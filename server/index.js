@@ -13,17 +13,27 @@ const { readdirSync } = require("fs");
 const { connectDb } = require("./db/connection");
 
 // handling connection erros
+const allowedOrigins = [
+  "https://swag-fashion-6hu3-git-main-varuns-projects-30000ad4.vercel.app",
+  "https://swag-fashion-6hu3-47ggloldf-varuns-projects-30000ad4.vercel.app",
+  "https://swag-fashion.vercel.app", // Production
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
 
 app.use(express.json());
-app.options("*", cors()); // optional: handle preflight
+// app.options("*", cors()); // optional: handle preflight
 
  console.log(process.env.CLIENT_URL)
 connectDb();
