@@ -71,11 +71,11 @@ function welcomeEmailTemplate(customerName, websiteLink, supportInfo) {
     </style>
   </head>
   <body>
-
     <div class="header">
       <div class="logo">
-       
-      </div> <img src="https://yourdomain.com/logo.png" alt="Swag Fashion Logo" />
+        <!-- Optional Logo Placeholder -->
+      </div> 
+      <img src="https://yourdomain.com/logo.png" alt="Swag Fashion Logo" />
       <h1>Welcome to</h1>
       <h2>SWAG FASHION</h2>
       <p>Let’s Get Started!</p>
@@ -98,10 +98,12 @@ function welcomeEmailTemplate(customerName, websiteLink, supportInfo) {
         ${websiteLink} | ${supportInfo}
       </div>
     </div>
-
   </body>
   </html>
   `;
 }
 
-module.exports=welcomeEmailTemplate
+// 👇 Exported inside an object
+module.exports = {
+  welcomeEmailTemplate,
+};
