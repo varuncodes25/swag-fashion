@@ -13,25 +13,26 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Define allowed origins
-const allowedOrigins = [
-  "https://swag-fashion.vercel.app", // Production
-  "https://swag-fashion-6hu3-git-main-varuns-projects-30000ad4.vercel.app",
-  "https://swag-fashion-6hu3-47ggloldf-varuns-projects-30000ad4.vercel.app",
-  "https://swag-fashion-2ett.vercel.app",
-  "https://swag-fashion-2ett-git-main-varuns-projects-30000ad4.vercel.app",
-  "https://swag-fashion-2ett-8w5nzfcp4-varuns-projects-30000ad4.vercel.app"
-];
-
-// Configure CORS
 app.use(
   cors({
     origin: function (origin, callback) {
-      console.log("🌐 Request Origin:", origin);
-      const isVercelPreview = /^https:\/\/swag-fashion.*\.vercel\.app$/.test(origin);
+      console.log("🔍 Incoming Origin:", origin);
+      const allowedOrigins = [
+        "https://swag-fashion.vercel.app",
+        "https://swag-fashion-6hu3-git-main-varuns-projects-30000ad4.vercel.app",
+        "https://swag-fashion-6hu3-47ggloldf-varuns-projects-30000ad4.vercel.app",
+        "https://swag-fashion-2ett.vercel.app",
+        "https://swag-fashion-2ett-git-main-varuns-projects-30000ad4.vercel.app",
+        "https://swag-fashion-2ett-8w5nzfcp4-varuns-projects-30000ad4.vercel.app"
+      ];
+
+      // Optional: allow all *.vercel.app previews
+      const isVercelPreview = origin && /^https:\/\/swag-fashion.*\.vercel\.app$/.test(origin);
+
       if (!origin || allowedOrigins.includes(origin) || isVercelPreview) {
         callback(null, true);
       } else {
-        console.error("❌ CORS Blocked:", origin);
+        console.error("❌ BLOCKED BY CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -40,6 +41,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
+
 
 // Parse incoming JSON requests
 app.use(express.json());
