@@ -2,7 +2,7 @@ const User = require("../models/User");
 const Admin = require("../models/Admin");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const welcomeEmailTemplate=require("../utils/userTemplate")
 const sendMail = require("../utils/mailer"); // ✅ Adjust path as needed
 // handles common MongoDB/Mongoose errors
 const handleMongoError = (error) => {

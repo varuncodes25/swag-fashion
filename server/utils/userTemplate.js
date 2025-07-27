@@ -103,3 +103,5 @@ function welcomeEmailTemplate(customerName, websiteLink, supportInfo) {
   </html>
   `;
 }
+
+module.exports=welcomeEmailTemplate
