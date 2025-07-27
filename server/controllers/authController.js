@@ -69,16 +69,14 @@ const signup = async (req, res) => {
 
     await sendMail(process.env.ADMIN_RECEIVER, "🚨 New User Signup", adminHtml);
 
-    // ✅ 2. Send welcome mail to USER
-    const userHtml = `
-      <h2>Welcome to UniFashion, ${name}!</h2>
-      <p>Thanks for signing up. We’re happy to have you on board.</p>
-      <p>If you need help, just reply to this email.</p>
-      <br/>
-      <p>Cheers,<br/>The UniFashion Team</p>
-    `;
+    // ✅ 2. Send full HTML Welcome Email to USER
+    const userHtml = welcomeEmailTemplate(
+      name,
+      "https://swag-fashion.vercel.app", // Website Link
+      "support@swag-fashion.com"         // Support Info
+    );
 
-    await sendMail(email, "🎉 Welcome to UniFashion!", userHtml);
+    await sendMail(email, "🎉 Welcome to Swag Fashion!", userHtml);
 
     return res.status(201).json({
       success: true,
@@ -93,6 +91,7 @@ const signup = async (req, res) => {
     });
   }
 };
+
 
 const login = async (req, res) => {
   const { email, password } = req.body;
