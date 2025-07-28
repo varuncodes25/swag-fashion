@@ -21,6 +21,7 @@ app.use(
       console.log("🔍 Incoming Origin:", origin);
 
       const allowedOrigins = [
+        "http://localhost:5173",
         "https://swag-fashion-bcah.vercel.app",
         "https://swag-fashion-bcah-git-main-varuns-projects-30000ad4.vercel.app",
         "https://swag-fashion-bcah-h7gx3z3wg-varuns-projects-30000ad4.vercel.app"

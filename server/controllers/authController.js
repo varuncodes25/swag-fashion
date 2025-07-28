@@ -146,7 +146,8 @@ const forgotPassword = async (req, res) => {
   const resetLink = `https://swag-fashion-bcah.vercel.app/reset-password/${token}`;
   const html = `<p>Click below to reset your password:</p><a href="${resetLink}">Reset Password</a>`;
 
-  await sendMail(user.email, "Password Reset", html);
+ const data= await sendMail(user.email, "Password Reset", html);
+ console.log(data)
   res.json({ message: "Reset email sent" });
 };
 const resetPasword = async (req, res) => {
