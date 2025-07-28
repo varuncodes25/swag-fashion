@@ -143,7 +143,7 @@ const forgotPassword = async (req, res) => {
     expiresIn: "15m",
   });
 
-  const resetLink = `http://localhost:5173/reset-password/${token}`;
+  const resetLink = `https://swag-fashion-bcah.vercel.app/${token}`;
   const html = `<p>Click below to reset your password:</p><a href="${resetLink}">Reset Password</a>`;
 
   await sendMail(user.email, "Password Reset", html);

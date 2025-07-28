@@ -28,25 +28,28 @@ const HeaderDisplay = () => {
   }, [imagesData.length]);
 
   return (
-    <div className="my-10 mx-auto w-[93vw] overflow-hidden">
-      <Carousel className="h-[60vh] relative rounded-3xl">
-        <CarouselContent className="h-full transition-transform duration-700 ease-in-out">
-          {imagesData.map((image, index) => (
-            <CarouselItem
-              key={index}
-              className={`h-full flex-shrink-0 transition-opacity duration-700 ease-in-out ${
-                index === currentIndex ? "opacity-100" : "opacity-0 absolute top-0 left-0 w-full"
-              }`}
-            >
-              <img
-                src={image}
-                alt={`banner-${index}`}
-                className="w-full h-full object-cover rounded-3xl"
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
+    <div className="w-screen overflow-hidden">
+      <Carousel className=" relative rounded-3xl">
+        <div className="relative  sm:h-[100px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
 
+          <CarouselContent className="mrelative w-[100vw] sm:w-[100vw] lg:w-[100vw]  h-[50vw] sm:h-[40vw] md:h-[30vw] lg:h-[25vw] xl:h-[20vw]">
+            {imagesData.map((image, index) => (
+              <CarouselItem
+                key={index}
+                className={`absolute top-0 left-0 w-full h-full transition-opacity duration-700 ease-in-out ${index === currentIndex ? "opacity-100 z-10" : "opacity-0 z-0"
+                  }`}
+              >
+                <img
+                  src={image}
+                  alt={`banner-${index}`}
+                  className="w-full h-full object-cover rounded-3xl"
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+
+        </div>
         {/* Optional: manual controls */}
         <CarouselPrevious />
         <CarouselNext />

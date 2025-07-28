@@ -18,6 +18,7 @@ const sendMail = async (toEmail, subject, htmlContent) => {
       from: `"UniFashion" <${process.env.GMAIL_USER}>`,
       to: toEmail,
       subject: subject,
+      text: htmlContent.replace(/<\/?[^>]+(>|$)/g, ""), // Remove HTML tags for plain text
       html: htmlContent,
     });
 
@@ -26,5 +27,6 @@ const sendMail = async (toEmail, subject, htmlContent) => {
     console.error("❌ Failed to send email:", error);
   }
 };
+
 
 module.exports = sendMail;
