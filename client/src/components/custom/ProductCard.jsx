@@ -15,8 +15,9 @@ const ProductCard = ({
   return (
     <Link
       to={`/product/${slug}`}
-      className="relative border w-fit overflow-clip grid z-1 hover:shadow-md rounded-2xl cursor-pointer group"
+      className="relative border w-fit overflow-clip grid z-1 rounded-2xl cursor-pointer group transform transition-transform duration-300 hover:scale-105 hover:shadow-md"
     >
+
       <img
         src={image.url}
         alt={name}
