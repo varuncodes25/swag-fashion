@@ -30,9 +30,9 @@ const HeaderDisplay = () => {
   return (
     <div className="w-screen overflow-hidden">
       <Carousel className=" relative rounded-3xl">
-        <div className="relative  sm:h-[100px] md:h-[400px] lg:h-[500px] xl:h-[600px]">
+        <div className="relative  sm:h-[100px] md:h-[400px] lg:h-[500px] xl:h-[500px]">
 
-          <CarouselContent className="mrelative w-[100vw] sm:w-[100vw] lg:w-[100vw]  h-[50vw] sm:h-[40vw] md:h-[30vw] lg:h-[25vw] xl:h-[20vw]">
+          <CarouselContent className="mrelative w-[100vw] sm:w-[100vw] lg:w-[100vw]  h-[50vw] sm:h-[40vw] md:h-[30vw] lg:h-[35vw] xl:h-[30vw]">
             {imagesData.map((image, index) => (
               <CarouselItem
                 key={index}

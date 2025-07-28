@@ -23,14 +23,22 @@ const ProductCard = ({
         alt={name}
         className="object-cover w-[30rem] h-[20rem]"
       />
-      <div className="px-3 grid gap-1 py-2 absolute bg-white dark:bg-zinc-900 w-full bottom-0 translate-y-[3rem] group-hover:translate-y-0 transform transition-all ease-in-out rounded-xl duration-300">
+      <div className="px-3 grid gap-1 py-2 absolute bg-white dark:bg-zinc-900 w-full bottom-0 
+  opacity-0 translate-y-[3rem] 
+  group-hover:opacity-100 group-hover:translate-y-0 
+  transform transition-all ease-in-out duration-300 
+  rounded-xl pointer-events-none group-hover:pointer-events-auto">
+
         <h2 className="text-lg font-semibold">{name}</h2>
+
         <div className="flex justify-between items-center">
           <div className="flex">{starsGenerator(rating)}</div>
           <span className="text-sm font-medium">₹{price}</span>
         </div>
+
         <div className="text-sm text-primary underline mt-1">View Product</div>
       </div>
+
     </Link>
   );
 };
