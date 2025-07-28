@@ -1,9 +1,5 @@
-import { Star } from "lucide-react";
-import React from "react";
-import { Link } from "react-router-dom";
-import { Button } from "../ui/button";
-import LinkButton from "./LinkButton";
 import { starsGenerator } from "@/constants/helper";
+import { Link } from "react-router-dom";
 
 const ProductCard = ({
   name = "Product Title",
@@ -14,25 +10,27 @@ const ProductCard = ({
     id: "322dadaf",
   },
 }) => {
+  const slug = name.split(" ").join("-");
+
   return (
-    <div className="relative border w-fit overflow-clip grid z-1 hover:shadow-md rounded-2xl">
+    <Link
+      to={`/product/${slug}`}
+      className="relative border w-fit overflow-clip grid z-1 hover:shadow-md rounded-2xl cursor-pointer group"
+    >
       <img
         src={image.url}
         alt={name}
         className="object-cover w-[30rem] h-[20rem]"
       />
-      <div className="px-3 grid gap-1 py-2 absolute bg-white dark:bg-zinc-900 w-full bottom-0 translate-y-[3rem] hover:translate-y-0 tranform transition-all ease-in-out rounded-xl duration-300">
-        <h2>{name}</h2>
-        <div className="flex justify-between">
+      <div className="px-3 grid gap-1 py-2 absolute bg-white dark:bg-zinc-900 w-full bottom-0 translate-y-[3rem] group-hover:translate-y-0 transform transition-all ease-in-out rounded-xl duration-300">
+        <h2 className="text-lg font-semibold">{name}</h2>
+        <div className="flex justify-between items-center">
           <div className="flex">{starsGenerator(rating)}</div>
-          <span>₹{price}</span>
+          <span className="text-sm font-medium">₹{price}</span>
         </div>
-        <LinkButton
-          to={`/product/${name.split(" ").join("-")}`}
-          text="View Product"
-        />
+        <div className="text-sm text-primary underline mt-1">View Product</div>
       </div>
-    </div>
+    </Link>
   );
 };
 
