@@ -94,9 +94,7 @@ function welcomeEmailTemplate(customerName, websiteLink, supportInfo) {
       <p>Welcome aboard,<br>
         The <strong>Swag Fashion</strong> Team</p>
 
-      <div class="footer">
-        ${websiteLink} | ${supportInfo}
-      </div>
+      
     </div>
   </body>
   </html>
