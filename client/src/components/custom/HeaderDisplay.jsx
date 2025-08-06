@@ -29,10 +29,10 @@ const HeaderDisplay = () => {
 
   return (
     <div className="w-screen overflow-hidden">
-      <Carousel className=" relative rounded-3xl">
+      <Carousel className=" relative ">
         <div className="relative  sm:h-[100px] md:h-[400px] lg:h-[500px] xl:h-[500px]">
 
-          <CarouselContent className="mrelative w-[100vw] sm:w-[100vw] lg:w-[100vw]  h-[50vw] sm:h-[40vw] md:h-[30vw] lg:h-[35vw] xl:h-[30vw]">
+          <CarouselContent className="mrelative w-auto sm:w-[100vw] lg:w-[100vw]  h-[30vw] sm:h-[40vw] md:h-[30vw] lg:h-[40vw] xl:h-[30vw]">
             {imagesData.map((image, index) => (
               <CarouselItem
                 key={index}
@@ -42,7 +42,7 @@ const HeaderDisplay = () => {
                 <img
                   src={image}
                   alt={`banner-${index}`}
-                  className="w-full h-full object-cover rounded-3xl"
+                  className="w-full h-full object-cover "
                 />
               </CarouselItem>
             ))}
