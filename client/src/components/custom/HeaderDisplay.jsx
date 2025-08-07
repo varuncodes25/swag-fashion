@@ -29,9 +29,9 @@ const HeaderDisplay = () => {
   }, [imagesData.length]);
 
   return (
-    <div className="w-screen overflow-hidden">
-      <Carousel className=" relative ">
-        <div className="relative  sm:h-[100px] md:h-[400px] lg:h-[500px] xl:h-[500px]">
+    <div className="w-screen overflow-x-hidden overflow-y-hidden">
+      <Carousel className=" relative "> 
+        <div className="relative  sm:h-[100px] md:h-[400px] lg:h-[500px]  xl:h-auto">
 
           <CarouselContent className="mrelative w-auto sm:w-[100vw] lg:w-[100vw]  h-[30vw] sm:h-[40vw] md:h-[30vw] lg:h-[40vw] xl:h-[30vw]">
             {imagesData.map((image, index) => (

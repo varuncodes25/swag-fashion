@@ -195,7 +195,7 @@ const Product = () => {
   return (
     <>
       <div>
-        <main className="w-[93vw] lg:w-[70vw] flex flex-col sm:flex-row justify-start items-start gap-10 mx-auto my-10">
+        <main className="w-[100vw] lg:w-[72vw] flex flex-col sm:flex-row justify-start items-start gap-10 mx-auto my-10">
           {/* LEFT SIDE */}
           <div className="grid sm:w-[45%] gap-3 ">
             <img
