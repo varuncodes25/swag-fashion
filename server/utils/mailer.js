@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 const sendMail = async (toEmail, subject, htmlContent) => {
   try {
     const info = await transporter.sendMail({
-      from: `"UniFashion" <${process.env.GMAIL_USER}>`,
+      from: `"Swag fashion" <${process.env.GMAIL_USER}>`,
       to: toEmail,
       subject: subject,
       text: htmlContent.replace(/<\/?[^>]+(>|$)/g, ""), // Remove HTML tags for plain text
