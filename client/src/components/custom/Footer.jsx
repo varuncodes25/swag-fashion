@@ -76,7 +76,7 @@ const Footer = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                unifashionstyle7@gmail.com
+                swagfashion077@gmail.com
               </a>
             </li>
           </ul>
