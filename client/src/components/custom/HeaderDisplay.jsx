@@ -12,7 +12,7 @@ import banner2 from "../../assets/banner2.png";
 import banner3 from "../../assets/banner2.png";
 
 const HeaderDisplay = () => {
-  const imagesData = [banner1, banner2, banner3;
+  const imagesData = [banner1, banner2, banner3];
   const [currentIndex, setCurrentIndex] = useState(0);
   const timeoutRef = useRef(null);
 
