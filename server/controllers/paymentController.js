@@ -9,8 +9,9 @@ var {
 } = require("razorpay/dist/utils/razorpay-utils");
 
 var instance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+  key_id: process.env.RAZORPAY_KEY_ID||"rzp_test_RW5A57UKh8Dv3F",
+  key_secret: process.env.RAZORPAY_KEY_SECRET ||"YourKeySecretHereHgijUZmybpNNR67lBrY4OumS",
+  
 });
 console.log("Razorpay instance created with key_id:", process.env.RAZORPAY_KEY_ID,process.env.RAZORPAY_KEY_SECRET);
 console.log("Razorpay key_secret is set");
