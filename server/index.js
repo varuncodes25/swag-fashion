@@ -51,10 +51,7 @@ app.use(express.json());
 connectDb();
 
 // Debug logs for cloud credentials
-console.log("🌩️ Cloudinary Config:");
-console.log("CLOUD_NAME:", process.env.CLOUD_NAME);
-console.log("CLOUD_API_KEY:", process.env.CLOUD_API_KEY);
-console.log("CLOUD_API_SECRET:", process.env.CLOUD_API_SECRET);
+
 
 // Health check route
 app.get("/", (req, res) => {

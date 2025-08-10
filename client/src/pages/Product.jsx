@@ -66,9 +66,11 @@ const Product = () => {
 
     fetchProductByName();
   }, [productName]);
-
+useEffect(() => {
+    console.log("paymentMethod changed:", paymentMethod);
+  }, [paymentMethod]);
   const calculateEmi = (price) => Math.round(price / 6);
-
+ 
   const checkAvailability = async () => {
     if (pincode.trim() === "") {
       setAvailabilityMessage("Please enter a valid pincode");
@@ -147,11 +149,17 @@ const Product = () => {
   const totalAmount = product.price * productQuantity;
 
   if (paymentMethod === "razorpay") {
+    alert("Processing payment with Razorpay...");
     const order = await generatePayment(totalAmount);
+    console.log("Order details:", order);
     await verifyPayment(
-      order,
+      {
+        ...order,
+        amount: order.amount || totalAmount * 100, // make sure amount exists in paise
+      },
       [{ id: product._id, quantity: productQuantity, color: productColor }],
-      address
+      address,
+      navigate
     );
   } else if (paymentMethod === "cod") {
     try {

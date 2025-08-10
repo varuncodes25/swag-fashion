@@ -32,150 +32,149 @@ import ResetPassword from "./components/ResetPassword";
 
 export default function App() {
   const router = createBrowserRouter([
-    {
-      path: "/",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<Home />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/signup",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<Signup />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/login",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<Login />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/product/:productName",
-      element: <RootLayout children={<Product />} />,
-    },
-    {
-      path: "/checkout",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<Checkout />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/forgot-password",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<ForgotPassword />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/reset-password/:token",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<ResetPassword />} />
-        </ProtectedRoute>
-      ),
-    },
-   
-    {
-      path: "/contact",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<Contact />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/faq",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<FaqPage />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/about",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<AboutPage />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/orders",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<MyOrders />} />{" "}
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/admin/login",
-      element: (
-        <ProtectedRoute>
-          <RootLayout children={<AdminLogin />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/admin/dashboard",
-      element: (
-        <ProtectedRoute>
-          <AdminLayout children={<CreateProducts />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/admin/dashboard/all-products",
-      element: (
-        <ProtectedRoute>
-          <AdminLayout children={<AllProducts />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/admin/dashboard/analytics",
-      element: (
-        <ProtectedRoute>
-          <AdminLayout children={<Analytics />} />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      path: "/admin/dashboard/orders",
-      element: (
-        <ProtectedRoute>
-          <AdminLayout children={<Orders />} />
-        </ProtectedRoute>
-      ),
-    },
+  {
+    path: "/",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<Home />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/signup",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<Signup />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/login",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<Login />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/product/:productName",
+    element: <RootLayout children={<Product />} />,
+  },
+  {
+    path: "/checkout",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<Checkout />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<ForgotPassword />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/reset-password/:token",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<ResetPassword />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/contact",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<Contact />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/faq",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<FaqPage />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/success",
+    element: <RootLayout children={<Success />} />,
+  },
+  {
+    path: "/about",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<AboutPage />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/orders",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<MyOrders />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/login",
+    element: (
+      <ProtectedRoute>
+        <RootLayout children={<AdminLogin />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/dashboard",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout children={<CreateProducts />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/dashboard/all-products",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout children={<AllProducts />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/dashboard/analytics",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout children={<Analytics />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/dashboard/orders",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout children={<Orders />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/dashboard/settings",
+    element: (
+      <ProtectedRoute>
+        <AdminLayout children={<Settings />} />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/*",
+    element: <Error />,
+  },
+]);
 
-    {
-      path: "/admin/dashboard/settings",
-      element: (
-        <ProtectedRoute>
-          <AdminLayout children={<Settings />} />
-        </ProtectedRoute>
-      ),
-    },
 
-    {
-      path: "/*",
-      element: <Error />,
-    },
-    {
-      path: "/success",
-      element: <Success />,
-    },
-  ]);
 
   return (
     <>

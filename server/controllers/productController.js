@@ -113,51 +113,63 @@ const getProducts = async (req, res) => {
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 9;
 
-    const query = { blacklisted: false }; // Filter out blacklisted products
+    const query = { blacklisted: false };
 
-    // 🔍 Filter by category
+    // Category filter
     if (category && category.toLowerCase() !== "all") {
-      const trimmedCategory = category.trim().toLowerCase();
-      query.category = new RegExp(`^${trimmedCategory}$`, "i");
+      query.category = category.trim();
     }
 
-    // 🔍 Search by product name
+    // Search filter
     if (search && search.trim() !== "") {
       query.name = { $regex: search.trim(), $options: "i" };
     }
 
-    // 🔍 Filter by max price
+    // Price filter
     if (price && !isNaN(price)) {
       query.price = { $lte: Number(price) };
     }
 
-    // 📦 Total matching products
-    const totalProducts = await Product.countDocuments(query);
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    // ⬇️ Optional sorting
-    let sortBy = { createdAt: -1 }; // Newest first by default
+    // Sorting
+    let sortBy = { createdAt: -1 };
     if (sort === "priceLowToHigh") sortBy = { price: 1 };
     if (sort === "priceHighToLow") sortBy = { price: -1 };
 
-    // 🛒 Fetch paginated and sorted products
-    const products = await Product.find(query)
-      .select("name price images rating description blacklisted sizes")
-      .sort(sortBy)
-      .skip((page - 1) * limit)
-      .limit(limit);
+    // Aggregation pipeline (fast & single query)
+    const pipeline = [
+      { $match: query },
+      {
+        $facet: {
+          products: [
+            { $sort: sortBy },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            {
+              $project: {
+                name: 1,
+                price: 1,
+                rating: 1,
+                description: 1,
+                sizes: 1,
+                image: { $arrayElemAt: ["$images", 0] }
+              }
+            }
+          ],
+          totalCount: [{ $count: "count" }]
+        }
+      }
+    ];
 
-    const formattedProducts = products.map((product) => {
-      const p = product.toObject();
-      p.image = p.images[0]; // Primary image
-      delete p.images;
-      return p;
-    });
+    const result = await Product.aggregate(pipeline);
+
+    const products = result[0].products;
+    const totalProducts = result[0].totalCount[0]?.count || 0;
+    const totalPages = Math.ceil(totalProducts / limit);
 
     return res.status(200).json({
       success: true,
       message: "Products fetched",
-      data: formattedProducts,
+      data: products,
       pagination: {
         totalProducts,
         totalPages,
@@ -166,9 +178,11 @@ const getProducts = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Get Products Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 const getProductByName = async (req, res) => {
