@@ -24,7 +24,9 @@ app.use(
         "http://localhost:5173",
         "https://swag-fashion-bcah.vercel.app",
         "https://swag-fashion-bcah-git-main-varuns-projects-30000ad4.vercel.app",
-        "https://swag-fashion-bcah-h7gx3z3wg-varuns-projects-30000ad4.vercel.app"
+        "https://swag-fashion-bcah-h7gx3z3wg-varuns-projects-30000ad4.vercel.app",
+        "https://swagfashion.in",
+        "https://www.swagfashion.in"
       ];
 
       // Optional: allow all *.vercel.app previews
