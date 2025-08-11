@@ -49,7 +49,7 @@ const Product = () => {
   const [product, setProduct] = useState({});
   const [selectedImage, setSelectedImage] = useState(0);
   const [productColor, setProductColor] = useState("");
-   const [productSize, setProductSize] = useState("");
+  const [productSize, setProductSize] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(""); // "razorpay" or "cod"
 
   useEffect(() => {
@@ -236,34 +236,23 @@ const Product = () => {
               </div>
             </div>
 
-            <div className="py-5 border-b bg-black">
-  <h3 className="font-bold text-lg text-white">Choose Size</h3>
-  <div className="flex items-center my-2 text-black">
-    <select
-      className="border rounded p-2"
-      value={productSize}
-      onChange={(e) => setProductSize(e.target.value)}
-    >
-      <option value="">Select Size</option>
-      {product?.sizes?.map((size, index) => (
-        <option key={index} value={size}>
-          {size}
-        </option>
-      ))}
-    </select>
-  </div>
-</div>
-
-            <div className="py-5 border-b bg-black">
-              <h3 className="font-bold text-lg bg-black">Choose Size</h3>
-              <div className="flex items-center my-2 text-black">
-                <select className="border rounded p-2">
-                  {product?.sizes?.map((size, index) => (
-                    <option key={index} value={size} onClick={() => setProductSize(size)}>
-                      {size}
-                    </option>
-                  ))}
-                </select>
+            <div className="py-5 border-b">
+              <h3 className="font-bold text-lg text-white">Choose Size</h3>
+              <div className="flex items-center gap-3 my-3">
+                {["S", "M", "L", "XL"].map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setProductSize(size)}
+                    className={`px-4 py-2 border rounded-md text-sm font-medium transition-all
+          ${
+            productSize === size
+              ? "border-orange-500 bg-orange-100 text-orange-700 shadow-md"
+              : "border-gray-300 bg-white text-black hover:border-black"
+          }`}
+                  >
+                    {size}
+                  </button>
+                ))}
               </div>
             </div>
 
