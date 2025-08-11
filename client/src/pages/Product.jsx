@@ -49,6 +49,7 @@ const Product = () => {
   const [product, setProduct] = useState({});
   const [selectedImage, setSelectedImage] = useState(0);
   const [productColor, setProductColor] = useState("");
+   const [productSize, setProductSize] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(""); // "razorpay" or "cod"
 
   useEffect(() => {
@@ -56,21 +57,21 @@ const Product = () => {
       try {
         const res = await axios.get(
           import.meta.env.VITE_API_URL +
-          `/get-product-by-name/${productName?.split("-").join(" ")}`
+            `/get-product-by-name/${productName?.split("-").join(" ")}`
         );
         const { data } = await res.data;
         console.log(data);
         setProduct(data);
-      } catch (error) { }
+      } catch (error) {}
     };
 
     fetchProductByName();
   }, [productName]);
-useEffect(() => {
+  useEffect(() => {
     console.log("paymentMethod changed:", paymentMethod);
   }, [paymentMethod]);
   const calculateEmi = (price) => Math.round(price / 6);
- 
+
   const checkAvailability = async () => {
     if (pincode.trim() === "") {
       setAvailabilityMessage("Please enter a valid pincode");
@@ -106,6 +107,7 @@ useEffect(() => {
         color: productColor,
         stock: product.stock,
         blacklisted: product.blacklisted,
+        size: product.size,
       })
     );
 
@@ -116,89 +118,88 @@ useEffect(() => {
   };
 
   const handleBuyNow = async () => {
-  if (!isAuthenticated) {
-    navigate("/login");
-    return;
-  }
-
-  if (productQuantity > product.stock) {
-    toast({ title: "Product out of stock" });
-    return;
-  }
-
-  if (product.blacklisted) {
-    toast({ title: "Product isn't available for purchase" });
-    return;
-  }
-
-  if (productColor === "") {
-    toast({ title: "Please select a color" });
-    return;
-  }
-
-  if (!address.trim()) {
-    toast({ title: "Please enter your address" });
-    return;
-  }
-
-  if (!paymentMethod) {
-    toast({ title: "Please select a payment method" });
-    return;
-  }
-
-  const totalAmount = product.price * productQuantity;
-
-  if (paymentMethod === "razorpay") {
-    alert("Processing payment with Razorpay...");
-    const order = await generatePayment(totalAmount);
-    console.log("Order details:", order);
-    await verifyPayment(
-      {
-        ...order,
-        amount: order.amount || totalAmount * 100, // make sure amount exists in paise
-      },
-      [{ id: product._id, quantity: productQuantity, color: productColor }],
-      address,
-      navigate
-    );
-  } else if (paymentMethod === "cod") {
-    try {
-      const res = await axios.post(
-        import.meta.env.VITE_API_URL + "/cod-order",
-        {
-          amount: totalAmount,
-          address,
-          products: [
-            {
-              id: product._id,
-              quantity: productQuantity,
-              color: productColor,
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (res.data.success) {
-        toast({ title: "Order placed with Cash on Delivery!" });
-      } else {
-        toast({ title: res.data.message || "Failed to place COD order." });
-      }
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Something went wrong. Please try again." });
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
     }
-  }
 
-  setPurchaseProduct(false);
-  setPaymentMethod("");
-};
+    if (productQuantity > product.stock) {
+      toast({ title: "Product out of stock" });
+      return;
+    }
 
+    if (product.blacklisted) {
+      toast({ title: "Product isn't available for purchase" });
+      return;
+    }
 
+    if (productColor === "") {
+      toast({ title: "Please select a color" });
+      return;
+    }
+
+    if (!address.trim()) {
+      toast({ title: "Please enter your address" });
+      return;
+    }
+
+    if (!paymentMethod) {
+      toast({ title: "Please select a payment method" });
+      return;
+    }
+
+    const totalAmount = product.price * productQuantity;
+
+    if (paymentMethod === "razorpay") {
+      alert("Processing payment with Razorpay...");
+      const order = await generatePayment(totalAmount);
+      console.log("Order details:", order);
+      await verifyPayment(
+        {
+          ...order,
+          amount: order.amount || totalAmount * 100, // make sure amount exists in paise
+        },
+        [{ id: product._id, quantity: productQuantity, color: productColor }],
+        address,
+        navigate
+      );
+    } else if (paymentMethod === "cod") {
+      try {
+        const res = await axios.post(
+          import.meta.env.VITE_API_URL + "/cod-order",
+          {
+            amount: totalAmount,
+            address,
+            products: [
+              {
+                id: product._id,
+                quantity: productQuantity,
+                color: productColor,
+                size: productSize,
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (res.data.success) {
+          toast({ title: "Order placed with Cash on Delivery!" });
+        } else {
+          toast({ title: res.data.message || "Failed to place COD order." });
+        }
+      } catch (err) {
+        console.error(err);
+        toast({ title: "Something went wrong. Please try again." });
+      }
+    }
+
+    setPurchaseProduct(false);
+    setPaymentMethod("");
+  };
 
   return (
     <>
@@ -235,13 +236,35 @@ useEffect(() => {
               </div>
             </div>
 
-            <div className="py-5 border-t border-b">
-              <h3 className="font-bold text-xl">
-                Rs.{product.price}
-              </h3>
-              <p className="text-sm">
+            <div className="py-5 border-b bg-black">
+  <h3 className="font-bold text-lg text-white">Choose Size</h3>
+  <div className="flex items-center my-2 text-black">
+    <select
+      className="border rounded p-2"
+      value={productSize}
+      onChange={(e) => setProductSize(e.target.value)}
+    >
+      <option value="">Select Size</option>
+      {product?.sizes?.map((size, index) => (
+        <option key={index} value={size}>
+          {size}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
 
-              </p>
+            <div className="py-5 border-b bg-black">
+              <h3 className="font-bold text-lg bg-black">Choose Size</h3>
+              <div className="flex items-center my-2 text-black">
+                <select className="border rounded p-2">
+                  {product?.sizes?.map((size, index) => (
+                    <option key={index} value={size} onClick={() => setProductSize(size)}>
+                      {size}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="py-5 border-b">
@@ -327,7 +350,9 @@ useEffect(() => {
                   />
                   <div className="flex gap-3">
                     <Button
-                      variant={paymentMethod === "razorpay" ? "default" : "outline"}
+                      variant={
+                        paymentMethod === "razorpay" ? "default" : "outline"
+                      }
                       onClick={() => setPaymentMethod("razorpay")}
                     >
                       Pay with Razorpay
@@ -342,7 +367,6 @@ useEffect(() => {
                   <Button onClick={handleBuyNow}>Confirm Order</Button>
                 </div>
               )}
-
             </div>
           </div>
         </main>

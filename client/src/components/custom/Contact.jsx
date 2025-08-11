@@ -66,7 +66,7 @@ const Contact = () => {
             <div className="flex items-center space-x-4">
               <Mail className="text-customYellow" />
               <span className="text-gray-700 dark:text-customGray">
-                support@example.com
+                swagfashion077@gmail.com
               </span>
             </div>
             <div className="flex items-center space-x-4">
@@ -78,7 +78,7 @@ const Contact = () => {
             <div className="flex items-center space-x-4">
               <MapPin className="text-customYellow" />
               <span className="text-gray-700 dark:text-customGray">
-                123 Main St, New York, NY
+                PARSHV ELITE BLDG NO.01, BIRWADI ROAD, NEAR RAILWAY PHATAK, UMROLI EAST, Umroli, Palghar, Maharashtra - 401404
               </span>
             </div>
           </div>

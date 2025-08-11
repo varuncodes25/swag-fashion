@@ -5,12 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 
 const Signup = () => {
   const [enabled, setEnabled] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-
+  const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -59,11 +60,24 @@ const Signup = () => {
           <Input placeholder="Enter Your Name" type="text" name="name" />
           <Input placeholder="Enter Your Email" type="email" name="email" />
           <Input placeholder="Enter Your Phone" type="tel" name="phone" />
-          <Input
-            placeholder="Enter Your Password"
-            type="password"
-            name="password"
-          />
+          <div className="border rounded-md relative flex justify-between items-center p-2 outline-none focus-within:ring-2 focus-within:ring-blue-500">
+            <input
+              className="outline-none w-full"
+              placeholder="Enter Your Password"
+              type={showPassword ? "text" : "password"} // control type here
+              name="password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
+          </div>
           <div className="flex items-center space-x-2">
             <Checkbox id="terms" onCheckedChange={(e) => setEnabled(e)} />
             <label

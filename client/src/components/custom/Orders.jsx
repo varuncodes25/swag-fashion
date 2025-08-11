@@ -24,7 +24,7 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-
+ console.log("Current Page:", orders);
   const { handleErrorLogout } = useErrorLogout();
 
   useEffect(() => {
@@ -113,6 +113,12 @@ const Orders = () => {
                         <span className="font-bold">Email:</span>
                         <span className="text-sm text-customGray">
                           {item?.userId?.email}
+                        </span>
+                      </p>
+                      <p className="flex justify-between sm:justify-start gap-2 items-center px-3">
+                        <span className="font-bold">Payment Mode:</span>
+                        <span className="text-sm text-customGray">
+                          {item?.paymentMode}
                         </span>
                       </p>
                       <p className="flex justify-between sm:justify-start gap-2 items-center px-3">
