@@ -9,10 +9,10 @@ const Footer = () => {
         {/* Company Info */}
         <div>
           <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
-            TPrint Co.
+            Swag Fashion
           </h3>
           <p>
-            Your story, printed. Premium custom T-shirt printing for every need.
+            Address: Parshv Elite Building No.1, Birwadi Road, Near Railway Phatak, Umroli East, Umroli, Palghar, Maharashtra - 401404
           </p>
         </div>
         {/* Navigation */}

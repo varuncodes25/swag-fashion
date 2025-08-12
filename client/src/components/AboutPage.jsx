@@ -1,27 +1,52 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+// Import images from your assets folder
+import tshirt1 from "../assets/tshirt1.jpg";
+import tshirt2 from "../assets/tshirt2.png";
+import tshirt3 from "../assets/tshirt3.png";
 
 const AboutPage = () => {
+  const images = [tshirt1, tshirt2, tshirt3];
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }, 7000); // 7 seconds
+
+    return () => clearInterval(timer);
+  }, [images.length]);
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       {/* Hero Section */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">About Us</h1>
         <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          We're passionate about helping you wear your creativity. Whether it's custom apparel for your team, business, or brand, we’ve got your back (and your front).
+          At Swag Fashion, we turn blank tees into bold statements. Founded in
+          2025, we specialize in high-quality, custom T-shirt printing that
+          brings your ideas to life — whether for brands, events, businesses, or
+          personal projects.
         </p>
       </div>
 
       {/* Company Info */}
       <div className="grid md:grid-cols-2 gap-10 items-center mb-16">
         <img
-          src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f"
+          src={images[currentIndex]}
           alt="T-Shirt Printing"
-          className="w-full rounded-lg shadow-md"
+          className="w-full rounded-lg shadow-md transition-all duration-700"
         />
         <div>
           <h2 className="text-2xl font-semibold mb-4">Who We Are</h2>
           <p className="text-gray-700 dark:text-gray-300">
-            Founded in 2021, our custom T-shirt printing studio was born out of a love for design and expression. We believe that what you wear should tell a story — your story. From individuals to startups and events, we’ve helped thousands bring their ideas to life on fabric.
+            We are Swag Fashion – a passionate team of trendsetters, creators,
+            and style enthusiasts who believe fashion should be bold, affordable,
+            and unapologetically you. Our mission is simple: to help you express
+            yourself through style. Every piece in our collection is handpicked
+            or designed with the perfect mix of quality, comfort, and the latest
+            trends. From everyday essentials to statement outfits, we’re here to
+            make sure you always have the confidence to own your look.
           </p>
         </div>
       </div>
@@ -31,35 +56,44 @@ const AboutPage = () => {
         <h2 className="text-2xl font-semibold text-center mb-8">Our Process</h2>
         <div className="grid md:grid-cols-3 gap-8 text-center">
           <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow">
-            <h3 className="text-xl font-bold mb-2">1. Upload</h3>
+            <h3 className="text-xl font-bold mb-2">Design</h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Choose your T-shirt style and upload your design or use our built-in design tools.
+              We design and print exactly the way you want. Your style, your
+              vision – made real.
             </p>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow">
-            <h3 className="text-xl font-bold mb-2">2. Print</h3>
+            <h3 className="text-xl font-bold mb-2">About Tshirt</h3>
             <p className="text-gray-600 dark:text-gray-300">
-              We use high-quality DTG, screen, or vinyl printing methods for every order.
+              Premium 220 GSM, 100% cotton T-shirts – built for comfort, made to
+              last. Style that feels as good as it looks.   
             </p>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow">
-            <h3 className="text-xl font-bold mb-2">3. Deliver</h3>
+            <h3 className="text-xl font-bold mb-2">Print on T-shirt</h3>
             <p className="text-gray-600 dark:text-gray-300">
-              Your custom T-shirts are shipped right to your doorstep — fast and hassle-free.
+              High-quality 220 GSM, 100% cotton T-shirts printed using advanced
+              DTF technology and heat press – for vibrant, long-lasting designs.
             </p>
           </div>
-        </div>
+         {/* Centered last row */}
+    <div className="md:col-span-3 flex justify-center gap-8">
+      <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
+        <h3 className="text-xl font-bold mb-2">Quality check</h3>
+        <p className="text-gray-600 dark:text-gray-300">
+          We thoroughly check each product and its quality before dispatch to
+          ensure you receive only the best.
+        </p>
       </div>
-
-      {/* Call to Action */}
-      <div className="text-center mt-12">
-        <h3 className="text-2xl font-bold mb-4">Ready to print your story?</h3>
-        <a
-          href="/contact"
-          className="inline-block px-6 py-3 bg-yellow-500 text-white font-semibold rounded-full hover:bg-yellow-600 transition"
-        >
-          Get in Touch
-        </a>
+      <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
+        <h3 className="text-xl font-bold mb-2">Delivery</h3>
+        <p className="text-gray-600 dark:text-gray-300">
+          We ensure safe, fast, and reliable delivery, so your order reaches
+          you on time and in perfect condition.
+        </p>
+      </div>
+    </div>
+  </div>
       </div>
     </div>
   );
