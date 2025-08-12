@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Card } from "../ui/card";
 import { ArrowDownToLine, IndianRupee } from "lucide-react";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import axios from "axios";
 
 const OrderData = ({
@@ -28,61 +28,43 @@ const OrderData = ({
 
   const handleDownloadInvoice = async () => {
     try {
-      console.log("Starting invoice generation...");
-
       const pdfDoc = await PDFDocument.create();
-      let page = pdfDoc.addPage([600, 900]);
-      const { height } = page.getSize();
+      const page = pdfDoc.addPage([600, 900]);
+      const { width, height } = page.getSize();
 
-      // Load logo image
-      const logoUrl = "/logoswagfashion.png"; // Make sure this file is in your public folder
+      // Embed standard font Helvetica
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-      let response;
-      try {
-        response = await fetch(logoUrl);
-        if (!response.ok)
-          throw new Error(`Failed to fetch logo. Status: ${response.status} ${response.statusText}`);
-      } catch (fetchError) {
-        console.error("Error fetching logo:", fetchError);
-        alert(`Error fetching logo image: ${fetchError.message}`);
-        return;
-      }
-
-      let logoImageBytes;
-      try {
-        logoImageBytes = await response.arrayBuffer();
-      } catch (bufferError) {
-        console.error("Error reading logo bytes:", bufferError);
-        alert(`Error reading logo image data: ${bufferError.message}`);
-        return;
-      }
-
-      let logoImage;
-      try {
-        logoImage = await pdfDoc.embedPng(logoImageBytes); // Use embedJpg if your image is JPG
-      } catch (embedError) {
-        console.error("Error embedding logo image:", embedError);
-        alert(`Error embedding logo image: ${embedError.message}`);
-        return;
-      }
-
-      const logoDims = logoImage.scale(0.3);
-
-      // Draw logo on PDF
-      page.drawImage(logoImage, {
-        x: 20,
+      // HEADER BACKGROUND (grey)
+      page.drawRectangle({
+        x: 0,
         y: height - 60,
-        width: logoDims.width,
-        height: logoDims.height,
+        width: width,
+        height: 40,
+        color: rgb(0.9, 0.9, 0.9),
       });
 
-      // Draw invoice title near logo
-      page.drawText("Tax Invoice/Bill of Supply/Cash Memo", {
-        x: 300,
-        y: height - 40,
-        size: 10,
+      // LEFT: Invoice title
+      const title = "Tax Invoice/Bill of Supply/Cash Memo";
+      const fontSizeTitle = 14;
+      page.drawText(title, {
+        x: 20,
+        y: height - 45,
+        size: fontSizeTitle,
+        font: helveticaFont,
         color: rgb(0, 0, 0),
-        maxWidth: 280,
+      });
+
+      // RIGHT: Company name "SWAG FASHION"
+      const companyName = "SWAG FASHION";
+      const fontSizeCompany = 14;
+      const textWidth = helveticaFont.widthOfTextAtSize(companyName, fontSizeCompany);
+      page.drawText(companyName, {
+        x: width - textWidth - 20,
+        y: height - 45,
+        size: fontSizeCompany,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
       });
 
       // COMPANY DETAILS BLOCK
@@ -105,10 +87,11 @@ const OrderData = ({
         address || "N/A",
       ].join("\n");
 
+      // Helper function to draw multiline text
       const drawMultilineText = (page, text, x, y, size = 10) => {
         const lines = text.split("\n");
         lines.forEach((line, i) => {
-          page.drawText(line, { x, y: y - i * 14, size, color: rgb(0, 0, 0) });
+          page.drawText(line, { x, y: y - i * 14, size, font: helveticaFont, color: rgb(0, 0, 0) });
         });
         return lines.length * 14;
       };
@@ -121,19 +104,21 @@ const OrderData = ({
       y -= Math.max(companyHeight, billingHeight + shippingHeight + 20) + 20;
 
       // ORDER INFO
-      page.drawText(`Order Number: ${orderNumber}`, { x: 20, y, size: 9, color: rgb(0, 0, 0) });
-      page.drawText(`Invoice Number: ${invoiceNumber}`, { x: 320, y, size: 9, color: rgb(0, 0, 0) });
+      page.drawText(`Order Number: ${orderNumber}`, { x: 20, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
+      page.drawText(`Invoice Number: ${invoiceNumber}`, { x: 320, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
       y -= 15;
       page.drawText(`Order Date: ${new Date(createdAt).toLocaleDateString()}`, {
         x: 20,
         y,
         size: 9,
+        font: helveticaFont,
         color: rgb(0, 0, 0),
       });
       page.drawText(`Invoice Date: ${new Date(updatedAt).toLocaleDateString()}`, {
         x: 320,
         y,
         size: 9,
+        font: helveticaFont,
         color: rgb(0, 0, 0),
       });
       y -= 25;
@@ -157,7 +142,7 @@ const OrderData = ({
       ];
 
       columns.forEach((col) => {
-        page.drawText(col.label, { x: col.x, y: y + 5, size: 10, color: rgb(0, 0, 0) });
+        page.drawText(col.label, { x: col.x, y: y + 5, size: 10, font: helveticaFont, color: rgb(0, 0, 0) });
       });
 
       y -= 20;
@@ -165,27 +150,28 @@ const OrderData = ({
       // TABLE ROWS
       products.forEach((product, index) => {
         if (y < 100) {
+          // Add new page and reset y
           page = pdfDoc.addPage([600, 900]);
           y = height - 40;
         }
-        page.drawText((index + 1).toString(), { x: 25, y, size: 9, color: rgb(0, 0, 0) });
-        page.drawText(product?.id?.name || "Unknown", { x: 60, y, size: 9, color: rgb(0, 0, 0) });
-        page.drawText(`Rs.${(product?.id?.price ?? 0).toFixed(2)}`, { x: 310, y, size: 9, color: rgb(0, 0, 0) });
-        page.drawText("0.00", { x: 395, y, size: 9, color: rgb(0, 0, 0) }); // Discount placeholder
-        page.drawText(`${product?.quantity ?? 0}`, { x: 455, y, size: 9, color: rgb(0, 0, 0) });
+        page.drawText((index + 1).toString(), { x: 25, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
+        page.drawText(product?.id?.name || "Unknown", { x: 60, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
+        page.drawText(`Rs.${(product?.id?.price ?? 0).toFixed(2)}`, { x: 310, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
+        page.drawText("0.00", { x: 395, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) }); // Discount placeholder
+        page.drawText(`${product?.quantity ?? 0}`, { x: 455, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
         const netAmt = (product?.quantity ?? 0) * (product?.id?.price ?? 0);
-        page.drawText(`Rs.${netAmt.toFixed(2)}`, { x: 485, y, size: 9, color: rgb(0, 0, 0) });
+        page.drawText(`Rs.${netAmt.toFixed(2)}`, { x: 485, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
 
         y -= 15;
       });
 
       // TOTAL AMOUNT
-      page.drawText(`TOTAL: Rs.${amount.toFixed(2)}`, { x: 20, y: y - 10, size: 11, color: rgb(0, 0, 0) });
+      page.drawText(`TOTAL: Rs.${amount.toFixed(2)}`, { x: 20, y: y - 10, size: 11, font: helveticaFont, color: rgb(0, 0, 0) });
 
       y -= 40;
 
       // FOOTER
-      page.drawText("Thank you for your order!", { x: 230, y: 30, size: 12, color: rgb(0, 0, 0) });
+      page.drawText("Thank you for your order!", { x: 230, y: 30, size: 12, font: helveticaFont, color: rgb(0, 0, 0) });
 
       // SAVE & DOWNLOAD
       const pdfBytes = await pdfDoc.save();
@@ -267,8 +253,6 @@ const OrderData = ({
             </div>
           </div>
         ))}
-
-        {/* Removed Billing & Shipping addresses from UI */}
 
         <div className="flex flex-col sm:flex-row justify-between sm:items-center">
           <span>
