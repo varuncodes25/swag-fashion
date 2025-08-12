@@ -17,7 +17,7 @@ const ProductList = () => {
         </div>
       )}
 
-      <div className="w-[93vw] grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 mx-auto gap-5 place-content-center my-10">
+      <div className="w-[93vw] grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 mx-auto gap-4 place-content-center my-10">
         {Array.isArray(products) &&
           products.map((product) => (
             <ProductCard key={product._id} {...product} />

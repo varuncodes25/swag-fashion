@@ -13,7 +13,7 @@ import { setProducts } from "@/redux/slices/productSlice";
 
 const categoryData = {
   trigger: "Category",
-  items: ["All Categories","Men", "Women", "Kid","Men & Women"],
+  items: ["Men", "Women", "Kid","Men & Women"],
 };
 
 const priceData = {
