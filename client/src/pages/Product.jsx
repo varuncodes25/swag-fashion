@@ -118,88 +118,104 @@ const Product = () => {
   };
 
   const handleBuyNow = async () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
+  if (!isAuthenticated) {
+    navigate("/login");
+    return;
+  }
 
-    if (productQuantity > product.stock) {
-      toast({ title: "Product out of stock" });
-      return;
-    }
+  if (productQuantity > product.stock) {
+    toast({ title: "Product out of stock" });
+    return;
+  }
 
-    if (product.blacklisted) {
-      toast({ title: "Product isn't available for purchase" });
-      return;
-    }
+  if (product.blacklisted) {
+    toast({ title: "Product isn't available for purchase" });
+    return;
+  }
 
-    if (productColor === "") {
-      toast({ title: "Please select a color" });
-      return;
-    }
+  if (productColor === "") {
+    toast({ title: "Please select a color" });
+    return;
+  }
 
-    if (!address.trim()) {
-      toast({ title: "Please enter your address" });
-      return;
-    }
+  if (!address.trim()) {
+    toast({ title: "Please enter your address" });
+    return;
+  }
 
-    if (!paymentMethod) {
-      toast({ title: "Please select a payment method" });
-      return;
-    }
+  if (!paymentMethod) {
+    toast({ title: "Please select a payment method" });
+    return;
+  }
 
-    const totalAmount = product.price * productQuantity;
+  // Total price in rupees
+  console.log(product.discountedPrice,"fhgfhgfhgfhghgv")
+   console.log(product,"fhgfhgfhgfhghgv")
+  const totalAmount = product.discountedPrice * productQuantity;
+  console.log(totalAmount,"tottttttt")
+  if (paymentMethod === "razorpay") {
+    try {
+      // Razorpay ke liye paise me convert
+      const amountInPaise = totalAmount * 100;
 
-    if (paymentMethod === "razorpay") {
-      alert("Processing payment with Razorpay...");
-      const order = await generatePayment(totalAmount);
+      // Backend se order generate
+      const order = await generatePayment(amountInPaise);
       console.log("Order details:", order);
+
       await verifyPayment(
         {
           ...order,
-          amount: order.amount || totalAmount * 100, // make sure amount exists in paise
+          amount: order.amount || amountInPaise, // Razorpay expects paise
         },
         [{ id: product._id, quantity: productQuantity, color: productColor }],
         address,
         navigate
       );
-    } else if (paymentMethod === "cod") {
-      try {
-        const res = await axios.post(
-          import.meta.env.VITE_API_URL + "/cod-order",
-          {
-            amount: totalAmount,
-            address,
-            products: [
-              {
-                id: product._id,
-                quantity: productQuantity,
-                color: productColor,
-                size: productSize,
-              },
-            ],
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-
-        if (res.data.success) {
-          toast({ title: "Order placed with Cash on Delivery!" });
-        } else {
-          toast({ title: res.data.message || "Failed to place COD order." });
-        }
-      } catch (err) {
-        console.error(err);
-        toast({ title: "Something went wrong. Please try again." });
-      }
+    } catch (error) {
+      console.error("Razorpay payment failed:", error);
+      toast({ title: "Payment failed. Please try again." });
     }
+  } 
+  
+  else if (paymentMethod === "cod") {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/cod-order`,
+        {
+          amount: totalAmount, // COD me paise me nahi, rupees me hi store karo
+          address,
+          products: [
+            {
+              id: product._id,
+              quantity: productQuantity,
+              color: productColor,
+              size: productSize,
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
-    setPurchaseProduct(false);
-    setPaymentMethod("");
-  };
+      if (res.data.success) {
+        toast({ title: "Order placed with Cash on Delivery!" });
+      } else {
+        toast({ title: res.data.message || "Failed to place COD order." });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Something went wrong. Please try again." });
+    }
+  }
+
+  // Reset states
+  setPurchaseProduct(false);
+  setPaymentMethod("");
+};
+
 
   return (
     <>

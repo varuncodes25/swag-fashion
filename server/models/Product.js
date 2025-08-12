@@ -51,6 +51,28 @@ const productSchema = new mongoose.Schema(
       enum: ["All Category", "Men", "Women", "Kid", "Men & Women"],
       required: true,
     },
+     discount: {
+      type: Number, // percentage
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+    offerTitle: {
+      type: String,
+      default: null,
+    },
+    offerDescription: {
+      type: String,
+      default: null,
+    },
+    offerValidFrom: {
+      type: Date,
+      default: null,
+    },
+    offerValidTill: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
@@ -65,7 +87,20 @@ productSchema.methods.calculateRating = async function () {
   }
   await this.save();
 };
+// Check if offer is active based on current date
+productSchema.methods.isOfferActive = function () {
+  if (!this.offerValidFrom || !this.offerValidTill) return false;
+  const now = new Date();
+  return now >= this.offerValidFrom && now <= this.offerValidTill;
+};
 
+// Get discounted price if offer is active
+productSchema.methods.getDiscountedPrice = function () {
+  if (this.isOfferActive() && this.discount > 0) {
+    return this.price * (1 - this.discount / 100);
+  }
+  return this.price;
+};
 const Product = mongoose.model("Product", productSchema);
 
 module.exports = Product;

@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 
 const ProductList = () => {
   const { products } = useSelector((state) => state.product);
-
+  console.log("new product",products)
   // Check if products is an array before using .length or .map
   const isLoading = !Array.isArray(products) || products.length === 0;
 
@@ -17,7 +17,7 @@ const ProductList = () => {
         </div>
       )}
 
-      <div className="w-[93vw] grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 mx-auto gap-4 place-content-center my-10">
+      <div className="w-[93vw] grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 mx-auto gap-4 place-content-center my-10">
         {Array.isArray(products) &&
           products.map((product) => (
             <ProductCard key={product._id} {...product} />
