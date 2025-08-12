@@ -250,19 +250,25 @@ const getProductByName = async (req, res) => {
 
   try {
     const product = await Product.findOne({
-      name: {
-        $regex: new RegExp(name, "i"),
-      },
+      name: { $regex: new RegExp(name, "i") },
+    }).populate("reviews");
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    // Call the method on the product instance
+    const discountedPrice = product.getDiscountedPrice();
+
+    // Convert product to plain object to add discountedPrice
+    const productObj = product.toObject();
+    productObj.discountedPrice = discountedPrice;
+
+    return res.status(200).json({
+      success: true,
+      message: "Product found",
+      data: productObj,
     });
-
-    if (!product)
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
-
-    return res
-      .status(200)
-      .json({ success: true, message: "Product found", data: product });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }

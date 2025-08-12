@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 
 const ProductList = () => {
   const { products } = useSelector((state) => state.product);
-
+  console.log("new product",products)
   // Check if products is an array before using .length or .map
   const isLoading = !Array.isArray(products) || products.length === 0;
 
