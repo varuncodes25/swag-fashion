@@ -44,29 +44,29 @@ const OrderData = ({
         color: rgb(0.9, 0.9, 0.9),
       });
 
-      // LEFT: Invoice title
-      const title = "Tax Invoice/Bill of Supply/Cash Memo";
-      const fontSizeTitle = 14;
-      page.drawText(title, {
-        x: 20,
-        y: height - 45,
-        size: fontSizeTitle,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-      });
+      // RIGHT: Invoice title
+const title = "Tax Invoice/Bill of Supply/Cash Memo";
+const fontSizeTitle = 14;
+const textWidthTitle = helveticaFont.widthOfTextAtSize(title, fontSizeTitle);
+page.drawText(title, {
+  x: width - textWidthTitle - 20,  // 20px padding from right edge
+  y: height - 45,
+  size: fontSizeTitle,
+  font: helveticaFont,
+  color: rgb(0, 0, 0),
+});
 
-      // RIGHT: Company name "SWAG FASHION"
-      const companyName = "SWAG FASHION";
-      const fontSizeCompany = 14;
-      const textWidth = helveticaFont.widthOfTextAtSize(companyName, fontSizeCompany);
-      page.drawText(companyName, {
-        x: width - textWidth - 20,
-        y: height - 45,
-        size: fontSizeCompany,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-      });
 
+     // LEFT: Company name "SWAG FASHION"
+const companyName = "SWAG FASHION";
+const fontSizeCompany = 14;
+page.drawText(companyName, {
+  x: 20,                // Changed from right side to left side at 20 px
+  y: height - 45,
+  size: fontSizeCompany,
+  font: helveticaFont,
+  color: rgb(0.6, 0, 0.6),
+});
       // COMPANY DETAILS BLOCK
       const companyText = [
         `Sold By :`,
