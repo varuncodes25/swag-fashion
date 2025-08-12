@@ -32,6 +32,11 @@ const CreateProducts = () => {
   const [sizes, setSizes] = useState([]);
   const [images, setImages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [discount, setDiscount] = useState("");
+  const [offerTitle, setOfferTitle] = useState("");
+  const [offerDescription, setOfferDescription] = useState("");
+  const [offerValidTill, setOfferValidTill] = useState("");
+  const [offerValidFrom, setOfferValidFrom] = useState("");
 
   const fileInputRef = useRef(null);
   const { toast } = useToast();
@@ -110,6 +115,11 @@ const CreateProducts = () => {
     colors.forEach((color) => formData.append("colors", color));
     sizes.forEach((size) => formData.append("sizes", size));
     images.forEach((image) => formData.append("images", image.file));
+    formData.append("discount", discount);
+    formData.append("offerTitle", offerTitle);
+    formData.append("offerDescription", offerDescription);
+    formData.append("offerValidTill", offerValidTill);
+    formData.append("offerValidFrom", offerValidFrom);
 
     try {
       const res = await axios.post(
@@ -151,8 +161,9 @@ const CreateProducts = () => {
       </CardHeader>
 
       <form onSubmit={onSubmit}>
-        <div className="flex flex-col lg:flex-row lg:w-[70vw]">
-          <CardContent className="w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:w-[70vw]">
+          {/* Left column */}
+          <CardContent className="w-full space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Product Name</Label>
               <Input id="name" name="name" placeholder="Enter product name" required />
@@ -175,9 +186,55 @@ const CreateProducts = () => {
               <Label htmlFor="stock">Stock</Label>
               <Input id="stock" name="stock" type="number" placeholder="20" min="0" required />
             </div>
-          </CardContent>
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="images">Product Images</Label>
+              <div className="flex flex-wrap gap-4">
+                {images.map((image, index) => (
+                  <div className="relative" key={index}>
+                    <img
+                      src={image?.preview}
+                      alt={`Product image ${index + 1}`}
+                      width={100}
+                      height={100}
+                      className="rounded-md object-cover"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                      onClick={() => removeImage(index)}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Remove image</span>
+                    </Button>
+                  </div>
+                ))}
 
-          <CardContent className="w-full">
+                {images.length < MAX_IMAGES && (
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-[100px] h-[100px]"
+                    variant="outline"
+                  >
+                    <Upload className="h-6 w-6" />
+                    <span className="sr-only">Upload Image</span>
+                  </Button>
+                )}
+              </div>
+              <input
+                type="file"
+                id="images"
+                name="images"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImageUpload}
+                ref={fileInputRef}
+              />
+              <p className="text-sm text-muted-foreground mt-2">
+                Upload up to 15 images. Supported formats: JPG, PNG, GIF
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select name="category" required>
@@ -193,6 +250,11 @@ const CreateProducts = () => {
                 </SelectContent>
               </Select>
             </div>
+          </CardContent>
+
+          {/* Right column */}
+          <CardContent className="w-full space-y-6">
+            
 
             {/* Sizes */}
             <div className="space-y-2">
@@ -282,54 +344,66 @@ const CreateProducts = () => {
             </div>
 
             {/* Images */}
-            <div className="space-y-2 mt-4">
-              <Label htmlFor="images">Product Images</Label>
-              <div className="flex flex-wrap gap-4">
-                {images.map((image, index) => (
-                  <div className="relative" key={index}>
-                    <img
-                      src={image?.preview}
-                      alt={`Product image ${index + 1}`}
-                      width={100}
-                      height={100}
-                      className="rounded-md object-cover"
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                      onClick={() => removeImage(index)}
-                    >
-                      <X className="h-4 w-4" />
-                      <span className="sr-only">Remove image</span>
-                    </Button>
-                  </div>
-                ))}
+            
 
-                {images.length < MAX_IMAGES && (
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-[100px] h-[100px]"
-                    variant="outline"
-                  >
-                    <Upload className="h-6 w-6" />
-                    <span className="sr-only">Upload Image</span>
-                  </Button>
-                )}
-              </div>
-              <input
-                type="file"
-                id="images"
-                name="images"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={handleImageUpload}
-                ref={fileInputRef}
+            {/* Offer & Discount */}
+            <div className="space-y-2">
+              <Label htmlFor="discount">Discount (%)</Label>
+              <Input
+                id="discount"
+                name="discount"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="Enter discount percentage"
+                value={discount}
+                onChange={(e) => setDiscount(e.target.value)}
               />
-              <p className="text-sm text-muted-foreground mt-2">
-                Upload up to 15 images. Supported formats: JPG, PNG, GIF
-              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="offerTitle">Offer Title</Label>
+              <Input
+                id="offerTitle"
+                name="offerTitle"
+                placeholder="Enter offer title"
+                value={offerTitle}
+                onChange={(e) => setOfferTitle(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="offerDescription">Offer Description</Label>
+              <Textarea
+                id="offerDescription"
+                name="offerDescription"
+                rows={3}
+                placeholder="Enter offer description"
+                value={offerDescription}
+                onChange={(e) => setOfferDescription(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="offerValidFrom">Offer Valid From</Label>
+              <Input
+                id="offerValidFrom"
+                name="offerValidFrom"
+                type="date"
+                value={offerValidFrom}
+                onChange={(e) => setOfferValidFrom(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="offerValidTill">Offer Valid Till</Label>
+              <Input
+                id="offerValidTill"
+                name="offerValidTill"
+                type="date"
+                value={offerValidTill}
+                onChange={(e) => setOfferValidTill(e.target.value)}
+              />
             </div>
           </CardContent>
         </div>
@@ -341,6 +415,7 @@ const CreateProducts = () => {
           </Button>
         </CardFooter>
       </form>
+
     </div>
   );
 };

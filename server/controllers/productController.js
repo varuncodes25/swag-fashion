@@ -8,9 +8,21 @@ const createProduct = async (req, res) => {
   }
 
   try {
-    const { name, price, description, stock, colors, category, sizes } = req.body;
+    const {
+      name,
+      price,
+      description,
+      stock,
+      colors,
+      category,
+      sizes,
+      discount,
+      offerTitle,
+      offerDescription,
+      offerValidFrom,    // Add this line
+      offerValidTill,
+    } = req.body;
 
-    // Validate required fields
     if (!name || !price || !description || !stock || !colors || !category || !sizes) {
       return res.status(400).json({
         success: false,
@@ -38,8 +50,14 @@ const createProduct = async (req, res) => {
       stock,
       colors,
       category,
-      sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes), // If sent as JSON string (e.g., from form-data)
+      sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes),
       images: uploadedImages,
+
+      discount: discount ? Number(discount) : 0,
+      offerTitle: offerTitle || null,
+      offerDescription: offerDescription || null,
+      offerValidFrom: offerValidFrom ? new Date(offerValidFrom) : null,   // Set here
+      offerValidTill: offerValidTill ? new Date(offerValidTill) : null,
     });
 
     await product.save();
@@ -55,21 +73,33 @@ const createProduct = async (req, res) => {
 };
 
 
+
 const updateProduct = async (req, res) => {
   if (req.role !== ROLES.admin) {
     return res.status(401).json({ success: false, message: "Access denied" });
   }
 
   try {
-    const { ...data } = req.body;
     const { id } = req.params;
+    const data = { ...req.body };
+
+    if (data.sizes && typeof data.sizes === "string") {
+      try {
+        data.sizes = JSON.parse(data.sizes);
+      } catch {
+        // keep as is if parsing fails
+      }
+    }
+
+    if (data.discount) data.discount = Number(data.discount);
+
+    if (data.offerValidFrom) data.offerValidFrom = new Date(data.offerValidFrom);    // Add this
+    if (data.offerValidTill) data.offerValidTill = new Date(data.offerValidTill);
 
     const product = await Product.findByIdAndUpdate(id, data, { new: true });
 
     if (!product)
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
 
     return res.status(200).json({
       success: true,
@@ -80,6 +110,8 @@ const updateProduct = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+;
+
 
 const deleteProduct = async (req, res) => {
   if (req.role !== ROLES.admin) {
@@ -136,6 +168,8 @@ const getProducts = async (req, res) => {
     if (sort === "priceHighToLow") sortBy = { price: -1 };
 
     // Aggregation pipeline (fast & single query)
+    const now = new Date();
+
     const pipeline = [
       { $match: query },
       {
@@ -151,6 +185,30 @@ const getProducts = async (req, res) => {
                 rating: 1,
                 description: 1,
                 sizes: 1,
+                discount: 1,
+                offerValidTill: 1,
+                discountedPrice: {
+                  $round: [
+                    {
+                      $cond: [
+                        {
+                          $and: [
+                            { $gt: ["$discount", 0] },
+                            { $gt: ["$offerValidTill", now] }  // Use variable here
+                          ]
+                        },
+                        {
+                          $multiply: [
+                            "$price",
+                            { $subtract: [1, { $divide: ["$discount", 100] }] }
+                          ]
+                        },
+                        "$price"
+                      ]
+                    },
+                    1
+                  ]
+                },
                 image: { $arrayElemAt: ["$images", 0] }
               }
             }
@@ -159,6 +217,8 @@ const getProducts = async (req, res) => {
         }
       }
     ];
+
+
 
     const result = await Product.aggregate(pipeline);
 
@@ -266,6 +326,29 @@ const removeFromBlacklist = async (req, res) => {
   }
 };
 
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product)
+      return res.status(404).json({ success: false, message: "Product not found" });
+
+    const discountedPrice = product.getDiscountedPrice();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product fetched successfully",
+      data: {
+        product,
+        discountedPrice,
+        isOfferActive: product.isOfferActive(),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
 module.exports = {
   createProduct,
   updateProduct,
@@ -274,4 +357,5 @@ module.exports = {
   getProductByName,
   blacklistProduct,
   removeFromBlacklist,
+  getProductById
 };

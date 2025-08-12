@@ -9,6 +9,8 @@ const ProductCard = ({
     url: "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg?auto=compress&cs=tinysrgb&w=600",
     id: "322dadaf",
   },
+  discountedPrice,
+  discount
 }) => {
   const slug = name.split(" ").join("-");
 
@@ -17,45 +19,53 @@ const ProductCard = ({
       to={`/product/${slug}`}
       className="relative border w-fit overflow-clip grid z-1 rounded-2xl cursor-pointer group transform transition-transform duration-300 hover:scale-105 hover:shadow-md"
     >
-      <div className="max-w-sm bg-white dark:bg-zinc-900 rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer">
-        <img
-          src={image.url}
-          alt={name}
-          className="
-      object-cover
-      w-full
-      h-[14rem]     /* mobile */
-      sm:h-[15rem]  /* small devices ≥640px */
-      md:h-[18rem]  /* medium devices ≥768px */
-      lg:h-[20rem]  /* large devices ≥1024px */
-      xl:h-[22rem]  /* extra-large devices ≥1280px */
-      rounded-t-2xl
-    "
-        />
-        <div className="p-2 grid gap-2  lg:hidden">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-            {name}
-          </h2>
+    <div className="max-w-sm bg-white dark:bg-zinc-900 rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 cursor-pointer select-none">
+  <div className="w-80 h-56 sm:h-60 md:h-72 lg:h-80 xl:h-88 rounded-t-3xl overflow-hidden mx-auto">
+    <img
+      src={image.url}
+      alt={name}
+      className="
+        object-cover
+        w-full
+        h-full
+        transition-transform duration-300 ease-in-out
+        hover:scale-105
+      "
+    />
+  </div>
+  <div className="p-4 grid gap-3">
+    <h2 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
+      {name}
+    </h2>
 
-          <div className="flex justify-between items-center p-0">
-            <div className="flex text-xs">{starsGenerator(rating)}</div>{" "}
-            {/* smaller stars */}
-          </div>
+    <div className="flex items-center space-x-2">
+      <div className="flex text-sm">{starsGenerator(rating)}</div>
+      <span className="text-gray-500 dark:text-gray-400 text-sm">
+        ({rating.toFixed(1)})
+      </span>
+    </div>
 
-          <div className="flex gap-2">
-            <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
-              ₹{price}
-            </span>
-            <span className="text-2xl font-extrabold text-gray-800 dark:text-gray-300">
-              200
-            </span>
-          </div>
+    <div className="flex items-baseline gap-3">
+      <span className="text-md text-gray-400 dark:text-gray-500 line-through select-none">
+        ₹{price.toFixed(2)}
+      </span>
+      <span className="text-3xl font-extrabold text-gray-900 dark:text-yellow-400">
+        ₹{discountedPrice.toFixed(2)}
+      </span>
+      {discount > 0 && (
+        <span className="bg-yellow-300 dark:bg-yellow-600 text-yellow-900 dark:text-yellow-100 text-xs font-semibold px-2 py-0.5 rounded-full select-none">
+          {discount}% OFF
+        </span>
+      )}
+    </div>
 
-          <button className="mt-2 px-4 py-2 bg-customYellow text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200">
-            Add to Cart
-          </button>
-        </div>
-      </div>
+    <button className="mt-3 px-6 py-2 bg-yellow-500 dark:bg-yellow-400 text-gray-900 dark:text-gray-900 font-semibold rounded-lg shadow-md hover:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400">
+      Add to Cart
+    </button>
+  </div>
+</div>
+
+
 
       <div
   className="

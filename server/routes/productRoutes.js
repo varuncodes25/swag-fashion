@@ -7,6 +7,7 @@ const {
   getProductByName,
   blacklistProduct,
   removeFromBlacklist,
+  getProductById,
 } = require("../controllers/productController");
 const verifyToken = require("../middlewares/verifyToken");
 const upload = require("../middlewares/multer");
@@ -23,6 +24,8 @@ router.put("/update-product/:id", verifyToken, updateProduct);
 router.delete("/delete-product/:id", verifyToken, deleteProduct);
 
 router.get("/get-products", getProducts);
+
+router.get("/:id", getProductById);
 
 router.get("/get-product-by-name/:name", getProductByName);
 
