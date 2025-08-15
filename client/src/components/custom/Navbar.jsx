@@ -5,8 +5,7 @@ import CartDrawer from "./CartDrawer";
 import { User, Menu, ChevronLeft, X, Sparkles } from "lucide-react";
 import LogoutToggle from "./LogoutToggle";
 import { useSelector } from "react-redux";
-import swagiconLight from "@/assets/swagicon.jpg";
-import swagiconDark from "@/assets/iconwhite.jpg";
+import swagiconDark from "@/assets/iconwhite.png";
 const Navbar = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,23 +29,17 @@ const Navbar = () => {
 
         {/* Logo centered */}
         <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xl sm:text-2xl font-bold text-black dark:text-white">
-          <Link
-            to="/"
-            className="flex items-center gap-2 hover:text-pink-500 transition-colors duration-300"
-          >
-            <img
-              src={swagiconLight}
-              alt="Swag Icon"
-              className="h-14 w-16 rounded-full dark:hidden"
-            />
-            <img
-              src={swagiconDark}
-              alt="Swag Icon Dark"
-              className="h-14 w-16 rounded-full hidden dark:block"
-            />
-            <span className="tracking-wide">Swag Fashion</span>
-          </Link>
-        </div>
+  <Link
+    to="/"
+    className="flex items-center gap-2 hover:text-pink-500 transition-colors duration-300"
+  >
+    <img
+      src={swagiconDark}
+      alt="Swag Icon Dark"
+      className="h-20 w-20 sm:h-24 sm:w-24 lg:h-36 lg:w-40 rounded-full"
+    />
+  </Link>
+</div>
 
         {/* Hamburger / Mobile toggle */}
         <button
@@ -61,7 +54,7 @@ const Navbar = () => {
         </button>
 
         {/* Desktop items (hidden on mobile) */}
-        <div className="hidden sm:flex items-center gap-4 text-black dark:text-white">
+        <div className="hidden sm:flex items-center gap-4 text-black dark:text-white ">
           <ModeToggle />
           <CartDrawer />
           {isAuthenticated ? (
