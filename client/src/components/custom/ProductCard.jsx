@@ -14,13 +14,16 @@ const ProductCard = ({
     id: "322dadaf",
   },
   discountedPrice = price,
-  discount = 0
+  discount = 0,
+  offerValidTill
 }) => {
   const slug = name.split(" ").join("-");
   const { isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+     const now = new Date();
+      const isOfferActive = offerValidTill ? new Date(offerValidTill) >= now && discount > 0 : false;
+      const displayPrice = isOfferActive ? discountedPrice : price;
   const handleAddToCart = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
@@ -66,7 +69,7 @@ const ProductCard = ({
           </span>
         </div>
         <div className="mt-2 flex items-baseline gap-1">
-          {discount > 0 && (
+          {isOfferActive && discount > 0 && (
             <span className="text-xs text-gray-400 line-through">
               ₹{price.toFixed(2)}
             </span>
@@ -75,7 +78,7 @@ const ProductCard = ({
             ₹{(discountedPrice || price).toFixed(2)}
           </span>
         </div>
-        {discount > 0 && (
+        {isOfferActive  && (
           <span className="inline-block mt-1 bg-yellow-300 text-yellow-900 text-xs px-1.5 py-0.5 rounded-full">
             {discount}% OFF
           </span>
@@ -86,6 +89,26 @@ const ProductCard = ({
         >
           Add to Cart
         </button>
+      </div>
+       <div
+        className="
+    px-3 grid gap-1 py-2 absolute bg-white dark:bg-zinc-900 w-full bottom-0 
+    opacity-0 translate-y-[3rem]         
+    lg:opacity-0 lg:translate-y-[3rem]    
+    lg:group-hover:opacity-100 lg:group-hover:translate-y-0  /* show only on lg hover */
+    transform transition-all ease-in-out duration-300 
+    rounded-xl pointer-events-none lg:pointer-events-auto
+  "
+      >
+
+        <h2 className="text-lg font-semibold">{name}</h2>
+
+        <div className="flex justify-between items-center">
+          <div className="flex">{starsGenerator(rating)}</div>
+          <span className="text-sm font-medium">₹{price}</span>
+        </div>
+
+        <div className="text-sm text-primary underline mt-1">View Product</div>
       </div>
     </Link>
   );
