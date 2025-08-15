@@ -31,6 +31,10 @@ import Pagination from "../Pagination";
 const AllProducts = () => {
   const [currentColor, setCurrentColor] = useState("#000000");
   const [colors, setColors] = useState([]);
+
+  const [selectedSize, setSelectedSize] = useState("");
+  const [sizes, setSizes] = useState([]);
+
   const { products } = useSelector((state) => state.product);
   const dispatch = useDispatch();
   const { toast } = useToast();
@@ -47,6 +51,7 @@ const AllProducts = () => {
   const [deleteProductId, setDeleteProductId] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // Color handlers
   const addColor = () => {
     if (!colors.includes(currentColor)) {
       setColors([...colors, currentColor]);
@@ -56,6 +61,19 @@ const AllProducts = () => {
     setColors(colors.filter((c) => c !== color));
   };
 
+  // Size handlers
+  const addSelectedSize = () => {
+    const size = selectedSize.trim().toUpperCase();
+    if (size && !sizes.includes(size)) {
+      setSizes([...sizes, size]);
+      setSelectedSize("");
+    }
+  };
+  const removeSize = (sizeToRemove) => {
+    setSizes(sizes.filter((size) => size !== sizeToRemove));
+  };
+
+  // Fetch filtered products
   const getFilterProducts = async (page = 1) => {
     try {
       let queryParams = [];
@@ -71,7 +89,6 @@ const AllProducts = () => {
       const res = await axios.get(import.meta.env.VITE_API_URL + `/get-products-admin${queryString}`);
 
       if (res.data.success) {
-        console.log(res.data.data)
         dispatch(setProducts(res.data.data));
         setTotalPages(res.data.pagination.totalPages);
       } else {
@@ -125,10 +142,11 @@ const AllProducts = () => {
     }
   };
 
-  // Open edit modal and set editing product data including colors array
+  // Open edit modal and set editing product data including colors and sizes
   const handleEdit = (product) => {
     setEditingProduct(product);
     setColors(product.colors || []);
+    setSizes(product.sizes || []);
     setIsEditModalOpen(true);
   };
 
@@ -161,12 +179,11 @@ const AllProducts = () => {
       ...editingProduct,
       name: formData.get("name"),
       description: formData.get("description"),
-      price: formData.get("price"),
-      stock: formData.get("stock"),
+      price: parseFloat(formData.get("price")),
+      stock: parseInt(formData.get("stock")),
       category: formData.get("category"),
-      colors: colors.map(() => formData.get("colors")),
-      sizes: sizes.map(() => formData.get("sizes")),
-      images: images.map(() => formData.get("images")),
+      colors: colors,
+      sizes: sizes,
       discount: formData.get("discount"),
       offerTitle: formData.get("offerTitle"),
       offerDescription: formData.get("offerDescription"),
@@ -192,6 +209,7 @@ const AllProducts = () => {
     setIsEditModalOpen(false);
     setEditingProduct(null);
     setColors([]);
+    setSizes([]);
   };
 
   return (
@@ -262,7 +280,6 @@ const AllProducts = () => {
                   alt={product.name}
                   className="rounded-t-lg object-cover w-full h-full"
                 />
-
               </div>
 
               <CardContent className="flex-grow p-4">
@@ -336,22 +353,46 @@ const AllProducts = () => {
                 </Select>
               </div>
 
-              {/* Size */}
-              <div className="grid gap-4 items-center">
-                <Label htmlFor="size">Size</Label>
-                <Select name="size" defaultValue={editingProduct?.size}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="xs">XS</SelectItem>
-                    <SelectItem value="s">S</SelectItem>
-                    <SelectItem value="m">M</SelectItem>
-                    <SelectItem value="l">L</SelectItem>
-                    <SelectItem value="xl">XL</SelectItem>
-                    <SelectItem value="xxl">XXL</SelectItem>
-                  </SelectContent>
-                </Select>
+              {/* Size Picker with dropdown + add button */}
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="sizes">Sizes</Label>
+                <div className="flex items-center space-x-2">
+                  <Select value={selectedSize} onValueChange={setSelectedSize}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="XS">XS</SelectItem>
+                      <SelectItem value="S">S</SelectItem>
+                      <SelectItem value="M">M</SelectItem>
+                      <SelectItem value="L">L</SelectItem>
+                      <SelectItem value="XL">XL</SelectItem>
+                      <SelectItem value="XXL">XXL</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" onClick={addSelectedSize}>
+                    Add Size
+                  </Button>
+                </div>
+
+                {/* Show Added Sizes */}
+                <div className="flex gap-2 flex-wrap mt-2">
+                  {sizes.map((size, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-1 border rounded px-2 py-1"
+                    >
+                      <span className="text-sm font-medium">{size}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeSize(size)}
+                        className="text-red-500 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Discount */}
