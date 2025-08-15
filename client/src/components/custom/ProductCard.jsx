@@ -14,12 +14,14 @@ const ProductCard = ({
     id: "322dadaf",
   },
   discountedPrice,
-  discount
+  discount,
+  offerValidTill
 }) => {
   const slug = name.split(" ").join("-");
   const { isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate()
   const dispatch = useDispatch();
+  
   const handleAddToCart = () => {
     if (!isAuthenticated) {
       navigate("/login");
@@ -54,53 +56,57 @@ const ProductCard = ({
       to={`/product/${slug}`}
       className="relative border w-fit overflow-clip grid z-1 rounded-2xl cursor-pointer group transform transition-transform duration-300 hover:scale-105 hover:shadow-md"
     >
-      <div className="max-w-sm bg-white dark:bg-zinc-900 rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 cursor-pointer select-none">
-        <div className="w-80 h-56 sm:h-60 md:h-72 lg:h-80 xl:h-88 rounded-t-3xl overflow-hidden mx-auto">
-          <img
-            src={image.url}
-            alt={name}
-            className="
-        object-cover
-        w-full
-        h-full
-        transition-transform duration-300 ease-in-out
-        hover:scale-105
-      "
-          />
-        </div>
-        <div className="p-4 grid gap-3 lg:hidden">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
-            {name}
-          </h2>
+     <div className="max-w-sm bg-white dark:bg-zinc-900 rounded-3xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300 cursor-pointer select-none">
+  <div className="w-80 h-56 sm:h-60 md:h-72 lg:h-80 xl:h-88 rounded-t-3xl overflow-hidden mx-auto">
+    <img
+      src={image.url}
+      alt={name}
+      className="object-cover w-full h-full transition-transform duration-300 ease-in-out hover:scale-105"
+    />
+  </div>
 
-          <div className="flex items-center space-x-2">
-            <div className="flex text-sm">{starsGenerator(rating)}</div>
-            <span className="text-gray-500 dark:text-gray-400 text-sm">
-              ({rating.toFixed(1)})
-            </span>
-          </div>
+  <div className="p-4 grid gap-3 lg:hidden">
+    <h2 className="text-xl font-semibold text-gray-900 dark:text-white truncate">{name}</h2>
 
-          <div className="flex items-baseline gap-3">
+    <div className="flex items-center space-x-2">
+      <div className="flex text-sm">{starsGenerator(rating)}</div>
+      <span className="text-gray-500 dark:text-gray-400 text-sm">({rating.toFixed(1)})</span>
+    </div>
+
+    {/* Price Section */}
+    {(() => {
+      const now = new Date();
+      const isOfferActive = offerValidTill ? new Date(offerValidTill) >= now && discount > 0 : false;
+      const displayPrice = isOfferActive ? discountedPrice : price;
+
+      return (
+        <div className="flex items-baseline gap-3">
+          {isOfferActive && (
             <span className="text-md text-gray-400 dark:text-gray-500 line-through select-none">
               ₹{price.toFixed(2)}
             </span>
-            <span className="text-3xl font-extrabold text-gray-900 dark:text-yellow-400">
-              ₹{discountedPrice.toFixed(2)}
+          )}
+          <span className="text-3xl font-extrabold text-gray-900 dark:text-yellow-400">
+            ₹{displayPrice.toFixed(2)}
+          </span>
+          {isOfferActive && (
+            <span className="bg-yellow-300 dark:bg-yellow-600 text-yellow-900 dark:text-yellow-100 text-xs font-semibold px-2 py-0.5 rounded-full select-none">
+              {discount}% OFF
             </span>
-            {discount > 0 && (
-              <span className="bg-yellow-300 dark:bg-yellow-600 text-yellow-900 dark:text-yellow-100 text-xs font-semibold px-2 py-0.5 rounded-full select-none">
-                {discount}% OFF
-              </span>
-            )}
-          </div>
-
-          <button className="mt-3 px-6 py-2 bg-yellow-500 dark:bg-yellow-400 text-gray-900 dark:text-gray-900 font-semibold rounded-lg shadow-md hover:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-            onClick={() => handleAddToCart()}>
-
-            Add to Cart
-          </button>
+          )}
         </div>
-      </div>
+      );
+    })()}
+
+    <button
+      className="mt-3 px-6 py-2 bg-yellow-500 dark:bg-yellow-400 text-gray-900 dark:text-gray-900 font-semibold rounded-lg shadow-md hover:bg-yellow-600 dark:hover:bg-yellow-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+      onClick={() => handleAddToCart()}
+    >
+      Add to Cart
+    </button>
+  </div>
+</div>
+
 
 
 
