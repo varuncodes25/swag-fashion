@@ -96,11 +96,23 @@ productSchema.methods.isOfferActive = function () {
 
 // Get discounted price if offer is active
 productSchema.methods.getDiscountedPrice = function () {
-  if (this.isOfferActive() && this.discount > 0) {
-    return this.price * (1 - this.discount / 100);
+  let finalPrice = this.price;
+
+  // Apply discount only if offer is active
+  if (this.isOfferActive && typeof this.isOfferActive === 'function' && this.discount > 0) {
+    finalPrice = this.price * (1 - this.discount / 100);
   }
-  return this.price;
+
+  // Round to nearest integer (0.5 or more rounds up)
+  return Math.round(finalPrice);
 };
+
+
+
+
+
+
+
 const Product = mongoose.model("Product", productSchema);
 
 module.exports = Product;

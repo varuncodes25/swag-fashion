@@ -118,104 +118,111 @@ const Product = () => {
   };
 
   const handleBuyNow = async () => {
-  if (!isAuthenticated) {
-    navigate("/login");
-    return;
-  }
-
-  if (productQuantity > product.stock) {
-    toast({ title: "Product out of stock" });
-    return;
-  }
-
-  if (product.blacklisted) {
-    toast({ title: "Product isn't available for purchase" });
-    return;
-  }
-
-  if (productColor === "") {
-    toast({ title: "Please select a color" });
-    return;
-  }
-
-  if (!address.trim()) {
-    toast({ title: "Please enter your address" });
-    return;
-  }
-
-  if (!paymentMethod) {
-    toast({ title: "Please select a payment method" });
-    return;
-  }
-
-  // Total price in rupees
-  console.log(product.discountedPrice,"fhgfhgfhgfhghgv")
-   console.log(product,"fhgfhgfhgfhghgv")
-  const totalAmount = product.discountedPrice * productQuantity;
-  console.log(totalAmount,"tottttttt")
-  if (paymentMethod === "razorpay") {
-    try {
-      // Razorpay ke liye paise me convert
-      const amountInPaise = totalAmount * 100;
-
-      // Backend se order generate
-      const order = await generatePayment(amountInPaise);
-      console.log("Order details:", order);
-
-      await verifyPayment(
-        {
-          ...order,
-          amount: order.amount || amountInPaise, // Razorpay expects paise
-        },
-        [{ id: product._id, quantity: productQuantity, color: productColor }],
-        address,
-        navigate
-      );
-    } catch (error) {
-      console.error("Razorpay payment failed:", error);
-      toast({ title: "Payment failed. Please try again." });
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
     }
-  } 
-  
-  else if (paymentMethod === "cod") {
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/cod-order`,
-        {
-          amount: totalAmount, // COD me paise me nahi, rupees me hi store karo
-          address,
-          products: [
-            {
-              id: product._id,
-              quantity: productQuantity,
-              color: productColor,
-              size: productSize,
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (res.data.success) {
-        toast({ title: "Order placed with Cash on Delivery!" });
-      } else {
-        toast({ title: res.data.message || "Failed to place COD order." });
+    const requiredFields = [
+      "name",
+      "email",
+      "phone",
+      "street",
+      "city",
+      "state",
+      "zip",
+    ];
+    for (const field of requiredFields) {
+      if (!address[field] || address[field].trim() === "") {
+        return alert(`Please enter ${field}`);
       }
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Something went wrong. Please try again." });
     }
-  }
+    if (productQuantity > product.stock) {
+      toast({ title: "Product out of stock" });
+      return;
+    }
 
-  // Reset states
-  setPurchaseProduct(false);
-  setPaymentMethod("");
-};
+    if (product.blacklisted) {
+      toast({ title: "Product isn't available for purchase" });
+      return;
+    }
 
+    if (productColor === "") {
+      toast({ title: "Please select a color" });
+      return;
+    }
+
+    
+
+    if (!paymentMethod) {
+      toast({ title: "Please select a payment method" });
+      return;
+    }
+
+    // Total price in rupees
+    console.log(product.discountedPrice, "fhgfhgfhgfhghgv");
+    console.log(product, "fhgfhgfhgfhghgv");
+    const totalAmount = product.discountedPrice * productQuantity;
+    console.log(totalAmount, "tottttttt");
+    if (paymentMethod === "razorpay") {
+      try {
+        // Razorpay ke liye paise me convert
+        const amountInPaise = totalAmount * 100;
+
+        // Backend se order generate
+        const order = await generatePayment(amountInPaise);
+        console.log("Order details:", order);
+
+        await verifyPayment(
+          {
+            ...order,
+            amount: order.amount || amountInPaise, // Razorpay expects paise
+          },
+          [{ id: product._id, quantity: productQuantity, color: productColor }],
+          address,
+          navigate
+        );
+      } catch (error) {
+        console.error("Razorpay payment failed:", error);
+        toast({ title: "Payment failed. Please try again." });
+      }
+    } else if (paymentMethod === "cod") {
+      try {
+        const res = await axios.post(
+          `${import.meta.env.VITE_API_URL}/cod-order`,
+          {
+            amount: totalAmount, // COD me paise me nahi, rupees me hi store karo
+            address,
+            products: [
+              {
+                id: product._id,
+                quantity: productQuantity,
+                color: productColor,
+                size: productSize,
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (res.data.success) {
+          toast({ title: "Order placed with Cash on Delivery!" });
+        } else {
+          toast({ title: res.data.message || "Failed to place COD order." });
+        }
+      } catch (err) {
+        console.error(err);
+        toast({ title: "Something went wrong. Please try again." });
+      }
+    }
+
+    // Reset states
+    setPurchaseProduct(false);
+    setPaymentMethod("");
+  };
 
   return (
     <>
@@ -348,11 +355,61 @@ const Product = () => {
               </div>
 
               {purchaseProduct && (
-                <div className="my-2 space-y-2">
-                  <Input
-                    placeholder="Enter Your Address Here..."
-                    onChange={(e) => setAddress(e.target.value)}
-                  />
+                <div className="my-2 space-y-4">
+                  {/* Address Fields */}
+                  <div className="grid gap-2">
+                    <Input
+                      placeholder="Name"
+                      value={address.name || ""}
+                      onChange={(e) =>
+                        setAddress({ ...address, name: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Email"
+                      value={address.email || ""}
+                      onChange={(e) =>
+                        setAddress({ ...address, email: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Phone"
+                      value={address.phone || ""}
+                      onChange={(e) =>
+                        setAddress({ ...address, phone: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="Street"
+                      value={address.street || ""}
+                      onChange={(e) =>
+                        setAddress({ ...address, street: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="City"
+                      value={address.city || ""}
+                      onChange={(e) =>
+                        setAddress({ ...address, city: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="State"
+                      value={address.state || ""}
+                      onChange={(e) =>
+                        setAddress({ ...address, state: e.target.value })
+                      }
+                    />
+                    <Input
+                      placeholder="ZIP Code"
+                      value={address.zip || ""}
+                      onChange={(e) =>
+                        setAddress({ ...address, zip: e.target.value })
+                      }
+                    />
+                  </div>
+
+                  {/* Payment Method */}
                   <div className="flex gap-3">
                     <Button
                       variant={
@@ -369,6 +426,8 @@ const Product = () => {
                       Cash on Delivery
                     </Button>
                   </div>
+
+                  {/* Confirm Order Button */}
                   <Button onClick={handleBuyNow}>Confirm Order</Button>
                 </div>
               )}

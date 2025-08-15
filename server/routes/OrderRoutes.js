@@ -5,6 +5,7 @@ const {
   getMetrics,
   updateOrderStatus,
   createCODOrder,
+  trackShipment,
 } = require("../controllers/OrderController");
 const verifyToken = require("../middlewares/verifyToken");
 
@@ -17,5 +18,7 @@ router.get("/get-metrics", verifyToken, getMetrics);
 router.put("/update-order-status/:paymentId", verifyToken, updateOrderStatus);
 
 router.post("/cod-order", verifyToken, createCODOrder);
+
+router.get("/track/:id", trackShipment);
 
 module.exports = router;

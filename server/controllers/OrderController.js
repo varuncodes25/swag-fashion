@@ -2,7 +2,11 @@ const { ROLES } = require("../utils/constants");
 const Order = require("../models/Order");
 const User = require("../models/User");
 const Product = require("../models/Product");
+// controllers/orderController.js
+const getShiprocketToken = require("../utils/shiprocket");
+const { createShipment } = require("./shiprocketController"); // Import your Shiprocket logic
 
+const axios = require("axios");
 const getOrdersByUserId = async (req, res) => {
   const userId = req.id;
 
@@ -108,7 +112,6 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-
 const getMetrics = async (req, res) => {
   if (req.role !== ROLES.admin) {
     return res.status(403).json({
@@ -120,7 +123,9 @@ const getMetrics = async (req, res) => {
   const { startDate, endDate } = req.query;
 
   try {
-    const start = new Date(startDate || new Date().setMonth(new Date().getMonth() - 1));
+    const start = new Date(
+      startDate || new Date().setMonth(new Date().getMonth() - 1)
+    );
     const end = new Date(endDate || new Date());
 
     // Orders in selected date range
@@ -128,7 +133,10 @@ const getMetrics = async (req, res) => {
       createdAt: { $gte: start, $lte: end },
     });
 
-    const totalSales = ordersInRange.reduce((acc, order) => acc + (order.amount || 0), 0);
+    const totalSales = ordersInRange.reduce(
+      (acc, order) => acc + (order.amount || 0),
+      0
+    );
 
     // This month & last month orders
     const thisMonthOrders = ordersInRange;
@@ -138,8 +146,14 @@ const getMetrics = async (req, res) => {
       createdAt: { $gte: lastMonth, $lte: start },
     });
 
-    const totalThisMonth = thisMonthOrders.reduce((acc, order) => acc + (order.amount || 0), 0);
-    const totalLastMonth = lastMonthOrders.reduce((acc, order) => acc + (order.amount || 0), 0);
+    const totalThisMonth = thisMonthOrders.reduce(
+      (acc, order) => acc + (order.amount || 0),
+      0
+    );
+    const totalLastMonth = lastMonthOrders.reduce(
+      (acc, order) => acc + (order.amount || 0),
+      0
+    );
 
     const salesGrowth = totalLastMonth
       ? ((totalThisMonth - totalLastMonth) / totalLastMonth) * 100
@@ -154,7 +168,9 @@ const getMetrics = async (req, res) => {
     });
 
     const usersGrowth = lastMonthUsers.length
-      ? ((thisMonthUsers.length - lastMonthUsers.length) / lastMonthUsers.length) * 100
+      ? ((thisMonthUsers.length - lastMonthUsers.length) /
+          lastMonthUsers.length) *
+        100
       : 0;
 
     // Active now (last hour) vs previous day
@@ -181,7 +197,9 @@ const getMetrics = async (req, res) => {
       .limit(9);
 
     // Products delivered in last 6 months grouped by category/month
-    const sixMonthsAgo = new Date(new Date().setMonth(new Date().getMonth() - 6));
+    const sixMonthsAgo = new Date(
+      new Date().setMonth(new Date().getMonth() - 6)
+    );
 
     const sixMonthsOrders = await Order.find({
       createdAt: { $gte: sixMonthsAgo },
@@ -227,16 +245,17 @@ const getMetrics = async (req, res) => {
   }
 };
 
-
-
 const createCODOrder = async (req, res) => {
   const userId = req.id;
   console.log("Creating COD Order for User ID:", req.body.products);
+
   try {
     const { amount, address, products } = req.body;
 
     if (!amount || !address || !products || products.length === 0) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
     // ✅ Update product stock and user's purchasedProducts
@@ -262,25 +281,100 @@ const createCODOrder = async (req, res) => {
       userId,
     });
 
+    // ✅ Immediately create shipment in Shiprocket
+    try {
+      await createShipment(order._id);
+      console.log("Shipment created in Shiprocket for order:", order._id);
+    } catch (shipErr) {
+      console.error("Shiprocket shipment error:", shipErr.message);
+    }
+
     return res.status(201).json({
       success: true,
-      message: "COD order placed successfully",
+      message: "COD order placed successfully and shipment created",
       data: order,
     });
-
   } catch (error) {
     console.error("COD Order Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
+// Cancel COD orders within 24 hours
+const cancelOrder = async (req, res) => {
+  const { orderId, reason } = req.body;
+  const order = await Order.findById(orderId);
 
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  if (order.paymentMode !== "COD")
+    return res.status(400).json({ message: "Only COD can cancel" });
+  if (!["pending", "packed"].includes(order.status))
+    return res.status(400).json({ message: "Cannot cancel now" });
+
+  const hoursDiff = (new Date() - order.createdAt) / 36e5;
+  if (hoursDiff > 24)
+    return res.status(400).json({ message: "Cancel allowed within 24h only" });
+
+  order.isCancelled = true;
+  order.cancelReason = reason;
+  order.cancelledAt = new Date();
+  order.status = "cancelled";
+  await order.save();
+
+  res.json({ success: true, message: "Order cancelled", order });
+};
+
+// Exchange Paid Delivered Orders
+const exchangeOrder = async (req, res) => {
+  const { orderId, reason } = req.body;
+  const order = await Order.findById(orderId);
+
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  if (!order.isPaid)
+    return res
+      .status(400)
+      .json({ message: "Only paid orders can be exchanged" });
+  if (order.status !== "delivered")
+    return res
+      .status(400)
+      .json({ message: "Only delivered orders can be exchanged" });
+
+  order.isExchanged = true;
+  order.exchangeReason = reason;
+  order.exchangedAt = new Date();
+  order.status = "exchanged";
+  await order.save();
+
+  res.json({ success: true, message: "Order exchanged", order });
+};
+
+const trackShipment = async (req, res) => {
+  const order = await Order.findById(req.params.id);
+  if (!order || !order.shiprocketId)
+    return res
+      .status(404)
+      .json({ success: false, message: "Order not found or not shipped" });
+
+  const token = await getShiprocketToken();
+
+  const resShip = await axios.get(
+    `https://apiv2.shiprocket.in/v1/external/courier/track/shipment/${order.shiprocketId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  return res.json({
+    success: true,
+    tracking: resShip.data.data[0].tracking_data,
+  });
+};
 
 module.exports = {
   getOrdersByUserId,
   getAllOrders,
   updateOrderStatus,
   getMetrics,
-  createCODOrder
-
+  createCODOrder,
+  cancelOrder,
+  exchangeOrder,
+  trackShipment,
 };

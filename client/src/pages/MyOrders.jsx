@@ -28,8 +28,9 @@ const MyOrders = () => {
 
     getMyOrders();
   }, []);
-
+console.log("First Order ID:", orders);
   const handleCancelOrder = async (orderId) => {
+    console.log("Canceling order:", orderId);
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
 
     try {
