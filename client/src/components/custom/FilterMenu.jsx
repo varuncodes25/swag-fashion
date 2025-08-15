@@ -11,71 +11,47 @@ import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setProducts } from "@/redux/slices/productSlice";
 
-// Category dropdown data
 const categoryData = {
   trigger: "Category",
-  items: [
-    { label: "All Categories", value: "all" },
-    { label: "Men", value: "Men" },
-    { label: "Women", value: "Women" },
-    { label: "Kid", value: "Kid" },
-    { label: "Men & Women", value: "Men & Women" },
-  ],
+  items: ["Men", "Women", "Kid","Men & Women"],
 };
 
-// Price dropdown data
 const priceData = {
   trigger: "Price",
-  items: [
-    { label: "Less than 199", value: 199 },
-    { label: "Less than 249", value: 249 },
-    { label: "Less than 349", value: 349 },
-    { label: "Less than 499", value: 499 },
-  ],
+  items: [199, 249, 349, 499],
 };
 
 const FilterMenu = () => {
-  const [category, setCategory] = useState("all"); // Default to "all"
+  const [category, setCategory] = useState("");
   const [price, setPrice] = useState("");
   const [search, setSearch] = useState("");
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const getFilterProducts = async () => {
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/get-products`,
-          {
-            params: {
-              category,
-              price,
-              search,
-            },
-          }
-        );
+  const getFilterProducts = async () => {
+    const res = await axios.get(
+      import.meta.env.VITE_API_URL +
+        `/get-products?category=${category}&price=${price}&search=${search}`
+    );
+    const data = res.data.data;
 
-        const data = res.data.data || [];
+    // ✅ Filter unique products by name
+    const uniqueByName = [];
+    const nameSet = new Set();
 
-        // ✅ Filter unique products by name
-        const uniqueByName = [];
-        const nameSet = new Set();
-
-        for (const product of data) {
-          if (!nameSet.has(product.name)) {
-            nameSet.add(product.name);
-            uniqueByName.push(product);
-          }
-        }
-
-        dispatch(setProducts(uniqueByName));
-      } catch (error) {
-        console.error("Error fetching products:", error);
+    for (const product of data) {
+      if (!nameSet.has(product.name)) {
+        nameSet.add(product.name);
+        uniqueByName.push(product);
       }
-    };
+    }
 
-    getFilterProducts();
-  }, [category, price, search, dispatch]);
+    dispatch(setProducts(uniqueByName));
+  };
+
+  getFilterProducts();
+}, [category, price, search]);
 
   return (
     <div className="w-[93vw] flex flex-col sm:flex-row justify-between items-center mx-auto my-10 gap-3 sm:gap-0">
@@ -88,8 +64,8 @@ const FilterMenu = () => {
           </SelectTrigger>
           <SelectContent position="popper">
             {categoryData.items.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
+              <SelectItem key={item} value={item} className="capitalize">
+                {item}
               </SelectItem>
             ))}
           </SelectContent>
@@ -102,8 +78,8 @@ const FilterMenu = () => {
           </SelectTrigger>
           <SelectContent position="popper">
             {priceData.items.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
+              <SelectItem key={item} value={item} className="capitalize">
+                Less than {item}
               </SelectItem>
             ))}
           </SelectContent>

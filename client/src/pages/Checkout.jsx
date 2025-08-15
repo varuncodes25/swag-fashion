@@ -15,7 +15,7 @@ import axios from "axios";
 
 const Checkout = () => {
   const [address, setAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cod");
+  const [paymentMethod, setPaymentMethod] = useState("cod"); // Default payment method
   const { cartItems, totalPrice } = useSelector((state) => state.cart);
   const { user } = useSelector((state) => state.auth);
 
@@ -40,24 +40,25 @@ const Checkout = () => {
       });
     }
 
-    // ✅ Ensure color always has a value
     const productArray = cartItems.map((item) => ({
       id: item._id,
       quantity: item.quantity,
-      color: item.color || "default",
+      color: item.color,
       size: item.size || null,
     }));
 
     try {
       if (paymentMethod === "razorpay") {
         const order = await generatePayment(totalPrice);
+
         await verifyPayment(order, productArray, address, navigate);
 
         dispatch(emptyCart());
         toast({ title: "Payment successful and order placed!" });
-      } else if (paymentMethod === "cod") {
+      }
+      else if (paymentMethod === "cod") {
         const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/cod-order`, // ✅ Ensure matches backend
+          `${import.meta.env.VITE_API_URL}/cod-order`,
           {
             amount: totalPrice,
             address,
@@ -72,7 +73,7 @@ const Checkout = () => {
 
         if (res.data.success) {
           dispatch(emptyCart());
-          toast({ title: res.data.message || "Order placed with Cash on Delivery!" });
+          toast({ title: "Order placed with Cash on Delivery!" });
           navigate("/orders");
         } else {
           toast({ title: res.data.message || "Failed to place COD order." });
@@ -86,6 +87,7 @@ const Checkout = () => {
   return (
     <div className="mx-auto w-[90vw] sm:w-[60vw] flex justify-between items-center sm:my-20">
       <div className="flex flex-col sm:flex-row gap-5 mx-auto my-10">
+
         {/* Product Details */}
         <div className="space-y-8">
           <div className="p-4 space-y-4">
@@ -150,16 +152,16 @@ const Checkout = () => {
                   <button
                     key={method}
                     onClick={() => setPaymentMethod(method)}
-                    className={`flex-1 px-4 py-2 font-medium transition-colors duration-200 ${
-                      paymentMethod === method
+                    className={`flex-1 px-4 py-2 font-medium transition-colors duration-200 ${paymentMethod === method
                         ? "bg-yellow-500 text-white"
                         : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     {method === "cod" ? "Cash on Delivery" : "Razorpay"}
                   </button>
                 ))}
               </div>
+
             </div>
 
             <Button onClick={handleCheckout} className="w-full">
