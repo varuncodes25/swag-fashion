@@ -240,7 +240,7 @@ const Product = () => {
                   src={url}
                   key={id}
                   onClick={() => setSelectedImage(index)}
-                  className="rounded-xl filter hover:brightness-50 cursor-pointer transition-all ease-in-out duration-300 border dark:border-none"
+                  className="rounded-xl filter hover:brightness-50 cursor-pointer transition-all ease-in-out duration-300 border dark:border-none "
                 />
               ))}
             </div>

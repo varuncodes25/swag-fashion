@@ -67,15 +67,38 @@ const OrderData = ({
   };
 
   const handleDownloadInvoice = async () => {
-    try {
-      const pdfDoc = await PDFDocument.create();
-      const page = pdfDoc.addPage([600, 900]);
-      const { width, height } = page.getSize();
+  try {
+    const pdfDoc = await PDFDocument.create();
+    let page = pdfDoc.addPage([600, 900]);
+    let { width, height } = page.getSize();
 
-      // Embed standard font Helvetica
-      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-      // HEADER BACKGROUND (grey)
+    // Helper function to draw multiline text
+    const drawMultilineText = (page, text, x, y, size = 10) => {
+      const lines = text.split("\n");
+      lines.forEach((line, i) => {
+        page.drawText(line, {
+          x,
+          y: y - i * 14,
+          size,
+          font: helveticaFont,
+          color: rgb(0, 0, 0),
+        });
+      });
+      return lines.length * 14;
+    };
+
+    // Function to add new page and reset y
+    const addNewPage = () => {
+      page = pdfDoc.addPage([600, 900]);
+      const { height: newHeight } = page.getSize();
+      height = newHeight;
+      return height - 40; // reset y
+    };
+
+    // Draw header
+    const drawHeader = () => {
       page.drawRectangle({
         x: 0,
         y: height - 60,
@@ -84,117 +107,73 @@ const OrderData = ({
         color: rgb(0.9, 0.9, 0.9),
       });
 
-      // RIGHT: Invoice title
       const title = "Tax Invoice/Bill of Supply/Cash Memo";
-      const fontSizeTitle = 14;
-      const textWidthTitle = helveticaFont.widthOfTextAtSize(
-        title,
-        fontSizeTitle
-      );
+      const textWidthTitle = helveticaFont.widthOfTextAtSize(title, 14);
       page.drawText(title, {
-        x: width - textWidthTitle - 20, // 20px padding from right edge
+        x: width - textWidthTitle - 20,
         y: height - 45,
-        size: fontSizeTitle,
+        size: 14,
         font: helveticaFont,
         color: rgb(0, 0, 0),
       });
 
-      // LEFT: Company name "SWAG FASHION"
-      const companyName = "SWAG FASHION";
-      const fontSizeCompany = 14;
-      page.drawText(companyName, {
-        x: 20, // Changed from right side to left side at 20 px
+      page.drawText("SWAG FASHION", {
+        x: 20,
         y: height - 45,
-        size: fontSizeCompany,
+        size: 14,
         font: helveticaFont,
         color: rgb(0.6, 0, 0.6),
       });
-      // COMPANY DETAILS BLOCK
-      const companyText = [
-        `Sold By :`,
-        companyInfo.name,
-        ...companyInfo.addressLines,
-        `PAN No: ${panNumber}`,
-        `GST Registration No: ${gstNumber}`,
-      ].join("\n");
+    };
 
-      // Use delivery address for both billing and shipping
-      const billingText = [`Billing Address :`, address || "N/A"].join("\n");
+    drawHeader();
 
-      const shippingText = [`Shipping Address :`, address || "N/A"].join("\n");
+    let y = height - 90;
 
-      // Helper function to draw multiline text
-      const drawMultilineText = (page, text, x, y, size = 10) => {
-        const lines = text.split("\n");
-        lines.forEach((line, i) => {
-          page.drawText(line, {
-            x,
-            y: y - i * 14,
-            size,
-            font: helveticaFont,
-            color: rgb(0, 0, 0),
-          });
-        });
-        return lines.length * 14;
-      };
+    // Company, billing, shipping
+    const companyText = [
+      `Sold By :`,
+      companyInfo.name,
+      ...companyInfo.addressLines,
+      `PAN No: ${panNumber}`,
+      `GST Registration No: ${gstNumber}`,
+    ].join("\n");
 
-      let y = height - 90;
-      const companyHeight = drawMultilineText(page, companyText, 20, y, 8);
-      const billingHeight = drawMultilineText(page, billingText, 320, y, 8);
-      const shippingHeight = drawMultilineText(
-        page,
-        shippingText,
-        320,
-        y - billingHeight - 20,
-        8
-      );
+    const billingText = [`Billing Address :`, address || "N/A"].join("\n");
+    const shippingText = [`Shipping Address :`, address || "N/A"].join("\n");
 
-      y -= Math.max(companyHeight, billingHeight + shippingHeight + 20) + 20;
+    const companyHeight = drawMultilineText(page, companyText, 20, y, 8);
+    const billingHeight = drawMultilineText(page, billingText, 320, y, 8);
+    const shippingHeight = drawMultilineText(
+      page,
+      shippingText,
+      320,
+      y - billingHeight - 20,
+      8
+    );
 
-      // ORDER INFO
-      page.drawText(`Order Number: ${orderNumber}`, {
-        x: 20,
-        y,
-        size: 9,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-      });
-      page.drawText(`Invoice Number: ${invoiceNumber}`, {
-        x: 320,
-        y,
-        size: 9,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-      });
-      y -= 15;
-      page.drawText(`Order Date: ${new Date(createdAt).toLocaleDateString()}`, {
-        x: 20,
-        y,
-        size: 9,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-      });
-      page.drawText(
+    y -= Math.max(companyHeight, billingHeight + shippingHeight + 20) + 20;
+
+    // Order info
+    const orderInfo = [
+      [`Order Number: ${orderNumber}`, `Invoice Number: ${invoiceNumber}`],
+      [
+        `Order Date: ${new Date(createdAt).toLocaleDateString()}`,
         `Invoice Date: ${new Date(updatedAt).toLocaleDateString()}`,
-        {
-          x: 320,
-          y,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        }
-      );
-      y -= 25;
+      ],
+    ];
 
-      // TABLE HEADER
-      page.drawRectangle({
-        x: 20,
-        y: y,
-        width: 560,
-        height: 20,
-        color: rgb(0.9, 0.9, 0.9),
-      });
+    orderInfo.forEach((row) => {
+      page.drawText(row[0], { x: 20, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
+      page.drawText(row[1], { x: 320, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
+      y -= 15;
+    });
 
+    y -= 10;
+
+    // Table header
+    const drawTableHeader = () => {
+      page.drawRectangle({ x: 20, y, width: 560, height: 20, color: rgb(0.9, 0.9, 0.9) });
       const columns = [
         { label: "Sl. No.", x: 25 },
         { label: "Description", x: 60 },
@@ -203,112 +182,63 @@ const OrderData = ({
         { label: "Qty", x: 450 },
         { label: "Net Amount", x: 485 },
       ];
-
       columns.forEach((col) => {
-        page.drawText(col.label, {
-          x: col.x,
-          y: y + 5,
-          size: 10,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        });
+        page.drawText(col.label, { x: col.x, y: y + 5, size: 10, font: helveticaFont, color: rgb(0, 0, 0) });
       });
-
       y -= 20;
+    };
 
-      // TABLE ROWS
-      products.forEach((product, index) => {
-        if (y < 100) {
-          // Add new page and reset y
-          page = pdfDoc.addPage([600, 900]);
-          y = height - 40;
-        }
-        page.drawText((index + 1).toString(), {
-          x: 25,
-          y,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        });
-        page.drawText(product?.id?.name || "Unknown", {
-          x: 60,
-          y,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        });
-        page.drawText(`Rs.${(product?.id?.price ?? 0).toFixed(2)}`, {
-          x: 310,
-          y,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        });
-        page.drawText("0.00", {
-          x: 395,
-          y,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        }); // Discount placeholder
-        page.drawText(`${product?.quantity ?? 0}`, {
-          x: 455,
-          y,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        });
-        const netAmt = (product?.quantity ?? 0) * (product?.id?.price ?? 0);
-        page.drawText(`Rs.${netAmt.toFixed(2)}`, {
-          x: 485,
-          y,
-          size: 9,
-          font: helveticaFont,
-          color: rgb(0, 0, 0),
-        });
+    drawTableHeader();
 
-        y -= 15;
+    // Table rows
+    for (let i = 0; i < products.length; i++) {
+      const product = products[i];
+      if (y < 100) {
+        y = addNewPage();
+        drawHeader();
+        drawTableHeader();
+      }
+      const netAmt = (product?.quantity ?? 0) * (product?.id?.price ?? 0);
+      const rowData = [
+        (i + 1).toString(),
+        product?.id?.name || "Unknown",
+        `Rs.${(product?.id?.price ?? 0).toFixed(2)}`,
+        "0.00",
+        `${product?.quantity ?? 0}`,
+        `Rs.${netAmt.toFixed(2)}`,
+      ];
+      const xPositions = [25, 60, 310, 395, 455, 485];
+      rowData.forEach((text, idx) => {
+        page.drawText(text, { x: xPositions[idx], y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
       });
-
-      // TOTAL AMOUNT
-      page.drawText(`TOTAL: Rs.${amount.toFixed(2)}`, {
-        x: 20,
-        y: y - 10,
-        size: 11,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-      });
-
-      y -= 40;
-
-      // FOOTER
-      page.drawText("Thank you for your order!", {
-        x: 230,
-        y: 30,
-        size: 12,
-        font: helveticaFont,
-        color: rgb(0, 0, 0),
-      });
-
-      // SAVE & DOWNLOAD
-      const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes], { type: "application/pdf" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "invoice.pdf";
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      }, 100);
-
-      console.log("Invoice downloaded successfully");
-    } catch (error) {
-      console.error("Error generating PDF invoice:", error);
-      alert(`Error generating invoice: ${error?.message || error}`);
+      y -= 15;
     }
-  };
+
+    // Total amount
+    page.drawText(`TOTAL: Rs.${amount.toFixed(2)}`, { x: 20, y: y - 10, size: 11, font: helveticaFont, color: rgb(0, 0, 0) });
+
+    // Footer
+    page.drawText("Thank you for your order!", { x: 230, y: 30, size: 12, font: helveticaFont, color: rgb(0, 0, 0) });
+
+    // Save & download
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "invoice.pdf";
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    }, 100);
+
+    console.log("Invoice downloaded successfully");
+  } catch (error) {
+    console.error("Error generating PDF invoice:", error);
+    alert(`Error generating invoice: ${error?.message || error}`);
+  }
+};
 
   return (
     <div>

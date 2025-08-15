@@ -1,3 +1,4 @@
+import React from "react";
 import { starsGenerator } from "@/constants/helper";
 import { toast } from "@/hooks/use-toast";
 import { addToCart } from "@/redux/slices/cartSlice";
@@ -15,15 +16,16 @@ const ProductCard = ({
   },
   discountedPrice = price,
   discount = 0,
-  offerValidTill
+  offerValidTill,
 }) => {
   const slug = name.split(" ").join("-");
   const { isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-     const now = new Date();
-      const isOfferActive = offerValidTill ? new Date(offerValidTill) >= now && discount > 0 : false;
-      const displayPrice = isOfferActive ? discountedPrice : price;
+  const now = new Date();
+  const isOfferActive = offerValidTill ? new Date(offerValidTill) >= now && discount > 0 : false;
+  const displayPrice = isOfferActive ? discountedPrice : price;
+
   const handleAddToCart = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
@@ -43,74 +45,73 @@ const ProductCard = ({
   };
 
   return (
-    <Link
-      to={`/product/${slug}`}
-      className="border rounded-2xl overflow-hidden shadow-md transform 
-                 transition-transform duration-300 hover:scale-[1.02] bg-white dark:bg-zinc-900"
-    >
-      {/* Product Image */}
-      <div className="w-full h-58 overflow-hidden">
-        <img
-          src={image.url}
-          alt={name}
-          className="object-cover w-full h-full"
-        />
-      </div>
+    <div className="relative group border rounded-2xl overflow-hidden shadow-md transform transition-transform duration-300 hover:scale-[1.02] bg-white dark:bg-zinc-900">
+  <Link to={`/product/${slug}`}>
+    {/* Product Image: fixed height for all screen sizes */}
+    <div className="w-full h-56 lg:h-80 overflow-hidden">
+      <img src={image.url} alt={name} className="object-cover w-full h-full" />
+    </div>
 
-      {/* Product Info */}
-      <div className="p-3 ">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-          {name}
-        </h3>
-        <div className="flex items-center mt-1">
-          <div className="flex text-xs">{starsGenerator(rating)}</div>
-          <span className="text-xs text-gray-500 ml-1">
-            ({rating.toFixed(1)})
-          </span>
-        </div>
-        <div className="mt-2 flex items-baseline gap-1">
-          {isOfferActive && discount > 0 && (
-            <span className="text-xs text-gray-400 line-through">
-              ₹{price.toFixed(2)}
-            </span>
-          )}
-          <span className="text-lg font-bold text-gray-900 dark:text-yellow-400">
-            ₹{(discountedPrice || price).toFixed(2)}
-          </span>
-        </div>
-        {isOfferActive  && (
-          <span className="inline-block mt-1 bg-yellow-300 text-yellow-900 text-xs px-1.5 py-0.5 rounded-full">
-            {discount}% OFF
-          </span>
+    {/* Product Info for small screens */}
+    <div className="p-3 lg:hidden">
+      <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">{name}</h3>
+      <div className="flex items-center mt-1">
+        <div className="flex text-xs">{starsGenerator(rating)}</div>
+        <span className="text-xs text-gray-500 ml-1">({rating.toFixed(1)})</span>
+      </div>
+      <div className="mt-2 flex items-baseline gap-1">
+        {isOfferActive && discount > 0 && (
+          <span className="text-xs text-gray-400 line-through">₹{price.toFixed(2)}</span>
         )}
-        <button
-          className="mt-2 w-full py-1.5 bg-yellow-500 text-gray-900 text-sm font-medium rounded-md hover:bg-yellow-600 transition-colors"
-          onClick={handleAddToCart}
-        >
-          Add to Cart
-        </button>
+        <span className="text-lg font-bold text-gray-900 dark:text-yellow-400">
+          ₹{(discountedPrice || price).toFixed(2)}
+        </span>
       </div>
-       <div
-        className="
-    px-3 grid gap-1 py-2 absolute bg-white dark:bg-zinc-900 w-full bottom-0 
-    opacity-0 translate-y-[3rem]         
-    lg:opacity-0 lg:translate-y-[3rem]    
-    lg:group-hover:opacity-100 lg:group-hover:translate-y-0  /* show only on lg hover */
-    transform transition-all ease-in-out duration-300 
-    rounded-xl pointer-events-none lg:pointer-events-auto
-  "
+      {isOfferActive && (
+        <span className="inline-block mt-1 bg-yellow-300 text-yellow-900 text-xs px-1.5 py-0.5 rounded-full">
+          {discount}% OFF
+        </span>
+      )}
+      <button
+        className="mt-2 w-full py-1.5 bg-yellow-500 text-gray-900 text-sm font-medium rounded-md hover:bg-yellow-600 transition-colors"
+        onClick={handleAddToCart}
       >
+        Add to Cart
+      </button>
+    </div>
 
-        <h2 className="text-lg font-semibold">{name}</h2>
+    {/* Hover info for large screens only */}
+     <div
+      className="
+        px-3 gap-1 py-2 absolute bg-white dark:bg-zinc-900 w-full bottom-0 
+        opacity-0 translate-y-[3rem]
+        lg:opacity-0 lg:translate-y-[3rem]
+        lg:group-hover:opacity-100 lg:group-hover:translate-y-0
+        transform transition-all ease-in-out duration-300
+        rounded-xl pointer-events-none lg:pointer-events-auto
+        hidden lg:grid
+        max-h-screen overflow-hidden
+      "
+      style={{ maxHeight: "120px" }}  // optional inline style for max height
+    >
+      <h2 className="text-lg font-semibold">{name}</h2>
 
-        <div className="flex justify-between items-center">
-          <div className="flex">{starsGenerator(rating)}</div>
-          <span className="text-sm font-medium">₹{price}</span>
-        </div>
-
-        <div className="text-sm text-primary underline mt-1">View Product</div>
+      <div className="flex justify-between items-center">
+        <div className="flex">{starsGenerator(rating)}</div>
+        <span className="text-sm font-medium">₹{displayPrice.toFixed(2)}</span>
       </div>
-    </Link>
+
+      {isOfferActive && (
+        <span className=" lg:w-16 inline-block mt-1 bg-yellow-300 text-yellow-900 text-xs px-1.5 py-0.5 rounded-full">
+          {discount}% OFF
+        </span>
+      )}
+
+      <div className="text-sm text-primary underline mt-1">View Product</div>
+    </div>
+  </Link>
+</div>
+
   );
 };
 

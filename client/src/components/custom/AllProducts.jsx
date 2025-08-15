@@ -17,7 +17,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogDescription
+  DialogDescription,
 } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
 import axios from "axios";
@@ -29,15 +29,17 @@ import { ToastAction } from "../ui/toast";
 import Pagination from "../Pagination";
 
 const AllProducts = () => {
+  const [currentColor, setCurrentColor] = useState("#000000");
+  const [colors, setColors] = useState([]);
   const { products } = useSelector((state) => state.product);
   const dispatch = useDispatch();
   const { toast } = useToast();
   const { handleErrorLogout } = useErrorLogout();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); // ✅ From API
+  const [totalPages, setTotalPages] = useState(1);
   const [category, setCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [price, setPrice] = useState(""); // price filter state as string
+  const [price, setPrice] = useState("");
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -45,42 +47,33 @@ const AllProducts = () => {
   const [deleteProductId, setDeleteProductId] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-
-
+  const addColor = () => {
+    if (!colors.includes(currentColor)) {
+      setColors([...colors, currentColor]);
+    }
+  };
+  const removeColor = (color) => {
+    setColors(colors.filter((c) => c !== color));
+  };
 
   const getFilterProducts = async (page = 1) => {
     try {
-      console.log("Fetching products with filters:", {
-        category,
-        searchTerm,
-        price,
-        page,
-      });
-
       let queryParams = [];
-
-      if (category && category !== "all")
-        queryParams.push(`category=${category}`);
-      if (searchTerm)
-        queryParams.push(`search=${encodeURIComponent(searchTerm)}`);
+      if (category && category !== "all") queryParams.push(`category=${category}`);
+      if (searchTerm) queryParams.push(`search=${encodeURIComponent(searchTerm)}`);
       if (price && !isNaN(price)) queryParams.push(`price=${price}`);
 
       queryParams.push(`page=${page}`);
       queryParams.push(`limit=9`);
 
-      const queryString =
-        queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
+      const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
 
-      const res = await axios.get(
-        import.meta.env.VITE_API_URL + `/get-products${queryString}`
-      );
-
-      console.log("API response:", res.data);
+      const res = await axios.get(import.meta.env.VITE_API_URL + `/get-products-admin${queryString}`);
 
       if (res.data.success) {
+        console.log(res.data.data)
         dispatch(setProducts(res.data.data));
         setTotalPages(res.data.pagination.totalPages);
-
       } else {
         dispatch(setProducts([]));
       }
@@ -94,23 +87,16 @@ const AllProducts = () => {
     }
   };
 
-  // ✅ Call function inside a proper useEffect
   useEffect(() => {
     getFilterProducts(page);
   }, [category, searchTerm, price, page]);
 
-
-  console.log("Current products from redux:", products);
-
-  // Blacklist functions
   const removeFromBlacklist = async (id) => {
     try {
       const res = await axios.put(
         import.meta.env.VITE_API_URL + `/remove-from-blacklist/${id}`,
         null,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       toast({ title: "Success", description: res.data.message });
     } catch (error) {
@@ -123,9 +109,7 @@ const AllProducts = () => {
       const res = await axios.put(
         import.meta.env.VITE_API_URL + `/blacklist-product/${id}`,
         null,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       toast({
         title: "Success",
@@ -141,11 +125,13 @@ const AllProducts = () => {
     }
   };
 
-  // Edit modal handlers
+  // Open edit modal and set editing product data including colors array
   const handleEdit = (product) => {
     setEditingProduct(product);
+    setColors(product.colors || []);
     setIsEditModalOpen(true);
   };
+
   const confirmDelete = (productId) => {
     setDeleteProductId(productId);
     setIsDeleteDialogOpen(true);
@@ -153,14 +139,9 @@ const AllProducts = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      const res = await axios.delete(
-        import.meta.env.VITE_API_URL + `/delete-product/${deleteProductId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const res = await axios.delete(import.meta.env.VITE_API_URL + `/delete-product/${deleteProductId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
 
       dispatch(setProducts(products.filter((p) => p._id !== deleteProductId)));
       toast({ title: res.data.message || "Product deleted successfully" });
@@ -172,32 +153,33 @@ const AllProducts = () => {
     }
   };
 
-
-
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
+
     const updatedProduct = {
       ...editingProduct,
       name: formData.get("name"),
       description: formData.get("description"),
-      price: parseFloat(formData.get("price")),
+      price: formData.get("price"),
+      stock: formData.get("stock"),
       category: formData.get("category"),
+      colors: colors.map(() => formData.get("colors")),
+      sizes: sizes.map(() => formData.get("sizes")),
+      images: images.map(() => formData.get("images")),
+      discount: formData.get("discount"),
+      offerTitle: formData.get("offerTitle"),
+      offerDescription: formData.get("offerDescription"),
+      offerValidTill: formData.get("offerValidTill"),
+      offerValidFrom: formData.get("offerValidFrom"),
     };
 
-    dispatch(
-      setProducts(products.map((p) => (p._id === updatedProduct._id ? updatedProduct : p)))
-    );
+    dispatch(setProducts(products.map((p) => (p._id === updatedProduct._id ? updatedProduct : p))));
 
     try {
       const res = await axios.put(
         import.meta.env.VITE_API_URL + `/update-product/${editingProduct._id}`,
-        {
-          name: updatedProduct.name,
-          description: updatedProduct.description,
-          price: updatedProduct.price,
-          category: updatedProduct.category,
-        },
+        updatedProduct,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
@@ -209,10 +191,11 @@ const AllProducts = () => {
 
     setIsEditModalOpen(false);
     setEditingProduct(null);
+    setColors([]);
   };
 
   return (
-    <div className="mx-auto px-4 sm:px-8 -z-10">
+    <div className="mx-auto px-4 sm:px-8">
       <h1 className="text-3xl font-bold mb-8">Our Products</h1>
 
       <div className="mb-8">
@@ -275,10 +258,11 @@ const AllProducts = () => {
             <Card key={product._id} className="flex flex-col">
               <div className="aspect-square relative">
                 <img
-                  src={product.image.url}
+                  src={product.images[0]?.url}
                   alt={product.name}
                   className="rounded-t-lg object-cover w-full h-full"
                 />
+
               </div>
 
               <CardContent className="flex-grow p-4">
@@ -291,19 +275,9 @@ const AllProducts = () => {
                 <Button variant="outline" onClick={() => handleEdit(product)}>
                   <Edit className="mr-2 h-4 w-4" /> Edit
                 </Button>
-                {/* <Button
-                  onClick={() =>
-                    !product.blacklisted
-                      ? blacklistProduct(product._id)
-                      : removeFromBlacklist(product._id)
-                  }
-                >
-                  {!product.blacklisted ? "Blacklist Product" : "Remove from Blacklist"}
-                </Button> */}
                 <Button variant="destructive" onClick={() => confirmDelete(product._id)}>
                   Delete
                 </Button>
-
               </CardFooter>
             </Card>
           ))}
@@ -311,17 +285,20 @@ const AllProducts = () => {
       )}
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] h-[80vh] overflow-y-auto flex flex-col justify-between">
           <DialogHeader>
             <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
+          <form onSubmit={handleEditSubmit} className="w-full">
+            <div className="grid gap-4 py-4 w-full">
+              {/* Name */}
               <div className="grid gap-4 items-center">
                 <Label htmlFor="name">Name</Label>
                 <Input id="name" name="name" defaultValue={editingProduct?.name} />
               </div>
+
+              {/* Description */}
               <div className="grid gap-4 items-center">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -330,6 +307,8 @@ const AllProducts = () => {
                   defaultValue={editingProduct?.description}
                 />
               </div>
+
+              {/* Price */}
               <div className="grid gap-4 items-center">
                 <Label htmlFor="price">Price</Label>
                 <Input
@@ -339,6 +318,8 @@ const AllProducts = () => {
                   defaultValue={editingProduct?.price}
                 />
               </div>
+
+              {/* Category */}
               <div className="grid gap-4 items-center">
                 <Label htmlFor="category">Category</Label>
                 <Select name="category" defaultValue={editingProduct?.category}>
@@ -351,17 +332,139 @@ const AllProducts = () => {
                     <SelectItem value="Women">Women</SelectItem>
                     <SelectItem value="Kid">Kid</SelectItem>
                     <SelectItem value="Men & Women">Men & Women</SelectItem>
-
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Size */}
+              <div className="grid gap-4 items-center">
+                <Label htmlFor="size">Size</Label>
+                <Select name="size" defaultValue={editingProduct?.size}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="xs">XS</SelectItem>
+                    <SelectItem value="s">S</SelectItem>
+                    <SelectItem value="m">M</SelectItem>
+                    <SelectItem value="l">L</SelectItem>
+                    <SelectItem value="xl">XL</SelectItem>
+                    <SelectItem value="xxl">XXL</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Discount */}
+              <div className="grid gap-4 items-center">
+                <Label htmlFor="discount">Discount (%)</Label>
+                <Input
+                  type="number"
+                  id="discount"
+                  name="discount"
+                  defaultValue={editingProduct?.discount}
+                />
+              </div>
+
+              {/* Colors Picker */}
+              <div className="space-y-2 mt-4">
+                <Label htmlFor="color">Colors</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="color"
+                    type="color"
+                    value={currentColor}
+                    onChange={(e) => setCurrentColor(e.target.value)}
+                    className="w-12 h-12 p-1 rounded-md"
+                  />
+                  <Button type="button" variant="outline" onClick={addColor}>
+                    Add Color
+                  </Button>
+                </div>
+                <div className="flex gap-2 flex-wrap mt-2">
+                  {colors.map((color, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-1 border rounded px-2 py-1"
+                    >
+                      <div
+                        className="w-5 h-5 rounded-full border"
+                        style={{ backgroundColor: color }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeColor(color)}
+                        className="text-red-500 text-xs"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Offer Title */}
+              <div className="grid gap-4 items-center">
+                <Label htmlFor="offerTitle">Offer Title</Label>
+                <Input
+                  id="offerTitle"
+                  name="offerTitle"
+                  placeholder="Enter offer title"
+                  defaultValue={editingProduct?.offerTitle}
+                />
+              </div>
+
+              {/* Offer Description */}
+              <div className="grid gap-4 items-center">
+                <Label htmlFor="offerDescription">Offer Description</Label>
+                <Textarea
+                  id="offerDescription"
+                  name="offerDescription"
+                  placeholder="Enter offer description"
+                  defaultValue={editingProduct?.offerDescription}
+                />
+              </div>
+
+              {/* Offer Valid From */}
+              <div className="grid gap-4 items-center">
+                <Label htmlFor="offerValidFrom">Offer Valid From</Label>
+                <Input
+                  type="date"
+                  id="offerValidFrom"
+                  name="offerValidFrom"
+                  defaultValue={editingProduct?.offerValidFrom}
+                />
+              </div>
+
+              {/* Offer Valid Till */}
+              <div className="grid gap-4 items-center">
+                <Label htmlFor="offerValidTill">Offer Valid Till</Label>
+                <Input
+                  type="date"
+                  id="offerValidTill"
+                  name="offerValidTill"
+                  defaultValue={editingProduct?.offerValidTill}
+                />
+              </div>
+
+              {/* Stock */}
+              <div className="grid gap-4 items-center">
+                <Label htmlFor="stock">Stock</Label>
+                <Input
+                  type="number"
+                  id="stock"
+                  name="stock"
+                  defaultValue={editingProduct?.stock}
+                />
+              </div>
             </div>
+
             <DialogFooter>
               <Button type="submit">Save changes</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
+
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -380,11 +483,8 @@ const AllProducts = () => {
           </div>
         </DialogContent>
       </Dialog>
-      <Pagination
-        currentPage={page}
-        totalPages={totalPages}
-        onPageChange={(newPage) => setPage(newPage)}
-      />
+
+      <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 };
