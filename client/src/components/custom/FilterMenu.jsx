@@ -13,7 +13,7 @@ import { setProducts } from "@/redux/slices/productSlice";
 
 const categoryData = {
   trigger: "Category",
-  items: ["Men", "Women", "Kid","Men & Women"],
+  items: ["All", "Men", "Women", "Kid", "Men & Women"],
 };
 
 const priceData = {
@@ -22,43 +22,52 @@ const priceData = {
 };
 
 const FilterMenu = () => {
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("All");
   const [price, setPrice] = useState("");
   const [search, setSearch] = useState("");
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-  const getFilterProducts = async () => {
-    const res = await axios.get(
-      import.meta.env.VITE_API_URL +
-        `/get-products?category=${category}&price=${price}&search=${search}`
-    );
-    const data = res.data.data;
+    const getFilterProducts = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/get-products`,
+          {
+            params: {
+              category: category !== "All" ? category : "", // Only send if not "All"
+              price: price || "",
+              search: search || "",
+            },
+          }
+        );
+        const data = res.data.data;
 
-    // ✅ Filter unique products by name
-    const uniqueByName = [];
-    const nameSet = new Set();
+        // Filter unique products by name
+        const uniqueByName = [];
+        const nameSet = new Set();
+        for (const product of data) {
+          if (!nameSet.has(product.name)) {
+            nameSet.add(product.name);
+            uniqueByName.push(product);
+          }
+        }
 
-    for (const product of data) {
-      if (!nameSet.has(product.name)) {
-        nameSet.add(product.name);
-        uniqueByName.push(product);
+        dispatch(setProducts(uniqueByName));
+      } catch (err) {
+        console.error("Error fetching products:", err);
       }
-    }
+    };
 
-    dispatch(setProducts(uniqueByName));
-  };
-
-  getFilterProducts();
-}, [category, price, search]);
+    getFilterProducts();
+  }, [category, price, search, dispatch]);
 
   return (
     <div className="w-[93vw] flex flex-col sm:flex-row justify-between items-center mx-auto my-10 gap-3 sm:gap-0">
       {/* DROPDOWN FILTERS */}
       <div className="flex sm:w-[30%] w-full gap-3">
-        {/* FOR CATEGORY */}
-        <Select onValueChange={(value) => setCategory(value)}>
+        {/* CATEGORY SELECT */}
+        <Select value={category} onValueChange={setCategory}>
           <SelectTrigger id={categoryData.trigger}>
             <SelectValue placeholder={categoryData.trigger} />
           </SelectTrigger>
@@ -71,14 +80,14 @@ const FilterMenu = () => {
           </SelectContent>
         </Select>
 
-        {/* FOR PRICE */}
-        <Select onValueChange={(value) => setPrice(value)}>
+        {/* PRICE SELECT */}
+        <Select value={price} onValueChange={setPrice}>
           <SelectTrigger id={priceData.trigger}>
             <SelectValue placeholder={priceData.trigger} />
           </SelectTrigger>
           <SelectContent position="popper">
             {priceData.items.map((item) => (
-              <SelectItem key={item} value={item} className="capitalize">
+              <SelectItem key={item} value={item}>
                 Less than {item}
               </SelectItem>
             ))}
@@ -91,6 +100,7 @@ const FilterMenu = () => {
         <Input
           id="search"
           placeholder="Search Here..."
+          value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
