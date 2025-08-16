@@ -13,50 +13,68 @@ const createProduct = async (req, res) => {
       price,
       description,
       stock,
-      colors,
       category,
       sizes,
+      colors,
       discount,
       offerTitle,
       offerDescription,
-      offerValidFrom,    // Add this line
+      offerValidFrom,
       offerValidTill,
     } = req.body;
 
-    if (!name || !price || !description || !stock || !colors || !category || !sizes) {
+    if (!name || !price || !description || !stock || !category || !sizes || !colors) {
       return res.status(400).json({
         success: false,
-        message: "All fields including sizes are required.",
+        message: "All fields including sizes and colors are required.",
       });
     }
 
-    const uploadedImages = [];
+    const sizesArray = Array.isArray(sizes) ? sizes : JSON.parse(sizes);
+    const colorsArray = Array.isArray(colors) ? colors : JSON.parse(colors);
+    const colorsForImages = JSON.parse(req.body.colorsForImages); // Frontend sends
 
-    for (const file in req.files) {
-      const result = await cloudinary.uploader.upload(req.files[file].path, {
+    // Upload images to Cloudinary
+    const uploadedImages = [];
+    for (const file of req.files) {
+      const result = await cloudinary.uploader.upload(file.path, {
         folder: "products",
       });
-
+      console.log("Uploaded image:", result);
       uploadedImages.push({
-        url: result.secure_url,
+        url: result.secure_url, // ✅ store secure_url here
         id: result.public_id,
       });
     }
+
+    // Map images to colors
+    const variantData = {};
+    for (let i = 0; i < uploadedImages.length; i++) {
+      const color = colorsForImages[i];
+      if (!variantData[color]) variantData[color] = [];
+      variantData[color].push({
+        url: uploadedImages[i].url, // ✅ use the stored secure_url
+        id: uploadedImages[i].id,
+      });
+    }
+
+    const variants = Object.entries(variantData).map(([color, images]) => ({
+      color,
+      images,
+    }));
 
     const product = new Product({
       name,
       price,
       description,
       stock,
-      colors,
       category,
-      sizes: Array.isArray(sizes) ? sizes : JSON.parse(sizes),
-      images: uploadedImages,
-
+      sizes: sizesArray,
+      variants,
       discount: discount ? Number(discount) : 0,
       offerTitle: offerTitle || null,
       offerDescription: offerDescription || null,
-      offerValidFrom: offerValidFrom ? new Date(offerValidFrom) : null,   // Set here
+      offerValidFrom: offerValidFrom ? new Date(offerValidFrom) : null,
       offerValidTill: offerValidTill ? new Date(offerValidTill) : null,
     });
 
@@ -68,10 +86,10 @@ const createProduct = async (req, res) => {
       data: product,
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 
 const updateProduct = async (req, res) => {
@@ -93,13 +111,17 @@ const updateProduct = async (req, res) => {
 
     if (data.discount) data.discount = Number(data.discount);
 
-    if (data.offerValidFrom) data.offerValidFrom = new Date(data.offerValidFrom);    // Add this
-    if (data.offerValidTill) data.offerValidTill = new Date(data.offerValidTill);
+    if (data.offerValidFrom)
+      data.offerValidFrom = new Date(data.offerValidFrom); // Add this
+    if (data.offerValidTill)
+      data.offerValidTill = new Date(data.offerValidTill);
 
     const product = await Product.findByIdAndUpdate(id, data, { new: true });
 
     if (!product)
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
 
     return res.status(200).json({
       success: true,
@@ -110,9 +132,6 @@ const updateProduct = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-;
-
-
 const deleteProduct = async (req, res) => {
   if (req.role !== ROLES.admin) {
     return res.status(401).json({ success: false, message: "Access denied" });
@@ -187,6 +206,7 @@ const getProducts = async (req, res) => {
                 sizes: 1,
                 discount: 1,
                 offerValidTill: 1,
+                variants,
                 discountedPrice: {
                   $round: [
                     {
@@ -194,31 +214,29 @@ const getProducts = async (req, res) => {
                         {
                           $and: [
                             { $gt: ["$discount", 0] },
-                            { $gt: ["$offerValidTill", now] }  // Use variable here
-                          ]
+                            { $gt: ["$offerValidTill", now] }, // Use variable here
+                          ],
                         },
                         {
                           $multiply: [
                             "$price",
-                            { $subtract: [1, { $divide: ["$discount", 100] }] }
-                          ]
+                            { $subtract: [1, { $divide: ["$discount", 100] }] },
+                          ],
                         },
-                        "$price"
-                      ]
+                        "$price",
+                      ],
                     },
-                    1
-                  ]
+                    1,
+                  ],
                 },
-                image: { $arrayElemAt: ["$images", 0] }
-              }
-            }
+                image: { $arrayElemAt: ["$images", 0] },
+              },
+            },
           ],
-          totalCount: [{ $count: "count" }]
-        }
-      }
+          totalCount: [{ $count: "count" }],
+        },
+      },
     ];
-
-
 
     const result = await Product.aggregate(pipeline);
 
@@ -279,12 +297,12 @@ const getProductsforadmin = async (req, res) => {
           products: [
             { $sort: sortBy },
             { $skip: (page - 1) * limit },
-            { $limit: limit }
+            { $limit: limit },
             // ❌ Removed $project so we return full documents
           ],
-          totalCount: [{ $count: "count" }]
-        }
-      }
+          totalCount: [{ $count: "count" }],
+        },
+      },
     ];
 
     const result = await Product.aggregate(pipeline);
@@ -301,16 +319,14 @@ const getProductsforadmin = async (req, res) => {
         totalProducts,
         totalPages,
         currentPage: page,
-        pageSize: limit
-      }
+        pageSize: limit,
+      },
     });
   } catch (error) {
     console.error("Get Products Error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
 
 const getProductByName = async (req, res) => {
   const { name } = req.params;
@@ -321,7 +337,9 @@ const getProductByName = async (req, res) => {
     }).populate("reviews");
 
     if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
     // Call the method on the product instance
@@ -403,7 +421,9 @@ const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product)
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
 
     const discountedPrice = product.getDiscountedPrice();
 
@@ -421,7 +441,6 @@ const getProductById = async (req, res) => {
   }
 };
 
-
 module.exports = {
   createProduct,
   updateProduct,
@@ -431,5 +450,5 @@ module.exports = {
   blacklistProduct,
   removeFromBlacklist,
   getProductById,
-  getProductsforadmin
+  getProductsforadmin,
 };

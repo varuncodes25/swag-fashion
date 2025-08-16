@@ -19,10 +19,18 @@ const productSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-    images: {
-      type: Array,
-      required: true,
-    },
+    variants: [
+      {
+        color: { type: String, required: true },
+        images: [
+          {
+            url: String,
+            id: String,
+          },
+        ],
+      },
+    ],
+
     rating: {
       type: Number,
       default: 5,
@@ -35,7 +43,7 @@ const productSchema = new mongoose.Schema(
     ],
     colors: {
       type: Array,
-      required: true,
+      required: false,
     },
     sizes: {
       type: [String],
@@ -51,7 +59,7 @@ const productSchema = new mongoose.Schema(
       enum: ["All Category", "Men", "Women", "Kid", "Men & Women"],
       required: true,
     },
-     discount: {
+    discount: {
       type: Number, // percentage
       default: 0,
       min: 0,
@@ -99,19 +107,17 @@ productSchema.methods.getDiscountedPrice = function () {
   let finalPrice = this.price;
 
   // Apply discount only if offer is active
-  if (this.isOfferActive && typeof this.isOfferActive === 'function' && this.discount > 0) {
+  if (
+    this.isOfferActive &&
+    typeof this.isOfferActive === "function" &&
+    this.discount > 0
+  ) {
     finalPrice = this.price * (1 - this.discount / 100);
   }
 
   // Round to nearest integer (0.5 or more rounds up)
   return Math.round(finalPrice);
 };
-
-
-
-
-
-
 
 const Product = mongoose.model("Product", productSchema);
 
