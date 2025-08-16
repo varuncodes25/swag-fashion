@@ -117,112 +117,130 @@ const Product = () => {
     });
   };
 
-  const handleBuyNow = async () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
+const handleBuyNow = async () => {
+  if (!isAuthenticated) {
+    navigate("/login");
+    return;
+  }
+
+  // Required fields check
+  const requiredFields = [
+    "name",
+    "email",
+    "phone",
+    "street",
+    "city",
+    "state",
+    "zip",
+  ];
+  for (const field of requiredFields) {
+    if (!address[field] || address[field].trim() === "") {
+      return alert(`Please enter ${field}`);
     }
-    const requiredFields = [
-      "name",
-      "email",
-      "phone",
-      "street",
-      "city",
-      "state",
-      "zip",
-    ];
-    for (const field of requiredFields) {
-      if (!address[field] || address[field].trim() === "") {
-        return alert(`Please enter ${field}`);
-      }
-    }
-    if (productQuantity > product.stock) {
-      toast({ title: "Product out of stock" });
-      return;
-    }
+  }
 
-    if (product.blacklisted) {
-      toast({ title: "Product isn't available for purchase" });
-      return;
-    }
+  // Stock validation
+  if (productQuantity > product.stock) {
+    toast({ title: "Product out of stock" });
+    return;
+  }
 
-    if (productColor === "") {
-      toast({ title: "Please select a color" });
-      return;
-    }
+  // Blacklist validation
+  if (product.blacklisted) {
+    toast({ title: "Product isn't available for purchase" });
+    return;
+  }
 
-    
+  // Color check
+  if (productColor === "") {
+    toast({ title: "Please select a color" });
+    return;
+  }
 
-    if (!paymentMethod) {
-      toast({ title: "Please select a payment method" });
-      return;
-    }
+  // Payment method check
+  if (!paymentMethod) {
+    toast({ title: "Please select a payment method" });
+    return;
+  }
 
-    // Total price in rupees
-    console.log(product.discountedPrice, "fhgfhgfhgfhghgv");
-    console.log(product, "fhgfhgfhgfhghgv");
-    const totalAmount = product.discountedPrice * productQuantity;
-    console.log(totalAmount, "tottttttt");
-    if (paymentMethod === "razorpay") {
-      try {
-        // Razorpay ke liye paise me convert
-        const amountInPaise = totalAmount * 100;
+  // Total price (in rupees, not paise)
+  const totalAmount = (product.discountedPrice || product.price) * productQuantity;
 
-        // Backend se order generate
-        const order = await generatePayment(amountInPaise);
-        console.log("Order details:", order);
+  if (paymentMethod === "razorpay") {
+    try {
+      // Convert to paise
+      const amountInPaise = totalAmount * 100;
 
-        await verifyPayment(
+      // Backend order
+      const order = await generatePayment(amountInPaise);
+
+      // Verify payment
+      await verifyPayment(
+        {
+          ...order,
+          amount: order.amount || amountInPaise, // Razorpay expects paise
+        },
+        [
           {
-            ...order,
-            amount: order.amount || amountInPaise, // Razorpay expects paise
+            id: product._id,
+            name: product.name,
+            price: product.discountedPrice || product.price,
+            quantity: productQuantity,
+            color: productColor,
+            size: productSize,
+            image: product?.images?.[0]?.url,
           },
-          [{ id: product._id, quantity: productQuantity, color: productColor }],
+        ],
+        address,
+        navigate
+      );
+    } catch (error) {
+      console.error("Razorpay payment failed:", error);
+      toast({ title: "Payment failed. Please try again." });
+    }
+  } else if (paymentMethod === "cod") {
+    try {
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/cod-order`,
+        {
+          amount: totalAmount, // store in rupees
           address,
-          navigate
-        );
-      } catch (error) {
-        console.error("Razorpay payment failed:", error);
-        toast({ title: "Payment failed. Please try again." });
-      }
-    } else if (paymentMethod === "cod") {
-      try {
-        const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/cod-order`,
-          {
-            amount: totalAmount, // COD me paise me nahi, rupees me hi store karo
-            address,
-            products: [
-              {
-                id: product._id,
-                quantity: productQuantity,
-                color: productColor,
-                size: productSize,
-              },
-            ],
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+          products: [
+            {
+              id: product._id,
+              name: product.name,
+              price: product.discountedPrice || product.price,
+              quantity: productQuantity,
+              color: productColor,
+              size: productSize,
+              image: product?.images?.[0]?.url,
             },
-          }
-        );
-
-        if (res.data.success) {
-          toast({ title: "Order placed with Cash on Delivery!" });
-        } else {
-          toast({ title: res.data.message || "Failed to place COD order." });
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-      } catch (err) {
-        console.error(err);
-        toast({ title: "Something went wrong. Please try again." });
-      }
-    }
+      );
 
-    // Reset states
-    setPurchaseProduct(false);
-    setPaymentMethod("");
-  };
+      if (res.data.success) {
+        toast({ title: "Order placed with Cash on Delivery!" });
+        navigate("/orders"); // redirect to orders page
+      } else {
+        toast({ title: res.data.message || "Failed to place COD order." });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Something went wrong. Please try again." });
+    }
+  }
+
+  // Reset
+  setPurchaseProduct(false);
+  setPaymentMethod("");
+};
+
 
   return (
     <>

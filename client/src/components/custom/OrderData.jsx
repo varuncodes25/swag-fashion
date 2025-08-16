@@ -3,6 +3,7 @@ import { Card } from "../ui/card";
 import { ArrowDownToLine, IndianRupee } from "lucide-react";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import axios from "axios";
+import { CancelOrderDialog } from "../CancelOrderDialog";
 
 const OrderData = ({
   products = [],
@@ -21,8 +22,10 @@ const OrderData = ({
   createdAt = new Date().toISOString(),
   updatedAt = new Date().toISOString(),
   _id,
-    orderNumber = "ORD123456",
+  orderNumber = "ORD123456",
   invoiceNumber = "INV123456",
+  isCancelled,
+  isPaid = true,
 }) => {
   const [trackingData, setTrackingData] = useState([]);
 
@@ -67,178 +70,220 @@ const OrderData = ({
   };
 
   const handleDownloadInvoice = async () => {
-  try {
-    const pdfDoc = await PDFDocument.create();
-    let page = pdfDoc.addPage([600, 900]);
-    let { width, height } = page.getSize();
+    try {
+      const pdfDoc = await PDFDocument.create();
+      let page = pdfDoc.addPage([600, 900]);
+      let { width, height } = page.getSize();
 
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    // Helper function to draw multiline text
-    const drawMultilineText = (page, text, x, y, size = 10) => {
-      const lines = text.split("\n");
-      lines.forEach((line, i) => {
-        page.drawText(line, {
-          x,
-          y: y - i * 14,
-          size,
+      // Helper function to draw multiline text
+      const drawMultilineText = (page, text, x, y, size = 10) => {
+        const lines = text.split("\n");
+        lines.forEach((line, i) => {
+          page.drawText(line, {
+            x,
+            y: y - i * 14,
+            size,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
+        });
+        return lines.length * 14;
+      };
+
+      // Function to add new page and reset y
+      const addNewPage = () => {
+        page = pdfDoc.addPage([600, 900]);
+        const { height: newHeight } = page.getSize();
+        height = newHeight;
+        return height - 40; // reset y
+      };
+
+      // Draw header
+      const drawHeader = () => {
+        page.drawRectangle({
+          x: 0,
+          y: height - 60,
+          width: width,
+          height: 40,
+          color: rgb(0.9, 0.9, 0.9),
+        });
+
+        const title = "Tax Invoice/Bill of Supply/Cash Memo";
+        const textWidthTitle = helveticaFont.widthOfTextAtSize(title, 14);
+        page.drawText(title, {
+          x: width - textWidthTitle - 20,
+          y: height - 45,
+          size: 14,
           font: helveticaFont,
           color: rgb(0, 0, 0),
         });
+
+        page.drawText("SWAG FASHION", {
+          x: 20,
+          y: height - 45,
+          size: 14,
+          font: helveticaFont,
+          color: rgb(0.6, 0, 0.6),
+        });
+      };
+
+      drawHeader();
+
+      let y = height - 90;
+
+      // Company, billing, shipping
+      const companyText = [
+        `Sold By :`,
+        companyInfo.name,
+        ...companyInfo.addressLines,
+        `PAN No: ${panNumber}`,
+        `GST Registration No: ${gstNumber}`,
+      ].join("\n");
+
+      const billingText = [`Billing Address :`, address || "N/A"].join("\n");
+      const shippingText = [`Shipping Address :`, address || "N/A"].join("\n");
+
+      const companyHeight = drawMultilineText(page, companyText, 20, y, 8);
+      const billingHeight = drawMultilineText(page, billingText, 320, y, 8);
+      const shippingHeight = drawMultilineText(
+        page,
+        shippingText,
+        320,
+        y - billingHeight - 20,
+        8
+      );
+
+      y -= Math.max(companyHeight, billingHeight + shippingHeight + 20) + 20;
+
+      // Order info
+      const orderInfo = [
+        [`Order Number: ${orderNumber}`, `Invoice Number: ${invoiceNumber}`],
+        [
+          `Order Date: ${new Date(createdAt).toLocaleDateString()}`,
+          `Invoice Date: ${new Date(updatedAt).toLocaleDateString()}`,
+        ],
+      ];
+
+      orderInfo.forEach((row) => {
+        page.drawText(row[0], {
+          x: 20,
+          y,
+          size: 9,
+          font: helveticaFont,
+          color: rgb(0, 0, 0),
+        });
+        page.drawText(row[1], {
+          x: 320,
+          y,
+          size: 9,
+          font: helveticaFont,
+          color: rgb(0, 0, 0),
+        });
+        y -= 15;
       });
-      return lines.length * 14;
-    };
 
-    // Function to add new page and reset y
-    const addNewPage = () => {
-      page = pdfDoc.addPage([600, 900]);
-      const { height: newHeight } = page.getSize();
-      height = newHeight;
-      return height - 40; // reset y
-    };
+      y -= 10;
 
-    // Draw header
-    const drawHeader = () => {
-      page.drawRectangle({
-        x: 0,
-        y: height - 60,
-        width: width,
-        height: 40,
-        color: rgb(0.9, 0.9, 0.9),
-      });
+      // Table header
+      const drawTableHeader = () => {
+        page.drawRectangle({
+          x: 20,
+          y,
+          width: 560,
+          height: 20,
+          color: rgb(0.9, 0.9, 0.9),
+        });
+        const columns = [
+          { label: "Sl. No.", x: 25 },
+          { label: "Description", x: 60 },
+          { label: "Unit Price", x: 310 },
+          { label: "Discount", x: 390 },
+          { label: "Qty", x: 450 },
+          { label: "Net Amount", x: 485 },
+        ];
+        columns.forEach((col) => {
+          page.drawText(col.label, {
+            x: col.x,
+            y: y + 5,
+            size: 10,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
+        });
+        y -= 20;
+      };
 
-      const title = "Tax Invoice/Bill of Supply/Cash Memo";
-      const textWidthTitle = helveticaFont.widthOfTextAtSize(title, 14);
-      page.drawText(title, {
-        x: width - textWidthTitle - 20,
-        y: height - 45,
-        size: 14,
+      drawTableHeader();
+
+      // Table rows
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        if (y < 100) {
+          y = addNewPage();
+          drawHeader();
+          drawTableHeader();
+        }
+        const netAmt = (product?.quantity ?? 0) * (product?.id?.price ?? 0);
+        const rowData = [
+          (i + 1).toString(),
+          product?.id?.name || "Unknown",
+          `Rs.${(product?.id?.price ?? 0).toFixed(2)}`,
+          "0.00",
+          `${product?.quantity ?? 0}`,
+          `Rs.${netAmt.toFixed(2)}`,
+        ];
+        const xPositions = [25, 60, 310, 395, 455, 485];
+        rowData.forEach((text, idx) => {
+          page.drawText(text, {
+            x: xPositions[idx],
+            y,
+            size: 9,
+            font: helveticaFont,
+            color: rgb(0, 0, 0),
+          });
+        });
+        y -= 15;
+      }
+
+      // Total amount
+      page.drawText(`TOTAL: Rs.${amount.toFixed(2)}`, {
+        x: 20,
+        y: y - 10,
+        size: 11,
         font: helveticaFont,
         color: rgb(0, 0, 0),
       });
 
-      page.drawText("SWAG FASHION", {
-        x: 20,
-        y: height - 45,
-        size: 14,
+      // Footer
+      page.drawText("Thank you for your order!", {
+        x: 230,
+        y: 30,
+        size: 12,
         font: helveticaFont,
-        color: rgb(0.6, 0, 0.6),
+        color: rgb(0, 0, 0),
       });
-    };
 
-    drawHeader();
+      // Save & download
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes], { type: "application/pdf" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "invoice.pdf";
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }, 100);
 
-    let y = height - 90;
-
-    // Company, billing, shipping
-    const companyText = [
-      `Sold By :`,
-      companyInfo.name,
-      ...companyInfo.addressLines,
-      `PAN No: ${panNumber}`,
-      `GST Registration No: ${gstNumber}`,
-    ].join("\n");
-
-    const billingText = [`Billing Address :`, address || "N/A"].join("\n");
-    const shippingText = [`Shipping Address :`, address || "N/A"].join("\n");
-
-    const companyHeight = drawMultilineText(page, companyText, 20, y, 8);
-    const billingHeight = drawMultilineText(page, billingText, 320, y, 8);
-    const shippingHeight = drawMultilineText(
-      page,
-      shippingText,
-      320,
-      y - billingHeight - 20,
-      8
-    );
-
-    y -= Math.max(companyHeight, billingHeight + shippingHeight + 20) + 20;
-
-    // Order info
-    const orderInfo = [
-      [`Order Number: ${orderNumber}`, `Invoice Number: ${invoiceNumber}`],
-      [
-        `Order Date: ${new Date(createdAt).toLocaleDateString()}`,
-        `Invoice Date: ${new Date(updatedAt).toLocaleDateString()}`,
-      ],
-    ];
-
-    orderInfo.forEach((row) => {
-      page.drawText(row[0], { x: 20, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
-      page.drawText(row[1], { x: 320, y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
-      y -= 15;
-    });
-
-    y -= 10;
-
-    // Table header
-    const drawTableHeader = () => {
-      page.drawRectangle({ x: 20, y, width: 560, height: 20, color: rgb(0.9, 0.9, 0.9) });
-      const columns = [
-        { label: "Sl. No.", x: 25 },
-        { label: "Description", x: 60 },
-        { label: "Unit Price", x: 310 },
-        { label: "Discount", x: 390 },
-        { label: "Qty", x: 450 },
-        { label: "Net Amount", x: 485 },
-      ];
-      columns.forEach((col) => {
-        page.drawText(col.label, { x: col.x, y: y + 5, size: 10, font: helveticaFont, color: rgb(0, 0, 0) });
-      });
-      y -= 20;
-    };
-
-    drawTableHeader();
-
-    // Table rows
-    for (let i = 0; i < products.length; i++) {
-      const product = products[i];
-      if (y < 100) {
-        y = addNewPage();
-        drawHeader();
-        drawTableHeader();
-      }
-      const netAmt = (product?.quantity ?? 0) * (product?.id?.price ?? 0);
-      const rowData = [
-        (i + 1).toString(),
-        product?.id?.name || "Unknown",
-        `Rs.${(product?.id?.price ?? 0).toFixed(2)}`,
-        "0.00",
-        `${product?.quantity ?? 0}`,
-        `Rs.${netAmt.toFixed(2)}`,
-      ];
-      const xPositions = [25, 60, 310, 395, 455, 485];
-      rowData.forEach((text, idx) => {
-        page.drawText(text, { x: xPositions[idx], y, size: 9, font: helveticaFont, color: rgb(0, 0, 0) });
-      });
-      y -= 15;
+      console.log("Invoice downloaded successfully");
+    } catch (error) {
+      console.error("Error generating PDF invoice:", error);
+      alert(`Error generating invoice: ${error?.message || error}`);
     }
-
-    // Total amount
-    page.drawText(`TOTAL: Rs.${amount.toFixed(2)}`, { x: 20, y: y - 10, size: 11, font: helveticaFont, color: rgb(0, 0, 0) });
-
-    // Footer
-    page.drawText("Thank you for your order!", { x: 230, y: 30, size: 12, font: helveticaFont, color: rgb(0, 0, 0) });
-
-    // Save & download
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "invoice.pdf";
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => {
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    }, 100);
-
-    console.log("Invoice downloaded successfully");
-  } catch (error) {
-    console.error("Error generating PDF invoice:", error);
-    alert(`Error generating invoice: ${error?.message || error}`);
-  }
-};
+  };
 
   return (
     <div>
@@ -318,18 +363,37 @@ const OrderData = ({
             )}
           </span>
 
-          <div className="flex gap-2 mt-2 sm:mt-0">
+          <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0 items-start sm:items-center">
             {status !== "Exchange" && (
-              <button
-                onClick={handleCancelOrder}
-                className="bg-indigo-700 hover:bg-blue-600 text-white text-xs sm:text-sm px-3 py-1 rounded-lg"
-              >
-                Exchange
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                {/* Cancel Button */}
+                <CancelOrderDialog
+                  orderId={_id}
+                  isCancelled={isCancelled}
+                  onSuccess={(updatedOrder) => {
+                    console.log("Order cancelled:", updatedOrder);
+                    // e.g., refresh orders list or update state
+                  }}
+                />
+
+                {/* Exchange Button */}
+                <button
+                  className={`w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all duration-200 ${
+                    !isPaid
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:scale-105"
+                  }`}
+                  disabled={!isPaid}
+                >
+                  Exchange
+                </button>
+              </div>
             )}
+
+            {/* Track Order Button */}
             <button
               onClick={() => handleTrackOrder(_id)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-1 rounded-lg"
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all duration-200 hover:scale-105"
             >
               Track Order
             </button>

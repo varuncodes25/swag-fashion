@@ -6,6 +6,7 @@ const {
   updateOrderStatus,
   createCODOrder,
   trackShipment,
+  cancelOrder,
 } = require("../controllers/OrderController");
 const verifyToken = require("../middlewares/verifyToken");
 
@@ -20,5 +21,7 @@ router.put("/update-order-status/:paymentId", verifyToken, updateOrderStatus);
 router.post("/cod-order", verifyToken, createCODOrder);
 
 router.get("/track/:id", trackShipment);
+
+router.put("/cancel-order", cancelOrder);
 
 module.exports = router;
