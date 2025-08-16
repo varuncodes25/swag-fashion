@@ -110,56 +110,24 @@ const CreateProducts = () => {
       });
     }
 
-    const totalImages = Object.values(variantImages).reduce(
-      (acc, imgs) => acc + imgs.length,
-      0
-    );
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("price", price);
+    formData.append("stock", stock);
+    formData.append("category", category);
+    formData.append("sizes", JSON.stringify(sizes));
+    formData.append("colors", JSON.stringify(colors));
 
-    if (totalImages < 4) {
-      return toast({
-        title: "Error",
-        description: "Please upload at least 4 images in total",
+    // Send each color's files
+    Object.entries(variantImages).forEach(([color, imgs]) => {
+      imgs.forEach((imgObj) => {
+        formData.append("images", imgObj.file); // backend sees all images
+        formData.append("colorsForImages", color); // send color for each image
       });
-    }
-
-    setIsLoading(true);
+    });
 
     try {
-      const formData = new FormData();
-      formData.append("name", name);
-      formData.append("description", description);
-      formData.append("price", price);
-      formData.append("stock", stock);
-      formData.append("category", category);
-      formData.append("colors", JSON.stringify(colors));
-      formData.append("sizes", JSON.stringify(sizes));
-      formData.append("discount", discount);
-      formData.append("offerTitle", offerTitle);
-      formData.append("offerDescription", offerDescription);
-      formData.append("offerValidFrom", offerValidFrom);
-      formData.append("offerValidTill", offerValidTill);
-
-      // Build color -> [file1, file2] map
-      const colorFilesMap = {};
-      Object.entries(variantImages).forEach(([color, imgs]) => {
-        colorFilesMap[color] = imgs.map((imgObj) => imgObj.file);
-
-        // Append each file to FormData
-        imgs.forEach((imgObj) => {
-          formData.append("images", imgObj.file); // multer expects all files under same field "images"
-        });
-      });
-
-      // Send the color mapping as JSON for backend
-      formData.append(
-        "colorsForImages",
-        JSON.stringify(
-          Object.entries(colorFilesMap).flatMap(([color, files]) =>
-            files.map(() => color)
-          )
-        )
-      );
-
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/create-product`,
         formData,
@@ -170,12 +138,9 @@ const CreateProducts = () => {
           },
         }
       );
-
       toast({ title: "Success", description: res.data.message });
     } catch (error) {
       handleErrorLogout(error, "Error uploading product");
-    } finally {
-      setIsLoading(false);
     }
   };
 
