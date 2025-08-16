@@ -83,7 +83,7 @@ const Navbar = () => {
             </button>
 
             {/* Menu Items */}
-            <div className="mt-12 grid grid-cols-1 gap-4">
+            <div className="mt-12 grid grid-cols-1 gap-4  ">
               {/* Theme Toggle */}
               <div className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition">
                 <ModeToggle />

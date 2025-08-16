@@ -13,7 +13,10 @@ const ProductList = () => {
     <>
       {isLoading && (
         <div className="flex justify-center items-center my-10">
-          <Loader2 className="animate-spin" size={30} />
+          <Loader2 className="anima
+          
+          
+            te-spin" size={30} />
         </div>
       )}
 

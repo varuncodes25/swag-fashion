@@ -231,9 +231,9 @@ const Product = () => {
           {/* LEFT SIDE */}
           <div className="grid sm:w-[45%] gap-3 ">
             <img
-              src={product?.images?.[selectedImage]?.url}
-              className="w-full lg:h-[35rem] rounded-xl object-center object-cover border dark:border-none"
-            />
+  src={product?.images?.[selectedImage]?.url}
+  className="w-full lg:h-[35rem] rounded-xl object-center object-cover border dark:border-none"
+/>
             <div className="grid grid-cols-4 gap-3 ">
               {product?.images?.map(({ url, id }, index) => (
                 <img
