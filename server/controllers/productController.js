@@ -206,7 +206,8 @@ const getProducts = async (req, res) => {
                 sizes: 1,
                 discount: 1,
                 offerValidTill: 1,
-                variants,
+                    variants: 1, // ✅ directly include the field from the document
+
                 discountedPrice: {
                   $round: [
                     {
