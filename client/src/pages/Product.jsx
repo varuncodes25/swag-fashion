@@ -40,6 +40,7 @@ const Product = () => {
   const { toast } = useToast();
   const dispatch = useDispatch();
   const { verifyPayment, generatePayment } = useRazorpay();
+  
 
   const [productQuantity, setProductQuantity] = useState(1);
   const [pincode, setPincode] = useState("");
@@ -51,7 +52,8 @@ const Product = () => {
   const [productColor, setProductColor] = useState("");
   const [productSize, setProductSize] = useState("");
   const [paymentMethod, setPaymentMethod] = useState(""); // "razorpay" or "cod"
-
+const variant = product.variants?.[0]; // choose first variant by default
+  const variantImages = variant?.images || [];
   useEffect(() => {
     const fetchProductByName = async () => {
       try {
@@ -117,95 +119,71 @@ const Product = () => {
     });
   };
 
-const handleBuyNow = async () => {
-  if (!isAuthenticated) {
-    navigate("/login");
-    return;
-  }
-
-  // Required fields check
-  const requiredFields = [
-    "name",
-    "email",
-    "phone",
-    "street",
-    "city",
-    "state",
-    "zip",
-  ];
-  for (const field of requiredFields) {
-    if (!address[field] || address[field].trim() === "") {
-      return alert(`Please enter ${field}`);
+  const handleBuyNow = async () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
     }
-  }
 
-  // Stock validation
-  if (productQuantity > product.stock) {
-    toast({ title: "Product out of stock" });
-    return;
-  }
+    // Required fields check
+    const requiredFields = [
+      "name",
+      "email",
+      "phone",
+      "street",
+      "city",
+      "state",
+      "zip",
+    ];
+    for (const field of requiredFields) {
+      if (!address[field] || address[field].trim() === "") {
+        return alert(`Please enter ${field}`);
+      }
+    }
 
-  // Blacklist validation
-  if (product.blacklisted) {
-    toast({ title: "Product isn't available for purchase" });
-    return;
-  }
+    // Stock validation
+    if (productQuantity > product.stock) {
+      toast({ title: "Product out of stock" });
+      return;
+    }
 
-  // Color check
-  if (productColor === "") {
-    toast({ title: "Please select a color" });
-    return;
-  }
+    // Blacklist validation
+    if (product.blacklisted) {
+      toast({ title: "Product isn't available for purchase" });
+      return;
+    }
 
-  // Payment method check
-  if (!paymentMethod) {
-    toast({ title: "Please select a payment method" });
-    return;
-  }
+    // Color check
+    if (productColor === "") {
+      toast({ title: "Please select a color" });
+      return;
+    }
 
-  // Total price (in rupees, not paise)
-  const totalAmount = (product.discountedPrice || product.price) * productQuantity;
+    // Payment method check
+    if (!paymentMethod) {
+      toast({ title: "Please select a payment method" });
+      return;
+    }
 
-  if (paymentMethod === "razorpay") {
-    try {
-      // Convert to paise
-      const amountInPaise = totalAmount * 100;
+    // Total price (in rupees, not paise)
+    const totalAmount =
+      (product.discountedPrice || product.price) * productQuantity;
 
-      // Backend order
-      const order = await generatePayment(amountInPaise);
+    if (paymentMethod === "razorpay") {
+      try {
+        // Convert to paise
+        const amountInPaise = totalAmount * 100;
 
-      // Verify payment
-      await verifyPayment(
-        {
-          ...order,
-          amount: order.amount || amountInPaise, // Razorpay expects paise
-        },
-        [
+        // Backend order
+        const order = await generatePayment(amountInPaise);
+
+        // Verify payment
+        await verifyPayment(
           {
-            id: product._id,
-            name: product.name,
-            price: product.discountedPrice || product.price,
-            quantity: productQuantity,
-            color: productColor,
-            size: productSize,
-            image: product?.images?.[0]?.url,
+            ...order,
+            amount: order.amount || amountInPaise, // Razorpay expects paise
           },
-        ],
-        address,
-        navigate
-      );
-    } catch (error) {
-      console.error("Razorpay payment failed:", error);
-      toast({ title: "Payment failed. Please try again." });
-    }
-  } else if (paymentMethod === "cod") {
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/cod-order`,
-        {
-          amount: totalAmount, // store in rupees
-          address,
-          products: [
+          [
             {
               id: product._id,
               name: product.name,
@@ -216,31 +194,55 @@ const handleBuyNow = async () => {
               image: product?.images?.[0]?.url,
             },
           ],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (res.data.success) {
-        toast({ title: "Order placed with Cash on Delivery!" });
-        navigate("/orders"); // redirect to orders page
-      } else {
-        toast({ title: res.data.message || "Failed to place COD order." });
+          address,
+          navigate
+        );
+      } catch (error) {
+        console.error("Razorpay payment failed:", error);
+        toast({ title: "Payment failed. Please try again." });
       }
-    } catch (err) {
-      console.error(err);
-      toast({ title: "Something went wrong. Please try again." });
+    } else if (paymentMethod === "cod") {
+      try {
+        const res = await axios.post(
+          `${import.meta.env.VITE_API_URL}/cod-order`,
+          {
+            amount: totalAmount, // store in rupees
+            address,
+            products: [
+              {
+                id: product._id,
+                name: product.name,
+                price: product.discountedPrice || product.price,
+                quantity: productQuantity,
+                color: productColor,
+                size: productSize,
+                image: product?.images?.[0]?.url,
+              },
+            ],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (res.data.success) {
+          toast({ title: "Order placed with Cash on Delivery!" });
+          navigate("/orders"); // redirect to orders page
+        } else {
+          toast({ title: res.data.message || "Failed to place COD order." });
+        }
+      } catch (err) {
+        console.error(err);
+        toast({ title: "Something went wrong. Please try again." });
+      }
     }
-  }
 
-  // Reset
-  setPurchaseProduct(false);
-  setPaymentMethod("");
-};
-
+    // Reset
+    setPurchaseProduct(false);
+    setPaymentMethod("");
+  };
 
   return (
     <>
@@ -249,11 +251,11 @@ const handleBuyNow = async () => {
           {/* LEFT SIDE */}
           <div className="grid sm:w-[45%] gap-3 ">
             <img
-  src={product?.images?.[selectedImage]?.url}
-  className="w-full lg:h-[35rem] rounded-xl object-center object-cover border dark:border-none"
-/>
+              src={variantImages?.[selectedImage]?.url}
+              className="w-full lg:h-[35rem] rounded-xl object-center object-cover border dark:border-none"
+            />
             <div className="grid grid-cols-4 gap-3 ">
-              {product?.images?.map(({ url, id }, index) => (
+              {variantImages?.map(({ url, id }, index) => (
                 <img
                   src={url}
                   key={id}
