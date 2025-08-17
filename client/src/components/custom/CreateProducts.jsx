@@ -42,25 +42,7 @@ const CreateProducts = () => {
 
   const [variantImages, setVariantImages] = useState({}); // { color: [{ preview, file }] }
 
-  const COLOR_OPTIONS = [
-    { name: "Black", code: "#000000" },
-    { name: "Red", code: "#dd2c2c" },
-    { name: "White", code: "#ffffff" },
-    { name: "Blue", code: "#0000ff" },
-  ];
-
-  const addColor = () => {
-    if (!colors.includes(currentColor)) setColors([...colors, currentColor]);
-  };
-
-  const removeColor = (color) => {
-    setColors(colors.filter((c) => c !== color));
-    setVariantImages((prev) => {
-      const updated = { ...prev };
-      delete updated[color];
-      return updated;
-    });
-  };
+  
 
   const removeSize = (size) => {
     setSizes((prev) => prev.filter((s) => s !== size));
@@ -86,63 +68,99 @@ const CreateProducts = () => {
     }));
   };
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  // COLORS OPTIONS
+const COLOR_OPTIONS = [
+  { name: "Black", code: "#000000" },
+  { name: "Red", code: "#dd2c2c" },
+  { name: "White", code: "#ffffff" },
+  { name: "Blue", code: "#0000ff" },
+];
 
-    const name = e.target.name.value;
-    const description = e.target.description.value;
-    const price = e.target.price.value;
-    const stock = e.target.stock.value;
-    const category = e.target.category.value;
+// ---- Add color ----
+const addColor = () => {
+  if (!currentColor) return;
+  if (!colors.includes(currentColor)) {
+    setColors([...colors, currentColor]); // we store the NAME only
+  }
+};
 
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !stock ||
-      !category ||
-      colors.length === 0 ||
-      sizes.length === 0
-    ) {
-      return toast({
-        title: "Error",
-        description: "Please fill out all fields",
-      });
-    }
+// ---- Remove color ----
+const removeColor = (color) => {
+  setColors(colors.filter((c) => c !== color));
+  const updated = { ...variantImages };
+  delete updated[color];
+  setVariantImages(updated);
+};
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("description", description);
-    formData.append("price", price);
-    formData.append("stock", stock);
-    formData.append("category", category);
-    formData.append("sizes", JSON.stringify(sizes));
-    formData.append("colors", JSON.stringify(colors));
+// ---- Submit ----
+const onSubmit = async (e) => {
+  e.preventDefault();
 
-    // Send each color's files
-    Object.entries(variantImages).forEach(([color, imgs]) => {
-      imgs.forEach((imgObj) => {
-        formData.append("images", imgObj.file); // backend sees all images
-        formData.append("colorsForImages", color); // send color for each image
-      });
+  const name = e.target.name.value;
+  const description = e.target.description.value;
+  const price = e.target.price.value;
+  const stock = e.target.stock.value;
+  const category = e.target.category.value;
+
+  if (
+    !name ||
+    !description ||
+    !price ||
+    !stock ||
+    !category ||
+    colors.length === 0 ||
+    sizes.length === 0
+  ) {
+    return toast({
+      title: "Error",
+      description: "Please fill out all fields",
     });
+  }
 
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/create-product`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      toast({ title: "Success", description: res.data.message });
-    } catch (error) {
-      handleErrorLogout(error, "Error uploading product");
-    }
-  };
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("description", description);
+  formData.append("price", price);
+  formData.append("stock", stock);
+  formData.append("category", category);
+  formData.append("sizes", JSON.stringify(sizes));
+  formData.append("colors", JSON.stringify(colors)); // ["Black","Red"]
+
+  // ---- Images grouped by color ----
+  const colorImageMap = []; // keep colors in same order as files
+
+  Object.entries(variantImages).forEach(([color, imgs]) => {
+    imgs.forEach((imgObj) => {
+      // attach image file
+      formData.append("images", imgObj.file);
+
+      // push the color for each file
+      colorImageMap.push(color);
+    });
+  });
+
+  // ✅ send array of colors for mapping
+  formData.append("colorsForImages", JSON.stringify(colorImageMap));
+
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/create-product`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    toast({ title: "Success", description: res.data.message });
+  } catch (error) {
+    handleErrorLogout(error, "Error uploading product");
+  }
+};
+
+
 
   if (isLoading) {
     return (
@@ -287,7 +305,7 @@ const CreateProducts = () => {
                 >
                   <option value="">Select color</option>
                   {COLOR_OPTIONS.map((color) => (
-                    <option key={color.code} value={color.code}>
+                    <option key={color.code} value={color.name}>
                       {color.name}
                     </option>
                   ))}
