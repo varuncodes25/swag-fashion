@@ -61,7 +61,7 @@ const HeaderDisplay = () => {
           className="
             relative w-full overflow-hidden
             aspect-[16/5]    /* Mobile */
-            sm:aspect-[16/8]
+            sm:aspect-[16/8]  
             md:aspect-[16/6]
             lg:aspect-[16/5]
             xl:aspect-[16/5]
