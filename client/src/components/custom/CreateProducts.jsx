@@ -22,11 +22,18 @@ import { useToast } from "@/hooks/use-toast";
 import useErrorLogout from "@/hooks/use-error-logout";
 import axios from "axios";
 
-const MAX_IMAGES = 15;
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL"];
 
+const COLOR_OPTIONS = [
+  { name: "Black", code: "#000000" },
+  { name: "Red", code: "#dd2c2c" },
+  { name: "White", code: "#ffffff" },
+  { name: "Blue", code: "#0000ff" },
+  // Add more colors if needed
+];
+
 const CreateProducts = () => {
-  const [currentColor, setCurrentColor] = useState("#000000");
+  const [currentColor, setCurrentColor] = useState("");
   const [colors, setColors] = useState([]);
   const [selectedSize, setSelectedSize] = useState("M");
   const [sizes, setSizes] = useState([]);
@@ -36,56 +43,57 @@ const CreateProducts = () => {
   const [offerDescription, setOfferDescription] = useState("");
   const [offerValidTill, setOfferValidTill] = useState("");
   const [offerValidFrom, setOfferValidFrom] = useState("");
+  const [variantImages, setVariantImages] = useState({}); // { colorName: [{ file, preview }] }
+
   const fileInputRefs = useRef({});
   const { toast } = useToast();
   const { handleErrorLogout } = useErrorLogout();
 
-  const [variantImages, setVariantImages] = useState({}); // { color: [{ preview, file }] }
+  // ---- Sizes ----
+  const addSize = () => {
+    if (selectedSize && !sizes.includes(selectedSize)) {
+      setSizes([...sizes, selectedSize]);
+    }
+  };
+  const removeSize = (size) => setSizes(sizes.filter((s) => s !== size));
 
-  const COLOR_OPTIONS = [
-    { name: "Black", code: "#000000" },
-    { name: "Red", code: "#dd2c2c" },
-    { name: "White", code: "#ffffff" },
-    { name: "Blue", code: "#0000ff" },
-  ];
-
+  // ---- Colors ----
   const addColor = () => {
-    if (!colors.includes(currentColor)) setColors([...colors, currentColor]);
+    if (!currentColor) return;
+    const colorObj = COLOR_OPTIONS.find((c) => c.code === currentColor);
+    if (colorObj && !colors.includes(colorObj.name)) {
+      setColors([...colors, colorObj.name]);
+      setCurrentColor(""); // Reset select
+    }
+  };
+  const removeColor = (colorName) => {
+    setColors(colors.filter((c) => c !== colorName));
+    const updated = { ...variantImages };
+    delete updated[colorName];
+    setVariantImages(updated);
   };
 
-  const removeColor = (color) => {
-    setColors(colors.filter((c) => c !== color));
-    setVariantImages((prev) => {
-      const updated = { ...prev };
-      delete updated[color];
-      return updated;
-    });
-  };
-
-  const removeSize = (size) => {
-    setSizes((prev) => prev.filter((s) => s !== size));
-  };
-
-  const handleImageUpload = (color) => (e) => {
+  // ---- Images ----
+  const handleImageUpload = (colorName) => (e) => {
     const files = e.target.files;
     if (!files) return;
     const newFiles = Array.from(files).map((file) => ({
-      preview: URL.createObjectURL(file),
       file,
+      preview: URL.createObjectURL(file),
     }));
     setVariantImages((prev) => ({
       ...prev,
-      [color]: prev[color] ? [...prev[color], ...newFiles] : newFiles,
+      [colorName]: prev[colorName] ? [...prev[colorName], ...newFiles] : newFiles,
     }));
   };
-
-  const removeImage = (color, index) => {
+  const removeImage = (colorName, index) => {
     setVariantImages((prev) => ({
       ...prev,
-      [color]: prev[color].filter((_, i) => i !== index),
+      [colorName]: prev[colorName].filter((_, i) => i !== index),
     }));
   };
 
+  // ---- Submit ----
   const onSubmit = async (e) => {
     e.preventDefault();
 
@@ -95,19 +103,8 @@ const CreateProducts = () => {
     const stock = e.target.stock.value;
     const category = e.target.category.value;
 
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !stock ||
-      !category ||
-      colors.length === 0 ||
-      sizes.length === 0
-    ) {
-      return toast({
-        title: "Error",
-        description: "Please fill out all fields",
-      });
+    if (!name || !description || !price || !stock || !category || colors.length === 0 || sizes.length === 0) {
+      return toast({ title: "Error", description: "Please fill out all fields" });
     }
 
     const formData = new FormData();
@@ -119,28 +116,28 @@ const CreateProducts = () => {
     formData.append("sizes", JSON.stringify(sizes));
     formData.append("colors", JSON.stringify(colors));
 
-    // Send each color's files
-    Object.entries(variantImages).forEach(([color, imgs]) => {
+    const colorImageMap = [];
+    Object.entries(variantImages).forEach(([colorName, imgs]) => {
       imgs.forEach((imgObj) => {
-        formData.append("images", imgObj.file); // backend sees all images
-        formData.append("colorsForImages", color); // send color for each image
+        formData.append("images", imgObj.file);
+        colorImageMap.push(colorName);
       });
     });
+    formData.append("colorsForImages", JSON.stringify(colorImageMap));
 
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/create-product`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      setIsLoading(true);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/create-product`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       toast({ title: "Success", description: res.data.message });
     } catch (error) {
       handleErrorLogout(error, "Error uploading product");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -153,59 +150,31 @@ const CreateProducts = () => {
   }
 
   return (
-    <div className="w-full max-w-2xl -z-10">
+    <div className="w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="text-2xl">Add New Product</CardTitle>
-        <CardDescription>
-          Enter the details for the new product you want to add
-        </CardDescription>
+        <CardDescription>Enter the details for the new product you want to add</CardDescription>
       </CardHeader>
 
       <form onSubmit={onSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:w-[70vw]">
           {/* Left Column */}
-          <CardContent className="w-full space-y-6">
+          <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="name">Product Name</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Enter product name"
-                required
-              />
+              <Input id="name" name="name" placeholder="Enter product name" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                rows={4}
-                placeholder="Enter description"
-                required
-              />
+              <Textarea id="description" name="description" rows={4} placeholder="Enter description" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                required
-              />
+              <Input id="price" name="price" type="number" step="0.01" min="0" placeholder="0.00" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="stock">Stock</Label>
-              <Input
-                id="stock"
-                name="stock"
-                type="number"
-                min="0"
-                placeholder="20"
-                required
-              />
+              <Input id="stock" name="stock" type="number" min="0" placeholder="20" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
@@ -225,7 +194,7 @@ const CreateProducts = () => {
           </CardContent>
 
           {/* Right Column */}
-          <CardContent className="w-full space-y-6">
+          <CardContent className="space-y-6">
             {/* Sizes */}
             <div className="space-y-2">
               <Label>Sizes</Label>
@@ -236,37 +205,17 @@ const CreateProducts = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {SIZE_OPTIONS.map((size) => (
-                      <SelectItem key={size} value={size}>
-                        {size}
-                      </SelectItem>
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    if (!sizes.includes(selectedSize))
-                      setSizes([...sizes, selectedSize]);
-                  }}
-                >
-                  Add Size
-                </Button>
+                <Button type="button" variant="outline" onClick={addSize}>Add Size</Button>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
                 {sizes.map((size) => (
-                  <div
-                    key={size}
-                    className="flex items-center bg-gray-100 rounded-full px-2 py-1"
-                  >
-                    <span className="text-sm mr-1 dark:text-slate-900">
-                      {size}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      className="h-6 w-6 p-0 rounded-full"
-                      onClick={() => removeSize(size)}
-                    >
+                  <div key={size} className="flex items-center bg-gray-100 rounded-full px-2 py-1">
+                    <span className="text-sm mr-1 dark:text-slate-900">{size}</span>
+                    <Button variant="ghost" className="h-6 w-6 p-0 rounded-full" onClick={() => removeSize(size)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -274,152 +223,90 @@ const CreateProducts = () => {
               </div>
             </div>
 
-            {/* Colors & Images */}
-            <div className="space-y-4 mt-6 bg-black p-4 rounded-lg">
-              <Label htmlFor="color" className="text-white font-medium">
-                Colors
-              </Label>
-              <div className="flex items-center space-x-3">
+            {/* Colors */}
+            <div className="space-y-2">
+              <Label>Colors</Label>
+              <div className="flex gap-2">
                 <select
                   value={currentColor}
                   onChange={(e) => setCurrentColor(e.target.value)}
-                  className="border border-gray-600 rounded-md px-3 py-2 bg-gray-900 text-white w-full"
+                  className="border border-gray-600 rounded-md px-3 py-2 bg-gray-900 text-white flex-1"
                 >
                   <option value="">Select color</option>
                   {COLOR_OPTIONS.map((color) => (
-                    <option key={color.code} value={color.code}>
-                      {color.name}
-                    </option>
+                    <option key={color.code} value={color.code}>{color.name}</option>
                   ))}
                 </select>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="px-4 py-2 h-10 text-sm text-white border-white hover:bg-white hover:text-black"
-                  onClick={addColor}
-                >
-                  Add Color
-                </Button>
+                <Button type="button" onClick={addColor}>Add Color</Button>
               </div>
 
-              <div className="space-y-3">
-                {colors.map((color) => {
-                  const colorObj = COLOR_OPTIONS.find((c) => c.code === color);
-                  const colorName = colorObj ? colorObj.name : color;
-                  return (
-                    <div
-                      key={color}
-                      className="border border-gray-700 rounded-lg p-3 bg-gray-900"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-2">
-                          <div
-                            className="w-5 h-5 rounded-full border"
-                            style={{ backgroundColor: color }}
-                          />
-                          <span className="font-medium text-white">
-                            {colorName}
-                          </span>
-                        </div>
+              {colors.map((colorName) => (
+                <div key={colorName} className="border border-gray-700 rounded-lg p-3 bg-gray-900 mt-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className="w-5 h-5 rounded-full border"
+                        style={{ backgroundColor: COLOR_OPTIONS.find(c => c.name === colorName)?.code || "#000" }}
+                      />
+                      <span className="font-medium text-white">{colorName}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="p-1" onClick={() => removeColor(colorName)}>
+                      <X className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    {(variantImages[colorName] || []).map((imgObj, i) => (
+                      <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-700">
+                        <img src={imgObj.preview} className="w-full h-full object-cover" />
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="p-1"
-                          onClick={() => removeColor(color)}
+                          className="absolute -top-1 -right-1 p-1 bg-gray-800 rounded-full shadow"
+                          onClick={() => removeImage(colorName, i)}
                         >
                           <X className="h-4 w-4 text-red-500" />
                         </Button>
                       </div>
-
-                      <div className="flex flex-wrap gap-3">
-                        {(variantImages[color] || []).map((imgObj, i) => (
-                          <div
-                            key={i}
-                            className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-700"
-                          >
-                            <img
-                              src={imgObj.preview}
-                              className="w-full h-full object-cover"
-                            />
-                            <Button
-                              variant="ghost"
-                              className="absolute -top-1 -right-1 p-1 bg-gray-800 rounded-full shadow"
-                              onClick={() => removeImage(color, i)}
-                            >
-                              <X className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          onClick={() => fileInputRefs.current[color].click()}
-                          className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-600 rounded-lg text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition"
-                        >
-                          <Upload className="h-5 w-5" />
-                        </Button>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*"
-                          className="hidden"
-                          ref={(el) => (fileInputRefs.current[color] = el)}
-                          onChange={handleImageUpload(color)}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    ))}
+                    <Button
+                      onClick={() => fileInputRefs.current[colorName]?.click()}
+                      className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-600 rounded-lg text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition"
+                    >
+                      <Upload className="h-5 w-5" />
+                    </Button>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      ref={(el) => (fileInputRefs.current[colorName] = el)}
+                      onChange={handleImageUpload(colorName)}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Offer & Discount */}
             <div className="space-y-2">
               <Label htmlFor="discount">Discount (%)</Label>
-              <Input
-                id="discount"
-                type="number"
-                min="0"
-                max="100"
-                placeholder="Enter discount %"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
-              />
+              <Input id="discount" type="number" min="0" max="100" placeholder="Enter discount %" value={discount} onChange={(e) => setDiscount(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="offerTitle">Offer Title</Label>
-              <Input
-                id="offerTitle"
-                placeholder="Enter offer title"
-                value={offerTitle}
-                onChange={(e) => setOfferTitle(e.target.value)}
-              />
+              <Input id="offerTitle" placeholder="Enter offer title" value={offerTitle} onChange={(e) => setOfferTitle(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="offerDescription">Offer Description</Label>
-              <Textarea
-                id="offerDescription"
-                rows={3}
-                placeholder="Enter offer description"
-                value={offerDescription}
-                onChange={(e) => setOfferDescription(e.target.value)}
-              />
+              <Textarea id="offerDescription" rows={3} placeholder="Enter offer description" value={offerDescription} onChange={(e) => setOfferDescription(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="offerValidFrom">Offer Valid From</Label>
-              <Input
-                id="offerValidFrom"
-                type="date"
-                value={offerValidFrom}
-                onChange={(e) => setOfferValidFrom(e.target.value)}
-              />
+              <Input id="offerValidFrom" type="date" value={offerValidFrom} onChange={(e) => setOfferValidFrom(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="offerValidTill">Offer Valid Till</Label>
-              <Input
-                id="offerValidTill"
-                type="date"
-                value={offerValidTill}
-                onChange={(e) => setOfferValidTill(e.target.value)}
-              />
+              <Input id="offerValidTill" type="date" value={offerValidTill} onChange={(e) => setOfferValidTill(e.target.value)} />
             </div>
           </CardContent>
         </div>
