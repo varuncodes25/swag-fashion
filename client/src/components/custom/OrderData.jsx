@@ -28,7 +28,11 @@ const OrderData = ({
   isPaid = true,
 }) => {
   const [trackingData, setTrackingData] = useState([]);
-
+  const selectedVariant = products?.id?.variants?.find(
+    (v) => v.color.toLowerCase() === products.color.toLowerCase()
+  );
+  const imageUrl = products[0].id.variants[0].images[0].url
+  console.log(imageUrl, "image")
   // Cancel Order
   const handleCancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
@@ -49,26 +53,6 @@ const OrderData = ({
       alert("Failed to cancel order");
     }
   };
-
-  // Track Order
-  const handleTrackOrder = async (orderId) => {
-    console.log("Tracking order:", orderId);
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/orders/track/${orderId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      setTrackingData(res.data.tracking || []);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to fetch tracking data");
-    }
-  };
-
   const handleDownloadInvoice = async () => {
     try {
       const pdfDoc = await PDFDocument.create();
@@ -284,26 +268,49 @@ const OrderData = ({
       alert(`Error generating invoice: ${error?.message || error}`);
     }
   };
+  // Track Order
+  const handleTrackOrder = async (orderId) => {
+    console.log("Tracking order:", orderId);
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_URL}/orders/track/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      setTrackingData(res.data.tracking || []);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to fetch tracking data");
+    }
+  };
+
+
 
   return (
     <div>
-      <Card className="grid gap-2 p-2">
+      <Card className="grid gap-3 p-3">
+        {/* Products */}
         {products.map((product) => (
           <div
-            key={product._id}
+            key={product?._id}
             className="flex flex-col sm:flex-row justify-between items-end sm:items-center border p-3 rounded-lg bg-gray-100 dark:bg-zinc-900"
           >
+            {/* Product Info */}
             <div className="flex items-center gap-2">
               <img
-                src={product?.id?.images?.[0]?.url || ""}
+                key={product._id}
+                src={product?.id?.variants?.[0]?.images?.[0]?.url || ""}
                 alt={product?.id?.name || "Product"}
-                className="w-20 h-20 rounded-lg"
+                className="w-20 h-20 rounded-lg object-cover"
               />
               <div className="grid gap-1">
                 <h1 className="font-semibold text-sm sm:text-lg">
                   {product?.id?.name || "Unknown Product"}
                 </h1>
-                <p className="flex text-xs sm:text-md gap-2 text-gray-500 my-2 sm:my-0">
+                <p className="flex text-xs sm:text-sm gap-2 text-gray-500">
                   <span>
                     Color:{" "}
                     <span
@@ -320,9 +327,11 @@ const OrderData = ({
                 </p>
               </div>
             </div>
+
+            {/* Price & Quantity */}
             <div className="flex sm:flex-col gap-3 sm:gap-0 mt-2 sm:mt-0 sm:items-center">
               <h2 className="text-md sm:text-xl font-bold flex items-center dark:text-customYellow">
-                <IndianRupee size={18} /> {(amount ?? 0).toFixed(2)}
+                <IndianRupee size={18} /> {amount.toFixed(2)}
               </h2>
               <p className="dark:text-customYellow text-end">
                 Qty: {product?.quantity ?? 0}
@@ -331,24 +340,26 @@ const OrderData = ({
           </div>
         ))}
 
+        {/* Order Date & Invoice */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center mt-2">
           <span>
             Ordered On:{" "}
             <span className="capitalize">
-              {new Date(createdAt).toLocaleString()}
+              {createdAt ? new Date(createdAt).toLocaleString() : "N/A"}
             </span>
           </span>
           <span
             onClick={handleDownloadInvoice}
             className="hover:underline text-sm cursor-pointer flex items-center gap-1 dark:text-customYellow"
           >
-            <ArrowDownToLine size={10} />
+            <ArrowDownToLine size={12} />
             Download Invoice
           </span>
         </div>
 
         <hr className="my-2" />
 
+        {/* Delivery Address */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
           <span>
             Delivery At:{" "}
@@ -363,6 +374,7 @@ const OrderData = ({
             )}
           </span>
 
+          {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0 items-start sm:items-center">
             {status !== "Exchange" && (
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -372,17 +384,14 @@ const OrderData = ({
                   isCancelled={isCancelled}
                   onSuccess={(updatedOrder) => {
                     console.log("Order cancelled:", updatedOrder);
-                    // e.g., refresh orders list or update state
+                    // refresh orders or update state here
                   }}
                 />
 
                 {/* Exchange Button */}
                 <button
-                  className={`w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all duration-200 ${
-                    !isPaid
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:scale-105"
-                  }`}
+                  className={`w-full sm:w-auto bg-green-600 hover:bg-green-500 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all duration-200 ${!isPaid ? "opacity-50 cursor-not-allowed" : "hover:scale-105"
+                    }`}
                   disabled={!isPaid}
                 >
                   Exchange
@@ -400,7 +409,7 @@ const OrderData = ({
           </div>
         </div>
 
-        {/* Show tracking status */}
+        {/* Tracking Status */}
         {trackingData.length > 0 && (
           <div className="mt-2 p-2 bg-gray-100 dark:bg-zinc-700 rounded">
             <h2 className="font-semibold">Tracking Status:</h2>

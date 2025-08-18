@@ -21,6 +21,7 @@ const createProduct = async (req, res) => {
       offerDescription,
       offerValidFrom,
       offerValidTill,
+      colorsForImages
     } = req.body;
 
     if (!name || !price || !description || !stock || !category || !sizes || !colors) {
@@ -29,39 +30,38 @@ const createProduct = async (req, res) => {
         message: "All fields including sizes and colors are required.",
       });
     }
-
+ console.log(req.files,"hjvgcvuiuihvuhfgvfvvjhvvrhvirvhjvehivevchjhiobvejrvivercirfjjhreioerfwh")
     const sizesArray = Array.isArray(sizes) ? sizes : JSON.parse(sizes);
     const colorsArray = Array.isArray(colors) ? colors : JSON.parse(colors);
-    const colorsForImages = JSON.parse(req.body.colorsForImages); // Frontend sends
+    const colorsImagesArray = Array.isArray(colorsForImages) ? colorsForImages : JSON.parse(colorsForImages);
 
-    // Upload images to Cloudinary
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ success: false, message: "No images uploaded" });
+    }
+
+    // Upload images to Cloudinary using buffer
     const uploadedImages = [];
-    for (const file of req.files) {
-      const result = await cloudinary.uploader.upload(file.path, {
-        folder: "products",
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "products" },
+          (error, result) => (error ? reject(error) : resolve(result))
+        );
+        stream.end(file.buffer);
       });
-      console.log("Uploaded image:", result);
-      uploadedImages.push({
-        url: result.secure_url, // ✅ store secure_url here
-        id: result.public_id,
-      });
+      uploadedImages.push({ url: result.secure_url, id: result.public_id });
     }
 
     // Map images to colors
     const variantData = {};
     for (let i = 0; i < uploadedImages.length; i++) {
-      const color = colorsForImages[i];
+      const color = colorsImagesArray[i];
       if (!variantData[color]) variantData[color] = [];
-      variantData[color].push({
-        url: uploadedImages[i].url, // ✅ use the stored secure_url
-        id: uploadedImages[i].id,
-      });
+      variantData[color].push(uploadedImages[i]);
     }
 
-    const variants = Object.entries(variantData).map(([color, images]) => ({
-      color,
-      images,
-    }));
+    const variants = Object.entries(variantData).map(([color, images]) => ({ color, images }));
 
     const product = new Product({
       name,
@@ -69,6 +69,7 @@ const createProduct = async (req, res) => {
       description,
       stock,
       category,
+      colors: colorsArray,
       sizes: sizesArray,
       variants,
       discount: discount ? Number(discount) : 0,
@@ -90,7 +91,6 @@ const createProduct = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 const updateProduct = async (req, res) => {
   if (req.role !== ROLES.admin) {

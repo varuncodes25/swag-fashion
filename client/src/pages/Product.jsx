@@ -21,7 +21,6 @@ const Product = () => {
   const { toast } = useToast();
   const dispatch = useDispatch();
   const { verifyPayment, generatePayment } = useRazorpay();
-  
 
   const [productQuantity, setProductQuantity] = useState(1);
   const [pincode, setPincode] = useState("");
@@ -32,19 +31,20 @@ const Product = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [productColor, setProductColor] = useState("");
   const [productSize, setProductSize] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState(""); // "razorpay" or "cod"
-const variant = product.variants?.[0]; // choose first variant by default
-  const variantImages = variant?.images || [];
+  const [paymentMethod, setPaymentMethod] = useState("");
+
   useEffect(() => {
     const fetchProductByName = async () => {
       try {
         const res = await axios.get(
           import.meta.env.VITE_API_URL +
-            `/get-product-by-name/${productName?.split("-").join(" ")}`
+          `/get-product-by-name/${productName?.split("-").join(" ")}`
         );
         const { data } = await res.data;
         setProduct(data);
-      } catch (error) {}
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+      }
     };
     fetchProductByName();
   }, [productName]);
@@ -56,7 +56,9 @@ const variant = product.variants?.[0]; // choose first variant by default
       setAvailabilityMessage("Please enter a valid pincode");
       return;
     }
-    const res = await axios.get(import.meta.env.VITE_API_URL + `/get-pincode/${pincode}`);
+    const res = await axios.get(
+      import.meta.env.VITE_API_URL + `/get-pincode/${pincode}`
+    );
     const data = await res.data;
     setAvailabilityMessage(data.message);
   };
@@ -77,7 +79,7 @@ const variant = product.variants?.[0]; // choose first variant by default
         name: product.name,
         price: product.price,
         quantity: productQuantity,
-        image: product.images[0]?.url,
+        image: product?.variants?.[0]?.images?.[0]?.url || "/fallback.png",
         color: productColor,
         stock: product.stock,
         blacklisted: product.blacklisted,
@@ -160,7 +162,8 @@ const variant = product.variants?.[0]; // choose first variant by default
               quantity: productQuantity,
               color: productColor,
               size: productSize,
-              image: product?.images?.[0]?.url,
+              image: product?.variants?.[0]?.images?.[selectedImage]?.url,
+
             },
           ],
           address,
@@ -175,7 +178,7 @@ const variant = product.variants?.[0]; // choose first variant by default
         const res = await axios.post(
           `${import.meta.env.VITE_API_URL}/cod-order`,
           {
-            amount: totalAmount, // store in rupees
+            amount: totalAmount,
             address,
             products: [
               {
@@ -185,7 +188,7 @@ const variant = product.variants?.[0]; // choose first variant by default
                 quantity: productQuantity,
                 color: productColor,
                 size: productSize,
-                image: product?.images?.[0]?.url,
+                image: product?.variants?.[0]?.images?.[0]?.url,
               },
             ],
           },
@@ -198,7 +201,7 @@ const variant = product.variants?.[0]; // choose first variant by default
 
         if (res.data.success) {
           toast({ title: "Order placed with Cash on Delivery!" });
-          navigate("/orders"); // redirect to orders page
+          navigate("/orders");
         } else {
           toast({ title: res.data.message || "Failed to place COD order." });
         }
@@ -214,26 +217,39 @@ const variant = product.variants?.[0]; // choose first variant by default
   };
 
   return (
-    <>
-      <div>
-        <main className="w-[100vw] lg:w-[72vw] flex flex-col sm:flex-row justify-start items-start gap-10 mx-auto my-10">
-          {/* LEFT SIDE */}
-          <div className="grid sm:w-[45%] gap-3 ">
-            <img
-  src={product?.images?.[selectedImage]?.url}
-  className="w-full lg:h-[35rem] rounded-xl object-center object-cover border dark:border-none"
-/>
-            <div className="grid grid-cols-4 gap-3 ">
-              {product?.images?.map(({ url, id }, index) => (
+    <div>
+      <main className="w-[100vw] lg:w-[72vw] flex flex-col sm:flex-row justify-start items-start gap-10 mx-auto my-10">
+        {/* LEFT SIDE */}
+        <div className="relative sm:w-[45%] w-full grid gap-3">
+          {/* Main Image */}
+          <img
+            src={
+              product?.variants
+                ?.find((v) => v.color === productColor)
+                ?.images?.[selectedImage]?.url || "/fallback.png"
+            }
+            alt="Selected product"
+            className="w-full lg:h-[35rem] rounded-xl object-center object-cover border dark:border-none"
+          />
+
+          {/* Scrollable Thumbnails */}
+          <div className="flex overflow-x-auto gap-2 mt-2 scrollbar-hide">
+            {product?.variants
+              ?.find((v) => v.color === productColor)
+              ?.images?.map((img, index) => (
                 <img
-                  src={url}
-                  key={id}
+                  key={index}
+                  src={img?.url}
+                  alt={`Thumbnail ${index + 1}`}
                   onClick={() => setSelectedImage(index)}
-                  className="rounded-xl filter hover:brightness-50 cursor-pointer transition-all ease-in-out duration-300 border dark:border-none "
+                  className={`rounded-xl min-w-[5rem] h-20 object-cover cursor-pointer border transition-all duration-200 ${selectedImage === index
+                    ? "border-2 border-orange-400"
+                    : "border-gray-300"
+                    }`}
                 />
               ))}
-            </div>
           </div>
+        </div>
 
         {/* RIGHT SIDE */}
         <div className="sm:w-[50%] lg:w-[35%]">
@@ -242,7 +258,9 @@ const variant = product.variants?.[0]; // choose first variant by default
             <p className="text-sm my-2">{product?.description}</p>
             <div className="flex items-center">
               {starsGenerator(product.rating, "0", 15)}
-              <span className="text-md ml-1">({product?.reviews?.length})</span>
+              <span className="text-md ml-1">
+                ({product?.reviews?.length})
+              </span>
             </div>
           </div>
 
@@ -254,11 +272,10 @@ const variant = product.variants?.[0]; // choose first variant by default
                 <button
                   key={size}
                   onClick={() => setProductSize(size)}
-                  className={`px-4 py-2 border rounded-md text-sm font-medium transition-all ${
-                    productSize === size
-                      ? "border-orange-500 bg-orange-100 text-orange-700 shadow-md"
-                      : "border-gray-300 bg-white text-black hover:border-black"
-                  }`}
+                  className={`px-4 py-2 border rounded-md text-sm font-medium transition-all ${productSize === size
+                    ? "border-orange-500 bg-orange-100 text-orange-700 shadow-md"
+                    : "border-gray-300 bg-white text-black hover:border-black"
+                    }`}
                 >
                   {size}
                 </button>
@@ -307,7 +324,7 @@ const variant = product.variants?.[0]; // choose first variant by default
                 />
               </div>
 
-              {product.stock - productQuantity > 0 && (
+              {product?.stock - productQuantity > 0 && (
                 <div className="grid text-sm font-semibold text-gray-600">
                   <span>
                     Only{" "}
@@ -345,10 +362,20 @@ const variant = product.variants?.[0]; // choose first variant by default
             {purchaseProduct && (
               <div className="my-2 space-y-4">
                 <div className="grid gap-2">
-                  {["name","email","phone","street","city","state","zip"].map((field) => (
+                  {[
+                    "name",
+                    "email",
+                    "phone",
+                    "street",
+                    "city",
+                    "state",
+                    "zip",
+                  ].map((field) => (
                     <Input
                       key={field}
-                      placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                      placeholder={
+                        field.charAt(0).toUpperCase() + field.slice(1)
+                      }
                       value={address[field] || ""}
                       onChange={(e) =>
                         setAddress({ ...address, [field]: e.target.value })
@@ -359,7 +386,9 @@ const variant = product.variants?.[0]; // choose first variant by default
 
                 <div className="flex gap-3">
                   <Button
-                    variant={paymentMethod === "razorpay" ? "default" : "outline"}
+                    variant={
+                      paymentMethod === "razorpay" ? "default" : "outline"
+                    }
                     onClick={() => setPaymentMethod("razorpay")}
                   >
                     Pay with Razorpay
@@ -377,11 +406,11 @@ const variant = product.variants?.[0]; // choose first variant by default
             )}
           </div>
         </div>
-      </main>
+      </main >
 
       {/* REVIEW SECTION */}
-      <ReviewsComponent productId={product?._id} />
-    </div>
+      < ReviewsComponent productId={product?._id} />
+    </div >
   );
 };
 

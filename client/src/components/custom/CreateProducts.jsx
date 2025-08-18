@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   CardContent,
   CardDescription,
@@ -23,16 +23,14 @@ import useErrorLogout from "@/hooks/use-error-logout";
 import axios from "axios";
 
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL"];
-
 const COLOR_OPTIONS = [
   { name: "Black", code: "#000000" },
   { name: "Red", code: "#dd2c2c" },
   { name: "White", code: "#ffffff" },
   { name: "Blue", code: "#0000ff" },
-  // Add more colors if needed
 ];
 
-const CreateProducts = () => {
+const CreateProducts = ({ productId }) => {
   const [currentColor, setCurrentColor] = useState("");
   const [colors, setColors] = useState([]);
   const [selectedSize, setSelectedSize] = useState("M");
@@ -44,16 +42,49 @@ const CreateProducts = () => {
   const [offerValidTill, setOfferValidTill] = useState("");
   const [offerValidFrom, setOfferValidFrom] = useState("");
   const [variantImages, setVariantImages] = useState({}); // { colorName: [{ file, preview }] }
-
   const fileInputRefs = useRef({});
   const { toast } = useToast();
   const { handleErrorLogout } = useErrorLogout();
 
+  // ---- Map API variants to variantImages ----
+  const mapVariantsFromAPI = (variants) => {
+    const mapped = {};
+    variants.forEach((v) => {
+      mapped[v.color] = v.images.map((img) => ({ file: null, preview: img.url }));
+    });
+    return mapped;
+  };
+
+  // ---- Load product data if editing ----
+  useEffect(() => {
+    if (!productId) return;
+    const fetchProduct = async () => {
+      try {
+        setIsLoading(true);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/product/${productId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        const product = res.data.data;
+        setSizes(product.sizes || []);
+        setColors(product.variants.map((v) => v.color) || []);
+        setVariantImages(mapVariantsFromAPI(product.variants || []));
+        setDiscount(product.discount || "");
+        setOfferTitle(product.offerTitle || "");
+        setOfferDescription(product.offerDescription || "");
+        setOfferValidFrom(product.offerValidFrom || "");
+        setOfferValidTill(product.offerValidTill || "");
+      } catch (error) {
+        handleErrorLogout(error, "Error fetching product");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [productId]);
+
   // ---- Sizes ----
   const addSize = () => {
-    if (selectedSize && !sizes.includes(selectedSize)) {
-      setSizes([...sizes, selectedSize]);
-    }
+    if (selectedSize && !sizes.includes(selectedSize)) setSizes([...sizes, selectedSize]);
   };
   const removeSize = (size) => setSizes(sizes.filter((s) => s !== size));
 
@@ -63,7 +94,7 @@ const CreateProducts = () => {
     const colorObj = COLOR_OPTIONS.find((c) => c.code === currentColor);
     if (colorObj && !colors.includes(colorObj.name)) {
       setColors([...colors, colorObj.name]);
-      setCurrentColor(""); // Reset select
+      setCurrentColor("");
     }
   };
   const removeColor = (colorName) => {
@@ -75,16 +106,24 @@ const CreateProducts = () => {
 
   // ---- Images ----
   const handleImageUpload = (colorName) => (e) => {
-    const files = e.target.files;
-    if (!files) return;
-    const newFiles = Array.from(files).map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-    setVariantImages((prev) => ({
-      ...prev,
-      [colorName]: prev[colorName] ? [...prev[colorName], ...newFiles] : newFiles,
-    }));
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    const existingNames = (variantImages[colorName] || []).map(
+      (img) => img.file?.name || img.preview
+    );
+
+    const newFiles = files
+      .filter((f) => !existingNames.includes(f.name))
+      .map((file) => ({ file, preview: URL.createObjectURL(file) }));
+
+    if (newFiles.length) {
+      setVariantImages((prev) => ({
+        ...prev,
+        [colorName]: prev[colorName] ? [...prev[colorName], ...newFiles] : newFiles,
+      }));
+    }
+    console.log(variantImages,"uyfguyasguiguisghvauigys")
   };
   const removeImage = (colorName, index) => {
     setVariantImages((prev) => ({
@@ -96,15 +135,24 @@ const CreateProducts = () => {
   // ---- Submit ----
   const onSubmit = async (e) => {
     e.preventDefault();
-
-    const name = e.target.name.value;
-    const description = e.target.description.value;
-    const price = e.target.price.value;
-    const stock = e.target.stock.value;
+    const name = e.target.name.value.trim();
+    const description = e.target.description.value.trim();
+    const price = e.target.price.value.trim();
+    const stock = e.target.stock.value.trim();
     const category = e.target.category.value;
 
     if (!name || !description || !price || !stock || !category || colors.length === 0 || sizes.length === 0) {
       return toast({ title: "Error", description: "Please fill out all fields" });
+    }
+
+    for (const colorName of colors) {
+      if (!variantImages[colorName] || variantImages[colorName].length === 0) {
+        return toast({ title: "Error", description: `Please upload at least one image for color: ${colorName}` });
+      }
+    }
+
+    if (offerValidFrom && offerValidTill && offerValidFrom > offerValidTill) {
+      return toast({ title: "Error", description: "Offer start date cannot be after end date" });
     }
 
     const formData = new FormData();
@@ -115,11 +163,16 @@ const CreateProducts = () => {
     formData.append("category", category);
     formData.append("sizes", JSON.stringify(sizes));
     formData.append("colors", JSON.stringify(colors));
+    formData.append("discount", discount);
+    formData.append("offerTitle", offerTitle);
+    formData.append("offerDescription", offerDescription);
+    formData.append("offerValidFrom", offerValidFrom);
+    formData.append("offerValidTill", offerValidTill);
 
     const colorImageMap = [];
     Object.entries(variantImages).forEach(([colorName, imgs]) => {
       imgs.forEach((imgObj) => {
-        formData.append("images", imgObj.file);
+        if (imgObj.file) formData.append("images", imgObj.file);
         colorImageMap.push(colorName);
       });
     });
@@ -127,13 +180,18 @@ const CreateProducts = () => {
 
     try {
       setIsLoading(true);
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/create-product`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_API_URL}/create-product`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      );
       toast({ title: "Success", description: res.data.message });
+
+      // Reset form
+      setSizes([]); setColors([]); setVariantImages({});
+      setDiscount(""); setOfferTitle(""); setOfferDescription("");
+      setOfferValidFrom(""); setOfferValidTill("");
+      e.target.reset();
     } catch (error) {
       handleErrorLogout(error, "Error uploading product");
     } finally {
@@ -142,18 +200,14 @@ const CreateProducts = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center absolute inset-0">
-        <Loader2 className="h-12 w-12 animate-spin" />
-      </div>
-    );
+    return <div className="flex items-center justify-center absolute inset-0"><Loader2 className="h-12 w-12 animate-spin" /></div>;
   }
 
   return (
     <div className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle className="text-2xl">Add New Product</CardTitle>
-        <CardDescription>Enter the details for the new product you want to add</CardDescription>
+        <CardTitle className="text-2xl">Add / Edit Product</CardTitle>
+        <CardDescription>Enter the details for the product</CardDescription>
       </CardHeader>
 
       <form onSubmit={onSubmit}>
@@ -179,9 +233,7 @@ const CreateProducts = () => {
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select name="category" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="All Category">All Category</SelectItem>
                   <SelectItem value="Men">Men</SelectItem>
@@ -200,14 +252,8 @@ const CreateProducts = () => {
               <Label>Sizes</Label>
               <div className="flex items-center space-x-2">
                 <Select value={selectedSize} onValueChange={setSelectedSize}>
-                  <SelectTrigger className="w-[120px]">
-                    <SelectValue placeholder="Select size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SIZE_OPTIONS.map((size) => (
-                      <SelectItem key={size} value={size}>{size}</SelectItem>
-                    ))}
-                  </SelectContent>
+                  <SelectTrigger className="w-[120px]"><SelectValue placeholder="Select size" /></SelectTrigger>
+                  <SelectContent>{SIZE_OPTIONS.map((size) => <SelectItem key={size} value={size}>{size}</SelectItem>)}</SelectContent>
                 </Select>
                 <Button type="button" variant="outline" onClick={addSize}>Add Size</Button>
               </div>
@@ -227,64 +273,47 @@ const CreateProducts = () => {
             <div className="space-y-2">
               <Label>Colors</Label>
               <div className="flex gap-2">
-                <select
-                  value={currentColor}
-                  onChange={(e) => setCurrentColor(e.target.value)}
-                  className="border border-gray-600 rounded-md px-3 py-2 bg-gray-900 text-white flex-1"
-                >
+                <select value={currentColor} onChange={(e) => setCurrentColor(e.target.value)} className="border border-gray-600 rounded-md px-3 py-2 bg-gray-900 text-white flex-1">
                   <option value="">Select color</option>
-                  {COLOR_OPTIONS.map((color) => (
-                    <option key={color.code} value={color.code}>{color.name}</option>
-                  ))}
+                  {COLOR_OPTIONS.map((color) => (<option key={color.code} value={color.code}>{color.name}</option>))}
                 </select>
                 <Button type="button" onClick={addColor}>Add Color</Button>
               </div>
 
-              {colors.map((colorName) => (
-                <div key={colorName} className="border border-gray-700 rounded-lg p-3 bg-gray-900 mt-2">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-5 h-5 rounded-full border"
-                        style={{ backgroundColor: COLOR_OPTIONS.find(c => c.name === colorName)?.code || "#000" }}
-                      />
-                      <span className="font-medium text-white">{colorName}</span>
-                    </div>
-                    <Button variant="ghost" size="sm" className="p-1" onClick={() => removeColor(colorName)}>
-                      <X className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    {(variantImages[colorName] || []).map((imgObj, i) => (
-                      <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-700">
-                        <img src={imgObj.preview} className="w-full h-full object-cover" />
-                        <Button
-                          variant="ghost"
-                          className="absolute -top-1 -right-1 p-1 bg-gray-800 rounded-full shadow"
-                          onClick={() => removeImage(colorName, i)}
-                        >
-                          <X className="h-4 w-4 text-red-500" />
-                        </Button>
+              {colors.map((colorName) => {
+                const colorCode = COLOR_OPTIONS.find(c => c.name === colorName)?.code || "#000";
+                return (
+                  <div key={colorName} className="border border-gray-700 rounded-lg p-3 bg-gray-900 mt-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-5 h-5 rounded-full border" style={{ backgroundColor: colorCode }} />
+                        <span className="font-medium text-white">{colorName}</span>
                       </div>
-                    ))}
-                    <Button
-                      onClick={() => fileInputRefs.current[colorName]?.click()}
-                      className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-600 rounded-lg text-gray-400 hover:border-indigo-400 hover:text-indigo-500 transition"
-                    >
-                      <Upload className="h-5 w-5" />
+                      <Button variant="ghost" size="sm" className="p-1" onClick={() => removeColor(colorName)}>
+                        <X className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+
+                    {/* Existing images */}
+                    <div className="flex flex-wrap gap-3 mb-2">
+                      {(variantImages[colorName] || []).map((imgObj, i) => (
+                        <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-700 group">
+                          <img src={imgObj.preview} className="w-full h-full object-cover" />
+                          <Button variant="ghost" className="absolute -top-1 -right-1 p-1 bg-gray-800 rounded-full shadow opacity-0 group-hover:opacity-100 transition" onClick={() => removeImage(colorName, i)}>
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Upload Images button */}
+                    <Button type="button" variant="outline" onClick={() => fileInputRefs.current[colorName]?.click()} className="w-full flex items-center justify-center gap-2 border-dashed border-gray-600 hover:border-indigo-400 hover:text-indigo-500">
+                      <Upload className="h-5 w-5" /> Upload Images
                     </Button>
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      className="hidden"
-                      ref={(el) => (fileInputRefs.current[colorName] = el)}
-                      onChange={handleImageUpload(colorName)}
-                    />
+                    <input type="file" multiple accept="image/*" className="hidden" ref={(el) => (fileInputRefs.current[colorName] = el)} onChange={handleImageUpload(colorName)} />
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Offer & Discount */}
@@ -311,6 +340,7 @@ const CreateProducts = () => {
           </CardContent>
         </div>
 
+        {/* Submit Product */}
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

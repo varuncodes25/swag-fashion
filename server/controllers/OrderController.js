@@ -11,11 +11,11 @@ const getOrdersByUserId = async (req, res) => {
   const userId = req.id;
 
   try {
+  
     const orders = await Order.find({ userId }).populate({
       path: "products.id",
-      select: "name price category images",
+      select: "name price category variants", // ye sahi hai
     });
-
     if (!orders)
       return res
         .status(500)
@@ -41,7 +41,7 @@ const getAllOrders = async (req, res) => {
     const orders = await Order.find()
       .populate({
         path: "products.id",
-        select: "name price category images",
+        select: "name price category variants",
       })
       .populate({
         path: "userId",
@@ -169,8 +169,8 @@ const getMetrics = async (req, res) => {
 
     const usersGrowth = lastMonthUsers.length
       ? ((thisMonthUsers.length - lastMonthUsers.length) /
-          lastMonthUsers.length) *
-        100
+        lastMonthUsers.length) *
+      100
       : 0;
 
     // Active now (last hour) vs previous day
