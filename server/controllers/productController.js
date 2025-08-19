@@ -30,7 +30,7 @@ const createProduct = async (req, res) => {
         message: "All fields including sizes and colors are required.",
       });
     }
- console.log(req.files,"hjvgcvuiuihvuhfgvfvvjhvvrhvirvhjvehivevchjhiobvejrvivercirfjjhreioerfwh")
+    console.log(req.files, "hjvgcvuiuihvuhfgvfvvjhvvrhvirvhjvehivevchjhiobvejrvivercirfjjhreioerfwh")
     const sizesArray = Array.isArray(sizes) ? sizes : JSON.parse(sizes);
     const colorsArray = Array.isArray(colors) ? colors : JSON.parse(colors);
     const colorsImagesArray = Array.isArray(colorsForImages) ? colorsForImages : JSON.parse(colorsForImages);
@@ -206,7 +206,7 @@ const getProducts = async (req, res) => {
                 sizes: 1,
                 discount: 1,
                 offerValidTill: 1,
-                    variants: 1, // ✅ directly include the field from the document
+                variants: 1, // ✅ directly include the field from the document
 
                 discountedPrice: {
                   $round: [
@@ -349,7 +349,7 @@ const getProductByName = async (req, res) => {
     // Convert product to plain object to add discountedPrice
     const productObj = product.toObject();
     productObj.discountedPrice = discountedPrice;
-
+    console.log(productObj, "ygyfgh")
     return res.status(200).json({
       success: true,
       message: "Product found",

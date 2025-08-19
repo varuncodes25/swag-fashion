@@ -33,6 +33,7 @@ const Product = () => {
   const [productSize, setProductSize] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
 
+
   useEffect(() => {
     const fetchProductByName = async () => {
       try {
@@ -42,6 +43,15 @@ const Product = () => {
         );
         const { data } = await res.data;
         setProduct(data);
+
+        // ✅ Auto-select black if available, otherwise first color
+        if (data?.colors?.length > 0) {
+          if (data.colors.includes("black")) {
+            setProductColor("black");
+          } else {
+            setProductColor(data.colors[0]);
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch product:", error);
       }
@@ -49,8 +59,18 @@ const Product = () => {
     fetchProductByName();
   }, [productName]);
 
-  const calculateEmi = (price) => Math.round(price / 6);
+  // ✅ Reset selected image when color changes
+  useEffect(() => {
+    setSelectedImage(0);
+  }, [productColor]);
 
+  const now = new Date();
+  const { price, discount, discountedPrice, offerValidTill } = product || {};
+
+  const isOfferActive =
+    offerValidTill && new Date(offerValidTill) >= now && discount > 0;
+
+  const displayPrice = isOfferActive ? discountedPrice : price;
   const checkAvailability = async () => {
     if (pincode.trim() === "") {
       setAvailabilityMessage("Please enter a valid pincode");
@@ -96,7 +116,6 @@ const Product = () => {
       return;
     }
 
-    // Required fields check
     const requiredFields = [
       "name",
       "email",
@@ -112,47 +131,38 @@ const Product = () => {
       }
     }
 
-    // Stock validation
     if (productQuantity > product.stock) {
       toast({ title: "Product out of stock" });
       return;
     }
 
-    // Blacklist validation
     if (product.blacklisted) {
       toast({ title: "Product isn't available for purchase" });
       return;
     }
 
-    // Color check
     if (productColor === "") {
       toast({ title: "Please select a color" });
       return;
     }
 
-    // Payment method check
     if (!paymentMethod) {
       toast({ title: "Please select a payment method" });
       return;
     }
 
-    // Total price (in rupees, not paise)
     const totalAmount =
       (product.discountedPrice || product.price) * productQuantity;
 
     if (paymentMethod === "razorpay") {
       try {
-        // Convert to paise
         const amountInPaise = totalAmount * 100;
-
-        // Backend order
         const order = await generatePayment(amountInPaise);
 
-        // Verify payment
         await verifyPayment(
           {
             ...order,
-            amount: order.amount || amountInPaise, // Razorpay expects paise
+            amount: order.amount || amountInPaise,
           },
           [
             {
@@ -163,7 +173,6 @@ const Product = () => {
               color: productColor,
               size: productSize,
               image: product?.variants?.[0]?.images?.[selectedImage]?.url,
-
             },
           ],
           address,
@@ -211,7 +220,6 @@ const Product = () => {
       }
     }
 
-    // Reset
     setPurchaseProduct(false);
     setPaymentMethod("");
   };
@@ -263,6 +271,16 @@ const Product = () => {
               </span>
             </div>
           </div>
+          <div className="mt-2 flex items-baseline gap-1">
+            {isOfferActive && discount > 0 && price !== undefined && (
+              <span className="text-xs text-gray-400 line-through">
+                ₹{Number(price).toFixed(2)}
+              </span>
+            )}
+            <span className="text-lg font-bold text-gray-900 dark:text-yellow-400">
+              ₹{Number(displayPrice || 0).toFixed(2)}
+            </span>
+          </div>
 
           {/* Size Selection */}
           <div className="py-5 border-b">
@@ -295,7 +313,8 @@ const Product = () => {
                   strokeWidth={0.2}
                   size={40}
                   onClick={() => setProductColor(color)}
-                  className="cursor-pointer filter hover:brightness-50"
+                  className={`cursor-pointer filter hover:brightness-50 ${productColor === color ? "ring-2 ring-orange-400" : ""
+                    }`}
                 />
               ))}
             </div>
@@ -406,11 +425,11 @@ const Product = () => {
             )}
           </div>
         </div>
-      </main >
+      </main>
 
       {/* REVIEW SECTION */}
-      < ReviewsComponent productId={product?._id} />
-    </div >
+      <ReviewsComponent productId={product?._id} />
+    </div>
   );
 };
 
