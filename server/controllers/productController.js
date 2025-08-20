@@ -1,7 +1,7 @@
 const { ROLES } = require("../utils/constants");
 const Product = require("../models/Product");
 const cloudinary = require("../utils/cloudinary");
-var redisClient = require("../utils/redisClient");
+
 const createProduct = async (req, res) => {
   if (req.role !== ROLES.admin) {
     return res.status(401).json({ success: false, message: "Access denied" });
