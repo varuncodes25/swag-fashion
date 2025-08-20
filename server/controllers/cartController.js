@@ -51,22 +51,30 @@ exports.getCart = async function(req, res) {
 };
 
 // Remove product from cart
-exports.removeFromCart = async function(req, res) {
-  try {
-    var userId = req.body.userId;
-    var productId = req.body.productId;
 
-    var cart = await Cart.findOne({ user: userId });
+exports.removeFromCart = async function (req, res) {
+  try {
+    const { userId, cartItemId } = req.body; // cartItemId is the _id of the cart item
+    console.log(req.body, "Remove cart item payload");
+
+    // Find user's cart
+    const cart = await Cart.findOne({ user: userId });
     if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
 
-    cart.products = cart.products.filter(function(p) {
-      return p.product.toString() !== productId;
-    });
+    // Remove the exact cart item
+    const initialLength = cart.products.length;
+    cart.products = cart.products.filter(p => p._id.toString() !== cartItemId);
+
+    if (cart.products.length === initialLength) {
+      return res.status(404).json({ success: false, message: "Cart item not found" });
+    }
 
     await cart.save();
-    res.status(200).json({ success: true, message: "Product removed", cart: cart });
+
+    res.status(200).json({ success: true, message: "Product removed", cart });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
+

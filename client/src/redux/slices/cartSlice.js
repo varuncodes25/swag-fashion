@@ -1,64 +1,90 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const initialState = {
+  cartItems: [],
+  totalQuantity: 0,
+  totalPrice: 0,
+};
+
 const cartSlice = createSlice({
   name: "cart",
-
-  initialState: {
-    cartItems: [],
-    totalQuantity: 0,
-    totalPrice: 0,
-  },
-
+  initialState,
   reducers: {
+    // Set cart from backend (used when fetching user cart)
+    setCart: (state, action) => {
+      const products = action.payload.products || [];
+
+      // Map over the products and create cartItems
+      state.cartItems = products.map((item) => {
+        const variant = item.product.variants?.find((v) => v.color === item.color);
+
+        return {
+          cartItemId: item._id,       // ✅ Cart item ID, for remove API
+          productId: item.product._id, // ✅ Product ID
+          quantity: item.quantity,
+          color: item.color,
+          size: item.size,
+          price: item.product.price,
+          name: item.product.name,
+          image: variant?.images?.[0]?.url || "/fallback.png",
+          stock: item.product.stock,
+          blacklisted: item.product.blacklisted,
+        };
+      });
+
+
+      // Calculate totals
+      state.totalQuantity = state.cartItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0
+      );
+      state.totalPrice = state.cartItems.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+      );
+    },
+
+
+    // Add an item to cart
     addToCart: (state, action) => {
-      const newItem = action.payload;
-      const existingItemIndex = state.cartItems.findIndex(
-        (item) => item._id === newItem._id
+      const existingItem = state.cartItems.find(
+        (item) => item._id === action.payload._id && item.color === action.payload.color && item.size === action.payload.size
       );
-
-      if (existingItemIndex === -1) {
-        state.cartItems.push({
-          ...newItem,
-          quantity: newItem.quantity,
-          totalItemPrice: newItem.quantity * newItem.price,
-        });
+      if (existingItem) {
+        existingItem.quantity += action.payload.quantity;
       } else {
-        state.cartItems[existingItemIndex].quantity += newItem.quantity;
-        state.cartItems[existingItemIndex].totalItemPrice +=
-          newItem.price * newItem.quantity;
+        state.cartItems.push(action.payload);
       }
 
-      state.totalQuantity += newItem.quantity;
-      state.totalPrice = Number(
-        state.totalPrice + newItem.price * newItem.quantity.toFixed(2)
+      // recalc totals
+      state.totalQuantity = state.cartItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0
+      );
+      state.totalPrice = state.cartItems.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
       );
     },
 
+    // Remove a single item from cart
     removeFromCart: (state, action) => {
-      const itemToRemove = action.payload;
-
-      const existingItemIndex = state.cartItems.findIndex(
-        (item) => item._id === itemToRemove._id
+      // action.payload = _id of product to remove
+      state.cartItems = state.cartItems.filter(
+        (item) => item._id !== action.payload
       );
-
-      if (existingItemIndex === -1) return;
-
-      const existingItem = state.cartItems[existingItemIndex];
-      existingItem.quantity -= itemToRemove.quantity;
-      existingItem.totalItemPrice -= itemToRemove.price * itemToRemove.quantity;
-
-      state.totalQuantity -= itemToRemove.quantity;
-      state.totalPrice = Number(
-        (state.totalPrice - itemToRemove.price * itemToRemove.quantity).toFixed(
-          2
-        )
+      // recalc totals
+      state.totalQuantity = state.cartItems.reduce(
+        (acc, item) => acc + item.quantity,
+        0
       );
-
-      if (existingItem.quantity <= 0) {
-        state.cartItems = state.cartItems.splice(existingItemIndex, 1);
-      }
+      state.totalPrice = state.cartItems.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+      );
     },
 
+    // Empty the entire cart
     emptyCart: (state) => {
       state.cartItems = [];
       state.totalQuantity = 0;
@@ -67,6 +93,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, removeFromCart, emptyCart } = cartSlice.actions;
-
+export const { setCart, addToCart, removeFromCart, emptyCart } = cartSlice.actions;
 export default cartSlice.reducer;

@@ -5,13 +5,14 @@ import { Colors } from "@/constants/colors";
 import { starsGenerator } from "@/constants/helper";
 import useRazorpay from "@/hooks/use-razorpay";
 import { useToast } from "@/hooks/use-toast";
-import { addToCart } from "@/redux/slices/cartSlice";
+import { addToCart, setCart } from "@/redux/slices/cartSlice";
 import axios from "axios";
 import { Circle, Minus, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-
+import useCart from "@/hooks/useCart";
+import useCartActions from "@/hooks/useCartActions";
 const productStock = 5;
 
 const Product = () => {
@@ -21,7 +22,7 @@ const Product = () => {
   const { toast } = useToast();
   const dispatch = useDispatch();
   const { verifyPayment, generatePayment } = useRazorpay();
-
+  const { fetchCart } = useCart();
   const [productQuantity, setProductQuantity] = useState(1);
   const [pincode, setPincode] = useState("");
   const [availabilityMessage, setAvailabilityMessage] = useState("");
@@ -83,7 +84,49 @@ const Product = () => {
     setAvailabilityMessage(data.message);
   };
 
-  const handleAddToCart = async () => {
+  // const handleAddToCart = async () => {
+  //   if (!isAuthenticated) {
+  //     navigate("/login");
+  //     return;
+  //   }
+
+  //   if (!productColor) {
+  //     toast({ title: "Please select a color" });
+  //     return;
+  //   }
+
+  //   try {
+  //     const user = JSON.parse(localStorage.getItem("user"));
+  //     if (!user) return;
+
+  //     const res = await axios.post(`${import.meta.env.VITE_API_URL}/add`, {
+  //       userId: user.id,
+  //       productId: product._id,
+  //       quantity: productQuantity,
+  //       price: product.price,
+  //       color: productColor,
+  //       size: productSize,
+  //     });
+
+  //     if (res.data.success) {
+  //       // Fetch the updated cart from backend
+  //       await fetchCart(user.id);
+
+  //       setProductQuantity(1);
+  //       toast({ title: "Product added to cart" });
+  //     } else {
+  //       toast({ title: "Failed to add product to cart" });
+  //     }
+  //   } catch (error) {
+  //     console.error("Add to cart error:", error);
+  //     toast({ title: "Failed to add product to cart" });
+  //   }
+  // };
+
+
+const { addToCart } = useCartActions();
+
+const handleAddToCart = () => {
   if (!isAuthenticated) {
     navigate("/login");
     return;
@@ -92,46 +135,22 @@ const Product = () => {
   if (!productColor) {
     toast({ title: "Please select a color" });
     return;
-  }   
-  const urrr= JSON.parse(localStorage.getItem("user"));
-  console.log( JSON.parse(localStorage.getItem("user")));
-  console.log("Product details:", {
-    _id: urrr.id)
-  try {
-    // Call your backend API to save cart
-    const res = await axios.post(
-      `${import.meta.env.VITE_API_URL}/add`, // userId from auth state
-      {
-        userId: JSON.parse(localStorage.getItem("user")).id,
-        productId: product._id,
-        quantity: productQuantity,
-        price: product.price,
-        color: productColor,
-      }
-    );
-
-    // Update local Redux cart as well (optional, for immediate UI update)
-    dispatch(
-      addToCart({
-        _id: product._id,
-        name: product.name,
-        price: product.price,
-        quantity: productQuantity,
-        image: product?.variants?.[0]?.images?.[0]?.url || "/fallback.png",
-        color: productColor,
-        stock: product.stock,
-        blacklisted: product.blacklisted,
-        size: productSize,
-      })
-    );
-
-    setProductQuantity(1);
-    toast({ title: "Product added to cart" });
-  } catch (error) {
-    console.error(error);
-    toast({ title: "Failed to add product to cart" });
   }
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  addToCart({
+    userId: user.id,
+    productId: product._id,
+    quantity: productQuantity,
+    price: product.price,
+    color: productColor,
+    size: productSize,
+    toast,
+    setQuantityCallback: setProductQuantity,
+  });
 };
+
+
 
 
   const handleBuyNow = async () => {
