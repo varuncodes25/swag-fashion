@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ModeToggle } from "./ModeToggle";
 import CartDrawer from "./CartDrawer";
 import { User, Menu, ChevronLeft, X, Sparkles } from "lucide-react";
 import LogoutToggle from "./LogoutToggle";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import swagiconDark from "@/assets/iconwhite.png";
+import { setCart } from "@/redux/slices/cartSlice";
+import axios from "axios";
 const Navbar = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -14,6 +16,27 @@ const Navbar = () => {
   const handleNavigate = () => {
     navigate("/");
   };
+
+  const dispatch = useDispatch();
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/cart/${user.id}`
+        );
+        console.log(res, "uyfuyguhbjhb")
+        if (res.data.success) {
+          dispatch(setCart(res.data.cart)); // set cart in Redux
+        }
+      } catch (error) {
+        console.error("Failed to fetch cart:", error);
+      }
+    };
+
+    fetchCart(); // ✅ call the function here
+  }, [user?.id, dispatch]);
 
   return (
     <nav className="relative border-b dark:bg-zinc-900 bg-white px-4 sm:px-6 py-3 sm:py-4">
@@ -29,17 +52,17 @@ const Navbar = () => {
 
         {/* Logo centered */}
         <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xl sm:text-2xl font-bold text-black dark:text-white">
-  <Link
-    to="/"
-    className="flex items-center gap-2 hover:text-pink-500 transition-colors duration-300"
-  >
-    <img
-      src={swagiconDark}
-      alt="Swag Icon Dark"
-      className="h-20 w-20 sm:h-24 sm:w-24 lg:h-36 lg:w-40 rounded-full"
-    />
-  </Link>
-</div>
+          <Link
+            to="/"
+            className="flex items-center gap-2 hover:text-pink-500 transition-colors duration-300"
+          >
+            <img
+              src={swagiconDark}
+              alt="Swag Icon Dark"
+              className="h-20 w-20 sm:h-24 sm:w-24 lg:h-36 lg:w-40 rounded-full"
+            />
+          </Link>
+        </div>
 
         {/* Hamburger / Mobile toggle */}
         <button

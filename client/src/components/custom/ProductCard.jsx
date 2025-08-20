@@ -4,7 +4,7 @@ import { toast } from "@/hooks/use-toast";
 import { addToCart } from "@/redux/slices/cartSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-
+import useCartActions from "@/hooks/useCartActions";
 const ProductCard = ({
   _id,
   name = "Product Title",
@@ -20,6 +20,8 @@ const ProductCard = ({
   const { isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { addToCart } = useCartActions();
+
   const now = new Date();
   const isOfferActive = offerValidTill
     ? new Date(offerValidTill) >= now && discount > 0
@@ -29,22 +31,27 @@ const ProductCard = ({
     image?.url ||
     (variants.length > 0 && variants[0].images?.[0]?.url) ||
     "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg?auto=compress&cs=tinysrgb&w=600";
-  const handleAddToCart = (e) => {
+  
+    const handleAddToCart = (e) => {
     e.preventDefault();
+
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
-    dispatch(
-      addToCart({
-        _id,
-        name,
-        price: discountedPrice || price,
-        quantity: 1,
-        image: image.url,
-      })
-    );
-    toast({ title: "Product added to cart" });
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) return;
+
+    addToCart({
+      userId: user.id,
+      productId: _id,
+      quantity: 1,
+      price: displayPrice,
+      color: variants?.[0]?.color || "Default", // adjust logic if multiple colors
+      size: "", // optional, you can add size selection later
+      toast,
+    });
   };
 
   return (

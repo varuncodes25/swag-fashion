@@ -164,6 +164,14 @@ const getProducts = async (req, res) => {
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 9;
 
+     // Unique cache key per query
+    var cacheKey = `products:${page}:${limit}:${category || "all"}:${price || "all"}:${search || "all"}:${sort || "default"}`;
+
+    
+   
+    if (category && category.toLowerCase() !== "all") query.category = category.trim();
+    if (search && search.trim() !== "") query.name = { $regex: search.trim(), $options: "i" };
+    if (price && !isNaN(price)) query.price = { $lte: Number(price) };
     const query = { blacklisted: false };
 
     // Category filter

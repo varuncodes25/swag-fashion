@@ -10,19 +10,19 @@ import {
 import { Button } from "../ui/button";
 import { ShoppingCart } from "lucide-react";
 import { Badge } from "../ui/badge";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import CartProduct from "./CartProduct";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { setCart } from "@/redux/slices/cartSlice";
 
 const CartDrawer = () => {
   const { cartItems, totalQuantity, totalPrice } = useSelector(
     (state) => state.cart
   );
-
+  console.log(cartItems)
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
-
   const handleCheckout = () => {
     setOpen(false); // ✅ close drawer
     navigate("/checkout"); // ✅ navigate to checkout page
