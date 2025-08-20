@@ -7,11 +7,12 @@ const getShiprocketToken = require("../utils/shiprocket");
 const { createShipment } = require("./shiprocketController"); // Import your Shiprocket logic
 
 const axios = require("axios");
+const Cart = require("../models/Cart");
 const getOrdersByUserId = async (req, res) => {
   const userId = req.id;
 
   try {
-  
+
     const orders = await Order.find({ userId }).populate({
       path: "products.id",
       select: "name price category variants", // ye sahi hai
@@ -280,7 +281,12 @@ const createCODOrder = async (req, res) => {
       products,
       userId,
     });
+    const purchasedProductIds = products.map((p) => p.id);
 
+    await Cart.updateOne(
+      { user: userId },
+      { $pull: { products: { product: { $in: purchasedProductIds } } } }
+    );
     // ✅ Immediately create shipment in Shiprocket
     try {
       await createShipment(order._id);

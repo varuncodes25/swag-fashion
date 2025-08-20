@@ -69,37 +69,36 @@ const HeaderDisplay = () => {
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-           {/* Slider track */}
-<CarouselContent
-  className="flex"
-  style={{
-    transform: `translateX(-${currentIndex * 100}%)`,
-    transition: "none", // no animation for instant slide change
-  }}
->
-  {imagesData.map((image, index) => (
-    <CarouselItem key={index} className="w-full h-full flex-shrink-0">
-      <img
-        src={image}
-        alt={`banner-${index}`}
-        className="w-full h-full object-cover select-none"
-        draggable={false}
-        loading="lazy"
-      />
-    </CarouselItem>
-  ))}
-</CarouselContent>
+          {/* Slider track */}
+          <CarouselContent
+            className="flex"
+            style={{
+              transform: `translateX(-${currentIndex * 100}%)`,
+              transition: "none", // no animation for instant slide change
+            }}
+          >
+            {imagesData.map((image, index) => (
+              <CarouselItem key={index} className="w-full h-full flex-shrink-0">
+                <img
+                  src={image}
+                  alt={`banner-${index}`}
+                  className="w-full h-full object-cover select-none"
+                  draggable={false}
+                  loading="lazy"
+                />
+              </CarouselItem>
+            ))}
+          </CarouselContent>
           {/* Mobile dots below banner */}
           <div className="sm:hidden flex justify-center items-center gap-2 absolute bottom-2 left-1/2 -translate-x-1/2 z-10">
             {imagesData.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`transition-all duration-300 rounded-full ${
-                  index === currentIndex
+                className={`transition-all duration-300 rounded-full ${index === currentIndex
                     ? "bg-white w-5 h-1.5"
                     : "bg-gray-500/70 hover:bg-gray-400 w-2 h-2"
-                }`}
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
                 type="button"
               />
@@ -139,11 +138,10 @@ const HeaderDisplay = () => {
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`transition-all duration-300 rounded-full ${
-                  index === currentIndex
+                className={`transition-all duration-300 rounded-full ${index === currentIndex
                     ? "bg-white w-7 h-2.5"
                     : "bg-gray-500/70 hover:bg-gray-400 w-2.5 h-2.5"
-                }`}
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
                 type="button"
               />

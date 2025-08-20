@@ -9,21 +9,21 @@ var {
 } = require("razorpay/dist/utils/razorpay-utils");
 
 var instance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID||"rzp_test_RW5A57UKh8Dv3F",
-  key_secret: process.env.RAZORPAY_KEY_SECRET ||"YourKeySecretHereHgijUZmybpNNR67lBrY4OumS",
-  
+  key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_RW5A57UKh8Dv3F",
+  key_secret: process.env.RAZORPAY_KEY_SECRET || "YourKeySecretHereHgijUZmybpNNR67lBrY4OumS",
+
 });
-console.log("Razorpay instance created with key_id:", process.env.RAZORPAY_KEY_ID,process.env.RAZORPAY_KEY_SECRET);
+console.log("Razorpay instance created with key_id:", process.env.RAZORPAY_KEY_ID, process.env.RAZORPAY_KEY_SECRET);
 console.log("Razorpay key_secret is set");
 const generatePayment = async (req, res) => {
   const userId = req.id;
- console.log("Generating payment for user:", userId);
+  console.log("Generating payment for user:", userId);
   if (!userId) {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
   try {
     const { amount } = req.body;
-   console.log("Amount received for payment generation:", amount);
+    console.log("Amount received for payment generation:", amount);
     const options = {
       amount: amount * 100, // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
       currency: "INR",
@@ -31,7 +31,7 @@ const generatePayment = async (req, res) => {
     };
 
     const user = await User.findById(userId);
-   console.log("User found:", user ? user.name : "Not found");
+    console.log("User found:", user ? user.name : "Not found");
     if (!user) {
       return res
         .status(404)
@@ -96,6 +96,14 @@ const verifyPayment = async (req, res) => {
         { $inc: { stock: -product.quantity } }
       );
     }
+
+    // remove purchased items from cart
+    const purchasedProductIds = productArray.map((p) => p.id);
+
+    await Cart.updateOne(
+      { user: userId },
+      { $pull: { products: { product: { $in: purchasedProductIds } } } }
+    );
 
     await Order.create({
       amount: amount / 100,
