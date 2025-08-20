@@ -164,47 +164,22 @@ const getProducts = async (req, res) => {
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 9;
 
-     // Unique cache key per query
-    var cacheKey = `products:${page}:${limit}:${category || "all"}:${price || "all"}:${search || "all"}:${sort || "default"}`;
-
-    
-   
-    if (category && category.toLowerCase() !== "all") query.category = category.trim();
-    if (search && search.trim() !== "") query.name = { $regex: search.trim(), $options: "i" };
-    if (price && !isNaN(price)) query.price = { $lte: Number(price) };
-     // Unique cache key per query
-    var cacheKey = `products:${page}:${limit}:${category || "all"}:${price || "all"}:${search || "all"}:${sort || "default"}`;
-
-    
-   
-    if (category && category.toLowerCase() !== "all") query.category = category.trim();
-    if (search && search.trim() !== "") query.name = { $regex: search.trim(), $options: "i" };
-    if (price && !isNaN(price)) query.price = { $lte: Number(price) };
+    // Base query
     const query = { blacklisted: false };
 
-    // Category filter
-    if (category && category.toLowerCase() !== "all") {
-      query.category = category.trim();
-    }
-
-    // Search filter
-    if (search && search.trim() !== "") {
-      query.name = { $regex: search.trim(), $options: "i" };
-    }
-
-    // Price filter
-    if (price && !isNaN(price)) {
-      query.price = { $lte: Number(price) };
-    }
+    // Filters
+    if (category && category.toLowerCase() !== "all") query.category = category.trim();
+    if (search && search.trim() !== "") query.name = { $regex: search.trim(), $options: "i" };
+    if (price && !isNaN(price)) query.price = { $lte: Number(price) };
 
     // Sorting
-    let sortBy = { createdAt: -1 };
+    let sortBy = { createdAt: -1 }; // default
     if (sort === "priceLowToHigh") sortBy = { price: 1 };
     if (sort === "priceHighToLow") sortBy = { price: -1 };
 
-    // Aggregation pipeline (fast & single query)
     const now = new Date();
 
+    // Aggregation pipeline
     const pipeline = [
       { $match: query },
       {
@@ -222,24 +197,13 @@ const getProducts = async (req, res) => {
                 sizes: 1,
                 discount: 1,
                 offerValidTill: 1,
-                variants: 1, // ✅ directly include the field from the document
-
+                variants: 1,
                 discountedPrice: {
                   $round: [
                     {
                       $cond: [
-                        {
-                          $and: [
-                            { $gt: ["$discount", 0] },
-                            { $gt: ["$offerValidTill", now] }, // Use variable here
-                          ],
-                        },
-                        {
-                          $multiply: [
-                            "$price",
-                            { $subtract: [1, { $divide: ["$discount", 100] }] },
-                          ],
-                        },
+                        { $and: [{ $gt: ["$discount", 0] }, { $gt: ["$offerValidTill", now] }] },
+                        { $multiply: ["$price", { $subtract: [1, { $divide: ["$discount", 100] }] }] },
                         "$price",
                       ],
                     },
@@ -256,7 +220,6 @@ const getProducts = async (req, res) => {
     ];
 
     const result = await Product.aggregate(pipeline);
-
     const products = result[0].products;
     const totalProducts = result[0].totalCount[0]?.count || 0;
     const totalPages = Math.ceil(totalProducts / limit);
@@ -277,6 +240,7 @@ const getProducts = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 const getProductsforadmin = async (req, res) => {
   try {
     let { page, limit, category, price, search, sort } = req.query;
