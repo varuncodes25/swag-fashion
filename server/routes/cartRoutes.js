@@ -7,10 +7,7 @@ var cartController = require("../controllers/cartController");
 router.post("/add", cartController.addToCart);
 
 // Get user's cart
-// router.get("/:userId", cartController.getCart);
-
-// // Remove product from cart
-// router.post("/remove", cartController.removeFromCart);
+router.get("/cart/:userId", cartController.getCart);
 
 // // Clear all items from user's cart
 // router.delete("/:userId/clear", cartController.clearCart);
