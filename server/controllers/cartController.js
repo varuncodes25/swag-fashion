@@ -3,6 +3,7 @@ var Product = require("../models/Product");
 
 // Add product to cart
 exports.addToCart = async function(req, res) {
+  console.log("Adding product to cart", req.body);
   try {
     var userId = req.body.userId;
     var productId = req.body.productId;

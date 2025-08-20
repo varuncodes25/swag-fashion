@@ -1,6 +1,5 @@
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerFooter,
@@ -25,8 +24,8 @@ const CartDrawer = () => {
   const navigate = useNavigate();
 
   const handleCheckout = () => {
-    setOpen(false); // ✅ close the drawer
-    navigate("/checkout"); // ✅ navigate to checkout
+    setOpen(false); // ✅ close drawer
+    navigate("/checkout"); // ✅ navigate to checkout page
   };
 
   return (
@@ -50,6 +49,7 @@ const CartDrawer = () => {
           </DrawerDescription>
         </DrawerHeader>
 
+        {/* Cart Items */}
         <div className="flex flex-col gap-3 max-h-[70vh] overflow-y-auto px-4">
           {cartItems.length === 0 ? (
             <h2 className="text-primary text-sm">
@@ -60,6 +60,7 @@ const CartDrawer = () => {
           )}
         </div>
 
+        {/* Footer */}
         <DrawerFooter className="flex flex-col items-start gap-3">
           <div className="w-full flex justify-between text-base font-semibold">
             <span>Total:</span>

@@ -83,16 +83,34 @@ const Product = () => {
     setAvailabilityMessage(data.message);
   };
 
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-    if (!productColor) {
-      toast({ title: "Please select a color" });
-      return;
-    }
+  const handleAddToCart = async () => {
+  if (!isAuthenticated) {
+    navigate("/login");
+    return;
+  }
 
+  if (!productColor) {
+    toast({ title: "Please select a color" });
+    return;
+  }   
+  const urrr= JSON.parse(localStorage.getItem("user"));
+  console.log( JSON.parse(localStorage.getItem("user")));
+  console.log("Product details:", {
+    _id: urrr.id)
+  try {
+    // Call your backend API to save cart
+    const res = await axios.post(
+      `${import.meta.env.VITE_API_URL}/add`, // userId from auth state
+      {
+        userId: JSON.parse(localStorage.getItem("user")).id,
+        productId: product._id,
+        quantity: productQuantity,
+        price: product.price,
+        color: productColor,
+      }
+    );
+
+    // Update local Redux cart as well (optional, for immediate UI update)
     dispatch(
       addToCart({
         _id: product._id,
@@ -106,9 +124,15 @@ const Product = () => {
         size: productSize,
       })
     );
+
     setProductQuantity(1);
     toast({ title: "Product added to cart" });
-  };
+  } catch (error) {
+    console.error(error);
+    toast({ title: "Failed to add product to cart" });
+  }
+};
+
 
   const handleBuyNow = async () => {
     if (!isAuthenticated) {
