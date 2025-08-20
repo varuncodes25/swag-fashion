@@ -60,6 +60,11 @@ const Footer = () => {
                 Bulk Orders
               </Link>
             </li>
+             <li>
+              <Link to="/TermsAndConditions" className="hover:underline">
+                TermsAndConditions
+              </Link>
+            </li>
           </ul>
         </div>
         {/* Contact & Social */}
