@@ -72,7 +72,7 @@ const Contact = () => {
             <div className="flex items-center space-x-4">
               <Phone className="text-customYellow" />
               <span className="text-gray-700 dark:text-customGray">
-                +1 (555) 123-4567
+                +91 7410797961
               </span>
             </div>
             <div className="flex items-center space-x-4">
