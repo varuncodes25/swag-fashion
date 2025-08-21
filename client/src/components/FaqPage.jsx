@@ -10,7 +10,7 @@ const faqs = [
   {
     question: "Can I print my own design?",
     answer:
-      "Absolutely! You can upload your own artwork or design during the ordering process.",
+      "Absolutely! Please email your artwork or design to us when placing your order.",
   },
   {
     question: "What printing methods do you use?",

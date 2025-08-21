@@ -272,14 +272,22 @@ const AllProducts = () => {
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mx-2 sm:mx-0">
-          {products.map((product) => (
+          {products?.map((product) => (
             <Card key={product._id} className="flex flex-col">
               <div className="aspect-square relative">
                 <img
-                  src={product.images[0]?.url}
+                  src={
+                    Array.isArray(product.variants) &&
+                      product.variants.length > 0 &&
+                      Array.isArray(product.variants[0].images) &&
+                      product.variants[0].images.length > 0
+                      ? product.variants[0].images[0].url
+                      : "/placeholder.png"
+                  }
                   alt={product.name}
                   className="rounded-t-lg object-cover w-full h-full"
                 />
+
               </div>
 
               <CardContent className="flex-grow p-4">

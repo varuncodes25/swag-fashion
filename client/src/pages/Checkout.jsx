@@ -197,7 +197,7 @@ const Checkout = () => {
                       : "bg-white text-gray-700 hover:bg-gray-100"
                   }`}
                 >
-                  {method === "cod" ? "Cash on Delivery" : "Razorpay"}
+                  {method === "cod" ? "Cash on Delivery" : "Online"}
                 </button>
               ))}
             </div>

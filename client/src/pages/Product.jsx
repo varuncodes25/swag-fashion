@@ -453,7 +453,7 @@ const handleAddToCart = () => {
                     }
                     onClick={() => setPaymentMethod("razorpay")}
                   >
-                    Pay with Razorpay
+                    Pay with Online
                   </Button>
                   <Button
                     variant={paymentMethod === "cod" ? "default" : "outline"}
