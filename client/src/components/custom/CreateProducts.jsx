@@ -24,11 +24,14 @@ import axios from "axios";
 
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL"];
 const COLOR_OPTIONS = [
+  { name: "White", code: "#FFFFFF" },
   { name: "Black", code: "#000000" },
-  { name: "Red", code: "#dd2c2c" },
-  { name: "White", code: "#ffffff" },
-  { name: "Blue", code: "#0000ff" },
+  { name: "Maroon", code: "#800000" },
+  { name: "Gray", code: "#808080" },
+  { name: "Blue", code: "#0000FF" },
+  { name: "Purple", code: "#800080" }, 
 ];
+
 
 const CreateProducts = ({ productId }) => {
   const [currentColor, setCurrentColor] = useState("");
