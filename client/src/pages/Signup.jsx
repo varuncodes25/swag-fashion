@@ -143,11 +143,12 @@ const Signup = () => {
             <Link to={"/login"}>
               <label
                 htmlFor="terms"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium cursor-pointer"
               >
                 Login
               </label>
             </Link>
+
           </div>
         </form>
       </div>
