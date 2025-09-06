@@ -12,37 +12,64 @@ const Signup = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const { name, email, phone, password } = e.target.elements;
 
-    if (
-      name.value.trim() == "" ||
-      email.value.trim() == "" ||
-      phone.value.trim() == "" ||
-      password.value.trim() == ""
-    ) {
-      toast({
-        title: "Please fill all the fields",
-        variant: "destructive",
-      });
+    // Name validation
+    if (!name.value.trim()) {
+      return toast({ title: "Name is required", variant: "destructive" });
+    }
+    if (name.value.trim().length < 3) {
+      return toast({ title: "Name must be at least 3 characters", variant: "destructive" });
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.value.trim()) {
+      return toast({ title: "Email is required", variant: "destructive" });
+    }
+    if (!emailRegex.test(email.value.trim())) {
+      return toast({ title: "Enter a valid email address", variant: "destructive" });
+    }
+
+    // Phone validation
+    const phoneRegex = /^[0-9]{10,15}$/; // adjust length as needed
+    if (!phone.value.trim()) {
+      return toast({ title: "Phone number is required", variant: "destructive" });
+    }
+    if (!phoneRegex.test(phone.value.trim())) {
+      return toast({ title: "Enter a valid phone number", variant: "destructive" });
+    }
+
+    // Password validation
+    if (!password.value.trim()) {
+      return toast({ title: "Password is required", variant: "destructive" });
+    }
+    if (password.value.trim().length < 6) {
+      return toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+    }
+
+    // Terms validation
+    if (!enabled) {
+      return toast({ title: "You must accept the terms and conditions", variant: "destructive" });
+    }
+
+    // If all validation passes
     try {
       const res = await axios.post(import.meta.env.VITE_API_URL + "/signup", {
-        name: name.value,
-        phone: phone.value,
-        email: email.value,
-        password: password.value,
+        name: name.value.trim(),
+        phone: phone.value.trim(),
+        email: email.value.trim(),
+        password: password.value.trim(),
       });
 
       const data = await res.data;
 
-      toast({
-        title: data.message,
-      });
-
+      toast({ title: data.message });
       navigate("/login");
     } catch (error) {
       toast({
@@ -60,24 +87,42 @@ const Signup = () => {
           <Input placeholder="Enter Your Name" type="text" name="name" />
           <Input placeholder="Enter Your Email" type="email" name="email" />
           <Input placeholder="Enter Your Phone" type="tel" name="phone" />
-          <div className="border rounded-md relative flex justify-between items-center p-2 outline-none focus-within:ring-2 focus-within:ring-blue-500">
-            <input
-              className="outline-none w-full"
+          <div className="relative w-full">
+            <Input
+              className="w-full px-4 py-2 outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md pr-10"
               placeholder="Enter Your Password"
-              type={showPassword ? "text" : "password"} // control type here
+              type={showPassword ? "text" : "password"}
               name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
+
+
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
             >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" />
-              ) : (
-                <Eye className="h-4 w-4" />
-              )}
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
+
+            <div className="mt-2 text-sm space-y-1">
+              <p className={password.length === 0 ? "text-gray-400" : password.length >= 8 ? "text-green-500" : "text-red-500"}>
+                {password.length === 0 ? " At least 8 characters" : password.length >= 8 ? "✅ At least 8 characters" : "❌ At least 8 characters"}
+              </p>
+              <p className={password.length === 0 ? "text-gray-400" : /[A-Za-z]/.test(password) ? "text-green-500" : "text-red-500"}>
+                {password.length === 0 ? " Contains letters" : /[A-Za-z]/.test(password) ? "✅ Contains letters" : "❌ Contains letters"}
+              </p>
+              <p className={password.length === 0 ? "text-gray-400" : /\d/.test(password) ? "text-green-500" : "text-red-500"}>
+                {password.length === 0 ? " Contains numbers" : /\d/.test(password) ? "✅ Contains numbers" : "❌ Contains numbers"}
+              </p>
+            </div>
+
+
           </div>
+
+
+
           <div className="flex items-center space-x-2">
             <Checkbox id="terms" onCheckedChange={(e) => setEnabled(e)} />
             <label
