@@ -24,16 +24,17 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
- console.log("Current Page:", orders);
+  console.log("Current Page:", orders);
   const { handleErrorLogout } = useErrorLogout();
 
+// pura product dekho
   useEffect(() => {
     const fetchOrders = () => {
       try {
         axios
           .get(
             import.meta.env.VITE_API_URL +
-              `/get-all-orders?page=${currentPage}&limit=10`,
+            `/get-all-orders?page=${currentPage}&limit=10`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -86,7 +87,14 @@ const Orders = () => {
                   <Card key={item._id} className="space-y-2 p-3 shadow-md">
                     <div className="grid sm:grid-cols-3 gap-2">
                       {item?.products?.map((product) => (
-                        <OrderProductTile key={product._id} {...product} />
+                        <OrderProductTile
+                          key={product._id}
+                          name={product.name}
+                          price={product.price}
+                          quantity={product.quantity}
+                          image={product?.id?.variants?.[0]?.images?.[0]?.url}
+                        />
+
                       ))}
                     </div>
                     <hr />
@@ -100,9 +108,10 @@ const Orders = () => {
                       <p className="flex justify-between sm:justify-start gap-2 items-center px-3">
                         <span className="font-bold">Address:</span>
                         <span className="text-sm text-customGray">
-                          {item?.address}
+                          {item?.address?.name}, {item?.address?.phone}, {item?.address?.street}, {item?.address?.city}, {item?.address?.state}, {item?.address?.zip}, {item?.address?.country}
                         </span>
                       </p>
+
                       <p className="flex justify-between sm:justify-start gap-2 items-center px-3">
                         <span className="font-bold">Name:</span>
                         <span className="text-sm text-customGray">
@@ -131,7 +140,7 @@ const Orders = () => {
                     <Select
                       onValueChange={(value) => {
                         alert("Do you really want to update the status?");
-                        updateOrderStatus(value, item.razorpayPaymentId ||item._id);
+                        updateOrderStatus(value, item.razorpayPaymentId || item._id);
                       }}
                     >
                       <SelectTrigger>

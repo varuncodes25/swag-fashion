@@ -84,12 +84,14 @@ const Signup = () => {
       <div className="w-[60vw] lg:w-[25vw] mx-auto my-10 grid gap-3">
         <h1 className="text-2xl font-bold">Register your account</h1>
         <form className="grid gap-3" onSubmit={handleSubmit}>
-          <Input placeholder="Enter Your Name" type="text" name="name" />
+          <Input placeholder="Enter Your Name" type="text" name="name" className="p-1" />
           <Input placeholder="Enter Your Email" type="email" name="email" />
           <Input placeholder="Enter Your Phone" type="tel" name="phone" />
-          <div className="relative w-full">
+          <div className="flex items-center w-full border rounded-md bg-white dark:bg-transparent p-0">
             <Input
-              className="w-full px-4 py-2 outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-md pr-10"
+              className="flex-1 border-none outline-none focus:ring-0 focus:outline-none 
+               bg-transparent text-gray-900 dark:text-gray-100 
+               placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="Enter Your Password"
               type={showPassword ? "text" : "password"}
               name="password"
@@ -97,28 +99,14 @@ const Signup = () => {
               onChange={(e) => setPassword(e.target.value)}
             />
 
-
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100"
+              className="pr-3 text-gray-500 dark:text-gray-300 
+               hover:text-gray-700 dark:hover:text-gray-100"
             >
               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
-
-            <div className="mt-2 text-sm space-y-1">
-              <p className={password.length === 0 ? "text-gray-400" : password.length >= 8 ? "text-green-500" : "text-red-500"}>
-                {password.length === 0 ? " At least 8 characters" : password.length >= 8 ? "✅ At least 8 characters" : "❌ At least 8 characters"}
-              </p>
-              <p className={password.length === 0 ? "text-gray-400" : /[A-Za-z]/.test(password) ? "text-green-500" : "text-red-500"}>
-                {password.length === 0 ? " Contains letters" : /[A-Za-z]/.test(password) ? "✅ Contains letters" : "❌ Contains letters"}
-              </p>
-              <p className={password.length === 0 ? "text-gray-400" : /\d/.test(password) ? "text-green-500" : "text-red-500"}>
-                {password.length === 0 ? " Contains numbers" : /\d/.test(password) ? "✅ Contains numbers" : "❌ Contains numbers"}
-              </p>
-            </div>
-
-
           </div>
 
 

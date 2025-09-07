@@ -303,10 +303,10 @@ const handleAddToCart = () => {
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="sm:w-[50%] lg:w-[35%]">
+        <div className="sm:w-[50%] lg:w-[35%] px-4 sm:px-0">
           <div className="pb-5">
             <h2 className="font-extrabold text-2xl">{product?.name}</h2>
-            <p className="text-sm my-2">{product?.description}</p>
+            <p className="sm:m-2 text-sm my-2">{product?.description}</p>
             <div className="flex items-center">
               {starsGenerator(product.rating, "0", 15)}
               <span className="text-md ml-1">
