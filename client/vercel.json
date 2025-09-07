@@ -1,9 +1,6 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
-  ],
-  "cron": {
-    "schedule": "* * * * *",
-    "path": "/api/ping"
-  }
+  ]
+  
 }
