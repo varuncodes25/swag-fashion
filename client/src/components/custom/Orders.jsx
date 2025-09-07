@@ -88,11 +88,13 @@ const Orders = () => {
                     <div className="grid sm:grid-cols-3 gap-2">
                       {item?.products?.map((product) => (
                         <OrderProductTile
-                          key={product._id}
-                          name={product.name}
-                          price={product.price}
-                          quantity={product.quantity}
-                          image={product?.id?.variants?.[0]?.images?.[0]?.url}
+                        key={product._id}
+                        name={product.name}
+                       price={product.price}
+                       quantity={product.quantity}
+                       color={product.color} 
+                       size={product.size}
+                        id={product.id} 
                         />
 
                       ))}
