@@ -124,31 +124,31 @@ const Product = () => {
   // };
 
 
-const { addToCart } = useCartActions();
+  const { addToCart } = useCartActions();
 
-const handleAddToCart = () => {
-  if (!isAuthenticated) {
-    navigate("/login");
-    return;
-  }
+  const handleAddToCart = () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
 
-  if (!productColor) {
-    toast({ title: "Please select a color" });
-    return;
-  }
+    if (!productColor) {
+      toast({ title: "Please select a color" });
+      return;
+    }
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  addToCart({
-    userId: user.id,
-    productId: product._id,
-    quantity: productQuantity,
-    price: product.price,
-    color: productColor,
-    size: productSize,
-    toast,
-    setQuantityCallback: setProductQuantity,
-  });
-};
+    const user = JSON.parse(localStorage.getItem("user"));
+    addToCart({
+      userId: user.id,
+      productId: product._id,
+      quantity: productQuantity,
+      price: product.price,
+      color: productColor,
+      size: productSize,
+      toast,
+      setQuantityCallback: setProductQuantity,
+    });
+  };
 
 
 
@@ -163,10 +163,12 @@ const handleAddToCart = () => {
       "name",
       "email",
       "phone",
+      "house",
       "street",
       "city",
       "state",
-      "zip",
+      "pin code",
+      "Address",
     ];
     for (const field of requiredFields) {
       if (!address[field] || address[field].trim() === "") {
@@ -428,10 +430,12 @@ const handleAddToCart = () => {
                     "name",
                     "email",
                     "phone",
+                    "house",
                     "street",
                     "city",
                     "state",
-                    "zip",
+                    "pin code",
+                    "Address",
                   ].map((field) => (
                     <Input
                       key={field}
