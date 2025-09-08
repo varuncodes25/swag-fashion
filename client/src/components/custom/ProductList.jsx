@@ -29,7 +29,7 @@ const ProductList = () => {
               <ProductCard key={product._id} {...product} />
             ))}
         </div>
-      )}
+      )}  
     </>
   );
 };
