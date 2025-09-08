@@ -94,97 +94,103 @@ const Navbar = () => {
       {/* Hamburger / Mobile toggle */}
 
       {/* Mobile floating menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-end">
-          <div className="w-64 sm:w-72 bg-white/90 dark:bg-zinc-900/90 h-full shadow-xl px-6 py-6 flex flex-col gap-5 text-base text-black dark:text-white relative rounded-l-xl">
-            {/* Close Button */}
-            <button
-              className="absolute top-4 right-4 text-black dark:text-white hover:rotate-90 transition-transform"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <X className="w-6 h-6" />
-            </button>
+  {mobileMenuOpen && (
+  <div
+    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex justify-end"
+    onClick={() => setMobileMenuOpen(false)} // ✅ tap overlay to close
+  >
+    <div
+      className="w-40 sm:w-44 bg-white/90 dark:bg-zinc-900/90 h-full shadow-xl px-4 py-6 flex flex-col gap-5 text-base text-black dark:text-white relative rounded-l-xl transform translate-x-0 transition-transform duration-300 ease-in-out"
+      onClick={(e) => e.stopPropagation()} // ✅ prevent close when clicking inside menu
+    >
+      {/* Close Button */}
+      <button
+        className="absolute top-4 right-4 text-black dark:text-white hover:rotate-90 transition-transform"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        <X className="w-6 h-6" />
+      </button>
 
-            {/* Menu Items */}
-            <div className="mt-12 grid grid-cols-1 gap-4  ">
-              {/* Theme Toggle */}
-              <div className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition">
-                <ModeToggle />
-                <span className="text-sm font-medium">Theme</span>
-              </div>
-
-              {/* Cart Drawer */}
-              <div className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition">
-                <CartDrawer />
-                <span className="text-sm font-medium">Cart</span>
-              </div>
-
-              {/* Account */}
-              {isAuthenticated ? (
-                <div className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition">
-                  <LogoutToggle user={user} />
-                  <span className="text-sm font-medium">Account</span>
-                </div>
-              ) : (
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition"
-                >
-                  <User size={22} strokeWidth={1.4} />
-                  <span className="text-sm font-medium">Account</span>
-                </Link>
-              )}
-
-              {/* About */}
-              <Link
-                to="/about"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">About</span>
-              </Link>
-
-              {/* FAQ */}
-              <Link
-                to="/faq"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m-9 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <span className="text-sm font-medium">FAQ</span>
-              </Link>
-            </div>
-          </div>
+      {/* Menu Items */}
+      <div className="mt-12 grid grid-cols-1 gap-4">
+        {/* Theme Toggle */}
+        <div className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition">
+          <ModeToggle />
+          <span className="text-sm font-medium">Theme</span>
         </div>
-      )}
+
+        {/* Cart Drawer */}
+        <div className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition">
+          <CartDrawer />
+          <span className="text-sm font-medium">Cart</span>
+        </div>
+
+        {/* Account */}
+        {isAuthenticated ? (
+          <div className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition">
+            <LogoutToggle user={user} />
+            <span className="text-sm font-medium">Account</span>
+          </div>
+        ) : (
+          <Link
+            to="/login"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition"
+          >
+            <User size={22} strokeWidth={1.4} />
+            <span className="text-sm font-medium">Account</span>
+          </Link>
+        )}
+
+        {/* About */}
+        <Link
+          to="/about"
+          onClick={() => setMobileMenuOpen(false)}
+          className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+          <span className="text-sm font-medium">About</span>
+        </Link>
+
+        {/* FAQ */}
+        <Link
+          to="/faq"
+          onClick={() => setMobileMenuOpen(false)}
+          className="flex flex-col items-center gap-1 p-3 border-b border-zinc-300 dark:border-zinc-700 hover:text-primary transition"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M8 10h.01M12 10h.01M16 10h.01M9 16h6m-9 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          <span className="text-sm font-medium">FAQ</span>
+        </Link>
+      </div>
+    </div>
+  </div>
+)}
     </nav>
   );
 };

@@ -160,15 +160,16 @@ const Product = () => {
     }
 
     const requiredFields = [
-      "name",
+      "full name (frist and last name)",
       "email",
-      "phone",
-      "house",
-      "street",
-      "city",
+      "mobile number",
+      "Flat, house no., building, apartment",
+      "Area, street, village",
+      "landmark",
+      "city/town",
       "state",
       "pin code",
-      "Address",
+      "country/Region",
     ];
     for (const field of requiredFields) {
       if (!address[field] || address[field].trim() === "") {
@@ -427,15 +428,16 @@ const Product = () => {
               <div className="my-2 space-y-4">
                 <div className="grid gap-2">
                   {[
-                    "name",
+                    "full name (frist and last name)",
                     "email",
-                    "phone",
-                    "house",
-                    "street",
-                    "city",
+                    "mobile number",
+                    "Flat, house no., building, apartment",
+                    "Area, street, village",
+                    "landmark",
+                    "Town/city",
                     "state",
                     "pin code",
-                    "Address",
+                    "country/Region",
                   ].map((field) => (
                     <Input
                       key={field}

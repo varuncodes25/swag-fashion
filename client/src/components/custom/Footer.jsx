@@ -13,7 +13,7 @@ const Footer = () => {
             Swag Fashion
           </h3>
            <p className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-            <MapPin className="w-16 h-6 text-white" /> {/* Address icon */}
+            <MapPin className="w-16 h-6" /> {/* Address icon */}
             Parshv Elite Building No.1, Birwadi Road, Near Railway Phatak, Umroli East, Umroli, Palghar, Maharashtra - 401404
           </p>
         </div>
