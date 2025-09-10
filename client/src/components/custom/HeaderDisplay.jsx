@@ -8,9 +8,9 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import banner1 from "../../assets/banner.png";
 import banner2 from "../../assets/banner2.png";
-import banner3 from "../../assets/banner3.png";
 
-const imagesData = [banner1, banner2, banner3];
+
+const imagesData = [banner1, banner2];
 
 const HeaderDisplay = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
