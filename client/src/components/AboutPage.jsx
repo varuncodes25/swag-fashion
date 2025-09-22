@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
 
 // Import images from your assets folder
-import tshirt1 from "../assets/tshirt1.jpg";
-import tshirt2 from "../assets/tshirt2.png";
-import tshirt3 from "../assets/tshirt3.png";
+import groupphoto from "../assets/groupphoto.png";
 
 const AboutPage = () => {
-  const images = [tshirt1, tshirt2, tshirt3];
+  const images = [groupphoto];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -66,7 +64,7 @@ const AboutPage = () => {
             <h3 className="text-xl font-bold mb-2">About Tshirt</h3>
             <p className="text-gray-600 dark:text-gray-300">
               Premium 220 GSM, 100% cotton T-shirts – built for comfort, made to
-              last. Style that feels as good as it looks.   
+              last. Style that feels as good as it looks.
             </p>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow">
@@ -76,24 +74,25 @@ const AboutPage = () => {
               DTF technology and heat press – for vibrant, long-lasting designs.
             </p>
           </div>
-         {/* Centered last row */}
-    <div className="md:col-span-3 flex justify-center gap-8">
-      <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
-        <h3 className="text-xl font-bold mb-2">Quality check</h3>
-        <p className="text-gray-600 dark:text-gray-300">
-          We thoroughly check each product and its quality before dispatch to
-          ensure you receive only the best.
-        </p>
-      </div>
-      <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
-        <h3 className="text-xl font-bold mb-2">Delivery</h3>
-        <p className="text-gray-600 dark:text-gray-300">
-          We ensure safe, fast, and reliable delivery, so your order reaches
-          you on time and in perfect condition.
-        </p>
-      </div>
-    </div>
-  </div>
+
+          {/* Centered last row */}
+          <div className="md:col-span-3 flex justify-center gap-8">
+            <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
+              <h3 className="text-xl font-bold mb-2">Quality check</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                We thoroughly check each product and its quality before dispatch
+                to ensure you receive only the best.
+              </p>
+            </div>
+            <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
+              <h3 className="text-xl font-bold mb-2">Delivery</h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                We ensure safe, fast, and reliable delivery, so your order reaches
+                you on time and in perfect condition.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
