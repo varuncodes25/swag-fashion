@@ -248,7 +248,7 @@ const getMetrics = async (req, res) => {
 
 const createCODOrder = async (req, res) => {
   const userId = req.id;
-  console.log("Creating COD Order for User ID:", req.body.products);
+  // console.log("Creating COD Order for User ID:", req.body.products);
 
   try {
     const { amount, address, products } = req.body;
