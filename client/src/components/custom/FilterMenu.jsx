@@ -30,34 +30,38 @@ const FilterMenu = () => {
 
   useEffect(() => {
     const getFilterProducts = async () => {
-      try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/get-products`,
-          {
-            params: {
-              category: category !== "All" ? category : "", // Only send if not "All"
-              price: price || "",
-              search: search || "",
-            },
-          }
-        );
-        const data = res.data.data;
-
-        // Filter unique products by name
-        const uniqueByName = [];
-        const nameSet = new Set();
-        for (const product of data) {
-          if (!nameSet.has(product.name)) {
-            nameSet.add(product.name);
-            uniqueByName.push(product);
-          }
-        }
-
-        dispatch(setProducts(uniqueByName));
-      } catch (err) {
-        console.error("Error fetching products:", err);
+  try {
+    const res = await axios.get(
+      `${import.meta.env.VITE_API_URL}/get-products`,
+      {
+        params: {
+          category: category !== "All" ? category : "",
+          price: price || "",
+          search: search || "",
+        },
       }
-    };
+    );
+
+    const rawData = res.data?.data;
+    const data = Array.isArray(rawData) ? rawData : [];
+
+    const uniqueByName = [];
+    const nameSet = new Set();
+
+    for (const product of data) {
+      if (product?.name && !nameSet.has(product.name)) {
+        nameSet.add(product.name);
+        uniqueByName.push(product);
+      }
+    }
+
+    dispatch(setProducts(uniqueByName));
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    dispatch(setProducts([])); // prevent UI crash
+  }
+};
+
 
     getFilterProducts();
   }, [category, price, search, dispatch]);
