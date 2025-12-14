@@ -46,10 +46,27 @@ const CreateProducts = ({ productId }) => {
   const [offerValidTill, setOfferValidTill] = useState("");
   const [offerValidFrom, setOfferValidFrom] = useState("");
   const [variantImages, setVariantImages] = useState({}); // { colorName: [{ file, preview }] }
+  
+ const [categories, setCategories] = useState([]);
+  const [category, setCategory] = useState(null);
+  const [subCategory, setSubCategory] = useState(null);
   const fileInputRefs = useRef({});
   const { toast } = useToast();
   const { handleErrorLogout } = useErrorLogout();
 
+   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_API_URL}/categories`
+        );
+        setCategories(res.data);
+      } catch {
+        toast({ title: "Failed to load categories" });
+      }
+    };
+    fetchCategories();
+  }, []);
   // ---- Map API variants to variantImages ----
   const mapVariantsFromAPI = (variants) => {
     const mapped = {};
@@ -332,7 +349,44 @@ const CreateProducts = ({ productId }) => {
                 );
               })}
             </div>
+ <Select
+            onValueChange={(id) =>
+              setCategory(categories.find((c) => c._id === id))
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((c) => (
+                <SelectItem key={c._id} value={c._id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
+          {/* SUB CATEGORY */}
+          {category && (
+            <Select
+              onValueChange={(id) =>
+                setSubCategory(
+                  category.subCategories.find((s) => s._id === id)
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select SubCategory" />
+              </SelectTrigger>
+              <SelectContent>
+                {category.subCategories.map((s) => (
+                  <SelectItem key={s._id} value={s._id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
             {/* Offer & Discount */}
             <div className="space-y-2">
               <Label htmlFor="discount">Discount (%)</Label>

@@ -1,124 +1,179 @@
 const mongoose = require("mongoose");
-const Review = require("./Review");
 
+/* ================= IMAGE SCHEMA ================= */
+const imageSchema = {
+  url: { type: String, required: true },
+  id: { type: String }, // cloudinary / s3 id
+};
+
+/* ================= PRODUCT SCHEMA ================= */
 const productSchema = new mongoose.Schema(
   {
+    /* ================= BASIC INFO ================= */
     name: {
       type: String,
       required: true,
+      trim: true,
     },
-    price: {
-      type: Number,
+
+    slug: {
+      type: String,
       required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true,
     },
+
     description: {
       type: String,
       required: true,
     },
+
+    /* ================= CATEGORY (HYBRID) ================= */
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+      index: true,
+    },
+
+    subCategoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      index: true,
+    },
+
+    categorySlug: {
+      type: String,
+      required: true,
+      lowercase: true,
+      index: true,
+    },
+
+    subCategorySlug: {
+      type: String,
+      required: true,
+      lowercase: true,
+      index: true,
+    },
+
+    /* ================= PRICING ================= */
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    discount: {
+      type: Number, // %
+      default: 0,
+      min: 0,
+      max: 100,
+    },
+
+    offerTitle: {
+      type: String,
+      default: null,
+    },
+
+    offerDescription: {
+      type: String,
+      default: null,
+    },
+
+    offerValidFrom: {
+      type: Date,
+      default: null,
+    },
+
+    offerValidTill: {
+      type: Date,
+      default: null,
+    },
+
+    /* ================= INVENTORY ================= */
     stock: {
       type: Number,
       required: true,
+      min: 0,
     },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+      index: true,
+    },
+
+    /* ================= VARIANTS ================= */
     variants: [
       {
-        color: { type: String, required: true },
-        images: [
-          {
-            url: String,
-            id: String,
-          },
-        ],
+        color: {
+          type: String,
+          required: true,
+        },
+        images: [imageSchema],
       },
     ],
 
-    rating: {
-      type: Number,
-      default: 5,
-    },
-    reviews: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Review",
-      },
-    ],
-    colors: {
-      type: Array,
-      required: false,
-    },
     sizes: {
       type: [String],
       enum: ["XS", "S", "M", "L", "XL", "XXL"],
       required: true,
     },
-    blacklisted: {
-      type: Boolean,
-      default: false,
+
+    /* ================= RATINGS ================= */
+    ratingsAverage: {
+      type: Number,
+      default: 5,
+      min: 1,
+      max: 5,
     },
-    category: {
-      type: String,
-      enum: ["All Category", "Men", "Women", "Kid", "Men & Women"],
-      required: true,
-    },
-    discount: {
-      type: Number, // percentage
+
+    ratingsCount: {
+      type: Number,
       default: 0,
-      min: 0,
-      max: 100,
     },
-    offerTitle: {
-      type: String,
-      default: null,
-    },
-    offerDescription: {
-      type: String,
-      default: null,
-    },
-    offerValidFrom: {
-      type: Date,
-      default: null,
-    },
-    offerValidTill: {
-      type: Date,
-      default: null,
+
+    /* ================= SEARCH / COLLECTION ================= */
+    tags: {
+      type: [String], // eg: ["oversized", "summer", "printed"]
+      index: true,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-productSchema.methods.calculateRating = async function () {
-  const reviews = await Review.find({ productId: this._id });
-  if (reviews.length > 0) {
-    const totalRating = reviews.reduce((acc, review) => acc + review.rating, 0);
-    this.rating = totalRating / reviews.length;
-  } else {
-    this.rating = 5;
-  }
-  await this.save();
-};
-// Check if offer is active based on current date
+/* ================= METHODS ================= */
+
+// Offer active check
 productSchema.methods.isOfferActive = function () {
   if (!this.offerValidFrom || !this.offerValidTill) return false;
   const now = new Date();
   return now >= this.offerValidFrom && now <= this.offerValidTill;
 };
 
-// Get discounted price if offer is active
-productSchema.methods.getDiscountedPrice = function () {
-  let finalPrice = this.price;
+/* ================= VIRTUALS ================= */
 
-  // Apply discount only if offer is active
-  if (
-    this.isOfferActive &&
-    typeof this.isOfferActive === "function" &&
-    this.discount > 0
-  ) {
-    finalPrice = this.price * (1 - this.discount / 100);
+// Discounted price (calculated, not stored)
+productSchema.virtual("discountedPrice").get(function () {
+  if (this.discount > 0 && this.isOfferActive()) {
+    return Math.round(this.price * (1 - this.discount / 100));
   }
+  return this.price;
+});
 
-  // Round to nearest integer (0.5 or more rounds up)
-  return Math.round(finalPrice);
-};
+/* ================= INDEXES ================= */
 
-const Product = mongoose.model("Product", productSchema);
+// Fast listing & filters
+productSchema.index({ categorySlug: 1, subCategorySlug: 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ discount: -1 });
+productSchema.index({ ratingsAverage: -1 });
 
-module.exports = Product;
+/* ================= MODEL ================= */
+module.exports = mongoose.model("Product", productSchema);
