@@ -29,6 +29,7 @@
   import ForgotPassword from "./components/ForgotPassword";
   import ResetPassword from "./components/ResetPassword";
   import TermsAndConditions from "./components/TermsAndConditions";
+import CategoryPage from "./pages/CategoryPage";
 
 
 
@@ -62,6 +63,15 @@
       path: "/product/:productName",
       element: <RootLayout children={<Product />} />,
     },
+     {
+      path: "/category/:slug",
+      element: <RootLayout children={<CategoryPage />} />,
+    },
+   {
+      path: "/category/:slug/:subSlug",
+      element: <RootLayout children={<CategoryPage />} />,
+    },
+    
     {
       path: "/checkout",
       element: (
