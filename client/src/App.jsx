@@ -60,7 +60,7 @@ import CategoryPage from "./pages/CategoryPage";
       ),
     },
     {
-      path: "/product/:productName",
+      path: "/product/:productId",
       element: <RootLayout children={<Product />} />,
     },
      {

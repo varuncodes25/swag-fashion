@@ -37,10 +37,10 @@ const CreateProduct = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useDispatch();
-  
+
   const { currentProduct, loading: productLoading, getProduct, clearProduct } = useProducts();
   const { categories, getCategories } = useCategories();
-  
+
   const {
     formData,
     updateFormData,
@@ -57,7 +57,7 @@ const CreateProduct = () => {
     tempSpecValue,
     setTempSpecKey,
     setTempSpecValue,
-    
+
     // Constants
     SIZE_OPTIONS,
     COLOR_OPTIONS,
@@ -72,7 +72,9 @@ const CreateProduct = () => {
     SEASONS,
     OCCASIONS,
     MAX_IMAGES_PER_COLOR,
-    
+    stockMatrix,        // ✅ Changed from colorStocks
+    updateStock,        // ✅ Changed from updateColorStock
+    getTotalStockForColor, // ✅ New helper function
     // Handlers
     addSize,
     removeSize,
@@ -104,9 +106,9 @@ const CreateProduct = () => {
     toolbar: [
       [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'script': 'sub' }, { 'script': 'super' }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }],
       [{ 'direction': 'rtl' }],
       [{ 'size': ['small', false, 'large', 'huge'] }],
       [{ 'color': [] }, { 'background': [] }],
@@ -141,36 +143,36 @@ const CreateProduct = () => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     try {
       const formDataObj = prepareFormData();
-      
+
       let response;
       if (productId) {
         response = await dispatch(updateProduct({ id: productId, data: formDataObj })).unwrap();
       } else {
         response = await dispatch(createProduct(formDataObj)).unwrap();
       }
-      
+
       toast({
         title: "Success",
         description: response.message || "Product saved successfully",
       });
-      
+
       if (!productId) {
         resetForm();
       }
-      
+
       navigate('/admin/products');
     } catch (error) {
-      const errorMessage = error?.message || 
-                          error?.response?.data?.message || 
-                          error?.toString() || 
-                          "Failed to save product";
-      
+      const errorMessage = error?.message ||
+        error?.response?.data?.message ||
+        error?.toString() ||
+        "Failed to save product";
+
       toast({
         title: "Error",
         description: errorMessage,
@@ -243,7 +245,7 @@ const CreateProduct = () => {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   {/* Key Features List */}
                   {formData.keyFeatures.length > 0 && (
                     <div className="mt-2 space-y-2">
@@ -469,7 +471,7 @@ const CreateProduct = () => {
                 <p className="text-sm text-gray-500 mb-4">
                   Use the rich text editor to create a detailed product description with formatting, images, and links.
                 </p>
-                
+
                 <ReactQuill
                   theme="snow"
                   value={formData.description}
@@ -478,12 +480,12 @@ const CreateProduct = () => {
                   placeholder="Write detailed product description here..."
                   className="h-64 mb-12"
                 />
-                
+
                 <div className="mt-8 pt-4 border-t">
                   <Label className="text-sm font-medium text-gray-700">Preview:</Label>
                   <div className="mt-2 p-4 border rounded-lg bg-gray-50 max-h-64 overflow-y-auto">
-                    <div 
-                      className="prose max-w-none" 
+                    <div
+                      className="prose max-w-none"
                       dangerouslySetInnerHTML={{ __html: formData.description || '<p>No description yet</p>' }}
                     />
                   </div>
@@ -493,9 +495,10 @@ const CreateProduct = () => {
           </TabsContent>
 
           {/* Variants & Images Tab */}
+          {/* Variants & Images Tab */}
           <TabsContent value="variants" className="space-y-6">
             <CardContent className="space-y-8">
-              {/* Sizes */}
+              {/* Sizes (SAME) */}
               <div className="space-y-4">
                 <Label className="text-lg font-semibold">Sizes *</Label>
                 <div className="flex items-center space-x-2">
@@ -536,7 +539,7 @@ const CreateProduct = () => {
 
               <Separator />
 
-              {/* Colors */}
+              {/* Colors - STOCK AREA CHANGE HERE */}
               <div className="space-y-4">
                 <Label className="text-lg font-semibold">Colors *</Label>
                 <div className="flex gap-2">
@@ -568,8 +571,8 @@ const CreateProduct = () => {
                     <div key={colorName} className="border rounded-lg p-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div 
-                            className="w-8 h-8 rounded-full border shadow-sm" 
+                          <div
+                            className="w-8 h-8 rounded-full border shadow-sm"
                             style={{ backgroundColor: colorCode }}
                             title={colorName}
                           />
@@ -577,20 +580,35 @@ const CreateProduct = () => {
                             <span className="font-medium">{colorName}</span>
                             <div className="text-sm text-gray-500">
                               {imageCount} / {MAX_IMAGES_PER_COLOR} images
+                              {/* Optional: Show total stock */}
+                              {getTotalStockForColor && (
+                                <span className="ml-2">
+                                  • Total Stock: {getTotalStockForColor(colorName)}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
+
+                        {/* ✅ CHANGED: Stock Matrix Display */}
                         <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-2">
-                            <Label className="text-sm whitespace-nowrap">Stock:</Label>
-                            <Input
-                              type="number"
-                              min="0"
-                              placeholder="0"
-                              value={colorStocks[colorName] || ''}
-                              onChange={(e) => updateColorStock(colorName, e.target.value)}
-                              className="w-24"
-                            />
+                          <div className="flex flex-col space-y-1">
+                            <Label className="text-sm whitespace-nowrap">Stock by Size:</Label>
+                            <div className="flex space-x-2">
+                              {sizes.map((size) => (
+                                <div key={size} className="text-center">
+                                  <div className="text-xs text-gray-600">{size}</div>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    value={stockMatrix[colorName]?.[size] || ''}
+                                    onChange={(e) => updateStock(colorName, size, e.target.value)}
+                                    className="w-12 h-8 text-sm"
+                                  />
+                                </div>
+                              ))}
+                            </div>
                           </div>
                           <Button
                             type="button"
@@ -603,7 +621,7 @@ const CreateProduct = () => {
                         </div>
                       </div>
 
-                      {/* Images for this color */}
+                      {/* Images for this color (SAME) */}
                       <div className="grid grid-cols-4 gap-3">
                         {variantImages[colorName]?.map((imgObj, index) => (
                           <div key={index} className="relative aspect-square rounded-lg overflow-hidden border-2 group" style={{ borderColor: imgObj.isMain ? '#fbbf24' : '#e5e7eb' }}>
@@ -643,7 +661,7 @@ const CreateProduct = () => {
                         ))}
                       </div>
 
-                      {/* Upload Button */}
+                      {/* Upload Button (SAME) */}
                       <Button
                         type="button"
                         variant="outline"
@@ -850,7 +868,7 @@ const CreateProduct = () => {
                 {/* Package Details */}
                 <div className="space-y-4">
                   <Label className="text-lg font-semibold">Package Details</Label>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="packageContent">Package Content</Label>
                     <Input
@@ -1023,7 +1041,7 @@ const CreateProduct = () => {
                 {/* Package Dimensions */}
                 <div className="space-y-4">
                   <Label className="text-lg font-semibold">Package Dimensions</Label>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="dimensionsLength">Length (cm)</Label>
@@ -1087,7 +1105,7 @@ const CreateProduct = () => {
                 {/* Shipping Info */}
                 <div className="space-y-4">
                   <Label className="text-lg font-semibold">Shipping Information</Label>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="handlingTime">Handling Time (Days)</Label>

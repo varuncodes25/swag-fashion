@@ -25,6 +25,7 @@ router.put("/update-product/:id", verifyToken, updateProduct);
 router.delete("/delete-product/:id", verifyToken, deleteProduct);
 
 router.get("/get-products", getProducts);
+router.get("/get-product-by-id/:id", getProductById);
 
 router.get("/get-products-admin", getProductsforadmin);
 

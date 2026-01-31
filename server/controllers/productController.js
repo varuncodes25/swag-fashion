@@ -4,11 +4,30 @@ const cloudinary = require("cloudinary").v2;
 const ROLES = require("../utils/constants");
 
 // Configure Cloudinary
+// const cloudinary = require('cloudinary').v2;
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  
+  // Network settings
+  timeout: 120000, // 2 minutes
+  upload_prefix: "https://api.cloudinary.com", 
+  api_proxy: process.env.PROXY_URL, // Agar proxy use karte ho
+  
+  // Security
+  secure: true,
+  secure_distribution: null,
+  private_cdn: false,
+  
+  // Upload settings
+  chunk_size: 20000000, // 20MB chunks
+  keep_alive: true
 });
+
+// Additional: Global axios timeout (agar Cloudinary axios use karta hai)
+require('axios').defaults.timeout = 120000;
 
 // Helper function to get color code
 function getColorCode(colorName) {
@@ -32,13 +51,12 @@ function getColorCode(colorName) {
     "Cream": "#FFFDD0",
     "Khaki": "#C3B091"
   };
-  
+
   return colorMap[colorName] || "#000000";
 }
 
-// ==================== CREATE PRODUCT (VARIANT ONLY) ====================
-const createProduct = async (req, res) => {
 
+const createProduct = async (req, res) => {
   try {
     const {
       name,
@@ -52,9 +70,13 @@ const createProduct = async (req, res) => {
       // Variant data
       colors,
       sizes,
-      basePrice, // Base price for all variants
+      basePrice,
       stocks,
       colorCodes,
+      // Stock matrix for better stock management
+      stockMatrix,
+      // Color-Image mapping
+      colorImageMap,
       // Optional fields
       ageGroup = "Adult",
       fabricComposition = "100% Cotton",
@@ -72,7 +94,10 @@ const createProduct = async (req, res) => {
       occasion = "Casual",
       features = [],
       packageContent = "1 Piece",
-      countryOfOrigin = "India"
+      countryOfOrigin = "India",
+      productDimensions = {},
+      warranty = "No Warranty",
+      returnPolicy = "7 Days Return Available"
     } = req.body;
 
     // Basic validation
@@ -103,11 +128,35 @@ const createProduct = async (req, res) => {
     const stocksArray = Array.isArray(stocks) ? stocks : JSON.parse(stocks || "[]");
     const colorCodesArray = Array.isArray(colorCodes) ? colorCodes : JSON.parse(colorCodes || "[]");
     const featuresArray = Array.isArray(features) ? features : JSON.parse(features || "[]");
-    
-    // Parse season and occasion (could be string or array)
+
+    // Parse stock matrix if provided
+    let stockMatrixObj = {};
+    if (stockMatrix) {
+      try {
+        stockMatrixObj = typeof stockMatrix === 'string'
+          ? JSON.parse(stockMatrix)
+          : stockMatrix;
+      } catch (error) {
+        console.warn("Invalid stock matrix format:", error);
+      }
+    }
+
+    // Parse color-image mapping
+    let colorImageMapping = {};
+    if (colorImageMap) {
+      try {
+        colorImageMapping = typeof colorImageMap === 'string'
+          ? JSON.parse(colorImageMap)
+          : colorImageMap;
+      } catch (error) {
+        console.warn("Invalid colorImageMap format:", error);
+      }
+    }
+
+    // Parse season and occasion
     let seasonArray = ["All Season"];
     let occasionArray = ["Casual"];
-    
+
     if (season) {
       if (Array.isArray(season)) {
         seasonArray = season;
@@ -119,7 +168,7 @@ const createProduct = async (req, res) => {
         }
       }
     }
-    
+
     if (occasion) {
       if (Array.isArray(occasion)) {
         occasionArray = occasion;
@@ -146,62 +195,117 @@ const createProduct = async (req, res) => {
       const file = req.files[i];
       const result = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { 
+          {
             folder: "clothing/products",
-            resource_type: "image"
+            resource_type: "image",
+            transformation: [
+              { width: 800, height: 800, crop: "limit" },
+              { quality: "auto" }
+            ]
           },
           (error, result) => (error ? reject(error) : resolve(result))
         );
         stream.end(file.buffer);
       });
-      
+
       uploadedImages.push({
         url: result.secure_url,
         id: result.public_id,
-        isMain: i === 0
+        isMain: i === 0,
+        sortOrder: i
       });
     }
 
-    // Group images by color (from frontend)
-    const colorsForImages = req.body.colorsForImages 
-      ? (Array.isArray(req.body.colorsForImages) ? req.body.colorsForImages : JSON.parse(req.body.colorsForImages))
-      : [];
-    
-    const imagesByColor = {};
-    colorsForImages.forEach((color, index) => {
-      if (index < uploadedImages.length) {
-        if (!imagesByColor[color]) imagesByColor[color] = [];
-        imagesByColor[color].push(uploadedImages[index]);
-      }
-    });
+    // ============ CRITICAL CHANGE 1: Create centralized allImages ============
+    const allImages = [];
 
-    // If no color-image mapping, assign all images to all variants
-    if (Object.keys(imagesByColor).length === 0) {
-      colorsArray.forEach(color => {
-        imagesByColor[color] = uploadedImages;
+    // If color-image mapping provided, assign colors to images
+    if (Object.keys(colorImageMapping).length > 0) {
+      // Example colorImageMapping: { "Red": [0, 1], "Black": [2, 3] }
+      Object.entries(colorImageMapping).forEach(([color, indices]) => {
+        const colorIndex = colorsArray.indexOf(color);
+        const colorCode = colorCodesArray[colorIndex] || getColorCode(color);
+
+        indices.forEach(imgIndex => {
+          if (imgIndex < uploadedImages.length) {
+            allImages.push({
+              ...uploadedImages[imgIndex],
+              color: color,
+              colorCode: colorCode
+            });
+          }
+        });
+      });
+    } else {
+      // Default: All images belong to first color
+      const firstColor = colorsArray[0];
+      const firstColorCode = colorCodesArray[0] || getColorCode(firstColor);
+
+      uploadedImages.forEach((img, index) => {
+        allImages.push({
+          ...img,
+          color: firstColor,
+          colorCode: firstColorCode
+        });
       });
     }
 
-    // Create variants (all combinations of colors and sizes)
+    // ============ CRITICAL CHANGE 2: Create variants WITHOUT images array ============
     const variants = [];
     const price = parseFloat(basePrice);
-    
+    let variantCounter = 0;
+
     colorsArray.forEach((color, colorIndex) => {
       sizesArray.forEach((size, sizeIndex) => {
+        // Calculate stock - using stockMatrix if available, otherwise flat array
+        let stockValue = 0;
+
+        if (stockMatrixObj[color] && stockMatrixObj[color][size] !== undefined) {
+          stockValue = parseInt(stockMatrixObj[color][size]);
+        } else if (stocksArray.length > 0) {
+          // Try to get stock from flat array
+          const flatIndex = colorIndex * sizesArray.length + sizeIndex;
+          stockValue = parseInt(stocksArray[flatIndex] || stocksArray[colorIndex] || 0);
+        }
+
         const variant = {
           color: color,
           colorCode: colorCodesArray[colorIndex] || getColorCode(color),
           size: size,
           price: price,
-          stock: parseInt(stocksArray[colorIndex] || stocksArray[0] || 0),
-          images: imagesByColor[color] || uploadedImages
+          stock: stockValue,
+          // NO images field here - saving database space
         };
-        
+
         variants.push(variant);
+        variantCounter++;
       });
     });
 
-    // Create product (NO simple product fields - only variants)
+    // Parse product dimensions
+    let parsedDimensions = {
+      length: 0,
+      width: 0,
+      height: 0,
+      weight: 0.2
+    };
+
+    if (productDimensions) {
+      try {
+        const dims = typeof productDimensions === 'string'
+          ? JSON.parse(productDimensions)
+          : productDimensions;
+
+        parsedDimensions = {
+          ...parsedDimensions,
+          ...dims
+        };
+      } catch (error) {
+        console.warn("Invalid dimensions format:", error);
+      }
+    }
+
+    // ============ CRITICAL CHANGE 3: Create product with optimized structure ============
     const product = new Product({
       name,
       description,
@@ -222,13 +326,29 @@ const createProduct = async (req, res) => {
       features: featuresArray,
       packageContent,
       countryOfOrigin,
+
+      // Centralized images storage
+      allImages: allImages,
+
+      // Variants WITHOUT duplicate images
+      variants,
+
+      // Additional fields
       discount: parseInt(discount) || 0,
       offerTitle: offerTitle || null,
       offerDescription: offerDescription || null,
       offerValidFrom: offerValidFrom ? new Date(offerValidFrom) : null,
       offerValidTill: offerValidTill ? new Date(offerValidTill) : null,
       freeShipping: freeShipping === "true" || freeShipping === true,
-      variants,
+
+      // Dimensions
+      productDimensions: parsedDimensions,
+
+      // Warranty & Returns
+      warranty,
+      returnPolicy,
+
+      // Admin
       createdBy: req.userId
     });
 
@@ -249,6 +369,7 @@ const createProduct = async (req, res) => {
   }
 };
 
+
 // ==================== GET ALL PRODUCTS ====================
 const getProducts = async (req, res) => {
   console.log("🔄 Fetching products...");
@@ -259,7 +380,7 @@ const getProducts = async (req, res) => {
     limit = parseInt(limit) || 9;
 
     // Base query
-    const query = { };
+    const query = {};
 
     // Filters
     if (category && category.toLowerCase() !== "all") query.category = category.trim();
@@ -268,80 +389,34 @@ const getProducts = async (req, res) => {
 
     // Sorting
     let sortBy = { createdAt: -1 }; // default
-    if (sort === "priceLowToHigh") sortBy = { price: 1 };
-    if (sort === "priceHighToLow") sortBy = { price: -1 };
+    if (sort === "priceLowToHigh") sortBy = { sellingPrice: 1 };
+    if (sort === "priceHighToLow") sortBy = { sellingPrice: -1 };
 
-    const now = new Date();
-
-    console.log("Query:", query);
-    console.log("Page:", page, "Limit:", limit);
-
-    // SIMPLIFIED APPROACH - No aggregation
     const skip = (page - 1) * limit;
-    
+
     // Get total count
     const totalProducts = await Product.countDocuments(query);
-    
-    // Get products with proper filtering and sorting
-    let productsQuery = Product.find(query)
+
+    // ✅ CORRECT: Get products as Mongoose documents (NOT .lean())
+    let products = await Product.find(query)
       .sort(sortBy)
       .skip(skip)
-      .limit(limit)
-      .lean(); // Convert to plain JS objects
-    
-    // Execute query
-    let products = await productsQuery;
-    
+      .limit(limit);
+      // ❌ REMOVE: .lean() - We need Mongoose documents for methods
+
     console.log(`📊 Found ${products.length} products`);
 
-    // Process products to add calculated fields
+    // ✅ USE THE EXISTING METHOD: getProductCardData()
     const enhancedProducts = products.map(product => {
-      // Get min price from variants
-      const minPrice = product.variants?.length > 0 
-        ? Math.min(...product.variants.map(v => v.price || 0))
-        : 0;
+      console.log(`Processing: ${product.name}`);
+      console.log("Using getProductCardData() method");
       
-      // Get first variant's first image
-      const image = product.variants?.[0]?.images?.[0] || null;
+      // ✅ This returns ALL card data including image
+      const cardData = product.getProductCardData();
       
-      // Check if offer is active
-      const isOfferActive = product.discount > 0 && 
-                           product.offerValidTill && 
-                           new Date(product.offerValidTill) > now;
+      console.log("Card data image:", cardData.image?.url);
       
-      // Calculate discounted price
-      const discountedPrice = isOfferActive && product.discount > 0 
-        ? minPrice - (minPrice * product.discount / 100)
-        : minPrice;
-      
-      // Extract colors and sizes from variants
-      const colors = [...new Set(product.variants?.map(v => v.color) || [])];
-      const sizes = [...new Set(product.variants?.map(v => v.size) || [])];
-      
-      return {
-        _id: product._id,
-        name: product.name,
-        description: product.description,
-        rating: product.rating || 0,
-        reviewCount: product.reviewCount || 0,
-        discount: product.discount || 0,
-        offerValidTill: product.offerValidTill,
-        variants: product.variants || [],
-        colors,
-        sizes,
-        clothingType: product.clothingType,
-        gender: product.gender,
-        fabric: product.fabric,
-        brand: product.brand,
-        isFeatured: product.isFeatured || false,
-        isNewArrival: product.isNewArrival || false,
-        isBestSeller: product.isBestSeller || false,
-        freeShipping: product.freeShipping || false,
-        price: minPrice,
-        image,
-        discountedPrice: Math.round(discountedPrice * 100) / 100,
-        isOfferActive
-      };
+      return cardData;
     });
 
     const totalPages = Math.ceil(totalProducts / limit);
@@ -363,9 +438,9 @@ const getProducts = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Get Products Error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message || "Failed to fetch products" 
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch products"
     });
   }
 };
@@ -376,17 +451,17 @@ const getProductById = async (req, res) => {
     const product = await Product.findById(req.params.id)
       .populate("category", "name")
       .populate("reviews");
-    
+
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Product not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
 
     // Use the model method to get product details
     const productData = product.getProductDetailData();
-    
+
     return res.status(200).json({
       success: true,
       message: "Product fetched successfully",
@@ -394,9 +469,9 @@ const getProductById = async (req, res) => {
     });
   } catch (err) {
     console.error("Get product by ID error:", err);
-    return res.status(500).json({ 
-      success: false, 
-      message: err.message 
+    return res.status(500).json({
+      success: false,
+      message: err.message
     });
   }
 };
@@ -446,9 +521,9 @@ const getProductsforadmin = async (req, res) => {
     });
   } catch (error) {
     console.error("Get Products for Admin Error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
@@ -456,9 +531,9 @@ const getProductsforadmin = async (req, res) => {
 // ==================== UPDATE PRODUCT ====================
 const updateProduct = async (req, res) => {
   if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
-    return res.status(401).json({ 
-      success: false, 
-      message: "Access denied" 
+    return res.status(401).json({
+      success: false,
+      message: "Access denied"
     });
   }
 
@@ -506,15 +581,15 @@ const updateProduct = async (req, res) => {
     }
 
     const product = await Product.findByIdAndUpdate(
-      id, 
-      data, 
+      id,
+      data,
       { new: true, runValidators: true }
     );
 
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Product not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
 
@@ -525,9 +600,9 @@ const updateProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Update product error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
@@ -535,9 +610,9 @@ const updateProduct = async (req, res) => {
 // ==================== DELETE PRODUCT ====================
 const deleteProduct = async (req, res) => {
   if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
-    return res.status(401).json({ 
-      success: false, 
-      message: "Access denied" 
+    return res.status(401).json({
+      success: false,
+      message: "Access denied"
     });
   }
 
@@ -546,9 +621,9 @@ const deleteProduct = async (req, res) => {
 
     const product = await Product.findById(id);
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Product not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
 
@@ -572,26 +647,26 @@ const deleteProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Delete product error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
 
 // ==================== GET PRODUCT BY NAME ====================
 const getProductByName = async (req, res) => {
+  console.log("iiiiii")
   const { name } = req.params;
-
+console.log(name)
   try {
     const product = await Product.findOne({
       name: { $regex: new RegExp(name, "i") },
     }).populate("reviews");
-
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Product not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
 
@@ -605,9 +680,9 @@ const getProductByName = async (req, res) => {
     });
   } catch (error) {
     console.error("Get product by name error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
@@ -615,9 +690,9 @@ const getProductByName = async (req, res) => {
 // ==================== BLACKLIST PRODUCT ====================
 const blacklistProduct = async (req, res) => {
   if (req.role !== ROLES.admin) {
-    return res.status(401).json({ 
-      success: false, 
-      message: "Access denied" 
+    return res.status(401).json({
+      success: false,
+      message: "Access denied"
     });
   }
 
@@ -631,9 +706,9 @@ const blacklistProduct = async (req, res) => {
     );
 
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Product not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
 
@@ -644,9 +719,9 @@ const blacklistProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Blacklist product error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
@@ -654,9 +729,9 @@ const blacklistProduct = async (req, res) => {
 // ==================== REMOVE FROM BLACKLIST ====================
 const removeFromBlacklist = async (req, res) => {
   if (req.role !== ROLES.admin) {
-    return res.status(401).json({ 
-      success: false, 
-      message: "Access denied" 
+    return res.status(401).json({
+      success: false,
+      message: "Access denied"
     });
   }
 
@@ -670,9 +745,9 @@ const removeFromBlacklist = async (req, res) => {
     );
 
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Product not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
       });
     }
 
@@ -683,9 +758,9 @@ const removeFromBlacklist = async (req, res) => {
     });
   } catch (error) {
     console.error("Remove from blacklist error:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };
@@ -780,11 +855,13 @@ const getProductStats = async (req, res) => {
 
     const clothingTypeStats = await Product.aggregate([
       { $match: query },
-      { $group: {
-        _id: "$clothingType",
-        count: { $sum: 1 },
-        averagePrice: { $avg: { $arrayElemAt: ["$variants.price", 0] } }
-      }},
+      {
+        $group: {
+          _id: "$clothingType",
+          count: { $sum: 1 },
+          averagePrice: { $avg: { $arrayElemAt: ["$variants.price", 0] } }
+        }
+      },
       { $sort: { count: -1 } },
       { $limit: 10 }
     ]);
@@ -794,8 +871,8 @@ const getProductStats = async (req, res) => {
       data: {
         ...stats[0] || {},
         clothingTypeStats,
-        lowStock: await Product.countDocuments({ 
-          ...query, 
+        lowStock: await Product.countDocuments({
+          ...query,
           "variants.stock": { $lt: 10 }
         })
       }

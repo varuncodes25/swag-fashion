@@ -1,504 +1,256 @@
-import ReviewsComponent from "@/components/custom/ReviewsComponent";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Colors } from "@/constants/colors";
-import { starsGenerator } from "@/constants/helper";
-import useRazorpay from "@/hooks/use-razorpay";
-import { useToast } from "@/hooks/use-toast";
-import { addToCart, setCart } from "@/redux/slices/cartSlice";
-import axios from "axios";
-import { Circle, Minus, Plus } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+// Product.jsx - FIXED VERSION
 import { useNavigate, useParams } from "react-router-dom";
-import useCart from "@/hooks/useCart";
-import useCartActions from "@/hooks/useCartActions";
-const productStock = 5;
+import useBuyNow from "@/hooks/useBuyNow";
+import useAddToCart from "@/hooks/useAddToCart";
+import useProductDetails from "@/hooks/useProductDetails";
+
+import Breadcrumb from "@/components/Product/Breadcrumb";
+import ProductImages from "@/components/Product/ProductImages";
+import ProductInfo from "@/components/Product/ProductInfo";
+import ProductServices from "@/components/Product/ProductServices";
+import ProductVariants from "@/components/Product/ProductVariants";
+import ProductActions from "@/components/Product/ProductActions";
+import ProductTabs from "@/components/Product/ProductTabs";
+import MobileStickyCTA from "@/components/Product/MobileStickyCTA";
+import ReviewsComponent from "@/components/custom/ReviewsComponent";
+import SimilarProducts from "@/components/Product/SimilarProducts";
+import { useState } from "react";
 
 const Product = () => {
   const { productName } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useSelector((state) => state.auth);
-  const { toast } = useToast();
-  const dispatch = useDispatch();
-  const { verifyPayment, generatePayment } = useRazorpay();
-  const { fetchCart } = useCart();
-  const [productQuantity, setProductQuantity] = useState(1);
-  const [pincode, setPincode] = useState("");
-  const [availabilityMessage, setAvailabilityMessage] = useState("");
-  const [purchaseProduct, setPurchaseProduct] = useState(false);
-  const [address, setAddress] = useState({});
-  const [product, setProduct] = useState({});
-  const [selectedImage, setSelectedImage] = useState(0);
-  const [productColor, setProductColor] = useState("");
-  const [productSize, setProductSize] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
 
-  useEffect(() => {
-    const fetchProductByName = async () => {
-      try {
-        const res = await axios.get(
-          import.meta.env.VITE_API_URL +
-            `/get-product-by-name/${productName?.split("-").join(" ")}`
-        );
-        const { data } = await res.data;
-        setProduct(data);
+  // ✅ FIX: Correct destructuring from hook
+  const {
+    product,
+    loading,
+    quantity,
+    setQuantity,
+    selectedImage,  // This is an IMAGE OBJECT
+    selectedImageIndex, // This is the INDEX
+    setSelectedImageIndex, // This sets the INDEX
+    color,
+    setColor,
+    size,
+    setSize,
+    images,
+    displayPrice,
+    isOfferActive,
+    stock,
+    colors,
+    sizes,
+    selectedVariant,
+    getVariantImages,
+  } = useProductDetails();
 
-        // ✅ Auto-select black if available, otherwise first color
-        if (data?.colors?.length > 0) {
-          if (data.colors.includes("black")) {
-            setProductColor("black");
-          } else {
-            setProductColor(data.colors[0]);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch product:", error);
-      }
-    };
-    fetchProductByName();
-  }, [productName]);
+  const { buyNow } = useBuyNow();
+  const { handleAddToCart } = useAddToCart();
 
-  // ✅ Reset selected image when color changes
-  useEffect(() => {
-    setSelectedImage(0);
-  }, [productColor]);
+  const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
 
-  const now = new Date();
-  const { price, discount, discountedPrice, offerValidTill } = product || {};
-
-  const isOfferActive =
-    offerValidTill && new Date(offerValidTill) >= now && discount > 0;
-
-  const displayPrice = isOfferActive ? discountedPrice : price;
-  const checkAvailability = async () => {
-    if (pincode.trim() === "") {
-      setAvailabilityMessage("Please enter a valid pincode");
-      return;
-    }
-    const res = await axios.get(
-      import.meta.env.VITE_API_URL + `/get-pincode/${pincode}`
-    );
-    const data = await res.data;
-    setAvailabilityMessage(data.message);
+  // Child se data receive karne ke liye function
+  const handleMobileZoomChange = (isOpen) => {
+    console.log("Mobile zoom status:", isOpen);
+    setIsMobileZoomOpen(isOpen);
   };
 
-  // const handleAddToCart = async () => {
-  //   if (!isAuthenticated) {
-  //     navigate("/login");
-  //     return;
-  //   }
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  //   if (!productColor) {
-  //     toast({ title: "Please select a color" });
-  //     return;
-  //   }
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
-  //   try {
-  //     const user = JSON.parse(localStorage.getItem("user"));
-  //     if (!user) return;
+  // ============ FIX: Get images for selected color ============
+  const variantImages = getVariantImages ? getVariantImages(color) : images || [];
+  console.log("Variant Images:", variantImages);
 
-  //     const res = await axios.post(`${import.meta.env.VITE_API_URL}/add`, {
-  //       userId: user.id,
-  //       productId: product._id,
-  //       quantity: productQuantity,
-  //       price: product.price,
-  //       color: productColor,
-  //       size: productSize,
-  //     });
+  // ============ FIX: Handle image selection ============
+  const handleImageSelect = (index) => {
+    setSelectedImageIndex(index);
+  };
 
-  //     if (res.data.success) {
-  //       // Fetch the updated cart from backend
-  //       await fetchCart(user.id);
+  // ============ FIX: Get variant stock ============
+  const getVariantStock = () => {
+    return selectedVariant?.stock || stock || 0;
+  };
 
-  //       setProductQuantity(1);
-  //       toast({ title: "Product added to cart" });
-  //     } else {
-  //       toast({ title: "Failed to add product to cart" });
-  //     }
-  //   } catch (error) {
-  //     console.error("Add to cart error:", error);
-  //     toast({ title: "Failed to add product to cart" });
-  //   }
-  // };
-
-  const { addToCart } = useCartActions();
-
-  const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      navigate("/login");
+  const handleAddToCartClick = () => {
+    if (!selectedVariant) {
+      alert("Please select color and size");
       return;
     }
 
-    if (!productColor) {
-      toast({ title: "Please select a color" });
-      return;
-    }
-
-    const user = JSON.parse(localStorage.getItem("user"));
-    addToCart({
-      userId: user.id,
+    handleAddToCart({
       productId: product._id,
-      quantity: productQuantity,
-      price: product.price,
-      color: productColor,
-      size: productSize,
-      toast,
-      setQuantityCallback: setProductQuantity,
+      variantId: selectedVariant._id,
+      quantity,
+      price: selectedVariant.price || product.price,
+      color,
+      size,
+      variantSku: selectedVariant.sku,
     });
   };
 
-  const handleBuyNow = async () => {
-  console.log("handleBuyNow called");
-
-  if (!isAuthenticated) {
-    console.log("User not authenticated, redirecting to login");
-    navigate("/login");
-    return;
-  }
-
-  console.log("Address before validation:", address);
-
-  // ✅ Required frontend keys
-  const requiredFieldsMap = {
-    "full name (frist and last name)": "Full Name",
-    email: "Email",
-    "mobile number": "Mobile Number",
-    "Flat, house no., building, apartment": "Flat/House",
-    "Area, street, village": "Area/Street",
-    landmark: "Landmark",
-    "Town/city": "City",
-    state: "State",
-    "pin code": "Pin Code",
-    "country/Region": "Country",
-  };
-
-  // ✅ Frontend validation
-  for (const key in requiredFieldsMap) {
-    if (!address[key] || address[key].trim() === "") {
-      console.log(`Validation failed: ${requiredFieldsMap[key]} is missing`);
-      return toast({
-        title: `Please enter ${requiredFieldsMap[key]}`,
-        variant: "destructive",
-      });
-    }
-  }
-
-  console.log("Product quantity:", productQuantity, "Stock:", product.stock);
-  if (productQuantity > product.stock) {
-    console.log("Product out of stock");
-    toast({ title: "Product out of stock" });
-    return;
-  }
-
-  if (product.blacklisted) {
-    console.log("Product is blacklisted");
-    toast({ title: "Product isn't available for purchase" });
-    return;
-  }
-
-  if (!productColor) {
-    console.log("No color selected");
-    toast({ title: "Please select a color" });
-    return;
-  }
-
-  if (!paymentMethod) {
-    console.log("No payment method selected");
-    toast({ title: "Please select a payment method" });
-    return;
-  }
-
-  const totalAmount = (product.discountedPrice || product.price) * productQuantity;
-  console.log("Total amount:", totalAmount);
-
-  // ✅ Map frontend address to backend keys
-  const mappedAddress = {
-    name: address["full name (frist and last name)"],
-    phone: address["mobile number"],
-    street: address["Flat, house no., building, apartment"] + ", " + address["Area, street, village"],
-    city: address["Town/city"],
-    state: address["state"],
-    zip: address["pin code"],
-    country: address["country/Region"],
-    email: address["email"],
-    landmark: address["landmark"] || "",
-  };
-
-  // ✅ Prepare products array
-  const orderProducts = [
-    {
-      id: product._id,
-      name: product.name,
-      price: product.discountedPrice || product.price,
-      quantity: productQuantity,
-      color: productColor,
-      size: productSize,
-      image: product?.variants?.[0]?.images?.[selectedImage]?.url || "/fallback.png",
-    },
-  ];
-
-  // ✅ Payment handling
-  if (paymentMethod === "razorpay") {
-    try {
-      console.log("Processing Razorpay payment");
-      const amountInPaise = totalAmount * 100;
-      const order = await generatePayment(amountInPaise);
-      console.log("Razorpay order generated:", order);
-
-      await verifyPayment({ ...order, amount: order.amount || amountInPaise }, orderProducts, mappedAddress, navigate);
-      console.log("Razorpay payment verified and order placed");
-    } catch (error) {
-      console.error("Razorpay payment failed:", error);
-      toast({ title: "Payment failed. Please try again." });
+  const handleBuyNowClick = () => {
+    if (!selectedVariant) {
+      alert("Please select color and size");
       return;
     }
-  } else if (paymentMethod === "cod") {
-    try {
-      console.log("Processing COD order");
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/cod-order`,
-        {
-          amount: totalAmount,
-          address: mappedAddress,
-          products: orderProducts,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+
+    buyNow({
+      productId: product._id,
+      variantId: selectedVariant._id,
+      quantity,
+      variantSku: selectedVariant.sku,
+    });
+  };
+
+  // ✅ FIX: Handle color change with image reset
+  const handleColorChange = (newColor) => {
+    setColor(newColor);
+
+    // Get images for new color
+    if (getVariantImages) {
+      const newColorImages = getVariantImages(newColor);
+      console.log("New color images:", newColorImages);
+
+      // Reset to first image of new color
+      if (newColorImages && newColorImages.length > 0) {
+        // We can't directly set the image object, we need to find its index
+        const firstImage = newColorImages[0];
+        const imageIndex = newColorImages.findIndex(img =>
+          img.url === firstImage.url
+        );
+        if (imageIndex !== -1) {
+          setSelectedImageIndex(imageIndex);
         }
-      );
-
-      console.log("COD order response:", res.data);
-
-      if (res.data.success) {
-        toast({ title: "Order placed with Cash on Delivery!" });
-        navigate("/orders");
-      } else {
-        toast({ title: res.data.message || "Failed to place COD order." });
       }
-    } catch (err) {
-      console.error("COD order failed:", err.response?.data || err);
-      toast({ title: "Something went wrong. Please try again." });
-      return;
     }
-  }
+  };
 
-  console.log("Resetting purchase state");
-  setPurchaseProduct(false);
-  setPaymentMethod("");
-};
+  // ✅ FIX: Check if we have any images to display
+  const displayImages = variantImages.length > 0 ? variantImages :
+    (product.allImages || []);
 
+  console.log("displayImages", displayImages)
+
+  const currentSelectedImage = selectedImage || displayImages[0];
 
   return (
-    <div>
-      <main className="w-[100vw] lg:w-[72vw] flex flex-col sm:flex-row justify-start items-start gap-10 mx-auto my-10">
-        {/* LEFT SIDE */}
-        <div className="relative sm:w-[45%] w-full grid gap-3">
-          {/* Main Image */}
-          <img
-            src={
-              product?.variants?.find((v) => v.color === productColor)
-                ?.images?.[selectedImage]?.url || "/fallback.png"
-            }
-            alt="Selected product"
-            className="w-full lg:h-[35rem] rounded-xl object-center object-cover border dark:border-none"
-          />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Breadcrumb */}
+      <Breadcrumb
+        category={product.clothingType}
+        subcategory={product.gender}
+        productName={product.name}
+      />
 
-          {/* Scrollable Thumbnails */}
-          <div className="flex overflow-x-auto gap-2 mt-2 scrollbar-hide">
-            {product?.variants
-              ?.find((v) => v.color === productColor)
-              ?.images?.map((img, index) => (
-                <img
-                  key={index}
-                  src={img?.url}
-                  alt={`Thumbnail ${index + 1}`}
-                  onClick={() => setSelectedImage(index)}
-                  className={`rounded-xl min-w-[5rem] h-20 object-cover cursor-pointer border transition-all duration-200 ${
-                    selectedImage === index
-                      ? "border-2 border-orange-400"
-                      : "border-gray-300"
-                  }`}
+      {/* Main Product Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 sm:p-6 lg:p-8 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+            {/* Left Column - Images */}
+            <ProductImages
+              images={variantImages}
+              selectedImage={selectedImageIndex} // ✅ Pass INDEX number
+              onSelect={setSelectedImageIndex} // ✅ Pass function that sets INDEX
+              productName={product.name}
+               onMobileZoomChange={handleMobileZoomChange}
+            />
+
+            {/* Right Column - Product Info */}
+            <div className="space-y-6">
+              {/* Basic Info */}
+              <ProductInfo
+                name={product.name}
+                rating={product.rating}
+                reviewCount={product.reviewCount}
+                soldCount={product.soldCount}
+                brand={product.brand}
+                price={selectedVariant?.price || product.price}
+                displayPrice={displayPrice}
+                discount={product.discount}
+                isOfferActive={isOfferActive}
+              />
+
+              {/* Color Selection */}
+              {colors && colors.length > 0 && (
+                <ProductVariants
+                  colors={colors}
+                  selectedColor={color}
+                  onColorChange={handleColorChange}
+                  sizes={sizes}
+                  selectedSize={size}
+                  onSizeChange={setSize}
+                  sizeGuide={product.sizeGuide}
+                  stock={getVariantStock()}
+                  quantity={quantity}
+                  onQuantityChange={setQuantity}
+                  variant={selectedVariant}
                 />
-              ))}
-          </div>
-        </div>
-
-        {/* RIGHT SIDE */}
-        <div className="sm:w-[50%] lg:w-[35%] px-4 sm:px-0">
-          <div className="pb-5">
-            <h2 className="font-extrabold text-2xl">{product?.name}</h2>
-            <p className="sm:m-2 text-sm my-2">{product?.description}</p>
-            <div className="flex items-center">
-              {starsGenerator(product.rating, "0", 15)}
-              <span className="text-md ml-1">({product?.reviews?.length})</span>
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1">
-            {isOfferActive && discount > 0 && price !== undefined && (
-              <span className="text-xs text-gray-400 line-through">
-                ₹{Number(price).toFixed(2)}
-              </span>
-            )}
-            <span className="text-lg font-bold text-gray-900 dark:text-yellow-400">
-              ₹{Number(displayPrice || 0).toFixed(2)}
-            </span>
-          </div>
-
-          {/* Size Selection */}
-          <div className="py-5 border-b">
-            <h3 className="font-bold text-lg text-white">Choose Size</h3>
-            <div className="flex items-center gap-3 my-3">
-              {["S", "M", "L", "XL"].map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setProductSize(size)}
-                  className={`px-4 py-2 border rounded-md text-sm font-medium transition-all ${
-                    productSize === size
-                      ? "border-orange-500 bg-orange-100 text-orange-700 shadow-md"
-                      : "border-gray-300 bg-white text-black hover:border-black"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Color Selection */}
-          <div className="py-5 border-b">
-            <h3 className="font-bold text-lg">Choose Color</h3>
-            <div className="flex items-center my-2">
-              {product?.colors?.map((color, index) => (
-                <Circle
-                  key={index + color}
-                  fill={color}
-                  strokeOpacity={0.2}
-                  strokeWidth={0.2}
-                  size={40}
-                  onClick={() => setProductColor(color)}
-                  className={`cursor-pointer filter hover:brightness-50 ${
-                    productColor === color ? "ring-2 ring-orange-400" : ""
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Quantity & Stock */}
-          <div className="py-5">
-            <div className="flex gap-3 items-center">
-              <div className="flex items-center gap-5 bg-gray-100 rounded-full px-3 py-2 w-fit">
-                <Minus
-                  stroke={Colors.customGray}
-                  cursor={"pointer"}
-                  onClick={() =>
-                    setProductQuantity((qty) => (qty > 1 ? qty - 1 : 1))
-                  }
-                />
-                <span className="text-slate-950">{productQuantity}</span>
-                <Plus
-                  stroke={Colors.customGray}
-                  cursor={"pointer"}
-                  onClick={() =>
-                    setProductQuantity((qty) =>
-                      qty < productStock ? qty + 1 : qty
-                    )
-                  }
-                />
-              </div>
-
-              {product?.stock - productQuantity > 0 && (
-                <div className="grid text-sm font-semibold text-gray-600">
-                  <span>
-                    Only{" "}
-                    <span className="text-customYellow">
-                      {product.stock - productQuantity} items{" "}
-                    </span>
-                    left!
-                  </span>
-                  <span>Don't miss it</span>
-                </div>
               )}
-            </div>
 
-            {/* Pincode */}
-            <div className="grid gap-3 my-5">
-              <div className="flex gap-3">
-                <Input
-                  placeholder="Enter Your Pincode Here"
-                  onChange={(e) => setPincode(e.target.value)}
+              {/* Services */}
+              <ProductServices
+                freeDelivery={product.freeShipping}
+                deliveryCharge={product.deliveryCharge}
+                warranty={product.warranty}
+                warrantyType={product.warrantyType}
+                returnPolicy={product.returnPolicy}
+                returnable={product.returnable}
+                stock={getVariantStock()}
+              />
+
+              {/* CTA Buttons */}
+              <div className="hidden lg:block">
+                <ProductActions
+                  stock={getVariantStock()}
+                  onAddToCart={handleAddToCartClick}
+                  onBuyNow={handleBuyNowClick}
+                  paymentOptions={product.paymentOptions}
+                  highlights={product.features}
+                  isVariantSelected={!!selectedVariant}
                 />
-                <Button onClick={checkAvailability}>Check Availability</Button>
               </div>
-              <p className="text-sm px-2">{availabilityMessage}</p>
             </div>
-
-            {/* Buy/Add to Cart */}
-            <div className="flex gap-3">
-              <Button onClick={() => setPurchaseProduct(true)}>Buy Now</Button>
-              <Button variant="outline" onClick={handleAddToCart}>
-                Add to Cart
-              </Button>
-            </div>
-
-            {/* Address & Payment */}
-            {purchaseProduct && (
-              <div className="my-2 space-y-4">
-                <div className="grid gap-2">
-                  {[
-                    "full name (frist and last name)",
-                    "email",
-                    "mobile number",
-                    "Flat, house no., building, apartment",
-                    "Area, street, village",
-                    "landmark",
-                    "Town/city",
-                    "state",
-                    "pin code",
-                    "country/Region",
-                  ].map((field) => (
-                    <Input
-                      key={field}
-                      placeholder={
-                        field.charAt(0).toUpperCase() + field.slice(1)
-                      }
-                      value={address[field] || ""}
-                      onChange={(e) =>
-                        setAddress({ ...address, [field]: e.target.value })
-                      }
-                    />
-                  ))}
-                </div>
-
-                <div className="flex gap-3">
-                  <Button
-                    variant={
-                      paymentMethod === "razorpay" ? "default" : "outline"
-                    }
-                    onClick={() => setPaymentMethod("razorpay")}
-                  >
-                    Pay with Online
-                  </Button>
-                  <Button
-                    variant={paymentMethod === "cod" ? "default" : "outline"}
-                    onClick={() => setPaymentMethod("cod")}
-                  >
-                    Cash on Delivery
-                  </Button>
-                </div>
-
-                <Button onClick={handleBuyNow}>Confirm Order</Button>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Tabs Section */}
+        <ProductTabs product={product} />
+
+        {/* Reviews Section */}
+        <ReviewsComponent productId={product._id} product={product} />
       </main>
 
-      {/* REVIEW SECTION */}
-      <ReviewsComponent productId={product?._id} />
+      {/* Mobile Sticky CTA */}
+      {!isMobileZoomOpen && < MobileStickyCTA
+        product={product}
+      displayPrice={displayPrice}
+      isOfferActive={isOfferActive}
+      onAddToCart={handleAddToCartClick}
+      onBuyNow={handleBuyNowClick}
+      isVariantSelected={!!selectedVariant}
+      stock={getVariantStock()}
+      />}
+
+      <SimilarProducts productId={product._id} />
     </div>
   );
 };

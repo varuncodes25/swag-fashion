@@ -105,7 +105,7 @@ const ProductCard = ({
         transition-all duration-300
       "
     >
-      <Link to={`/product/${slug}`} className="block">
+      <Link to={`/product/${_id}`} className="block">
         {/* ===== Wishlist ===== */}
         <button
           onClick={toggleWishlist}

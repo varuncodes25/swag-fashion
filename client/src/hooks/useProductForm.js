@@ -123,8 +123,9 @@ export const useProductForm = (initialData = null) => {
 
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
-  const [colorStocks, setColorStocks] = useState({});
+  const [stockMatrix, setStockMatrix] = useState({}); // NEW: Changed from colorStocks to stockMatrix
   const [variantImages, setVariantImages] = useState({});
+  const [colorImageMap, setColorImageMap] = useState({}); // NEW: For tracking image indices
   const [selectedSize, setSelectedSize] = useState('M');
   const [currentColor, setCurrentColor] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -183,28 +184,42 @@ export const useProductForm = (initialData = null) => {
     setColors(productColors);
     setSizes(productSizes);
 
-    // Set color stocks (take from first variant of each color)
-    const stocks = {};
-    productColors.forEach(color => {
-      const variant = product.variants?.find(v => v.color === color);
-      if (variant) {
-        stocks[color] = variant.stock || 0;
-      }
-    });
-    setColorStocks(stocks);
-
-    // Set variant images
-    const images = {};
+    // NEW: Create stock matrix from variants (color x size matrix)
+    const matrix = {};
     product.variants?.forEach(variant => {
-      if (variant.images?.length > 0) {
-        images[variant.color] = variant.images.map(img => ({
+      if (!matrix[variant.color]) {
+        matrix[variant.color] = {};
+      }
+      matrix[variant.color][variant.size] = variant.stock || 0;
+    });
+    setStockMatrix(matrix);
+
+    // NEW: Create color-image map from allImages
+    const imageMap = {};
+    if (product.allImages) {
+      product.allImages.forEach((img, index) => {
+        if (img.color) {
+          if (!imageMap[img.color]) {
+            imageMap[img.color] = [];
+          }
+          imageMap[img.color].push(index);
+        }
+      });
+    }
+    setColorImageMap(imageMap);
+
+    // Set variant images (for preview only - from imagesByColor)
+    const images = {};
+    if (product.imagesByColor) {
+      Object.keys(product.imagesByColor).forEach(color => {
+        images[color] = product.imagesByColor[color].map(img => ({
           file: null,
           preview: img.url,
           id: img.id,
           isMain: img.isMain || false,
         }));
-      }
-    });
+      });
+    }
     setVariantImages(images);
   }, []);
 
@@ -297,11 +312,36 @@ export const useProductForm = (initialData = null) => {
   const addSize = () => {
     if (selectedSize && !sizes.includes(selectedSize)) {
       setSizes(prev => [...prev, selectedSize]);
+      
+      // Update stock matrix for all colors with new size
+      setStockMatrix(prev => {
+        const updated = { ...prev };
+        colors.forEach(color => {
+          if (!updated[color]) {
+            updated[color] = {};
+          }
+          if (!updated[color][selectedSize]) {
+            updated[color][selectedSize] = 0;
+          }
+        });
+        return updated;
+      });
     }
   };
 
-  const removeSize = (size) => {
-    setSizes(prev => prev.filter(s => s !== size));
+  const removeSize = (sizeToRemove) => {
+    setSizes(prev => prev.filter(s => s !== sizeToRemove));
+    
+    // Remove size from stock matrix
+    setStockMatrix(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(color => {
+        if (updated[color][sizeToRemove]) {
+          delete updated[color][sizeToRemove];
+        }
+      });
+      return updated;
+    });
   };
 
   // Color handlers
@@ -310,65 +350,111 @@ export const useProductForm = (initialData = null) => {
     const colorObj = COLOR_OPTIONS.find((c) => c.code === currentColor);
     if (colorObj && !colors.includes(colorObj.name)) {
       setColors(prev => [...prev, colorObj.name]);
+      
+      // Initialize stock matrix for new color
+      setStockMatrix(prev => {
+        const updated = { ...prev };
+        if (!updated[colorObj.name]) {
+          updated[colorObj.name] = {};
+          sizes.forEach(size => {
+            updated[colorObj.name][size] = 0;
+          });
+        }
+        return updated;
+      });
+      
       setCurrentColor('');
     }
   };
 
   const removeColor = (colorName) => {
     setColors(prev => prev.filter(c => c !== colorName));
+    
+    // Remove from stock matrix
+    setStockMatrix(prev => {
+      const updated = { ...prev };
+      delete updated[colorName];
+      return updated;
+    });
+    
+    // Remove from variant images
     setVariantImages(prev => {
       const updated = { ...prev };
       delete updated[colorName];
       return updated;
     });
-    setColorStocks(prev => {
+    
+    // Remove from color image map
+    setColorImageMap(prev => {
       const updated = { ...prev };
       delete updated[colorName];
       return updated;
     });
   };
 
-  // Stock handlers
-  const updateColorStock = (colorName, stock) => {
-    setColorStocks(prev => ({
+  // NEW: Stock handlers for matrix
+  const updateStock = (colorName, sizeName, stock) => {
+    setStockMatrix(prev => ({
       ...prev,
-      [colorName]: parseInt(stock) || 0,
+      [colorName]: {
+        ...prev[colorName],
+        [sizeName]: parseInt(stock) || 0
+      }
     }));
   };
 
   // Image handlers
-  const handleImageUpload = (colorName) => (e) => {
-    console.log()
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+  // Image handlers - FIXED
+const handleImageUpload = (colorName) => (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
 
-    setVariantImages((prev) => {
-      const existingImages = prev[colorName] || [];
-      const currentCount = existingImages.length;
+  setVariantImages((prev) => {
+    const existingImages = prev[colorName] || [];
+    const currentCount = existingImages.length;
 
-      if (currentCount >= MAX_IMAGES_PER_COLOR) {
-        toast({
-          title: "Limit Reached",
-          description: `You can upload a maximum of ${MAX_IMAGES_PER_COLOR} images for ${colorName}.`,
-        });
-        return prev;
-      }
+    if (currentCount >= MAX_IMAGES_PER_COLOR) {
+      toast({
+        title: "Limit Reached",
+        description: `You can upload a maximum of ${MAX_IMAGES_PER_COLOR} images for ${colorName}.`,
+      });
+      return prev;
+    }
 
-      const allowedFiles = files.slice(0, MAX_IMAGES_PER_COLOR - currentCount);
-      const newFiles = allowedFiles.map((file) => ({
-        file,
-        preview: URL.createObjectURL(file),
-        isMain: existingImages.length === 0,
-      }));
+    // ✅ FIX: Define allowedFiles here
+    const allowedFiles = files.slice(0, MAX_IMAGES_PER_COLOR - currentCount);
+    const newFiles = allowedFiles.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      isMain: existingImages.length === 0,
+    }));
 
-      return {
-        ...prev,
-        [colorName]: [...existingImages, ...newFiles],
-      };
-    });
+    return {
+      ...prev,
+      [colorName]: [...existingImages, ...newFiles],
+    };
+  });
 
-    e.target.value = "";
-  };
+  // ✅ FIX: Calculate allowedFiles again for colorImageMap
+  setColorImageMap(prev => {
+    const existingImages = variantImages[colorName] || [];
+    const currentCount = existingImages.length;
+    const allowedFiles = files.slice(0, MAX_IMAGES_PER_COLOR - currentCount);
+    
+    const existingIndices = prev[colorName] || [];
+    const newIndices = Array.from(
+      { length: allowedFiles.length }, 
+      (_, i) => currentCount + i
+    );
+    
+    return {
+      ...prev,
+      [colorName]: [...existingIndices, ...newIndices]
+    };
+  });
+
+  e.target.value = "";
+};
 
   const removeImage = (colorName, index) => {
     setVariantImages((prev) => {
@@ -380,6 +466,19 @@ export const useProductForm = (initialData = null) => {
       return {
         ...prev,
         [colorName]: updatedImages,
+      };
+    });
+
+    // Update colorImageMap indices
+    setColorImageMap(prev => {
+      const existingIndices = prev[colorName] || [];
+      const updatedIndices = existingIndices
+        .filter(idx => idx !== index)
+        .map(idx => idx > index ? idx - 1 : idx);
+      
+      return {
+        ...prev,
+        [colorName]: updatedIndices
       };
     });
   };
@@ -397,10 +496,10 @@ export const useProductForm = (initialData = null) => {
     });
   };
 
-  // Prepare form data for submission
+  // Prepare form data for submission - UPDATED FOR NEW SCHEMA
   const prepareFormData = () => {
     try {
-      console.log("🚀 Preparing form data...");
+      console.log("🚀 Preparing form data for new schema...");
       
       // Validate required fields first
       if (!formData.name || !formData.description || !formData.category) {
@@ -467,12 +566,8 @@ export const useProductForm = (initialData = null) => {
       formDataObj.append('colors', JSON.stringify(colors));
       formDataObj.append('sizes', JSON.stringify(sizes));
       
-      // Add stocks for each color
-      const stocksArray = colors.map(color => {
-        const stock = colorStocks[color];
-        return parseInt(stock) || 0;
-      });
-      formDataObj.append('stocks', JSON.stringify(stocksArray));
+      // NEW: Add stock matrix (color x size)
+      formDataObj.append('stockMatrix', JSON.stringify(stockMatrix));
       
       // Add color codes
       const colorCodesArray = colors.map(color => {
@@ -481,8 +576,8 @@ export const useProductForm = (initialData = null) => {
       });
       formDataObj.append('colorCodes', JSON.stringify(colorCodesArray));
 
-      // Add images
-      const colorsForImages = [];
+      // NEW: Prepare images data for new schema
+      const allImageFiles = [];
       let imageCount = 0;
       
       // Check if each color has at least one image
@@ -494,8 +589,7 @@ export const useProductForm = (initialData = null) => {
         
         images.forEach((imgObj) => {
           if (imgObj && imgObj.file) {
-            formDataObj.append('images', imgObj.file);
-            colorsForImages.push(colorName);
+            allImageFiles.push(imgObj.file);
             imageCount++;
           }
         });
@@ -505,15 +599,23 @@ export const useProductForm = (initialData = null) => {
         throw new Error("No images uploaded. Please upload images for all colors.");
       }
       
-      formDataObj.append('colorsForImages', JSON.stringify(colorsForImages));
+      // Add all images to FormData
+      allImageFiles.forEach((file) => {
+        formDataObj.append('images', file);
+      });
+      
+      // NEW: Add colorImageMap
+      formDataObj.append('colorImageMap', JSON.stringify(colorImageMap));
 
       // Debug: Log what's being sent
-      console.log("📤 FormData prepared successfully:", {
+      console.log("📤 FormData prepared successfully for new schema:", {
         name: formData.name,
         basePrice: formData.basePrice,
         colors: colors.length,
         sizes: sizes.length,
         images: imageCount,
+        stockMatrix: stockMatrix,
+        colorImageMap: colorImageMap,
         hasCategory: !!formData.category
       });
 
@@ -566,8 +668,9 @@ export const useProductForm = (initialData = null) => {
     });
     setColors([]);
     setSizes([]);
-    setColorStocks({});
+    setStockMatrix({});
     setVariantImages({});
+    setColorImageMap({});
     setSelectedSize('M');
     setCurrentColor('');
     setTempSpecKey('');
@@ -635,6 +738,21 @@ export const useProductForm = (initialData = null) => {
         return false;
       }
 
+      // NEW: Validate stock for all color-size combinations
+      for (const colorName of colors) {
+        for (const sizeName of sizes) {
+          const stock = stockMatrix[colorName]?.[sizeName];
+          if (stock === undefined || stock === null || isNaN(stock)) {
+            toast({
+              title: "Error",
+              description: `Please enter stock for ${colorName} - ${sizeName}`,
+              variant: "destructive",
+            });
+            return false;
+          }
+        }
+      }
+
       // Validate images for each color
       for (const colorName of colors) {
         const images = variantImages[colorName];
@@ -686,13 +804,20 @@ export const useProductForm = (initialData = null) => {
     }
   };
 
+  // Helper to get total stock for a color
+  const getTotalStockForColor = (colorName) => {
+    if (!stockMatrix[colorName]) return 0;
+    return Object.values(stockMatrix[colorName]).reduce((sum, stock) => sum + (stock || 0), 0);
+  };
+
   return {
     formData,
     updateFormData,
     colors,
     sizes,
-    colorStocks,
+    stockMatrix, // Changed from colorStocks
     variantImages,
+    colorImageMap,
     selectedSize,
     currentColor,
     isLoading,
@@ -725,7 +850,7 @@ export const useProductForm = (initialData = null) => {
     addColor,
     removeColor,
     setCurrentColor,
-    updateColorStock,
+    updateStock, // Changed from updateColorStock
     handleImageUpload,
     removeImage,
     setMainImage,
@@ -742,5 +867,6 @@ export const useProductForm = (initialData = null) => {
     toggleFeature,
     toggleSeason,
     toggleOccasion,
+    getTotalStockForColor, // New helper
   };
 };

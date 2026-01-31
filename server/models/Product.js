@@ -3,7 +3,7 @@ const Review = require("./Review");
 
 // Size Chart for Clothing
 const sizeChartSchema = new mongoose.Schema({
-  chest: { type: Number }, // in inches/cm
+  chest: { type: Number },
   waist: { type: Number },
   hips: { type: Number },
   length: { type: Number },
@@ -11,7 +11,33 @@ const sizeChartSchema = new mongoose.Schema({
   sleeve: { type: Number }
 }, { _id: false });
 
-// Variant Schema - Only for Clothing
+// Product Image Schema (Centralized)
+const productImageSchema = new mongoose.Schema({
+  url: { 
+    type: String, 
+    required: true 
+  },
+  id: { 
+    type: String, 
+    required: true 
+  },
+  isMain: { 
+    type: Boolean, 
+    default: false 
+  },
+  color: { 
+    type: String 
+  },
+  colorCode: { 
+    type: String 
+  },
+  sortOrder: {
+    type: Number,
+    default: 0
+  }
+}, { _id: false });
+
+// Variant Schema - WITHOUT images
 const variantSchema = new mongoose.Schema(
   {
     color: { 
@@ -49,15 +75,14 @@ const variantSchema = new mongoose.Schema(
       sparse: true
     },
     
-    images: [
-      {
-        url: { type: String, required: true },
-        id: { type: String, required: true },
-        isMain: { type: Boolean, default: false }
-      }
-    ],
+    // NO images field here - saving space
+    barcode: String,
     
-    barcode: String
+    // For inventory tracking
+    reservedStock: {
+      type: Number,
+      default: 0
+    }
   },
   { _id: true, timestamps: true }
 );
@@ -88,14 +113,32 @@ const productSchema = new mongoose.Schema(
       default: []
     },
     
+    fullDescription: {
+      type: String
+    },
+    
     // ============== SPECIFICATIONS (STRUCTURED) ==============
     specifications: {
       type: Map,
-      of: String,
+      of: mongoose.Schema.Types.Mixed,
       default: {}
     },
     
-    // ============== VARIANTS ==============
+    // ============== CENTRALIZED IMAGES STORAGE ==============
+    allImages: [productImageSchema],
+    
+    // Quick lookup map for images by color
+    imagesByColor: {
+      type: Map,
+      of: [{
+        url: String,
+        id: String,
+        isMain: Boolean,
+        sortOrder: Number
+      }]
+    },
+    
+    // ============== VARIANTS (NO DUPLICATE IMAGES) ==============
     variants: { 
       type: [variantSchema], 
       required: true,
@@ -353,7 +396,7 @@ const productSchema = new mongoose.Schema(
       length: { type: Number, default: 0 },
       width: { type: Number, default: 0 },
       height: { type: Number, default: 0 },
-      weight: { type: Number, default: 0.2 } // in kg
+      weight: { type: Number, default: 0.2 }
     },
     
     // ============== STATUS ==============
@@ -406,6 +449,17 @@ const productSchema = new mongoose.Schema(
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User"
+    },
+    
+    // ============== DERIVED FIELDS ==============
+    colors: {
+      type: [String],
+      default: []
+    },
+    
+    sizes: {
+      type: [String],
+      default: []
     }
   },
   { 
@@ -427,6 +481,8 @@ productSchema.index({ isBestSeller: 1 });
 productSchema.index({ blacklisted: 1 });
 productSchema.index({ ageGroup: 1 });
 productSchema.index({ offerValidTill: 1 });
+productSchema.index({ colors: 1 });
+productSchema.index({ sizes: 1 });
 
 // ==================== PRE-SAVE MIDDLEWARE ====================
 productSchema.pre('save', function(next) {
@@ -448,15 +504,18 @@ productSchema.pre('save', function(next) {
       const skuPrefix = this.brand.substring(0, 3).toUpperCase();
       const colorCode = variant.color.substring(0, 2).toUpperCase();
       const sizeCode = variant.size;
-      variant.sku = `${skuPrefix}-${Date.now().toString().slice(-6)}-${colorCode}-${sizeCode}-${index}`;
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      variant.sku = `${skuPrefix}-${randomNum}-${colorCode}-${sizeCode}-${index}`;
     }
   });
   
   // Generate slug if not exists
   if (!this.slug) {
-    this.slug = this.name.toLowerCase()
+    const baseSlug = this.name.toLowerCase()
       .replace(/[^\w\s]/gi, '')
-      .replace(/\s+/g, '-') + '-' + Date.now().toString().slice(-6);
+      .replace(/\s+/g, '-');
+    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+    this.slug = `${baseSlug}-${randomSuffix}`;
   }
   
   // Set default blacklisted to false if not set
@@ -471,8 +530,37 @@ productSchema.pre('save', function(next) {
     
     // Calculate MRP with markup (optional)
     if (!this.mrp) {
-      this.mrp = Math.round(minPrice * 1.2); // 20% markup
+      this.mrp = Math.round(minPrice * 1.2);
     }
+  }
+  
+  // Organize images by color for quick lookup
+  if (this.allImages && this.allImages.length > 0) {
+    const imagesMap = new Map();
+    
+    // Group images by color
+    this.allImages.forEach((image, index) => {
+      if (image.color) {
+        if (!imagesMap.has(image.color)) {
+          imagesMap.set(image.color, []);
+        }
+        
+        // Add image to map without color fields (to save space in map)
+        imagesMap.get(image.color).push({
+          url: image.url,
+          id: image.id,
+          isMain: image.isMain,
+          sortOrder: image.sortOrder || index
+        });
+      }
+    });
+    
+    // Sort images in each color group by sortOrder
+    imagesMap.forEach((images, color) => {
+      images.sort((a, b) => a.sortOrder - b.sortOrder);
+    });
+    
+    this.imagesByColor = imagesMap;
   }
   
   next();
@@ -491,7 +579,6 @@ productSchema.virtual('isOfferActive').get(function() {
   const validFrom = new Date(this.offerValidFrom);
   const validTill = new Date(this.offerValidTill);
   
-  // Set time to end of day for validTill
   validTill.setHours(23, 59, 59, 999);
   
   return now >= validFrom && now <= validTill;
@@ -512,6 +599,13 @@ productSchema.virtual('totalStock').get(function() {
   return this.variants.reduce((sum, variant) => sum + (variant.stock || 0), 0);
 });
 
+productSchema.virtual('availableStock').get(function() {
+  return this.variants.reduce((sum, variant) => {
+    const available = variant.stock - (variant.reservedStock || 0);
+    return sum + Math.max(available, 0);
+  }, 0);
+});
+
 // ==================== METHODS ====================
 
 // Get minimum price from variants
@@ -526,7 +620,7 @@ productSchema.methods.getMaxPrice = function() {
   return Math.max(...this.variants.map(v => v.price || 0));
 };
 
-// Get discounted price
+// Get discounted price for variant
 productSchema.methods.getDiscountedPrice = function(variantIndex = 0) {
   const variant = this.variants[variantIndex] || this.variants[0];
   if (!variant) return 0;
@@ -538,18 +632,136 @@ productSchema.methods.getDiscountedPrice = function(variantIndex = 0) {
   return variant.price;
 };
 
-// Get offer details
-productSchema.methods.getOfferDetails = function() {
-  if (!this.isOfferActive) return null;
+// Get main image
+productSchema.methods.getMainImage = function() {
+  if (this.allImages && this.allImages.length > 0) {
+    const mainImage = this.allImages.find(img => img.isMain);
+    return mainImage || this.allImages[0];
+  }
+  return null;
+};
+
+// Get images for specific color
+productSchema.methods.getImagesByColor = function(color) {
+  if (this.imagesByColor && this.imagesByColor.has(color)) {
+    return this.imagesByColor.get(color);
+  }
+  // Fallback: filter from allImages
+  return this.allImages.filter(img => img.color === color);
+};
+
+// Get variant by color and size
+productSchema.methods.getVariant = function(color, size) {
+  return this.variants.find(v => 
+    v.color.toLowerCase() === color.toLowerCase() && 
+    v.size === size
+  );
+};
+
+// Get variant with images
+productSchema.methods.getVariantWithImages = function(color, size) {
+  const variant = this.getVariant(color, size);
+  if (!variant) return null;
   
   return {
-    title: this.offerTitle || `${this.discount}% Off`,
-    description: this.offerDescription || `Get ${this.discount}% discount on this product`,
+    ...variant.toObject(),
+    images: this.getImagesByColor(color)
+  };
+};
+
+// Get all variants with images
+productSchema.methods.getAllVariantsWithImages = function() {
+  return this.variants.map(variant => ({
+    ...variant.toObject(),
+    images: this.getImagesByColor(variant.color)
+  }));
+};
+
+// Update variant stock
+productSchema.methods.updateVariantStock = function(variantId, quantity) {
+  const variant = this.variants.id(variantId);
+  if (variant) {
+    variant.stock += quantity;
+    if (variant.stock < 0) variant.stock = 0;
+    return true;
+  }
+  return false;
+};
+
+// Reserve stock for order
+productSchema.methods.reserveVariantStock = function(variantId, quantity) {
+  const variant = this.variants.id(variantId);
+  if (variant && variant.stock >= (variant.reservedStock || 0) + quantity) {
+    variant.reservedStock = (variant.reservedStock || 0) + quantity;
+    return true;
+  }
+  return false;
+};
+
+// Release reserved stock
+productSchema.methods.releaseVariantStock = function(variantId, quantity) {
+  const variant = this.variants.id(variantId);
+  if (variant && (variant.reservedStock || 0) >= quantity) {
+    variant.reservedStock = Math.max((variant.reservedStock || 0) - quantity, 0);
+    return true;
+  }
+  return false;
+};
+
+// Get available sizes for a color
+productSchema.methods.getAvailableSizesForColor = function(color) {
+  return this.variants
+    .filter(v => 
+      v.color.toLowerCase() === color.toLowerCase() && 
+      (v.stock - (v.reservedStock || 0)) > 0
+    )
+    .map(v => v.size);
+};
+
+// Get available colors for a size
+productSchema.methods.getAvailableColorsForSize = function(size) {
+  return this.variants
+    .filter(v => 
+      v.size === size && 
+      (v.stock - (v.reservedStock || 0)) > 0
+    )
+    .map(v => v.color);
+};
+
+// Get product card data for listing
+productSchema.methods.getProductCardData = function() {
+  const minPrice = this.getMinPrice();
+  const maxPrice = this.getMaxPrice();
+  const discountedPrice = this.getDiscountedPrice();
+
+  return {
+    _id: this._id,
+    name: this.name,
+    brand: this.brand,
+    clothingType: this.clothingType,
+    gender: this.gender,
+    ageGroup: this.ageGroup,
+    description: this.shortDescription || this.description.substring(0, 100) + '...',
+    price: minPrice,
+    maxPrice: maxPrice !== minPrice ? maxPrice : undefined,
+    discountedPrice: discountedPrice,
     discount: this.discount,
-    validFrom: this.offerValidFrom,
-    validTill: this.offerValidTill,
-    daysLeft: this.offerDaysLeft,
-    isActive: this.isOfferActive
+    rating: this.rating,
+    reviewCount: this.reviewCount,
+    image: this.getMainImage(),
+    isOfferActive: this.isOfferActive,
+    offerValidTill: this.offerValidTill,
+    offerDaysLeft: this.offerDaysLeft,
+    isInStock: this.isInStock,
+    totalStock: this.totalStock,
+    availableStock: this.availableStock,
+    colors: this.colors,
+    sizes: this.sizes,
+    isFeatured: this.isFeatured,
+    isNewArrival: this.isNewArrival,
+    isBestSeller: this.isBestSeller,
+    freeShipping: this.freeShipping,
+    slug: this.slug
   };
 };
 
@@ -589,127 +801,28 @@ productSchema.methods.getFormattedSpecifications = function() {
   return specs;
 };
 
-// Get product description with HTML formatting
-productSchema.methods.getFormattedDescription = function() {
-  let description = `<h3>${this.name}</h3>`;
+// Get offer details
+productSchema.methods.getOfferDetails = function() {
+  if (!this.isOfferActive) return null;
   
-  if (this.shortDescription) {
-    description += `<p><strong>${this.shortDescription}</strong></p>`;
-  }
-  
-  description += `<p>${this.description}</p>`;
-  
-  if (this.keyFeatures && this.keyFeatures.length > 0) {
-    description += `<h4>Key Features:</h4><ul>`;
-    this.keyFeatures.forEach(feature => {
-      description += `<li>${feature}</li>`;
-    });
-    description += `</ul>`;
-  }
-  
-  if (this.features && this.features.length > 0) {
-    description += `<h4>Product Features:</h4><ul>`;
-    this.features.forEach(feature => {
-      description += `<li>${feature}</li>`;
-    });
-    description += `</ul>`;
-  }
-  
-  return description;
-};
-
-// Get main image (first image from first variant)
-productSchema.methods.getMainImage = function() {
-  if (this.variants.length > 0 && this.variants[0].images.length > 0) {
-    const mainImage = this.variants[0].images.find(img => img.isMain);
-    return mainImage || this.variants[0].images[0];
-  }
-  return null;
-};
-
-// Get all images from all variants
-productSchema.methods.getAllImages = function() {
-  const allImages = [];
-  this.variants.forEach(variant => {
-    variant.images.forEach(img => {
-      allImages.push(img);
-    });
-  });
-  return allImages;
-};
-
-// Get variant by color and size
-productSchema.methods.getVariant = function(color, size) {
-  return this.variants.find(v => 
-    v.color.toLowerCase() === color.toLowerCase() && 
-    v.size === size
-  );
-};
-
-// Check if specific variant is in stock
-productSchema.methods.isVariantInStock = function(color, size) {
-  const variant = this.getVariant(color, size);
-  return variant ? variant.stock > 0 : false;
-};
-
-// Get available sizes for a color
-productSchema.methods.getSizesForColor = function(color) {
-  return this.variants
-    .filter(v => v.color.toLowerCase() === color.toLowerCase() && v.stock > 0)
-    .map(v => v.size);
-};
-
-// Get available colors for a size
-productSchema.methods.getColorsForSize = function(size) {
-  return this.variants
-    .filter(v => v.size === size && v.stock > 0)
-    .map(v => v.color);
-};
-
-// Get product card data for listing
-productSchema.methods.getProductCardData = function() {
-  const minPrice = this.getMinPrice();
-  const maxPrice = this.getMaxPrice();
-  const isOfferActive = this.isOfferActive;
-  const discountedPrice = this.getDiscountedPrice();
-
   return {
-    _id: this._id,
-    name: this.name,
-    brand: this.brand,
-    clothingType: this.clothingType,
-    gender: this.gender,
-    ageGroup: this.ageGroup,
-    description: this.shortDescription || this.description.substring(0, 100) + '...',
-    price: minPrice,
-    maxPrice: maxPrice !== minPrice ? maxPrice : undefined,
-    discountedPrice: discountedPrice,
+    title: this.offerTitle || `${this.discount}% Off`,
+    description: this.offerDescription || `Get ${this.discount}% discount on this product`,
     discount: this.discount,
-    rating: this.rating,
-    reviewCount: this.reviewCount,
-    image: this.getMainImage(),
-    isOfferActive: isOfferActive,
-    offerValidTill: this.offerValidTill,
-    offerDaysLeft: this.offerDaysLeft,
-    isInStock: this.isInStock,
-    totalStock: this.totalStock,
-    colors: this.colors,
-    sizes: this.sizes,
-    isFeatured: this.isFeatured,
-    isNewArrival: this.isNewArrival,
-    isBestSeller: this.isBestSeller,
-    freeShipping: this.freeShipping,
-    slug: this.slug
+    validFrom: this.offerValidFrom,
+    validTill: this.offerValidTill,
+    daysLeft: this.offerDaysLeft,
+    isActive: this.isOfferActive
   };
 };
 
-// Get product detail data
+// Get product detail data (OPTIMIZED - NO DUPLICATE IMAGES)
 productSchema.methods.getProductDetailData = function() {
   const cardData = this.getProductCardData();
   
   return {
     ...cardData,
-    fullDescription: this.description,
+    fullDescription: this.description || this.fullDescription,
     keyFeatures: this.keyFeatures,
     specifications: this.getFormattedSpecifications(),
     fabric: this.fabric,
@@ -723,6 +836,8 @@ productSchema.methods.getProductDetailData = function() {
     occasion: this.occasion,
     features: this.features,
     offerDetails: this.getOfferDetails(),
+    
+    // Variants WITHOUT duplicate images in each
     variants: this.variants.map(v => ({
       _id: v._id,
       color: v.color,
@@ -730,11 +845,20 @@ productSchema.methods.getProductDetailData = function() {
       size: v.size,
       stock: v.stock,
       price: v.price,
-      images: v.images,
       sku: v.sku,
-      isInStock: v.stock > 0
+      barcode: v.barcode,
+      isInStock: v.stock > 0,
+      availableStock: Math.max(v.stock - (v.reservedStock || 0), 0),
+      sizeDetails: v.sizeDetails
     })),
-    allImages: this.getAllImages(),
+    
+    // Centralized images storage
+    allImages: this.allImages,
+    
+    // Helper for frontend
+    imagesByColor: Object.fromEntries(this.imagesByColor || new Map()),
+    
+    // Additional info
     packageContent: this.packageContent,
     countryOfOrigin: this.countryOfOrigin,
     dimensions: this.productDimensions,
@@ -746,18 +870,7 @@ productSchema.methods.getProductDetailData = function() {
   };
 };
 
-// Update variant stock
-productSchema.methods.updateVariantStock = function(variantId, quantity) {
-  const variant = this.variants.id(variantId);
-  if (variant) {
-    variant.stock += quantity;
-    if (variant.stock < 0) variant.stock = 0;
-    return true;
-  }
-  return false;
-};
-
-// Add variant
+// Add new variant
 productSchema.methods.addVariant = function(variantData) {
   this.variants.push(variantData);
 };
@@ -765,6 +878,22 @@ productSchema.methods.addVariant = function(variantData) {
 // Remove variant
 productSchema.methods.removeVariant = function(variantId) {
   this.variants = this.variants.filter(v => v._id.toString() !== variantId);
+};
+
+// Add images for a color
+productSchema.methods.addImagesForColor = function(color, images) {
+  images.forEach(img => {
+    this.allImages.push({
+      ...img,
+      color: color,
+      colorCode: this.variants.find(v => v.color === color)?.colorCode
+    });
+  });
+};
+
+// Remove images for a color
+productSchema.methods.removeImagesForColor = function(color) {
+  this.allImages = this.allImages.filter(img => img.color !== color);
 };
 
 module.exports = mongoose.model("Product", productSchema);
