@@ -19,12 +19,18 @@ const ProductCard = ({
   offerValidTill,
   variants = [],
 }) => {
-  const slug = name.split(" ").join("-");
+  const slug = name?.split(" ").join("-") || "product";
   const { isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const { addToCart } = useCartActions();
 
   const [wishlisted, setWishlisted] = useState(false);
+
+  /* ================= SAFE NUMBER HANDLING ================= */
+  const safePrice = Number(price) || 0;
+  const safeDiscountedPrice = Number(discountedPrice) || safePrice;
+  const safeRating = Number(rating) || 0;
+  const safeDiscount = Number(discount) || 0;
 
   /* ================= IMAGE ================= */
   const rawImage =
@@ -39,11 +45,11 @@ const ProductCard = ({
 
   /* ================= OFFER ================= */
   const isOfferActive =
-    discount > 0 &&
+    safeDiscount > 0 &&
     offerValidTill &&
     new Date(offerValidTill) >= new Date();
 
-  const displayPrice = isOfferActive ? discountedPrice : price;
+  const displayPrice = isOfferActive ? safeDiscountedPrice : safePrice;
 
   /* ================= ACTIONS ================= */
 
@@ -78,6 +84,13 @@ const ProductCard = ({
       size: "",
       toast,
     });
+  };
+
+  /* ================= FORMAT PRICE ================= */
+  const formatPrice = (price) => {
+    const num = Number(price);
+    if (isNaN(num)) return "₹0.00";
+    return `₹${num.toFixed(2)}`;
   };
 
   /* ================= RENDER ================= */
@@ -125,7 +138,7 @@ const ProductCard = ({
               shadow
             "
           >
-            {discount}% OFF
+            {safeDiscount}% OFF
           </span>
         )}
 
@@ -147,16 +160,16 @@ const ProductCard = ({
         <div className="p-4 space-y-2">
           {/* Name */}
           <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2">
-            {name}
+            {name || "Unnamed Product"}
           </h3>
 
           {/* Rating */}
           <div className="flex items-center gap-1 text-xs">
             <div className="flex text-yellow-400">
-              {starsGenerator(rating)}
+              {starsGenerator(safeRating)}
             </div>
             <span className="text-gray-500">
-              {rating.toFixed(1)}
+              {safeRating.toFixed(1)}
             </span>
           </div>
 
@@ -164,12 +177,12 @@ const ProductCard = ({
           <div className="flex items-center justify-between">
             <div className="flex items-baseline gap-2">
               <span className="text-lg font-bold text-gray-900 dark:text-yellow-400">
-                ₹{displayPrice.toFixed(2)}
+                {formatPrice(displayPrice)}
               </span>
 
               {isOfferActive && (
                 <span className="text-xs text-gray-400 line-through">
-                  ₹{price.toFixed(2)}
+                  {formatPrice(safePrice)}
                 </span>
               )}
             </div>
@@ -183,7 +196,7 @@ const ProductCard = ({
                   dark:bg-green-900/30 dark:text-green-400
                 "
               >
-                Save {discount}%
+                Save {safeDiscount}%
               </span>
             )}
           </div>
