@@ -64,27 +64,27 @@ const ProductCard = ({
     });
   };
 
-  // const handleAddToCart = (e) => {
-  //   e.preventDefault();
+  const handleAddToCart = (e) => {
+    e.preventDefault();
 
-  //   if (!isAuthenticated) {
-  //     navigate("/login");
-  //     return;
-  //   }
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
 
-  //   const user = JSON.parse(localStorage.getItem("user"));
-  //   if (!user) return;
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) return;
 
-  //   addToCart({
-  //     userId: user.id,
-  //     productId: _id,
-  //     quantity: 1,
-  //     price: displayPrice,
-  //     color: variants?.[0]?.color || "Default",
-  //     size: "",
-  //     toast,
-  //   });
-  // };
+    addToCart({
+      userId: user.id,
+      productId: _id,
+      quantity: 1,
+      price: displayPrice,
+      color: variants?.[0]?.color || "Default",
+      size: "",
+      toast,
+    });
+  };
 
   /* ================= FORMAT PRICE ================= */
   const formatPrice = (price) => {
