@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import ProductCard from "./ProductCard";
+import { fetchWishlist } from "@/redux/slices/wishlistSlice";
 
 import { useDispatch } from "react-redux";
 import { setProducts as setReduxProducts } from "@/redux/slices/productSlice";
 import Pagination from "./Pagination";
 
-const ProductList = ({
-  category,
-  subCategory,
-  price,
-  discount,
-  search,
-}) => {
+const ProductList = ({ category, subCategory, price, discount, search }) => {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -20,7 +15,12 @@ const ProductList = ({
 
   const dispatch = useDispatch();
   const limit = 12;
-
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      dispatch(fetchWishlist());
+    }
+  }, []);
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -44,7 +44,7 @@ const ProductList = ({
             // ✅ search
             search: search || "",
           },
-        }
+        },
       );
 
       const { data = [], pagination } = res.data;
@@ -73,10 +73,7 @@ const ProductList = ({
     return (
       <div className="max-w-7xl mx-auto grid gap-5 grid-cols-[repeat(auto-fill,minmax(160px,1fr))] px-4 py-10">
         {Array.from({ length: 8 }).map((_, i) => (
-          <div
-            key={i}
-            className="border shadow rounded-xl p-3 animate-pulse"
-          >
+          <div key={i} className="border shadow rounded-xl p-3 animate-pulse">
             <div className="bg-gray-300 h-32 rounded mb-4" />
             <div className="h-4 bg-gray-300 w-3/4 mb-2 rounded" />
             <div className="h-3 bg-gray-200 w-1/2 rounded" />
@@ -95,9 +92,7 @@ const ProductList = ({
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 text-gray-500">
-          No products found
-        </div>
+        <div className="text-center py-20 text-gray-500">No products found</div>
       )}
 
       {/* PAGINATION */}

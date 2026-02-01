@@ -17,8 +17,9 @@ import SimilarProducts from "@/components/Product/SimilarProducts";
 import { useState } from "react";
 
 const Product = () => {
-  const { productName } = useParams();
-  const navigate = useNavigate();
+ const {productId}  = useParams();
+ 
+   const navigate = useNavigate();
 
   // ✅ FIX: Correct destructuring from hook
   const {
@@ -171,6 +172,7 @@ const Product = () => {
               selectedImage={selectedImageIndex} // ✅ Pass INDEX number
               onSelect={setSelectedImageIndex} // ✅ Pass function that sets INDEX
               productName={product.name}
+                id={productId}
                onMobileZoomChange={handleMobileZoomChange}
             />
 

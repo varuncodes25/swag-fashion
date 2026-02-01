@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { starsGenerator } from "@/constants/helper";
 import { toast } from "@/hooks/use-toast";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux"; // ✅ Added useDispatch
 import { Link, useNavigate } from "react-router-dom";
 import useCartActions from "@/hooks/useCartActions";
 import { Heart } from "lucide-react";
+import {
+  optimisticToggle,
+  revertOptimisticToggle,
+  toggleWishlist,
+} from "@/redux/slices/wishlistSlice";
 
 /* ================= PRODUCT CARD ================= */
 
@@ -21,16 +26,29 @@ const ProductCard = ({
 }) => {
   const slug = name?.split(" ").join("-") || "product";
   const { isAuthenticated } = useSelector((state) => state.auth);
+  const { wishlistStatus } = useSelector((state) => state.wishlist); // ✅ Get wishlist status
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // ✅ Added dispatch
   // const { addToCart } = useCartActions();
 
-  const [wishlisted, setWishlisted] = useState(false);
+  const [isToggling, setIsToggling] = useState(false); // ✅ Added loading state
 
   /* ================= SAFE NUMBER HANDLING ================= */
   const safePrice = Number(price) || 0;
   const safeDiscountedPrice = Number(discountedPrice) || safePrice;
   const safeRating = Number(rating) || 0;
   const safeDiscount = Number(discount) || 0;
+
+  /* ================= CHECK IF PRODUCT IS IN WISHLIST ================= */
+  // ✅ Correct way to check if product is in wishlist
+  const isInWishlist = wishlistStatus?.[_id] || false;
+  
+  // ✅ Sync local state with Redux
+  const [wishlisted, setWishlisted] = useState(isInWishlist);
+  
+  useEffect(() => {
+    setWishlisted(isInWishlist);
+  }, [isInWishlist]);
 
   /* ================= IMAGE ================= */
   const rawImage =
@@ -51,17 +69,53 @@ const ProductCard = ({
 
   const displayPrice = isOfferActive ? safeDiscountedPrice : safePrice;
 
-  /* ================= ACTIONS ================= */
-
-  const toggleWishlist = (e) => {
+  /* ================= WISHLIST TOGGLE ================= */
+  const handleWishlistToggle = async (e) => {
     e.preventDefault();
-    setWishlisted((prev) => !prev);
+    e.stopPropagation();
 
-    toast({
-      title: !wishlisted
-        ? "Added to Wishlist ❤️"
-        : "Removed from Wishlist",
-    });
+    if (!isAuthenticated) {
+      toast({
+        title: "Please login first",
+        description: "Login to add items to wishlist",
+        variant: "destructive",
+      });
+      navigate("/login");
+      return;
+    }
+
+    if (isToggling) return;
+
+    setIsToggling(true);
+    const previousState = wishlisted; // Save current state for rollback
+    
+    // ✅ Optimistically update UI
+    setWishlisted(!wishlisted);
+    dispatch(optimisticToggle(_id));
+
+    try {
+      // ✅ Dispatch toggleWishlist action
+      const result = await dispatch(toggleWishlist(_id)).unwrap();
+
+      toast({
+        title: result.action === "added"
+          ? "Added to wishlist ❤️"
+          : "Removed from wishlist",
+        variant: "default",
+      });
+    } catch (error) {
+      // ✅ Revert on error
+      setWishlisted(previousState);
+      dispatch(revertOptimisticToggle(_id));
+      
+      toast({
+        title: "Failed to update wishlist",
+        description: error.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsToggling(false);
+    }
   };
 
   const handleAddToCart = (e) => {
@@ -75,22 +129,22 @@ const ProductCard = ({
     const user = JSON.parse(localStorage.getItem("user"));
     if (!user) return;
 
-    addToCart({
-      userId: user.id,
-      productId: _id,
-      quantity: 1,
-      price: displayPrice,
-      color: variants?.[0]?.color || "Default",
-      size: "",
-      toast,
-    });
+    // addToCart({
+    //   userId: user.id,
+    //   productId: _id,
+    //   quantity: 1,
+    //   price: displayPrice,
+    //   color: variants?.[0]?.color || "Default",
+    //   size: "",
+    //   toast,
+    // });
   };
 
   /* ================= FORMAT PRICE ================= */
   const formatPrice = (price) => {
     const num = Number(price);
     if (isNaN(num)) return "₹0.00";
-    return `₹${num.toFixed(2)}`;
+    return `₹${num.toFixed(0)}`; // Changed to no decimal for Indian Rupees
   };
 
   /* ================= RENDER ================= */
@@ -106,24 +160,26 @@ const ProductCard = ({
       "
     >
       <Link to={`/product/${_id}`} className="block">
-        {/* ===== Wishlist ===== */}
+        {/* ===== Wishlist Button ===== */}
         <button
-          onClick={toggleWishlist}
-          className="
+          onClick={handleWishlistToggle}
+          disabled={isToggling}
+          className={`
             absolute top-2 right-2 z-20
             p-2 rounded-full
-            bg-white dark:bg-zinc-800
+            bg-white/90 dark:bg-zinc-800/90
             shadow hover:shadow-md
-            transition
-          "
+            transition-all duration-200
+            ${isToggling ? 'opacity-50 cursor-not-allowed' : ''}
+          `}
         >
           <Heart
             size={18}
-            className={`transition ${
+            className={`transition-all duration-200 ${
               wishlisted
                 ? "fill-red-500 text-red-500 scale-110"
-                : "text-gray-500"
-            }`}
+                : "text-gray-500 hover:text-red-400"
+            } ${isToggling ? 'animate-pulse' : ''}`}
           />
         </button>
 

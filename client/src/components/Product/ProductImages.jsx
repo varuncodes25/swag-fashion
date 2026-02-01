@@ -22,8 +22,13 @@ const ProductImages = ({
   const navigate = useNavigate();
   
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const isWishlisted = useSelector((state) => state.wishlist.wishlistStatus[id]);
-
+const wishlistState = useSelector((state) => state.wishlist);
+  const wishlistStatus = wishlistState?.wishlistStatus || {};
+  const isWishlisted = wishlistStatus[id] || false;
+console.log("Wishlist State:", wishlistState);
+  console.log("Wishlist Status Object:", wishlistStatus);
+  console.log("Product ID:", id);
+  console.log("Is Wishlisted:", isWishlisted);
   const handleWishlistToggle = async (e) => {
     e.preventDefault();
     e.stopPropagation();
