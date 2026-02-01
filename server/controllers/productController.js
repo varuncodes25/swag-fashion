@@ -887,6 +887,356 @@ const getProductStats = async (req, res) => {
   }
 };
 
+// ==================== GET PRODUCTS BY CATEGORY WITH FILTERS ====================
+const getProductsByCategory = async (req, res) => {
+  try {
+    const { slug, subSlug } = req.params;
+    const queryParams = req.query;
+    console.log("Incoming queryParams:", queryParams);
+
+    // ============ 1. FIND CATEGORY ============
+    const category = await Category.findOne({ slug });
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found"
+      });
+    }
+
+    // ============ 2. BUILD BASE QUERY ============
+    const query = {
+      category: category._id,
+      status: "published",
+      blacklisted: false
+    };
+
+    // Add subcategory if exists
+    let subCategory = null;
+    if (subSlug) {
+      subCategory = category.subCategories?.find(
+        sub => sub.slug === subSlug && sub.isActive !== false
+      );
+      if (subCategory) {
+        query.subCategory = subCategory._id;
+      }
+    }
+
+    // ============ 3. APPLY FILTERS ============
+    console.log("Applying filters from query params:", queryParams);
+
+    // PRICE RANGE FILTER - CORRECTED
+    if (queryParams.priceRange) {
+      const priceRanges = queryParams.priceRange.split(',');
+      console.log("Price ranges:", priceRanges);
+      
+      const priceConditions = [];
+      
+      priceRanges.forEach(range => {
+        const [min, max] = range.split('-').map(Number);
+        if (!isNaN(min) && !isNaN(max)) {
+          priceConditions.push({
+            "variants.price": { $gte: min, $lte: max }
+          });
+        }
+      });
+      
+      if (priceConditions.length > 0) {
+        if (priceConditions.length === 1) {
+          Object.assign(query, priceConditions[0]);
+        } else {
+          query.$or = query.$or || [];
+          query.$or.push(...priceConditions);
+        }
+      }
+    }
+
+    // DISCOUNT FILTER - CORRECTED
+    if (queryParams.discount) {
+      const discounts = queryParams.discount.split(',').map(Number).filter(n => !isNaN(n));
+      if (discounts.length > 0) {
+        query.discount = { $in: discounts };
+      }
+      console.log("Discount query:", discounts);
+    }
+
+    // RATING FILTER - CORRECTED
+    if (queryParams.rating) {
+      const ratings = queryParams.rating.split(',').map(Number).filter(n => !isNaN(n));
+      if (ratings.length > 0) {
+        query.rating = { $in: ratings };
+      }
+      console.log("Rating query:", query.rating);
+    }
+
+    // ✅ COLOR FILTER - FIXED
+    if (queryParams.color) {
+      const colors = queryParams.color.split(',').map(c => c.trim().toLowerCase());
+      // Aapke schema mein field ka naam "colors" hai (array)
+      query.colors = { $in: colors.map(c => new RegExp(`^${c}$`, 'i')) };
+      console.log("✅ Color filter applied:", query.colors);
+    }
+
+    // ✅ SIZE FILTER - FIXED
+    if (queryParams.size) {
+      const sizes = queryParams.size.split(',').map(s => s.toUpperCase().trim());
+      // Aapke schema mein field ka naam "sizes" hai (array)
+      query.sizes = { $in: sizes };
+      console.log("✅ Size filter applied:", query.sizes);
+    }
+
+    // BRAND FILTER - CORRECTED
+    if (queryParams.brand) {
+      const brands = queryParams.brand.split(',').map(b => b.trim());
+      query.brand = { $in: brands.map(b => new RegExp(b, 'i')) };
+      console.log("Brand query:", brands);
+    }
+
+    // GENDER FILTER - CORRECTED
+    if (queryParams.gender) {
+      const genders = queryParams.gender.split(',').map(g => g.trim().toLowerCase());
+      query.gender = { $in: genders.map(g => new RegExp(`^${g}$`, 'i')) };
+      console.log("Gender query:", genders);
+    }
+
+    // AGE GROUP FILTER
+    if (queryParams.ageGroup) {
+      const ageGroups = queryParams.ageGroup.split(',').map(a => a.trim());
+      query.ageGroup = { $in: ageGroups.map(a => new RegExp(a, 'i')) };
+    }
+
+    // FABRIC FILTER
+    if (queryParams.fabric) {
+      const fabrics = queryParams.fabric.split(',').map(f => f.trim());
+      query.fabric = { $in: fabrics.map(f => new RegExp(f, 'i')) };
+    }
+
+    // FIT FILTER
+    if (queryParams.fit) {
+      const fits = queryParams.fit.split(',').map(f => f.trim());
+      query.fit = { $in: fits };
+    }
+
+    // CLOTHING TYPE FILTER
+    if (queryParams.clothingType) {
+      const clothingTypes = queryParams.clothingType.split(',').map(t => t.trim());
+      query.clothingType = { $in: clothingTypes.map(t => new RegExp(t, 'i')) };
+    }
+
+    // FEATURED/BESTSELLER/NEW ARRIVAL FILTERS
+    if (queryParams.isFeatured === 'true') query.isFeatured = true;
+    if (queryParams.isBestSeller === 'true') query.isBestSeller = true;
+    if (queryParams.isNewArrival === 'true') query.isNewArrival = true;
+
+    // STOCK AVAILABILITY - FIXED
+    if (queryParams.inStock === 'true') {
+      query["variants.stock"] = { $gt: 0 };
+    }
+
+    // ============ 4. DEBUG: LOG FINAL QUERY ============
+    console.log("Final MongoDB Query:", JSON.stringify(query, null, 2));
+
+    // ============ 5. SORTING ============
+    let sortBy = { createdAt: -1 };
+    
+    if (queryParams.sort) {
+      switch(queryParams.sort) {
+        case "price_low": sortBy = { sellingPrice: 1 }; break;
+        case "price_high": sortBy = { sellingPrice: -1 }; break;
+        case "rating": sortBy = { rating: -1 }; break;
+        case "popular": sortBy = { viewCount: -1 }; break;
+        case "discount": sortBy = { discount: -1 }; break; // Fixed: discount not discountPercentage
+        case "newest": sortBy = { createdAt: -1 }; break;
+        case "oldest": sortBy = { createdAt: 1 }; break;
+        case "best_seller": sortBy = { soldCount: -1 }; break;
+      }
+    }
+
+    // ============ 6. PAGINATION ============
+    const page = parseInt(queryParams.page) || 1;
+    const limit = parseInt(queryParams.limit) || 12;
+    const skip = (page - 1) * limit;
+
+    // ============ 7. EXECUTE QUERY ============
+    console.log("Executing query with sort:", sortBy);
+    
+    const products = await Product.find(query)
+      .sort(sortBy)
+      .skip(skip)
+      .limit(limit)
+      .populate('category', 'name slug')
+      .populate('subCategory', 'name slug');
+
+    const totalProducts = await Product.countDocuments(query);
+
+    console.log(`Found ${products.length} products out of ${totalProducts} total`);
+
+    // ============ 8. FORMAT RESPONSE ============
+    const formattedProducts = products.map(product => 
+      product.getProductCardData ? product.getProductCardData() : product
+    );
+
+    const response = {
+      success: true,
+      message: "Products fetched successfully",
+      data: {
+        products: formattedProducts,
+        pagination: {
+          totalProducts,
+          totalPages: Math.ceil(totalProducts / limit),
+          currentPage: page,
+          pageSize: limit,
+          hasNextPage: page < Math.ceil(totalProducts / limit),
+          hasPrevPage: page > 1
+        },
+        filtersApplied: Object.keys(queryParams).filter(key => !['page', 'limit', 'sort', 'includeFilters'].includes(key))
+      }
+    };
+
+    // Add debug info in development
+    if (process.env.NODE_ENV === 'development') {
+      response.debug = {
+        query: query,
+        queryParams: queryParams
+      };
+    }
+
+    res.status(200).json(response);
+
+  } catch (error) {
+    console.error("Get products by category error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch products",
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+};
+
+
+
+// ==================== GET AVAILABLE FILTER OPTIONS ====================
+const getAvailableFilters = async (categoryId, currentQuery) => {
+  try {
+    // Remove pagination fields
+    const filterQuery = { ...currentQuery };
+    delete filterQuery.limit;
+    delete filterQuery.skip;
+    delete filterQuery.sort;
+
+    const products = await Product.find(filterQuery);
+
+    // Extract unique values with counts
+    const colors = [...new Set(products.flatMap(p => p.colors))];
+    const sizes = [...new Set(products.flatMap(p => p.sizes))];
+    const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
+    const fabrics = [...new Set(products.map(p => p.fabric).filter(Boolean))];
+    const genders = [...new Set(products.map(p => p.gender).filter(Boolean))];
+    const ageGroups = [...new Set(products.map(p => p.ageGroup).filter(Boolean))];
+    const clothingTypes = [...new Set(products.map(p => p.clothingType).filter(Boolean))];
+
+    // Price range
+    const prices = products.map(p => p.getMinPrice()).filter(p => p > 0);
+    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
+
+    // Discounts
+    const discounts = [...new Set(products.map(p => p.discount).filter(d => d > 0))].sort((a, b) => a - b);
+
+    // Ratings
+    const ratings = [...new Set(products.map(p => Math.floor(p.rating)).filter(r => r > 0))].sort((a, b) => a - b);
+
+    return {
+      priceRange: { min: minPrice, max: maxPrice },
+      discounts: discounts.map(d => ({ value: d.toString(), count: products.filter(p => p.discount >= d).length })),
+      ratings: ratings.map(r => ({ value: r.toString(), count: products.filter(p => Math.floor(p.rating) >= r).length })),
+      colors: colors.map(c => ({ value: c, count: products.filter(p => p.colors.includes(c)).length })),
+      sizes: sizes.map(s => ({ value: s, count: products.filter(p => p.sizes.includes(s)).length })),
+      brands: brands.map(b => ({ value: b, count: products.filter(p => p.brand === b).length })),
+      fabrics: fabrics.map(f => ({ value: f, count: products.filter(p => p.fabric === f).length })),
+      genders: genders.map(g => ({ value: g, count: products.filter(p => p.gender === g).length })),
+      ageGroups: ageGroups.map(a => ({ value: a, count: products.filter(p => p.ageGroup === a).length })),
+      clothingTypes: clothingTypes.map(c => ({ value: c, count: products.filter(p => p.clothingType === c).length }))
+    };
+  } catch (error) {
+    console.error("Get filter options error:", error);
+    return {};
+  }
+};
+
+// ==================== GET SINGLE PRODUCT ====================
+const getProductBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const product = await Product.findOne({ slug })
+      .populate('category', 'name slug')
+      .populate('subCategory', 'name slug')
+      .populate('reviews');
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    // Increment view count
+    product.viewCount += 1;
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      data: product.getProductDetailData()
+    });
+
+  } catch (error) {
+    console.error("Get product error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch product"
+    });
+  }
+};
+
+// ==================== GET RELATED PRODUCTS ====================
+const getRelatedProducts = async (req, res) => {
+  try {
+    const { productId } = req.params;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
+
+    const relatedProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: productId },
+      status: "published",
+      blacklisted: false
+    })
+    .limit(8)
+    .sort({ rating: -1, createdAt: -1 });
+
+    const formattedProducts = relatedProducts.map(p => p.getProductCardData());
+
+    res.status(200).json({
+      success: true,
+      data: formattedProducts
+    });
+
+  } catch (error) {
+    console.error("Get related products error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch related products"
+    });
+  }
+};
+
+
 module.exports = {
   createProduct,
   updateProduct,
@@ -898,5 +1248,8 @@ module.exports = {
   getProductById,
   getProductsforadmin,
   updateVariantStock,
-  getProductStats
+  getProductStats,
+  getProductsByCategory,
+  getProductBySlug,
+  getRelatedProducts
 };
