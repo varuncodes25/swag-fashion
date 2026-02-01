@@ -10,51 +10,50 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  
+
   // Network settings
   timeout: 120000, // 2 minutes
-  upload_prefix: "https://api.cloudinary.com", 
+  upload_prefix: "https://api.cloudinary.com",
   api_proxy: process.env.PROXY_URL, // Agar proxy use karte ho
-  
+
   // Security
   secure: true,
   secure_distribution: null,
   private_cdn: false,
-  
+
   // Upload settings
   chunk_size: 20000000, // 20MB chunks
-  keep_alive: true
+  keep_alive: true,
 });
 
 // Additional: Global axios timeout (agar Cloudinary axios use karta hai)
-require('axios').defaults.timeout = 120000;
+require("axios").defaults.timeout = 120000;
 
 // Helper function to get color code
 function getColorCode(colorName) {
   const colorMap = {
-    "Red": "#FF0000",
-    "Blue": "#0000FF",
-    "Green": "#008000",
-    "Black": "#000000",
-    "White": "#FFFFFF",
-    "Gray": "#808080",
-    "Yellow": "#FFFF00",
-    "Pink": "#FFC0CB",
-    "Purple": "#800080",
-    "Orange": "#FFA500",
-    "Brown": "#A52A2A",
-    "Navy": "#000080",
-    "Maroon": "#800000",
-    "Teal": "#008080",
-    "Olive": "#808000",
-    "Beige": "#F5F5DC",
-    "Cream": "#FFFDD0",
-    "Khaki": "#C3B091"
+    Red: "#FF0000",
+    Blue: "#0000FF",
+    Green: "#008000",
+    Black: "#000000",
+    White: "#FFFFFF",
+    Gray: "#808080",
+    Yellow: "#FFFF00",
+    Pink: "#FFC0CB",
+    Purple: "#800080",
+    Orange: "#FFA500",
+    Brown: "#A52A2A",
+    Navy: "#000080",
+    Maroon: "#800000",
+    Teal: "#008080",
+    Olive: "#808000",
+    Beige: "#F5F5DC",
+    Cream: "#FFFDD0",
+    Khaki: "#C3B091",
   };
 
   return colorMap[colorName] || "#000000";
 }
-
 
 const createProduct = async (req, res) => {
   try {
@@ -97,45 +96,63 @@ const createProduct = async (req, res) => {
       countryOfOrigin = "India",
       productDimensions = {},
       warranty = "No Warranty",
-      returnPolicy = "7 Days Return Available"
+      returnPolicy = "7 Days Return Available",
     } = req.body;
 
     // Basic validation
-    if (!name || !description || !category || !clothingType || !gender || !fabric || !brand) {
+    if (
+      !name ||
+      !description ||
+      !category ||
+      !clothingType ||
+      !gender ||
+      !fabric ||
+      !brand
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Name, description, category, clothing type, gender, fabric and brand are required."
+        message:
+          "Name, description, category, clothing type, gender, fabric and brand are required.",
       });
     }
 
     if (!colors || !sizes || !basePrice) {
       return res.status(400).json({
         success: false,
-        message: "Colors, sizes and base price are required for variants."
+        message: "Colors, sizes and base price are required for variants.",
       });
     }
 
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Please upload at least one image."
+        message: "Please upload at least one image.",
       });
     }
 
     // Parse arrays
-    const colorsArray = Array.isArray(colors) ? colors : JSON.parse(colors || "[]");
+    const colorsArray = Array.isArray(colors)
+      ? colors
+      : JSON.parse(colors || "[]");
     const sizesArray = Array.isArray(sizes) ? sizes : JSON.parse(sizes || "[]");
-    const stocksArray = Array.isArray(stocks) ? stocks : JSON.parse(stocks || "[]");
-    const colorCodesArray = Array.isArray(colorCodes) ? colorCodes : JSON.parse(colorCodes || "[]");
-    const featuresArray = Array.isArray(features) ? features : JSON.parse(features || "[]");
+    const stocksArray = Array.isArray(stocks)
+      ? stocks
+      : JSON.parse(stocks || "[]");
+    const colorCodesArray = Array.isArray(colorCodes)
+      ? colorCodes
+      : JSON.parse(colorCodes || "[]");
+    const featuresArray = Array.isArray(features)
+      ? features
+      : JSON.parse(features || "[]");
 
     // Parse stock matrix if provided
     let stockMatrixObj = {};
     if (stockMatrix) {
       try {
-        stockMatrixObj = typeof stockMatrix === 'string'
-          ? JSON.parse(stockMatrix)
-          : stockMatrix;
+        stockMatrixObj =
+          typeof stockMatrix === "string"
+            ? JSON.parse(stockMatrix)
+            : stockMatrix;
       } catch (error) {
         console.warn("Invalid stock matrix format:", error);
       }
@@ -145,9 +162,10 @@ const createProduct = async (req, res) => {
     let colorImageMapping = {};
     if (colorImageMap) {
       try {
-        colorImageMapping = typeof colorImageMap === 'string'
-          ? JSON.parse(colorImageMap)
-          : colorImageMap;
+        colorImageMapping =
+          typeof colorImageMap === "string"
+            ? JSON.parse(colorImageMap)
+            : colorImageMap;
       } catch (error) {
         console.warn("Invalid colorImageMap format:", error);
       }
@@ -160,7 +178,7 @@ const createProduct = async (req, res) => {
     if (season) {
       if (Array.isArray(season)) {
         seasonArray = season;
-      } else if (typeof season === 'string') {
+      } else if (typeof season === "string") {
         try {
           seasonArray = JSON.parse(season);
         } catch {
@@ -172,7 +190,7 @@ const createProduct = async (req, res) => {
     if (occasion) {
       if (Array.isArray(occasion)) {
         occasionArray = occasion;
-      } else if (typeof occasion === 'string') {
+      } else if (typeof occasion === "string") {
         try {
           occasionArray = JSON.parse(occasion);
         } catch {
@@ -185,7 +203,7 @@ const createProduct = async (req, res) => {
     if (colorsArray.length === 0 || sizesArray.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "At least one color and one size is required."
+        message: "At least one color and one size is required.",
       });
     }
 
@@ -200,10 +218,10 @@ const createProduct = async (req, res) => {
             resource_type: "image",
             transformation: [
               { width: 800, height: 800, crop: "limit" },
-              { quality: "auto" }
-            ]
+              { quality: "auto" },
+            ],
           },
-          (error, result) => (error ? reject(error) : resolve(result))
+          (error, result) => (error ? reject(error) : resolve(result)),
         );
         stream.end(file.buffer);
       });
@@ -212,7 +230,7 @@ const createProduct = async (req, res) => {
         url: result.secure_url,
         id: result.public_id,
         isMain: i === 0,
-        sortOrder: i
+        sortOrder: i,
       });
     }
 
@@ -226,12 +244,12 @@ const createProduct = async (req, res) => {
         const colorIndex = colorsArray.indexOf(color);
         const colorCode = colorCodesArray[colorIndex] || getColorCode(color);
 
-        indices.forEach(imgIndex => {
+        indices.forEach((imgIndex) => {
           if (imgIndex < uploadedImages.length) {
             allImages.push({
               ...uploadedImages[imgIndex],
               color: color,
-              colorCode: colorCode
+              colorCode: colorCode,
             });
           }
         });
@@ -245,7 +263,7 @@ const createProduct = async (req, res) => {
         allImages.push({
           ...img,
           color: firstColor,
-          colorCode: firstColorCode
+          colorCode: firstColorCode,
         });
       });
     }
@@ -260,12 +278,17 @@ const createProduct = async (req, res) => {
         // Calculate stock - using stockMatrix if available, otherwise flat array
         let stockValue = 0;
 
-        if (stockMatrixObj[color] && stockMatrixObj[color][size] !== undefined) {
+        if (
+          stockMatrixObj[color] &&
+          stockMatrixObj[color][size] !== undefined
+        ) {
           stockValue = parseInt(stockMatrixObj[color][size]);
         } else if (stocksArray.length > 0) {
           // Try to get stock from flat array
           const flatIndex = colorIndex * sizesArray.length + sizeIndex;
-          stockValue = parseInt(stocksArray[flatIndex] || stocksArray[colorIndex] || 0);
+          stockValue = parseInt(
+            stocksArray[flatIndex] || stocksArray[colorIndex] || 0,
+          );
         }
 
         const variant = {
@@ -287,18 +310,19 @@ const createProduct = async (req, res) => {
       length: 0,
       width: 0,
       height: 0,
-      weight: 0.2
+      weight: 0.2,
     };
 
     if (productDimensions) {
       try {
-        const dims = typeof productDimensions === 'string'
-          ? JSON.parse(productDimensions)
-          : productDimensions;
+        const dims =
+          typeof productDimensions === "string"
+            ? JSON.parse(productDimensions)
+            : productDimensions;
 
         parsedDimensions = {
           ...parsedDimensions,
-          ...dims
+          ...dims,
         };
       } catch (error) {
         console.warn("Invalid dimensions format:", error);
@@ -349,7 +373,7 @@ const createProduct = async (req, res) => {
       returnPolicy,
 
       // Admin
-      createdBy: req.userId
+      createdBy: req.userId,
     });
 
     await product.save();
@@ -357,18 +381,16 @@ const createProduct = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Product created successfully",
-      data: product.getProductDetailData()
+      data: product.getProductDetailData(),
     });
-
   } catch (error) {
     console.error("Create product error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to create product"
+      message: error.message || "Failed to create product",
     });
   }
 };
-
 
 // ==================== GET ALL PRODUCTS ====================
 const getProducts = async (req, res) => {
@@ -383,8 +405,10 @@ const getProducts = async (req, res) => {
     const query = {};
 
     // Filters
-    if (category && category.toLowerCase() !== "all") query.category = category.trim();
-    if (search && search.trim() !== "") query.name = { $regex: search.trim(), $options: "i" };
+    if (category && category.toLowerCase() !== "all")
+      query.category = category.trim();
+    if (search && search.trim() !== "")
+      query.name = { $regex: search.trim(), $options: "i" };
     if (price && !isNaN(price)) query.price = { $lte: Number(price) };
 
     // Sorting
@@ -402,20 +426,20 @@ const getProducts = async (req, res) => {
       .sort(sortBy)
       .skip(skip)
       .limit(limit);
-      // ❌ REMOVE: .lean() - We need Mongoose documents for methods
+    // ❌ REMOVE: .lean() - We need Mongoose documents for methods
 
     console.log(`📊 Found ${products.length} products`);
 
     // ✅ USE THE EXISTING METHOD: getProductCardData()
-    const enhancedProducts = products.map(product => {
+    const enhancedProducts = products.map((product) => {
       console.log(`Processing: ${product.name}`);
       console.log("Using getProductCardData() method");
-      
+
       // ✅ This returns ALL card data including image
       const cardData = product.getProductCardData();
-      
+
       console.log("Card data image:", cardData.image?.url);
-      
+
       return cardData;
     });
 
@@ -433,14 +457,14 @@ const getProducts = async (req, res) => {
         currentPage: page,
         pageSize: limit,
         hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
+        hasPrevPage: page > 1,
       },
     });
   } catch (error) {
     console.error("❌ Get Products Error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Failed to fetch products"
+      message: error.message || "Failed to fetch products",
     });
   }
 };
@@ -455,7 +479,7 @@ const getProductById = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -465,13 +489,13 @@ const getProductById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Product fetched successfully",
-      data: productData
+      data: productData,
     });
   } catch (err) {
     console.error("Get product by ID error:", err);
     return res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 };
@@ -523,7 +547,7 @@ const getProductsforadmin = async (req, res) => {
     console.error("Get Products for Admin Error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -533,7 +557,7 @@ const updateProduct = async (req, res) => {
   if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
     return res.status(401).json({
       success: false,
-      message: "Access denied"
+      message: "Access denied",
     });
   }
 
@@ -580,29 +604,28 @@ const updateProduct = async (req, res) => {
       // For now, we'll skip image update in this simplified version
     }
 
-    const product = await Product.findByIdAndUpdate(
-      id,
-      data,
-      { new: true, runValidators: true }
-    );
+    const product = await Product.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Product updated successfully",
-      data: product.getProductDetailData()
+      data: product.getProductDetailData(),
     });
   } catch (error) {
     console.error("Update product error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -612,7 +635,7 @@ const deleteProduct = async (req, res) => {
   if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
     return res.status(401).json({
       success: false,
-      message: "Access denied"
+      message: "Access denied",
     });
   }
 
@@ -623,7 +646,7 @@ const deleteProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -643,22 +666,22 @@ const deleteProduct = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Product deleted successfully",
-      data: product
+      data: product,
     });
   } catch (error) {
     console.error("Delete product error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
 
 // ==================== GET PRODUCT BY NAME ====================
 const getProductByName = async (req, res) => {
-  console.log("iiiiii")
+  console.log("iiiiii");
   const { name } = req.params;
-console.log(name)
+  console.log(name);
   try {
     const product = await Product.findOne({
       name: { $regex: new RegExp(name, "i") },
@@ -666,7 +689,7 @@ console.log(name)
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -682,7 +705,7 @@ console.log(name)
     console.error("Get product by name error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -692,7 +715,7 @@ const blacklistProduct = async (req, res) => {
   if (req.role !== ROLES.admin) {
     return res.status(401).json({
       success: false,
-      message: "Access denied"
+      message: "Access denied",
     });
   }
 
@@ -702,13 +725,13 @@ const blacklistProduct = async (req, res) => {
     const product = await Product.findByIdAndUpdate(
       id,
       { blacklisted: true },
-      { new: true }
+      { new: true },
     );
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -721,7 +744,7 @@ const blacklistProduct = async (req, res) => {
     console.error("Blacklist product error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -731,7 +754,7 @@ const removeFromBlacklist = async (req, res) => {
   if (req.role !== ROLES.admin) {
     return res.status(401).json({
       success: false,
-      message: "Access denied"
+      message: "Access denied",
     });
   }
 
@@ -741,13 +764,13 @@ const removeFromBlacklist = async (req, res) => {
     const product = await Product.findByIdAndUpdate(
       id,
       { blacklisted: false },
-      { new: true }
+      { new: true },
     );
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -760,7 +783,7 @@ const removeFromBlacklist = async (req, res) => {
     console.error("Remove from blacklist error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -774,7 +797,7 @@ const updateVariantStock = async (req, res) => {
     if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
       return res.status(403).json({
         success: false,
-        message: "Access denied."
+        message: "Access denied.",
       });
     }
 
@@ -782,15 +805,19 @@ const updateVariantStock = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
     // Check ownership (for sellers)
-    if (req.role === ROLES.seller && product.createdBy && product.createdBy.toString() !== req.userId) {
+    if (
+      req.role === ROLES.seller &&
+      product.createdBy &&
+      product.createdBy.toString() !== req.userId
+    ) {
       return res.status(403).json({
         success: false,
-        message: "You can only update your own products"
+        message: "You can only update your own products",
       });
     }
 
@@ -798,7 +825,7 @@ const updateVariantStock = async (req, res) => {
     if (!variant) {
       return res.status(404).json({
         success: false,
-        message: "Variant not found"
+        message: "Variant not found",
       });
     }
 
@@ -812,15 +839,14 @@ const updateVariantStock = async (req, res) => {
       data: {
         variantId: variant._id,
         stock: variant.stock,
-        productId: product._id
-      }
+        productId: product._id,
+      },
     });
-
   } catch (error) {
     console.error("Update stock error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to update stock"
+      message: error.message || "Failed to update stock",
     });
   }
 };
@@ -831,7 +857,7 @@ const getProductStats = async (req, res) => {
     if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
       return res.status(403).json({
         success: false,
-        message: "Access denied."
+        message: "Access denied.",
       });
     }
 
@@ -848,9 +874,9 @@ const getProductStats = async (req, res) => {
           totalProducts: { $sum: 1 },
           averageRating: { $avg: "$rating" },
           totalSold: { $sum: "$soldCount" },
-          totalViews: { $sum: "$viewCount" }
-        }
-      }
+          totalViews: { $sum: "$viewCount" },
+        },
+      },
     ]);
 
     const clothingTypeStats = await Product.aggregate([
@@ -859,30 +885,29 @@ const getProductStats = async (req, res) => {
         $group: {
           _id: "$clothingType",
           count: { $sum: 1 },
-          averagePrice: { $avg: { $arrayElemAt: ["$variants.price", 0] } }
-        }
+          averagePrice: { $avg: { $arrayElemAt: ["$variants.price", 0] } },
+        },
       },
       { $sort: { count: -1 } },
-      { $limit: 10 }
+      { $limit: 10 },
     ]);
 
     res.json({
       success: true,
       data: {
-        ...stats[0] || {},
+        ...(stats[0] || {}),
         clothingTypeStats,
         lowStock: await Product.countDocuments({
           ...query,
-          "variants.stock": { $lt: 10 }
-        })
-      }
+          "variants.stock": { $lt: 10 },
+        }),
+      },
     });
-
   } catch (error) {
     console.error("Get stats error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to get stats"
+      message: error.message || "Failed to get stats",
     });
   }
 };
@@ -899,7 +924,7 @@ const getProductsByCategory = async (req, res) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found"
+        message: "Category not found",
       });
     }
 
@@ -907,14 +932,14 @@ const getProductsByCategory = async (req, res) => {
     const query = {
       category: category._id,
       status: "published",
-      blacklisted: false
+      blacklisted: false,
     };
 
     // Add subcategory if exists
     let subCategory = null;
     if (subSlug) {
       subCategory = category.subCategories?.find(
-        sub => sub.slug === subSlug && sub.isActive !== false
+        (sub) => sub.slug === subSlug && sub.isActive !== false,
       );
       if (subCategory) {
         query.subCategory = subCategory._id;
@@ -926,20 +951,20 @@ const getProductsByCategory = async (req, res) => {
 
     // PRICE RANGE FILTER - CORRECTED
     if (queryParams.priceRange) {
-      const priceRanges = queryParams.priceRange.split(',');
+      const priceRanges = queryParams.priceRange.split(",");
       console.log("Price ranges:", priceRanges);
-      
+
       const priceConditions = [];
-      
-      priceRanges.forEach(range => {
-        const [min, max] = range.split('-').map(Number);
+
+      priceRanges.forEach((range) => {
+        const [min, max] = range.split("-").map(Number);
         if (!isNaN(min) && !isNaN(max)) {
           priceConditions.push({
-            "variants.price": { $gte: min, $lte: max }
+            "variants.price": { $gte: min, $lte: max },
           });
         }
       });
-      
+
       if (priceConditions.length > 0) {
         if (priceConditions.length === 1) {
           Object.assign(query, priceConditions[0]);
@@ -952,7 +977,10 @@ const getProductsByCategory = async (req, res) => {
 
     // DISCOUNT FILTER - CORRECTED
     if (queryParams.discount) {
-      const discounts = queryParams.discount.split(',').map(Number).filter(n => !isNaN(n));
+      const discounts = queryParams.discount
+        .split(",")
+        .map(Number)
+        .filter((n) => !isNaN(n));
       if (discounts.length > 0) {
         query.discount = { $in: discounts };
       }
@@ -961,7 +989,10 @@ const getProductsByCategory = async (req, res) => {
 
     // RATING FILTER - CORRECTED
     if (queryParams.rating) {
-      const ratings = queryParams.rating.split(',').map(Number).filter(n => !isNaN(n));
+      const ratings = queryParams.rating
+        .split(",")
+        .map(Number)
+        .filter((n) => !isNaN(n));
       if (ratings.length > 0) {
         query.rating = { $in: ratings };
       }
@@ -969,66 +1000,80 @@ const getProductsByCategory = async (req, res) => {
     }
 
     // ✅ COLOR FILTER - FIXED
-    if (queryParams.color) {
-      const colors = queryParams.color.split(',').map(c => c.trim().toLowerCase());
+    if (queryParams.colors) {
+      console.log("col")
+      const colors = queryParams.colors
+        .split(",")
+        .map((c) => c.trim().toLowerCase());
       // Aapke schema mein field ka naam "colors" hai (array)
-      query.colors = { $in: colors.map(c => new RegExp(`^${c}$`, 'i')) };
+      query.colors = { $in: colors.map((c) => new RegExp(`^${c}$`, "i")) };
       console.log("✅ Color filter applied:", query.colors);
     }
 
     // ✅ SIZE FILTER - FIXED
-    if (queryParams.size) {
-      const sizes = queryParams.size.split(',').map(s => s.toUpperCase().trim());
-      // Aapke schema mein field ka naam "sizes" hai (array)
+    // ✅ SIZE FILTER - UPDATED VERSION
+    if (queryParams.size || queryParams.sizes) {
+      // Dono check karo
+      const sizeParam = queryParams.size || queryParams.sizes; // Pehle size, phir sizes
+      const sizes = sizeParam.split(",").map((s) => s.toUpperCase().trim());
+
       query.sizes = { $in: sizes };
-      console.log("✅ Size filter applied:", query.sizes);
+
+      console.log("✅ Size filter applied for:", sizes);
+      console.log("🔍 Using query.sizes:", query.sizes);
     }
 
     // BRAND FILTER - CORRECTED
     if (queryParams.brand) {
-      const brands = queryParams.brand.split(',').map(b => b.trim());
-      query.brand = { $in: brands.map(b => new RegExp(b, 'i')) };
+      const brands = queryParams.brand.split(",").map((b) => b.trim());
+      query.brand = { $in: brands.map((b) => new RegExp(b, "i")) };
       console.log("Brand query:", brands);
     }
 
     // GENDER FILTER - CORRECTED
     if (queryParams.gender) {
-      const genders = queryParams.gender.split(',').map(g => g.trim().toLowerCase());
-      query.gender = { $in: genders.map(g => new RegExp(`^${g}$`, 'i')) };
+      const genders = queryParams.gender
+        .split(",")
+        .map((g) => g.trim().toLowerCase());
+      query.gender = { $in: genders.map((g) => new RegExp(`^${g}$`, "i")) };
       console.log("Gender query:", genders);
     }
 
     // AGE GROUP FILTER
     if (queryParams.ageGroup) {
-      const ageGroups = queryParams.ageGroup.split(',').map(a => a.trim());
-      query.ageGroup = { $in: ageGroups.map(a => new RegExp(a, 'i')) };
+      const ageGroups = queryParams.ageGroup.split(",").map((a) => a.trim());
+      query.ageGroup = { $in: ageGroups.map((a) => new RegExp(a, "i")) };
     }
 
     // FABRIC FILTER
     if (queryParams.fabric) {
-      const fabrics = queryParams.fabric.split(',').map(f => f.trim());
-      query.fabric = { $in: fabrics.map(f => new RegExp(f, 'i')) };
+      const fabrics = queryParams.fabric.split(",").map((f) => f.trim());
+      query.fabric = { $in: fabrics.map((f) => new RegExp(f, "i")) };
     }
 
     // FIT FILTER
     if (queryParams.fit) {
-      const fits = queryParams.fit.split(',').map(f => f.trim());
+      const fits = queryParams.fit.split(",").map((f) => f.trim());
       query.fit = { $in: fits };
     }
 
     // CLOTHING TYPE FILTER
     if (queryParams.clothingType) {
-      const clothingTypes = queryParams.clothingType.split(',').map(t => t.trim());
-      query.clothingType = { $in: clothingTypes.map(t => new RegExp(t, 'i')) };
+      const clothingTypes = queryParams.clothingType
+        .split(",")
+        .map((t) => t.trim());
+      query.clothingType = {
+        $in: clothingTypes.map((t) => new RegExp(t, "i")),
+      };
     }
 
     // FEATURED/BESTSELLER/NEW ARRIVAL FILTERS
-    if (queryParams.isFeatured === 'true') query.isFeatured = true;
-    if (queryParams.isBestSeller === 'true') query.isBestSeller = true;
-    if (queryParams.isNewArrival === 'true') query.isNewArrival = true;
+    if (queryParams.isFeatured === "true") query.isFeatured = true;
+    if (queryParams.isBestSeller === "true") query.isBestSeller = true;
+    if (queryParams.isNewArrival === "true") query.isNewArrival = true;
 
     // STOCK AVAILABILITY - FIXED
-    if (queryParams.inStock === 'true') {
+    if (queryParams.inStock === "true") {
       query["variants.stock"] = { $gt: 0 };
     }
 
@@ -1037,17 +1082,33 @@ const getProductsByCategory = async (req, res) => {
 
     // ============ 5. SORTING ============
     let sortBy = { createdAt: -1 };
-    
+
     if (queryParams.sort) {
-      switch(queryParams.sort) {
-        case "price_low": sortBy = { sellingPrice: 1 }; break;
-        case "price_high": sortBy = { sellingPrice: -1 }; break;
-        case "rating": sortBy = { rating: -1 }; break;
-        case "popular": sortBy = { viewCount: -1 }; break;
-        case "discount": sortBy = { discount: -1 }; break; // Fixed: discount not discountPercentage
-        case "newest": sortBy = { createdAt: -1 }; break;
-        case "oldest": sortBy = { createdAt: 1 }; break;
-        case "best_seller": sortBy = { soldCount: -1 }; break;
+      switch (queryParams.sort) {
+        case "price_low":
+          sortBy = { sellingPrice: 1 };
+          break;
+        case "price_high":
+          sortBy = { sellingPrice: -1 };
+          break;
+        case "rating":
+          sortBy = { rating: -1 };
+          break;
+        case "popular":
+          sortBy = { viewCount: -1 };
+          break;
+        case "discount":
+          sortBy = { discount: -1 };
+          break; // Fixed: discount not discountPercentage
+        case "newest":
+          sortBy = { createdAt: -1 };
+          break;
+        case "oldest":
+          sortBy = { createdAt: 1 };
+          break;
+        case "best_seller":
+          sortBy = { soldCount: -1 };
+          break;
       }
     }
 
@@ -1058,21 +1119,23 @@ const getProductsByCategory = async (req, res) => {
 
     // ============ 7. EXECUTE QUERY ============
     console.log("Executing query with sort:", sortBy);
-    
+
     const products = await Product.find(query)
       .sort(sortBy)
       .skip(skip)
       .limit(limit)
-      .populate('category', 'name slug')
-      .populate('subCategory', 'name slug');
+      .populate("category", "name slug")
+      .populate("subCategory", "name slug");
 
     const totalProducts = await Product.countDocuments(query);
 
-    console.log(`Found ${products.length} products out of ${totalProducts} total`);
+    console.log(
+      `Found ${products.length} products out of ${totalProducts} total`,
+    );
 
     // ============ 8. FORMAT RESPONSE ============
-    const formattedProducts = products.map(product => 
-      product.getProductCardData ? product.getProductCardData() : product
+    const formattedProducts = products.map((product) =>
+      product.getProductCardData ? product.getProductCardData() : product,
     );
 
     const response = {
@@ -1086,33 +1149,32 @@ const getProductsByCategory = async (req, res) => {
           currentPage: page,
           pageSize: limit,
           hasNextPage: page < Math.ceil(totalProducts / limit),
-          hasPrevPage: page > 1
+          hasPrevPage: page > 1,
         },
-        filtersApplied: Object.keys(queryParams).filter(key => !['page', 'limit', 'sort', 'includeFilters'].includes(key))
-      }
+        filtersApplied: Object.keys(queryParams).filter(
+          (key) => !["page", "limit", "sort", "includeFilters"].includes(key),
+        ),
+      },
     };
 
     // Add debug info in development
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       response.debug = {
         query: query,
-        queryParams: queryParams
+        queryParams: queryParams,
       };
     }
 
     res.status(200).json(response);
-
   } catch (error) {
     console.error("Get products by category error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Failed to fetch products",
-      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 };
-
-
 
 // ==================== GET AVAILABLE FILTER OPTIONS ====================
 const getAvailableFilters = async (categoryId, currentQuery) => {
@@ -1126,36 +1188,73 @@ const getAvailableFilters = async (categoryId, currentQuery) => {
     const products = await Product.find(filterQuery);
 
     // Extract unique values with counts
-    const colors = [...new Set(products.flatMap(p => p.colors))];
-    const sizes = [...new Set(products.flatMap(p => p.sizes))];
-    const brands = [...new Set(products.map(p => p.brand).filter(Boolean))];
-    const fabrics = [...new Set(products.map(p => p.fabric).filter(Boolean))];
-    const genders = [...new Set(products.map(p => p.gender).filter(Boolean))];
-    const ageGroups = [...new Set(products.map(p => p.ageGroup).filter(Boolean))];
-    const clothingTypes = [...new Set(products.map(p => p.clothingType).filter(Boolean))];
+    const colors = [...new Set(products.flatMap((p) => p.colors))];
+    const sizes = [...new Set(products.flatMap((p) => p.sizes))];
+    const brands = [...new Set(products.map((p) => p.brand).filter(Boolean))];
+    const fabrics = [...new Set(products.map((p) => p.fabric).filter(Boolean))];
+    const genders = [...new Set(products.map((p) => p.gender).filter(Boolean))];
+    const ageGroups = [
+      ...new Set(products.map((p) => p.ageGroup).filter(Boolean)),
+    ];
+    const clothingTypes = [
+      ...new Set(products.map((p) => p.clothingType).filter(Boolean)),
+    ];
 
     // Price range
-    const prices = products.map(p => p.getMinPrice()).filter(p => p > 0);
+    const prices = products.map((p) => p.getMinPrice()).filter((p) => p > 0);
     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
     const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
 
     // Discounts
-    const discounts = [...new Set(products.map(p => p.discount).filter(d => d > 0))].sort((a, b) => a - b);
+    const discounts = [
+      ...new Set(products.map((p) => p.discount).filter((d) => d > 0)),
+    ].sort((a, b) => a - b);
 
     // Ratings
-    const ratings = [...new Set(products.map(p => Math.floor(p.rating)).filter(r => r > 0))].sort((a, b) => a - b);
+    const ratings = [
+      ...new Set(
+        products.map((p) => Math.floor(p.rating)).filter((r) => r > 0),
+      ),
+    ].sort((a, b) => a - b);
 
     return {
       priceRange: { min: minPrice, max: maxPrice },
-      discounts: discounts.map(d => ({ value: d.toString(), count: products.filter(p => p.discount >= d).length })),
-      ratings: ratings.map(r => ({ value: r.toString(), count: products.filter(p => Math.floor(p.rating) >= r).length })),
-      colors: colors.map(c => ({ value: c, count: products.filter(p => p.colors.includes(c)).length })),
-      sizes: sizes.map(s => ({ value: s, count: products.filter(p => p.sizes.includes(s)).length })),
-      brands: brands.map(b => ({ value: b, count: products.filter(p => p.brand === b).length })),
-      fabrics: fabrics.map(f => ({ value: f, count: products.filter(p => p.fabric === f).length })),
-      genders: genders.map(g => ({ value: g, count: products.filter(p => p.gender === g).length })),
-      ageGroups: ageGroups.map(a => ({ value: a, count: products.filter(p => p.ageGroup === a).length })),
-      clothingTypes: clothingTypes.map(c => ({ value: c, count: products.filter(p => p.clothingType === c).length }))
+      discounts: discounts.map((d) => ({
+        value: d.toString(),
+        count: products.filter((p) => p.discount >= d).length,
+      })),
+      ratings: ratings.map((r) => ({
+        value: r.toString(),
+        count: products.filter((p) => Math.floor(p.rating) >= r).length,
+      })),
+      colors: colors.map((c) => ({
+        value: c,
+        count: products.filter((p) => p.colors.includes(c)).length,
+      })),
+      sizes: sizes.map((s) => ({
+        value: s,
+        count: products.filter((p) => p.sizes.includes(s)).length,
+      })),
+      brands: brands.map((b) => ({
+        value: b,
+        count: products.filter((p) => p.brand === b).length,
+      })),
+      fabrics: fabrics.map((f) => ({
+        value: f,
+        count: products.filter((p) => p.fabric === f).length,
+      })),
+      genders: genders.map((g) => ({
+        value: g,
+        count: products.filter((p) => p.gender === g).length,
+      })),
+      ageGroups: ageGroups.map((a) => ({
+        value: a,
+        count: products.filter((p) => p.ageGroup === a).length,
+      })),
+      clothingTypes: clothingTypes.map((c) => ({
+        value: c,
+        count: products.filter((p) => p.clothingType === c).length,
+      })),
     };
   } catch (error) {
     console.error("Get filter options error:", error);
@@ -1169,14 +1268,14 @@ const getProductBySlug = async (req, res) => {
     const { slug } = req.params;
 
     const product = await Product.findOne({ slug })
-      .populate('category', 'name slug')
-      .populate('subCategory', 'name slug')
-      .populate('reviews');
+      .populate("category", "name slug")
+      .populate("subCategory", "name slug")
+      .populate("reviews");
 
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -1186,14 +1285,13 @@ const getProductBySlug = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: product.getProductDetailData()
+      data: product.getProductDetailData(),
     });
-
   } catch (error) {
     console.error("Get product error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to fetch product"
+      message: error.message || "Failed to fetch product",
     });
   }
 };
@@ -1207,7 +1305,7 @@ const getRelatedProducts = async (req, res) => {
     if (!product) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
@@ -1215,27 +1313,27 @@ const getRelatedProducts = async (req, res) => {
       category: product.category,
       _id: { $ne: productId },
       status: "published",
-      blacklisted: false
+      blacklisted: false,
     })
-    .limit(8)
-    .sort({ rating: -1, createdAt: -1 });
+      .limit(8)
+      .sort({ rating: -1, createdAt: -1 });
 
-    const formattedProducts = relatedProducts.map(p => p.getProductCardData());
+    const formattedProducts = relatedProducts.map((p) =>
+      p.getProductCardData(),
+    );
 
     res.status(200).json({
       success: true,
-      data: formattedProducts
+      data: formattedProducts,
     });
-
   } catch (error) {
     console.error("Get related products error:", error);
     res.status(500).json({
       success: false,
-      message: error.message || "Failed to fetch related products"
+      message: error.message || "Failed to fetch related products",
     });
   }
 };
-
 
 module.exports = {
   createProduct,
@@ -1251,5 +1349,5 @@ module.exports = {
   getProductStats,
   getProductsByCategory,
   getProductBySlug,
-  getRelatedProducts
+  getRelatedProducts,
 };
