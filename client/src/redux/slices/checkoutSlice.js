@@ -16,14 +16,14 @@ const authHeader = () => ({
 export const initCheckout = createAsyncThunk(
   "checkout/init",
   async (
-    { 
-      productId, 
+    {
+      productId,
       variantId, // ✅ ADD THIS
-      qty, 
-      addressId, 
-      checkoutType = "PRODUCT" 
+      qty,
+      addressId,
+      checkoutType = "PRODUCT",
     } = {},
-    { rejectWithValue }
+    { rejectWithValue },
   ) => {
     try {
       const params = new URLSearchParams();
@@ -31,17 +31,16 @@ export const initCheckout = createAsyncThunk(
       // ✅ सभी cases handle करो
       if (checkoutType === "PRODUCT" && productId) {
         params.append("productId", productId);
-        
+
         // ✅ VARIANT ID ADD KARO (MOST IMPORTANT!)
         if (variantId) {
           params.append("variantId", variantId);
         } else {
           console.warn("⚠️ variantId missing for PRODUCT checkout");
         }
-        
+
         params.append("qty", qty || 1);
         params.append("addressId", addressId);
-        
       } else if (checkoutType === "CART") {
         // ✅ Cart checkout के लिए सिर्फ addressId और checkoutType भेजो
         params.append("checkoutType", "CART");
@@ -57,7 +56,7 @@ export const initCheckout = createAsyncThunk(
       console.log("🔄 initCheckout API Call:", {
         url: `${API}/checkout/init?${params.toString()}`,
         params: Object.fromEntries(params.entries()),
-        hasVariantId: !!variantId
+        hasVariantId: !!variantId,
       });
 
       const res = await axios.get(`${API}/checkout/init?${params.toString()}`, {
@@ -69,12 +68,15 @@ export const initCheckout = createAsyncThunk(
         checkoutType, // ✅ Frontend को भी checkoutType return करो
       };
     } catch (err) {
-      console.error("❌ initCheckout error:", err.response?.data || err.message);
+      console.error(
+        "❌ initCheckout error:",
+        err.response?.data || err.message,
+      );
       return rejectWithValue(
-        err.response?.data?.message || "Checkout init failed"
+        err.response?.data?.message || "Checkout init failed",
       );
     }
-  }
+  },
 );
 
 /* 2️⃣ FETCH ADDRESSES */
@@ -88,10 +90,10 @@ export const fetchAddresses = createAsyncThunk(
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Failed to load addresses"
+        err.response?.data?.message || "Failed to load addresses",
       );
     }
-  }
+  },
 );
 
 /* 3️⃣ CREATE ADDRESS */
@@ -105,10 +107,10 @@ export const createAddress = createAsyncThunk(
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Failed to add address"
+        err.response?.data?.message || "Failed to add address",
       );
     }
-  }
+  },
 );
 
 /* 4️⃣ UPDATE ADDRESS */
@@ -122,10 +124,10 @@ export const updateAddress = createAsyncThunk(
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update address"
+        err.response?.data?.message || "Failed to update address",
       );
     }
-  }
+  },
 );
 
 /* 5️⃣ DELETE ADDRESS */
@@ -139,10 +141,10 @@ export const deleteAddress = createAsyncThunk(
       return id;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Failed to delete address"
+        err.response?.data?.message || "Failed to delete address",
       );
     }
-  }
+  },
 );
 
 /* 6️⃣ APPLY COUPON */
@@ -162,7 +164,7 @@ export const applyCoupon = createAsyncThunk(
       const res = await axios.post(
         `${API}/coupons/apply?${params.toString()}`,
         { code },
-        { headers: authHeader() }
+        { headers: authHeader() },
       );
 
       return {
@@ -173,7 +175,7 @@ export const applyCoupon = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Invalid coupon");
     }
-  }
+  },
 );
 
 export const placeCodOrder = createAsyncThunk(
@@ -218,10 +220,10 @@ export const placeCodOrder = createAsyncThunk(
       return rejectWithValue(
         err.response?.data?.message ||
           err.message ||
-          "Failed to place COD order"
+          "Failed to place COD order",
       );
     }
-  }
+  },
 );
 
 /* 8️⃣ CREATE RAZORPAY ORDER (Payment Initiation) */
@@ -230,25 +232,50 @@ export const createRazorpayOrder = createAsyncThunk(
   async (_, { rejectWithValue, getState }) => {
     try {
       const state = getState();
-      const { addressId, productId, qty, summary } = state.checkout;
+      const {
+        addressId,
+        productId,
+        variantId, // ✅ GET VARIANT ID FROM STATE
+        qty,
+        summary,
+      } = state.checkout;
 
+      console.log("🔄 createRazorpayOrder thunk:", {
+        addressId,
+        productId,
+        variantId, // ✅ Log variantId
+        qty,
+        totalAmount: summary?.total,
+      });
+
+      // ✅ VALIDATION
       if (!addressId) {
         throw new Error("Address is required");
       }
 
-      // Create Razorpay order for payment initiation
-      const res = await axios.post(
+      // ✅ For Buy Now, variantId is REQUIRED
+      if (productId && !variantId) {
+        throw new Error("Variant ID is required for Buy Now");
+      }
+ const res = await axios.post(
         `${API}/generate-payment`,
         {
           addressId,
           productId,
-          quantity: qty || 1,
-          amount: summary.total, // Total amount from checkout summary
+          variantId, // ✅ PASS VARIANT ID
+          quantity: qty || 1, // Total amount from checkout summary
         },
         {
           headers: authHeader(),
         }
       );
+      
+
+      console.log("✅ Razorpay order created:", {
+        razorpayOrderId: res.data.razorpayOrderId,
+        amount: res.data.amount,
+        success: res.data.success,
+      });
 
       if (!res.data.success) {
         throw new Error(res.data.message);
@@ -256,45 +283,63 @@ export const createRazorpayOrder = createAsyncThunk(
 
       return res.data; // { razorpayOrderId, amount, key, success: true }
     } catch (err) {
+      console.error("❌ createRazorpayOrder error:", err);
       return rejectWithValue(
-        err.response?.data?.message || "Failed to create payment order"
+        err.response?.data?.message || "Failed to create payment order",
       );
     }
-  }
+  },
 );
 
 /* 9️⃣ VERIFY RAZORPAY PAYMENT & CREATE FINAL ORDER */
 export const verifyRazorpayPayment = createAsyncThunk(
-  "checkout/verifyRazorpayPayment",
+  "checkout/verifyPayment",
   async (paymentData, { rejectWithValue, getState }) => {
     try {
       const state = getState();
-      const { addressId, productId, qty } = state.checkout;
+      const {
+        addressId,
+        productId,
+        variantId, // ✅ GET VARIANT ID
+        qty,
+      } = state.checkout;
+
+      console.log("🔍 verifyRazorpayPayment called:", {
+        razorpayOrderId: paymentData.razorpay_order_id,
+        productId,
+        variantId,
+        qty,
+        addressId,
+      });
 
       const res = await axios.post(
-        `${API}/verify-payment`,
+        `${API}/payment/verify-payment`,
         {
           ...paymentData,
           addressId,
           productId,
+          variantId, // ✅ PASS VARIANT ID
           quantity: qty || 1,
         },
         {
           headers: authHeader(),
-        }
+        },
       );
+
+      console.log("✅ Payment verified:", res.data);
 
       if (!res.data.success) {
         throw new Error(res.data.message);
       }
 
-      return res.data; // { orderId, success: true, message }
+      return res.data; // { success: true, orderId, message }
     } catch (err) {
+      console.error("❌ verifyRazorpayPayment error:", err);
       return rejectWithValue(
-        err.response?.data?.message || "Payment verification failed"
+        err.response?.data?.message || "Payment verification failed",
       );
     }
-  }
+  },
 );
 
 /* =====================================================
@@ -317,6 +362,7 @@ const checkoutSlice = createSlice({
     /* CHECKOUT TYPE */
     productId: null,
     qty: 1,
+    variantId: null,
 
     /* ADDRESS */
     addresses: [],
@@ -357,6 +403,9 @@ const checkoutSlice = createSlice({
       state.qty = action.payload;
     },
 
+    setVariantId(state, action) {
+      state.variantId = action.payload;
+    },
     setRazorpayOrder(state, action) {
       state.razorpayOrder = action.payload;
     },
@@ -384,11 +433,16 @@ const checkoutSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(initCheckout.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload.items;
-        state.summary = action.payload.summary;
-      })
+         .addCase(initCheckout.fulfilled, (state, action) => {
+      state.loading = false;
+      state.items = action.payload.items;
+      state.summary = action.payload.summary;
+      
+      // ✅ ACTION SE VARIANT ID BHI SET KARO (agar aati hai to)
+      if (action.payload.variantId) {
+        state.variantId = action.payload.items[0].variantId;
+      }
+    })
       .addCase(initCheckout.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
@@ -416,7 +470,7 @@ const checkoutSlice = createSlice({
       /* UPDATE ADDRESS */
       .addCase(updateAddress.fulfilled, (state, action) => {
         const index = state.addresses.findIndex(
-          (addr) => addr._id === action.payload._id
+          (addr) => addr._id === action.payload._id,
         );
         if (index !== -1) {
           state.addresses[index] = action.payload;
@@ -426,7 +480,7 @@ const checkoutSlice = createSlice({
       /* DELETE ADDRESS */
       .addCase(deleteAddress.fulfilled, (state, action) => {
         state.addresses = state.addresses.filter(
-          (addr) => addr._id !== action.payload
+          (addr) => addr._id !== action.payload,
         );
         if (state.addressId === action.payload) {
           state.addressId = state.addresses[0]?._id || null;
@@ -516,6 +570,7 @@ export const {
   clearCoupon,
   resetCheckout,
   clearError,
+  setVariantId
 } = checkoutSlice.actions;
 
 export default checkoutSlice.reducer;

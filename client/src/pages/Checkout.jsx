@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { initCheckout, setProductId } from "@/redux/slices/checkoutSlice";
+import { initCheckout, setProductId ,setVariantId} from "@/redux/slices/checkoutSlice";
 import AddressSection from "@/components/checkout/AddressSection";
 import OrderSummary from "@/components/checkout/OrderSummary";
 import PaymentMethod from "@/components/checkout/PaymentMethod";
@@ -60,7 +60,7 @@ useEffect(() => {
   });
   
   dispatch(setProductId(productId));
-  
+  dispatch(setVariantId(variantId));
   // ✅ Pass variantId to initCheckout
   if (addressId) {
     const selectedAddress = addresses.find(addr => addr._id === addressId);
