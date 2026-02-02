@@ -63,11 +63,21 @@ const variantSchema = new mongoose.Schema(
       default: 0
     },
     
-    price: { 
+    // ✅ YE DO FIELDS ADD KARO:
+    price: {      // MRP (Admin daalega)
       type: Number, 
       required: true,
       min: 0
     },
+    
+    sellingPrice: {       // Discount ke baad ka price (Auto calculate)
+      type: Number, 
+      required: true,
+      min: 0
+    },
+    
+    // ❌ 'price' field ko HATA DO ya comment karo
+    // price: { type: Number, required: true, min: 0 },
     
     sku: {
       type: String,
@@ -75,10 +85,8 @@ const variantSchema = new mongoose.Schema(
       sparse: true
     },
     
-    // NO images field here - saving space
     barcode: String,
     
-    // For inventory tracking
     reservedStock: {
       type: Number,
       default: 0
@@ -485,7 +493,39 @@ productSchema.index({ colors: 1 });
 productSchema.index({ sizes: 1 });
 
 // ==================== PRE-SAVE MIDDLEWARE ====================
+// ==================== PRE-VALIDATE MIDDLEWARE ====================
+// ✅ पहले ये ADD करें (सबसे ऊपर)
+productSchema.pre('validate', function(next) {
+  console.log('🔄 Pre-validate: Setting sellingPrice for variants');
+  
+  this.variants.forEach((variant) => {
+    // 1. Agar sellingPrice nahi hai ya 0 hai to calculate karo
+    if (!variant.sellingPrice || variant.sellingPrice <= 0) {
+      if (this.discount > 0) {
+        // Product level discount apply करो
+        variant.sellingPrice = Math.round(variant.price * (100 - this.discount) / 100);
+        console.log(`✅ Variant: ${variant.color}-${variant.size}, Price: ${variant.price}, Discount: ${this.discount}%, SellingPrice: ${variant.sellingPrice}`);
+      } else {
+        // No discount
+        variant.sellingPrice = variant.price;
+        console.log(`✅ Variant: ${variant.color}-${variant.size}, Price: ${variant.price}, SellingPrice: ${variant.sellingPrice} (No discount)`);
+      }
+    }
+    
+    // 2. Safety check - kabhi bhi undefined ya 0 na ho
+    if (!variant.sellingPrice || variant.sellingPrice <= 0) {
+      variant.sellingPrice = variant.price || 100; // Default minimum price
+      console.log(`⚠️ Variant: ${variant.color}-${variant.size}, Setting default sellingPrice: ${variant.sellingPrice}`);
+    }
+  });
+  
+  next();
+});
+
+// ==================== PRE-SAVE MIDDLEWARE ====================
 productSchema.pre('save', function(next) {
+  console.log('💾 Pre-save: Processing product data');
+  
   // Extract unique colors and sizes from variants
   const colorsSet = new Set();
   const sizesSet = new Set();
@@ -497,25 +537,43 @@ productSchema.pre('save', function(next) {
   
   this.colors = Array.from(colorsSet);
   this.sizes = Array.from(sizesSet);
+  console.log(`🎨 Colors: ${this.colors.join(', ')}, Sizes: ${this.sizes.join(', ')}`);
   
-  // Generate SKU if not exists
+  // ✅ पहले SKU generate करो
   this.variants.forEach((variant, index) => {
     if (!variant.sku) {
-      const skuPrefix = this.brand.substring(0, 3).toUpperCase();
-      const colorCode = variant.color.substring(0, 2).toUpperCase();
+      const skuPrefix = (this.brand || 'GEN').substring(0, 3).toUpperCase();
+      const colorCode = (variant.color || 'XX').substring(0, 2).toUpperCase();
       const sizeCode = variant.size;
       const randomNum = Math.floor(1000 + Math.random() * 9000);
-      variant.sku = `${skuPrefix}-${randomNum}-${colorCode}-${sizeCode}-${index}`;
+      variant.sku = `${skuPrefix}-${randomNum}-${colorCode}-${sizeCode}`;
+      console.log(`📦 Generated SKU for ${variant.color}-${variant.size}: ${variant.sku}`);
     }
+  });
+  
+  // ✅ अब discount price और percentage calculate करो
+  this.variants.forEach((variant) => {
+    // 1. Discount price calculate करो
+    variant.discountPrice = Math.max(variant.price - (variant.sellingPrice || variant.price), 0);
+    
+    // 2. Discount percentage calculate करो
+    if (variant.price > 0 && variant.sellingPrice < variant.price) {
+      variant.discountPercentage = Math.round(((variant.price - variant.sellingPrice) / variant.price) * 100);
+    } else {
+      variant.discountPercentage = 0;
+    }
+    
+    console.log(`💰 Variant ${variant.color}-${variant.size}: Price=${variant.price}, Selling=${variant.sellingPrice}, Discount=${variant.discountPrice} (${variant.discountPercentage}%)`);
   });
   
   // Generate slug if not exists
   if (!this.slug) {
-    const baseSlug = this.name.toLowerCase()
+    const baseSlug = (this.name || 'product').toLowerCase()
       .replace(/[^\w\s]/gi, '')
       .replace(/\s+/g, '-');
     const randomSuffix = Math.floor(100000 + Math.random() * 900000);
     this.slug = `${baseSlug}-${randomSuffix}`;
+    console.log(`🔗 Generated slug: ${this.slug}`);
   }
   
   // Set default blacklisted to false if not set
@@ -523,15 +581,21 @@ productSchema.pre('save', function(next) {
     this.blacklisted = false;
   }
   
-  // Calculate selling price from variants
+  // ✅ CORRECT: Product level sellingPrice calculate करो (sabse minimum sellingPrice लो)
   if (this.variants.length > 0) {
-    const minPrice = Math.min(...this.variants.map(v => v.price || 0));
-    this.sellingPrice = minPrice;
+    // Sabse minimum SELLING PRICE lo, price nahi
+    const minSellingPrice = Math.min(...this.variants.map(v => v.sellingPrice || v.price || 0));
+    const maxPrice = Math.max(...this.variants.map(v => v.price || 0));
+    
+    // Product level prices
+    this.sellingPrice = minSellingPrice;
     
     // Calculate MRP with markup (optional)
     if (!this.mrp) {
-      this.mrp = Math.round(minPrice * 1.2);
+      this.mrp = Math.round(maxPrice * 1.1); // 10% markup
     }
+    
+    console.log(`📊 Product prices - Selling: ${this.sellingPrice}, MRP: ${this.mrp}`);
   }
   
   // Organize images by color for quick lookup
@@ -545,7 +609,7 @@ productSchema.pre('save', function(next) {
           imagesMap.set(image.color, []);
         }
         
-        // Add image to map without color fields (to save space in map)
+        // Add image to map
         imagesMap.get(image.color).push({
           url: image.url,
           id: image.id,
@@ -561,6 +625,7 @@ productSchema.pre('save', function(next) {
     });
     
     this.imagesByColor = imagesMap;
+    console.log(`🖼️ Organized ${this.allImages.length} images by color`);
   }
   
   next();
@@ -730,9 +795,10 @@ productSchema.methods.getAvailableColorsForSize = function(size) {
 
 // Get product card data for listing
 productSchema.methods.getProductCardData = function() {
-  const minPrice = this.getMinPrice();
-  const maxPrice = this.getMaxPrice();
-  const discountedPrice = this.getDiscountedPrice();
+  const allSellingPrices = this.variants.map(v => v.sellingPrice || 0);
+  const minSellingPrice = Math.min(...allSellingPrices);
+  const cheapestVariant = this.variants.find(v => v.sellingPrice === minSellingPrice);
+  const originalPriceOfCheapest = cheapestVariant?.price || minSellingPrice;
 
   return {
     _id: this._id,
@@ -742,10 +808,9 @@ productSchema.methods.getProductCardData = function() {
     gender: this.gender,
     ageGroup: this.ageGroup,
     description: this.shortDescription || this.description.substring(0, 100) + '...',
-    price: minPrice,
-    maxPrice: maxPrice !== minPrice ? maxPrice : undefined,
-    discountedPrice: discountedPrice,
-    discount: this.discount,
+    sellingPrice: minSellingPrice,            // ✅ Selling price
+    price: originalPriceOfCheapest,   // ✅ Original price
+    discount: this.discount,   
     rating: this.rating,
     reviewCount: this.reviewCount,
     image: this.getMainImage(),
@@ -896,4 +961,4 @@ productSchema.methods.removeImagesForColor = function(color) {
   this.allImages = this.allImages.filter(img => img.color !== color);
 };
 
-module.exports = mongoose.model("Product", productSchema);
+module.exports = mongoose.model("Product", productSchema)
