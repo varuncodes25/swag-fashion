@@ -20,7 +20,6 @@ const Navbar = () => {
   };
 
   useEffect(() => {
-    console.log("navbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
     if (isAuthenticated && user?.id) {
       // ✅ Dispatch the Redux thunk instead of axios
       dispatch(fetchCart());

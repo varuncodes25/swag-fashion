@@ -4,7 +4,7 @@ const {
   getAllOrders,
   getMetrics,
   updateOrderStatus,
-  createCODOrder,
+  createOrder,
   trackShipment,
   cancelOrder,
 } = require("../controllers/OrderController");
@@ -18,7 +18,7 @@ router.get("/get-metrics", verifyToken, getMetrics);
 
 router.put("/update-order-status/:paymentId", verifyToken, updateOrderStatus);
 
-router.post("/cod-order", verifyToken, createCODOrder);
+router.post("/cod-order", verifyToken, createOrder);
 
 router.get("/track/:id", trackShipment);
 

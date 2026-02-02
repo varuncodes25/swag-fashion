@@ -60,16 +60,16 @@ const Product = () => {
       alert("Please select color and size");
       return;
     }
-    
+
     try {
       const result = await addToCart({
         productId: product._id,
         variantId: selectedVariant._id,
         quantity: quantity,
         productName: product.name,
-        variantColor: selectedVariant.color
+        variantColor: selectedVariant.color,
       });
-      
+
       if (result.success) {
         console.log("Added successfully!");
       }
@@ -85,12 +85,14 @@ const Product = () => {
       return;
     }
 
-    buyNow({
-      productId: product._id,
-      variantId: selectedVariant._id,
-      quantity,
-      variantSku: selectedVariant.sku,
-    });
+      buyNow({
+    productId: product._id,
+    variantId: selectedVariant._id, // ✅ CORRECT!
+    quantity,
+    color: selectedVariant.color, // ✅ Add color
+    size: selectedVariant.size,   // ✅ Add size
+  });
+
   };
 
   // ✅ Handle color change
@@ -133,7 +135,9 @@ const Product = () => {
   }
 
   // ✅ Get variant images
-  const variantImages = getVariantImages ? getVariantImages(color) : images || [];
+  const variantImages = getVariantImages
+    ? getVariantImages(color)
+    : images || [];
   console.log("Variant Images:", variantImages);
 
   // ✅ Get variant stock
@@ -142,7 +146,8 @@ const Product = () => {
   };
 
   // ✅ Display images
-  const displayImages = variantImages.length > 0 ? variantImages : (product.allImages || []);
+  const displayImages =
+    variantImages.length > 0 ? variantImages : product.allImages || [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

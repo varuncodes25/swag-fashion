@@ -246,64 +246,67 @@ const getMetrics = async (req, res) => {
   }
 };
 
-const createCODOrder = async (req, res) => {
-  const userId = req.id;
-  // console.log("Creating COD Order for User ID:", req.body.products);
-
-  try {
-    const { amount, address, products } = req.body;
-
-    if (!amount || !address || !products || products.length === 0) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields are required" });
+const createOrder = async (orderData) => {
+  // 1. Prepare products with snapshot
+  const productsWithSnapshot = await Promise.all(
+    orderData.items.map(async (item) => {
+      const product = await Product.findById(item.productId);
+      const variant = product.variants.id(item.variantId);
+      const images = product.getImagesByColor(variant.color);
+      
+      return {
+        productId: product._id,
+        variantId: variant._id,
+        quantity: item.quantity,
+        priceAtOrder: item.price,
+        snapshot: {
+          name: product.name,
+          brand: product.brand,
+          color: variant.color,
+          size: variant.size,
+          sku: variant.sku,
+          image: images[0] || product.image,
+          price: variant.price,
+          sellingPrice: item.price
+        }
+      };
+    })
+  );
+  
+  // 2. Create order
+  const order = new Order({
+    userId: orderData.userId,
+    shippingAddress: orderData.address,
+    products: productsWithSnapshot,
+    subtotal: orderData.subtotal,
+    shipping: orderData.shipping,
+    discount: orderData.discount,
+    payment: {
+      mode: orderData.paymentMode,
+      razorpayOrderId: orderData.razorpayOrderId
     }
-
-    // ✅ Update product stock and user's purchasedProducts
-    for (const product of products) {
-      await Product.findByIdAndUpdate(
-        { _id: product.id },
-        { $inc: { stock: -product.quantity } }
-      );
-
-      await User.findByIdAndUpdate(
-        { _id: userId },
-        { $push: { purchasedProducts: product.id } }
-      );
-    }
-
-    // ✅ Create COD Order
-    const order = await Order.create({
-      amount,
-      address,
-      paymentMode: "COD",
-      isPaid: false,
-      products,
-      userId,
-    });
-    const purchasedProductIds = products.map((p) => p.id);
-
-    await Cart.updateOne(
-      { user: userId },
-      { $pull: { products: { product: { $in: purchasedProductIds } } } }
-    );
-    // ✅ Immediately create shipment in Shiprocket
-    try {
-      await createShipment(order._id);
-      console.log("Shipment created in Shiprocket for order:", order._id);
-    } catch (shipErr) {
-      console.error("Shiprocket shipment error:", shipErr.message);
-    }
-
-    return res.status(201).json({
-      success: true,
-      message: "COD order placed successfully and shipment created",
-      data: order,
-    });
-  } catch (error) {
-    console.error("COD Order Error:", error);
-    return res.status(500).json({ success: false, message: error.message });
-  }
+  });
+  
+  // 3. Save order (hooks will auto-generate order number, calculate amount)
+  await order.save();
+  
+  // 4. Create Shiprocket order
+  const shiprocketData = order.getShiprocketPayload();
+  const shiprocketResponse = await createShiprocketOrder(shiprocketData);
+  
+  // 5. Update with Shiprocket details
+  order.shiprocket = {
+    orderId: shiprocketResponse.order_id,
+    shipmentId: shiprocketResponse.shipment_id,
+    awb: shiprocketResponse.awb_code,
+    status: "NEW",
+    labelUrl: shiprocketResponse.label_url,
+    trackingUrl: shiprocketResponse.tracking_url
+  };
+  
+  await order.save();
+  
+  return order;
 };
 
 // Cancel COD orders within 24 hours
@@ -379,7 +382,7 @@ module.exports = {
   getAllOrders,
   updateOrderStatus,
   getMetrics,
-  createCODOrder,
+  createOrder,
   cancelOrder,
   exchangeOrder,
   trackShipment,

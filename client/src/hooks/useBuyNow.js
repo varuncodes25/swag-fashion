@@ -12,14 +12,37 @@ const useBuyNow = () => {
   const { verifyPayment, generatePayment } = useRazorpay();
   const [loading, setLoading] = useState(false);
 
-  const buyNow = async ({ productId, quantity }) => {
+  const buyNow = async ({ productId, variantId, quantity, color, size }) => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
 
-    // For now, redirect to checkout with product details
-    navigate(`/checkout?productId=${productId}&quantity=${quantity}`);
+    // ✅ BUILD URL WITH ALL NECESSARY PARAMETERS
+    const params = new URLSearchParams();
+    
+    // ✅ REQUIRED: Product ID
+    params.append('productId', productId);
+    
+    // ✅ REQUIRED: Variant ID (MOST IMPORTANT!)
+    if (variantId) {
+      params.append('variantId', variantId);
+    }
+    
+    // ✅ OPTIONAL: Color and Size (for reference)
+    if (color) {
+      params.append('color', color);
+    }
+    
+    if (size) {
+      params.append('size', size);
+    }
+    
+    // ✅ Quantity
+    params.append('quantity', quantity || 1);
+
+    // ✅ Redirect to checkout page
+    navigate(`/checkout?${params.toString()}`);
   };
 
   return { buyNow, loading };
