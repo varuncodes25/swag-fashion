@@ -42,41 +42,53 @@ const CartDrawer = () => {
           size={28}
         />
         {totalQuantity > 0 && (
-          <Badge className="absolute top-0 right-0 px-1 py-0 text-xs">
+          <Badge className="absolute -top-2 -right-2 px-2 py-0 text-xs min-w-[20px] h-5 flex items-center justify-center">
             {totalQuantity}
           </Badge>
         )}
       </DrawerTrigger>
 
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Your Cart</DrawerTitle>
-          <DrawerDescription>
-            Total Items: {totalQuantity}, Total Price: ₹{totalPrice}
-          </DrawerDescription>
-        </DrawerHeader>
+      <DrawerContent className="ml-auto w-full sm:w-[400px] h-full">
+        <div className="flex flex-col h-full">
+          <DrawerHeader>
+            <DrawerTitle>Your Cart</DrawerTitle>
+            <DrawerDescription>
+              Total Items: {totalQuantity}, Total Price: ₹{totalPrice}
+            </DrawerDescription>
+          </DrawerHeader>
 
-        {/* Cart Items */}
-        <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto px-4">
-          {cartItems.length === 0 ? (
-            <h2 className="text-primary text-sm">
-              Nothing To Show, Please add some products...
-            </h2>
-          ) : (
-            cartItems.map((item) => <CartProduct key={item._id} {...item} />)
-          )}
-        </div>
-
-        {/* Footer */}
-        <DrawerFooter className="flex flex-col items-start gap-3">
-          <div className="w-full flex justify-between text-base font-semibold">
-            <span>Total:</span>
-            <span>₹{totalPrice}</span>
+          {/* Cart Items */}
+          <div className="flex-1 overflow-y-auto px-4">
+            {cartItems.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500 text-center">
+                  Your cart is empty. Add some products to get started.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 py-2">
+                {cartItems.map((item) => (
+                  <CartProduct key={item._id} {...item} />
+                ))}
+              </div>
+            )}
           </div>
-          <Button onClick={handleCheckout} className="w-full">
-            Checkout
-          </Button>
-        </DrawerFooter>
+
+          {/* Footer */}
+          <DrawerFooter className="border-t pt-4">
+            <div className="w-full flex justify-between text-lg font-semibold mb-4">
+              <span>Total:</span>
+              <span>₹{totalPrice}</span>
+            </div>
+            <Button 
+              onClick={handleCheckout} 
+              className="w-full"
+              disabled={cartItems.length === 0}
+            >
+              Checkout
+            </Button>
+          </DrawerFooter>
+        </div>
       </DrawerContent>
     </Drawer>
   );

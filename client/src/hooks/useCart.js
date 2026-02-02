@@ -1,4 +1,4 @@
-import { setCart } from "@/redux/slices/cartSlice";
+// import { setCart } from "@/redux/slices/cartSlice";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 
@@ -13,7 +13,7 @@ const useCart = () => {
       console.log(res.data, "Cart fetch response");
 
       if (res.data.success && res.data.cart) {
-        dispatch(setCart(res.data.cart));
+        // dispatch(setCart(res.data.cart));
       }
     } catch (error) {
       console.error("Failed to fetch cart:", error);

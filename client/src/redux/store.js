@@ -9,7 +9,7 @@ import wishlistReducer from "./slices/wishlistSlice"
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["cart", "auth","wishlist"], // persist cart and auth
+  whitelist: [ "auth","wishlist"], // persist cart and auth
   // Don't persist products to avoid stale data
 };
 

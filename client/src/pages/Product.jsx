@@ -1,7 +1,7 @@
-// Product.jsx - FIXED VERSION
+// Product.jsx - CORRECTED VERSION
 import { useNavigate, useParams } from "react-router-dom";
 import useBuyNow from "@/hooks/useBuyNow";
-import useAddToCart from "@/hooks/useAddToCart";
+import useAddToCart from "@/hooks/useAddToCart"; // ✅ Single import
 import useProductDetails from "@/hooks/useProductDetails";
 
 import Breadcrumb from "@/components/Product/Breadcrumb";
@@ -17,19 +17,21 @@ import SimilarProducts from "@/components/Product/SimilarProducts";
 import { useState } from "react";
 
 const Product = () => {
- const {productId}  = useParams();
- 
-   const navigate = useNavigate();
+  const { productId } = useParams();
+  const navigate = useNavigate();
 
-  // ✅ FIX: Correct destructuring from hook
+  // ✅ Custom hooks
+  const { addToCart, loading: cartLoading } = useAddToCart(); // ✅ Rename loading
+  const { buyNow } = useBuyNow();
+
+  // ✅ Product details hook
   const {
     product,
-    loading,
+    loading: productLoading, // ✅ Rename loading
     quantity,
     setQuantity,
-    selectedImage,  // This is an IMAGE OBJECT
-    selectedImageIndex, // This is the INDEX
-    setSelectedImageIndex, // This sets the INDEX
+    selectedImageIndex,
+    setSelectedImageIndex,
     color,
     setColor,
     size,
@@ -44,70 +46,39 @@ const Product = () => {
     getVariantImages,
   } = useProductDetails();
 
-  const { buyNow } = useBuyNow();
-  const { handleAddToCart } = useAddToCart();
-
   const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
 
-  // Child se data receive karne ke liye function
+  // ✅ Handle mobile zoom
   const handleMobileZoomChange = (isOpen) => {
     console.log("Mobile zoom status:", isOpen);
     setIsMobileZoomOpen(isOpen);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
-        <button
-          onClick={() => navigate("/")}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-        >
-          Back to Home
-        </button>
-      </div>
-    );
-  }
-
-  // ============ FIX: Get images for selected color ============
-  const variantImages = getVariantImages ? getVariantImages(color) : images || [];
-  console.log("Variant Images:", variantImages);
-
-  // ============ FIX: Handle image selection ============
-  const handleImageSelect = (index) => {
-    setSelectedImageIndex(index);
-  };
-
-  // ============ FIX: Get variant stock ============
-  const getVariantStock = () => {
-    return selectedVariant?.stock || stock || 0;
-  };
-
-  const handleAddToCartClick = () => {
+  // ✅ Add to Cart Function
+  const handleAddToCartClick = async () => {
     if (!selectedVariant) {
       alert("Please select color and size");
       return;
     }
-
-    handleAddToCart({
-      productId: product._id,
-      variantId: selectedVariant._id,
-      quantity,
-      price: selectedVariant.price || product.price,
-      color,
-      size,
-      variantSku: selectedVariant.sku,
-    });
+    
+    try {
+      const result = await addToCart({
+        productId: product._id,
+        variantId: selectedVariant._id,
+        quantity: quantity,
+        productName: product.name,
+        variantColor: selectedVariant.color
+      });
+      
+      if (result.success) {
+        console.log("Added successfully!");
+      }
+    } catch (error) {
+      console.error("Add to cart error:", error);
+    }
   };
 
+  // ✅ Buy Now Function
   const handleBuyNowClick = () => {
     if (!selectedVariant) {
       alert("Please select color and size");
@@ -122,36 +93,56 @@ const Product = () => {
     });
   };
 
-  // ✅ FIX: Handle color change with image reset
+  // ✅ Handle color change
   const handleColorChange = (newColor) => {
     setColor(newColor);
 
-    // Get images for new color
     if (getVariantImages) {
       const newColorImages = getVariantImages(newColor);
       console.log("New color images:", newColorImages);
 
-      // Reset to first image of new color
       if (newColorImages && newColorImages.length > 0) {
-        // We can't directly set the image object, we need to find its index
-        const firstImage = newColorImages[0];
-        const imageIndex = newColorImages.findIndex(img =>
-          img.url === firstImage.url
-        );
-        if (imageIndex !== -1) {
-          setSelectedImageIndex(imageIndex);
-        }
+        // Reset to first image of new color
+        setSelectedImageIndex(0);
       }
     }
   };
 
-  // ✅ FIX: Check if we have any images to display
-  const displayImages = variantImages.length > 0 ? variantImages :
-    (product.allImages || []);
+  // ✅ Loading state
+  if (productLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  console.log("displayImages", displayImages)
+  // ✅ Product not found
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
-  const currentSelectedImage = selectedImage || displayImages[0];
+  // ✅ Get variant images
+  const variantImages = getVariantImages ? getVariantImages(color) : images || [];
+  console.log("Variant Images:", variantImages);
+
+  // ✅ Get variant stock
+  const getVariantStock = () => {
+    return selectedVariant?.stock || stock || 0;
+  };
+
+  // ✅ Display images
+  const displayImages = variantImages.length > 0 ? variantImages : (product.allImages || []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -169,11 +160,11 @@ const Product = () => {
             {/* Left Column - Images */}
             <ProductImages
               images={variantImages}
-              selectedImage={selectedImageIndex} // ✅ Pass INDEX number
-              onSelect={setSelectedImageIndex} // ✅ Pass function that sets INDEX
+              selectedImage={selectedImageIndex}
+              onSelect={setSelectedImageIndex}
               productName={product.name}
-                id={productId}
-               onMobileZoomChange={handleMobileZoomChange}
+              id={productId}
+              onMobileZoomChange={handleMobileZoomChange}
             />
 
             {/* Right Column - Product Info */}
@@ -228,6 +219,7 @@ const Product = () => {
                   paymentOptions={product.paymentOptions}
                   highlights={product.features}
                   isVariantSelected={!!selectedVariant}
+                  loading={cartLoading} // ✅ Pass loading state
                 />
               </div>
             </div>
@@ -242,15 +234,18 @@ const Product = () => {
       </main>
 
       {/* Mobile Sticky CTA */}
-      {!isMobileZoomOpen && < MobileStickyCTA
-        product={product}
-      displayPrice={displayPrice}
-      isOfferActive={isOfferActive}
-      onAddToCart={handleAddToCartClick}
-      onBuyNow={handleBuyNowClick}
-      isVariantSelected={!!selectedVariant}
-      stock={getVariantStock()}
-      />}
+      {!isMobileZoomOpen && (
+        <MobileStickyCTA
+          product={product}
+          displayPrice={displayPrice}
+          isOfferActive={isOfferActive}
+          onAddToCart={handleAddToCartClick}
+          onBuyNow={handleBuyNowClick}
+          isVariantSelected={!!selectedVariant}
+          stock={getVariantStock()}
+          loading={cartLoading} // ✅ Pass loading state
+        />
+      )}
 
       <SimilarProducts productId={product._id} />
     </div>

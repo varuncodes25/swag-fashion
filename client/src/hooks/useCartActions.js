@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useDispatch } from "react-redux";
-import { setCart } from "@/redux/slices/cartSlice";
+// import { setCart } from "@/redux/slices/cartSlice";
 import useCart from "./useCart";
 
 const useCartActions = () => {

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { emptyCart } from "@/redux/slices/cartSlice";
+// import { emptyCart } from "@/redux/slices/cartSlice";
 import useErrorLogout from "@/hooks/use-error-logout";
 import useRazorpay from "@/hooks/use-razorpay";
 import { useToast } from "@/hooks/use-toast";
@@ -79,7 +79,7 @@ const Checkout = () => {
 
         await verifyPayment(order, orderProducts, address, navigate);
 
-        if (!stateProducts.length) dispatch(emptyCart());
+        // if (!stateProducts.length) dispatch(emptyCart());
         toast({ title: "Payment successful and order placed!" });
         navigate("/my-orders");
       } else if (paymentMethod === "cod") {
@@ -90,7 +90,7 @@ const Checkout = () => {
         );
 
         if (res.data.success) {
-          if (!stateProducts.length) dispatch(emptyCart());
+          // if (!stateProducts.length) dispatch(emptyCart());
           toast({ title: "Order placed with Cash on Delivery!" });
           navigate("/my-orders");
         } else {
