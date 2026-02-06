@@ -30,6 +30,7 @@
   import ResetPassword from "./components/ResetPassword";
   import TermsAndConditions from "./components/TermsAndConditions";
 import CategoryPage from "./pages/CategoryPage";
+import OrderDetails from "./components/order/OrderDetails";
 
 
 
@@ -93,6 +94,14 @@ import CategoryPage from "./pages/CategoryPage";
       element: (
         <ProtectedRoute>
           <RootLayout children={<ResetPassword />} />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/orders/:orderId",
+      element: (
+        <ProtectedRoute>
+          <RootLayout children={<OrderDetails />} />
         </ProtectedRoute>
       ),
     },

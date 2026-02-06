@@ -183,7 +183,7 @@ export const placeCodOrder = createAsyncThunk(
   async (_, { rejectWithValue, getState }) => {
     try {
       const state = getState();
-      const { addressId, productId, qty, summary } = state.checkout;
+      const { addressId, productId, qty, summary,variantId } = state.checkout;
       // console.log(addressId, productId, qty, .courierId)
       if (!addressId) {
         return rejectWithValue("Address is required");
@@ -200,6 +200,7 @@ export const placeCodOrder = createAsyncThunk(
             addressId,
             productId,
             quantity: qty || 1,
+            variantId,
             shippingMeta: {
               courierId: shippingInfo.courierId,
             },

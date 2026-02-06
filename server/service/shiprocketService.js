@@ -148,7 +148,7 @@ async function saveShipment(order, shiprocketOrder) {
 
 async function calculateShippingCharge({ deliveryPincode, totalWeight }) {
   const token = await getShiprocketToken();
-
+ console.log("token",token)
   const url = `https://apiv2.shiprocket.in/v1/external/courier/serviceability/?pickup_postcode=400053&delivery_postcode=${deliveryPincode}&weight=${totalWeight}&cod=0`;
 
   const res = await axios.get(url, {
@@ -158,7 +158,7 @@ async function calculateShippingCharge({ deliveryPincode, totalWeight }) {
   });
 
   const data = res.data?.data;
-
+ console.log(data,"gggggg")
   if (!data || !data.available_courier_companies?.length) {
     throw new Error("Shipping not available for this pincode");
   }

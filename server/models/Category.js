@@ -1,27 +1,29 @@
 const mongoose = require("mongoose");
 
-const imageSchema = {
-  url: { type: String, required: true },
-  id: { type: String }, // Cloudinary / S3 id
-};
+const imageSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    id: { type: String }
+  },
+  { _id: false }
+);
 
 const subCategorySchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     slug: { type: String, required: true },
-    image: imageSchema, // ✅ subcategory image
-    isActive: { type: Boolean, default: true },
+    image: imageSchema
   },
-  { _id: false }
+  { _id: true }
 );
 
 const categorySchema = new mongoose.Schema(
   {
+    // ✅ सिर्फ 4 Essential Fields
     name: { type: String, required: true, unique: true },
     slug: { type: String, required: true, unique: true },
-    image: imageSchema, // ✅ category image
-    subCategories: [subCategorySchema],
-    isActive: { type: Boolean, default: true },
+    image: imageSchema,
+    subCategories: [subCategorySchema]
   },
   { timestamps: true }
 );
