@@ -27,9 +27,9 @@ const getOrdersByUserId = async (req, res) => {
   const skip = (page - 1) * limit;
 
   try {
-    // Fetch orders with pagination
+    // Fetch orders with pagination - NO POPULATE NEEDED (items are embedded)
     const orders = await Order.find({ userId })
-      .select("_id orderNumber createdAt status totalAmount paymentMethod paymentStatus shippingAddress.items")
+      .select("_id orderNumber createdAt status totalAmount paymentMethod paymentStatus shippingAddress items subtotal shippingCharge discount")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -51,38 +51,99 @@ const getOrdersByUserId = async (req, res) => {
       });
     }
 
-    // Format minimal data for list view
+    // Format data correctly
     const formattedOrders = orders.map(order => {
-      const orderItems = Array.isArray(order.items) ? order.items : [];
+      // Get all items from the order
+      const orderItems = order.items || [];
+      
+      // Calculate correct item count (sum of quantities)
+      const itemCount = orderItems.reduce((total, item) => {
+        return total + (item.quantity || 1);
+      }, 0);
+      
+      // Get distinct product count
+      const productCount = orderItems.length;
+      
+      // Get first item for thumbnail
+      const firstItem = orderItems.length > 0 ? {
+        name: orderItems[0].name || "Product",
+        image: orderItems[0].image || "/placeholder.png",
+        quantity: orderItems[0].quantity || 1,
+        price: orderItems[0].finalPrice || orderItems[0].price || 0
+      } : null;
+      
+      // Get all product images for UI
+      const productImages = orderItems.map(item => ({
+        image: item.image || "/placeholder.png",
+        name: item.name || "Product",
+        quantity: item.quantity || 1,
+        color: item.color,
+        size: item.size
+      }));
+      
+      // Calculate total from order data
+      const totalAmount = order.totalAmount || 0;
       
       return {
         id: order._id,
-        orderNumber: order.orderNumber || `ORDER-${order._id.toString().slice(-6)}`,
+        orderNumber: order.orderNumber || `ORDER-${order._id.toString().slice(-8).toUpperCase()}`,
         date: order.createdAt,
         status: order.status || "PENDING",
         
-        // Basic pricing for list view
-        totalAmount: order.totalAmount || 0,
-        itemCount: orderItems.length,
+        // Correct item counts
+        summary: {
+          itemCount: itemCount,  // Total quantity of all items
+          productCount: productCount,  // Number of different products
+          totalQuantity: itemCount
+        },
         
-        // Payment status for quick view
+        // Pricing information
+        amount: totalAmount,
+        pricing: {
+          totalAmount: totalAmount,
+          subtotal: order.subtotal || 0,
+          shippingCharge: order.shippingCharge || 0,
+          couponDiscount: order.discount || 0,
+          taxAmount: order.taxAmount || 0
+        },
+        
+        // Payment information
         payment: {
           method: order.paymentMethod || "COD",
           status: order.paymentStatus || "PENDING",
           isPaid: order.paymentStatus === "PAID"
         },
         
-        // First item preview (for UI thumbnail)
-        firstItem: orderItems.length > 0 ? {
-          name: orderItems[0].name || "Product",
-          image: orderItems[0].image || "default.jpg",
-          quantity: orderItems[0].quantity || 1
-        } : null,
+        // Items information for UI
+        items: orderItems.map(item => ({
+          productId: item.productId,
+          variantId: item.variantId,
+          name: item.name || "Product",
+          image: item.image || "/placeholder.png",
+          quantity: item.quantity || 1,
+          price: item.price || 0, // MRP
+          finalPrice: item.finalPrice || 0, // Price after discount
+          discountPercent: item.discountPercent || 0,
+          discountAmount: item.discountAmount || 0,
+          lineTotal: item.lineTotal || 0,
+          color: item.color || "N/A",
+          size: item.size || "N/A",
+          sku: item.sku || "N/A"
+        })),
         
-        // Delivery status quick info
+        // Product images for thumbnail display
+        productImages: productImages.slice(0, 4), // Max 4 for thumbnail
+        
+        // First item for quick preview
+        firstItem: firstItem,
+        
+        // Delivery information
         delivery: {
           city: order.shippingAddress?.city || "N/A",
-          pincode: order.shippingAddress?.pincode || "N/A"
+          state: order.shippingAddress?.state || "N/A",
+          pincode: order.shippingAddress?.pincode || "N/A",
+          name: order.shippingAddress?.name || "N/A",
+          phone: order.shippingAddress?.phone || "N/A"
         }
       };
     });
