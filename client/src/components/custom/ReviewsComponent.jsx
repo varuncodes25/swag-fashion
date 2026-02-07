@@ -1,36 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { X } from "lucide-react";
-import { useReviewOperations } from "@/hooks/useReviewOperations";
 import WriteReviewForm from "../Review/WriteReviewForm";
 import ProductPageReviews from "../Review/ProductPageReviews";
+import { fetchReviews } from "@/redux/slices/reviewsSlice";
 
 const ReviewsComponent = ({ productId }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  
-  const { toast } = useToast();
-  const { user } = useSelector((state) => state.auth);
 
-  const {
-    reviews: reviewList,
-    loading,
-    fetchReviews,
-  } = useReviewOperations(productId);
+  const { toast } = useToast();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { reviews, loading, error } = useSelector((state) => state.reviews);
 
   useEffect(() => {
-    fetchReviews();
-  }, [productId]);
+    dispatch(fetchReviews(productId));
+  }, [productId, dispatch]);
 
   const handleReviewToggle = () => {
     setShowReviewForm((prev) => !prev);
   };
 
   const handleReviewSuccess = () => {
-    fetchReviews();
+    dispatch(fetchReviews(productId));
     setShowReviewForm(false);
     toast({
       title: "Success!",
@@ -73,7 +69,6 @@ const ReviewsComponent = ({ productId }) => {
             </div>
             <WriteReviewForm
               productId={productId}
-              loading={loading.create}
               onCancel={handleReviewToggle}
               onSuccess={handleReviewSuccess}
             />
@@ -82,7 +77,11 @@ const ReviewsComponent = ({ productId }) => {
       </div>
 
       {/* Reviews Preview */}
-      <ProductPageReviews productId={productId} />
+      <ProductPageReviews 
+        productId={productId}
+        reviews={reviews}
+        loading={loading}
+      />
 
       {/* Image Modal */}
       <Dialog open={drawerOpen} onOpenChange={setDrawerOpen}>

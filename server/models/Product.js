@@ -631,22 +631,7 @@ productSchema.pre('save', function(next) {
   next();
 });
 
-// models/Product.js में
-productSchema.methods.calculateRating = async function() {
-  const reviews = await Review.find({ productId: this._id });
-  
-  if (reviews.length === 0) {
-    this.averageRating = 0;
-    await this.save();
-    return 0;
-  }
-  
-  const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-  this.averageRating = totalRating / reviews.length;
-  await this.save();
-  
-  return this.averageRating;
-};
+
 // ==================== VIRTUAL PROPERTIES ====================
 productSchema.virtual('isInStock').get(function() {
   return this.variants.some(v => v.stock > 0);

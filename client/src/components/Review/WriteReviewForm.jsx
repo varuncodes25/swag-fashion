@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Upload, X, User } from "lucide-react";
 import StarRating from "../StarRating";
 import { useToast } from "@/hooks/use-toast";
-import { useReviewOperations } from "@/hooks/useReviewOperations";
+import { useDispatch, useSelector } from "react-redux";
+import { createReview } from "@/redux/slices/reviewsSlice";
 
 const WriteReviewForm = ({
   productId,
@@ -21,8 +22,9 @@ const WriteReviewForm = ({
   const MAX_IMAGES = 15;
   const { toast } = useToast();
 
-  // Hook से createReview function लें
-  const { createReview, loading } = useReviewOperations(productId);
+  // Direct Redux use
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.reviews);
 
   const handleImageUpload = (e) => {
     const files = e.target.files;
@@ -58,36 +60,34 @@ const WriteReviewForm = ({
         });
       }
 
-      const result = await createReview({
-        review: newReview.review,
-        rating: newReview.rating,
-        productId,
-        images,
+      // Direct dispatch createReview action
+      await dispatch(
+        createReview({
+          review: newReview.review,
+          rating: newReview.rating,
+          productId,
+          images,
+        })
+      ).unwrap();
+
+      toast({
+        title: "Review submitted",
+        description: "Thanks for your feedback!",
       });
 
-      if (result.success) {
-        toast({
-          title: "Review submitted",
-          description: "Thanks for your feedback!",
-        });
+      // Reset form
+      setNewReview({ review: "", rating: 0 });
+      setImages([]);
 
-        // Reset form
-        setNewReview({ review: "", rating: 0 });
-        setImages([]);
-
-        // Call success callback
-        if (onSuccess) {
-          onSuccess();
-        }
+      // Call success callback
+      if (onSuccess) {
+        onSuccess();
       }
-      // Error handling is done inside createReview hook
     } catch (error) {
-      // Fallback error handling
+      // Error handling from Redux thunk
       toast({
         title: "Error",
-        description:
-          error.response.data.message ||
-          "Something went wrong. Please try again.",
+        description: error || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     }
@@ -202,11 +202,11 @@ const WriteReviewForm = ({
           <Button
             onClick={handleSubmit}
             disabled={
-              loading.create || !newReview.review.trim() || !newReview.rating
+              loading || !newReview.review.trim() || !newReview.rating
             }
             className="flex-1 px-8 py-3 text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold"
           >
-            {loading.create ? (
+            {loading ? (
               <span className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 Submitting...

@@ -94,65 +94,42 @@ const ProductVariants = ({
       )}
 
       {/* Quantity Selection */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Quantity
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              Choose how many you need
-            </p>
-          </div>
-          
-          {/* Stock Indicator */}
-          <div className={`
-            px-3 py-1.5 rounded-full text-sm font-medium
-            ${stock > 10 
-              ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' 
-              : stock > 0 
-                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-            }
-          `}>
-            {stock > 0 ? `${stock} in stock` : 'Out of stock'}
-          </div>
+      <div className="flex flex-row items-center gap-4 gap-6">
+  {/* Quantity Selector - Takes full width on mobile */}
+  <div className="w-full md:w-auto">
+    <QuantitySelector
+      value={quantity}
+      onChange={onQuantityChange}
+      max={stock}
+    />
+  </div>
+  
+  {/* Stock Details - Below on mobile, beside on desktop */}
+  <div className="text-sm w-full md:w-auto">
+    {stock > 0 ? (
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${
+            stock > 10 ? 'bg-green-500' : 'bg-amber-500'
+          }`} />
+          <span className="text-gray-600 dark:text-gray-400">
+            {stock > 10 ? 'Good availability' : 'Limited stock'}
+          </span>
         </div>
-        
-        <div className="flex items-center gap-6">
-          <QuantitySelector
-            value={quantity}
-            onChange={onQuantityChange}
-            max={stock}
-          />
-          
-          {/* Stock Details */}
-          <div className="text-sm">
-            {stock > 0 ? (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${
-                    stock > 10 ? 'bg-green-500' : 'bg-amber-500'
-                  }`} />
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {stock > 10 ? 'Good availability' : 'Limited stock'}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Only {stock} units remaining
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <span className="text-red-600 dark:text-red-400 font-medium">
-                  Currently unavailable
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Only {stock} units remaining
+        </p>
       </div>
+    ) : (
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-red-500" />
+        <span className="text-red-600 dark:text-red-400 font-medium">
+          Currently unavailable
+        </span>
+      </div>
+    )}
+  </div>
+</div>
     </div>
   );
 };

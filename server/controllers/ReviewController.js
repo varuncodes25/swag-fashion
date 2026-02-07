@@ -4,7 +4,7 @@ const Product = require("../models/Product");
 const cloudinary = require("../utils/cloudinary");
 
 /* ======================================================
-   CREATE REVIEW
+   CREATE REVIEW - FIXED VERSION
 ====================================================== */
 const createReview = async (req, res) => {
   if (req.role !== ROLES.user) {
@@ -25,7 +25,8 @@ const createReview = async (req, res) => {
       });
     }
 
-    const product = await Product.findById(productId);
+    // ✅ FIX: LEAN use karo, document nahi
+    const product = await Product.findById(productId).lean();
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -43,13 +44,11 @@ const createReview = async (req, res) => {
 
     const uploadedImages = [];
     
-    // FIX: Check if files exist and handle buffer
     if (req.files && req.files.length > 0) {
       console.log("Processing files:", req.files.length);
       
       for (const file of req.files) {
         try {
-          // For memory storage, use buffer instead of path
           const uploadResult = await new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
               { folder: "review" },
@@ -59,7 +58,6 @@ const createReview = async (req, res) => {
               }
             );
             
-            // Write buffer to stream
             stream.end(file.buffer);
           });
           
@@ -71,13 +69,13 @@ const createReview = async (req, res) => {
           console.log("Image uploaded successfully:", uploadResult.secure_url);
         } catch (uploadError) {
           console.error("Error uploading image to cloudinary:", uploadError);
-          // Continue with other images even if one fails
         }
       }
     } else {
       console.log("No files received in req.files");
     }
 
+    // ✅ FIX: Review create karo
     const newReview = await Review.create({
       productId,
       userId,
@@ -86,11 +84,17 @@ const createReview = async (req, res) => {
       images: uploadedImages,
     });
 
-    product.reviews.push(newReview._id);
-    await product.save();
+    // ✅ FIX: Product ko DIRECT UPDATE karo, save() nahi
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        $push: { reviews: newReview._id },
+        $inc: { reviewCount: 1 }
+      }
+    );
 
-    // Calculate average rating
-    await product.calculateRating();
+    // ✅ FIX: Alag function se rating calculate karo
+    await calculateAndUpdateProductRating(productId);
 
     return res.status(201).json({
       success: true,
@@ -107,7 +111,7 @@ const createReview = async (req, res) => {
 };
 
 /* ======================================================
-   UPDATE REVIEW
+   UPDATE REVIEW - FIXED VERSION
 ====================================================== */
 const updateReview = async (req, res) => {
   if (req.role !== ROLES.user) {
@@ -137,10 +141,8 @@ const updateReview = async (req, res) => {
     reviewDoc.rating = rating;
     await reviewDoc.save();
 
-    const product = await Product.findById(reviewDoc.productId);
-    if (product) {
-      await product.calculateRating();
-    }
+    // ✅ FIX: Product ko direct update karo
+    await calculateAndUpdateProductRating(reviewDoc.productId);
 
     return res.status(200).json({
       success: true,
@@ -157,7 +159,7 @@ const updateReview = async (req, res) => {
 };
 
 /* ======================================================
-   DELETE REVIEW
+   DELETE REVIEW - FIXED VERSION
 ====================================================== */
 const deleteReview = async (req, res) => {
   if (req.role !== ROLES.user) {
@@ -175,6 +177,7 @@ const deleteReview = async (req, res) => {
       });
     }
 
+    // Delete images from cloudinary
     if (review.images?.length) {
       for (const img of review.images) {
         if (img.public_id) {
@@ -185,18 +188,23 @@ const deleteReview = async (req, res) => {
 
     const productId = review.productId;
 
+    // ✅ FIX: Pehle review delete karo
     await Review.findByIdAndDelete(id);
-    await Product.findByIdAndUpdate(productId, {
-      $pull: { reviews: review._id },
-    });
+    
+    // ✅ FIX: Phir product ko direct update karo
+    await Product.findByIdAndUpdate(
+      productId,
+      {
+        $pull: { reviews: review._id },
+        $inc: { reviewCount: -1 }
+      }
+    );
 
-    const product = await Product.findById(productId);
-    if (product) {
-      await product.calculateRating();
-    }
+    // ✅ FIX: Rating alag se calculate karo
+    await calculateAndUpdateProductRating(productId);
 
     return res.status(200).json({
-      success: true,
+      success: false,
       message: "Review deleted successfully",
     });
   } catch (error) {
@@ -209,7 +217,7 @@ const deleteReview = async (req, res) => {
 };
 
 /* ======================================================
-   REPLY TO REVIEW
+   REPLY TO REVIEW - FIXED VERSION
 ====================================================== */
 const replyReview = async (req, res) => {
   if (req.role !== ROLES.user) {
@@ -251,27 +259,30 @@ const replyReview = async (req, res) => {
 };
 
 /* ======================================================
-   GET REVIEWS BY PRODUCT
+   GET REVIEWS BY PRODUCT - FIXED VERSION
 ====================================================== */
 const getReviews = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(id, "abhi");
 
     const reviews = await Review.find({ productId: id })
       .populate("userId", "name")
       .populate("replies.userId", "name");
 
-    if (!reviews.length) {
-      return res.status(404).json({
-        success: false,
-        message: "No reviews found",
-      });
-    }
+    // ❌ WRONG: 404 return करना
+    // if (!reviews.length) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "No reviews found",
+    //   });
+    // }
 
+    // ✅ CORRECT: हमेशा 200 OK return करो
     return res.status(200).json({
       success: true,
-      message: "Reviews fetched",
-      data: reviews,
+      message: reviews.length > 0 ? "Reviews fetched" : "No reviews yet",
+      data: reviews, // Empty array भी send करो
     });
   } catch (error) {
     console.error("Get reviews error:", error);
@@ -282,10 +293,90 @@ const getReviews = async (req, res) => {
   }
 };
 
+/* ======================================================
+   HELPER FUNCTION: Calculate Product Rating
+====================================================== */
+// ✅ FIX: Alag helper function banaye
+const calculateAndUpdateProductRating = async (productId) => {
+  try {
+    const reviews = await Review.find({ productId });
+    
+    if (reviews.length === 0) {
+      // Agar koi review nahi hai
+      await Product.findByIdAndUpdate(productId, {
+        rating: 0,
+        reviewCount: 0
+      });
+      return 0;
+    }
+    
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = parseFloat((totalRating / reviews.length).toFixed(1));
+    
+    // ✅ FIX: Direct update karo
+    await Product.findByIdAndUpdate(productId, {
+      rating: averageRating,
+      reviewCount: reviews.length
+    });
+    
+    return averageRating;
+  } catch (error) {
+    console.error("Error calculating product rating:", error);
+    return 0;
+  }
+};
+
+/* ======================================================
+   EXTRA: Get Product Reviews with Stats
+====================================================== */
+const getProductReviewStats = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const reviews = await Review.find({ productId: id });
+    
+    const stats = {
+      total: reviews.length,
+      average: 0,
+      distribution: {
+        5: 0, 4: 0, 3: 0, 2: 0, 1: 0
+      }
+    };
+    
+    if (reviews.length > 0) {
+      const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+      stats.average = parseFloat((totalRating / reviews.length).toFixed(1));
+      
+      reviews.forEach(review => {
+        stats.distribution[review.rating]++;
+      });
+      
+      // Convert to percentages
+      Object.keys(stats.distribution).forEach(rating => {
+        stats.distribution[rating] = Math.round((stats.distribution[rating] / reviews.length) * 100);
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: "Review stats fetched",
+      data: stats
+    });
+  } catch (error) {
+    console.error("Get review stats error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   createReview,
   updateReview,
   deleteReview,
   replyReview,
   getReviews,
+  getProductReviewStats,
+  calculateAndUpdateProductRating // Export karo agar dusre jagah use karna hai
 };

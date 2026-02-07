@@ -7,7 +7,7 @@ import useProductDetails from "@/hooks/useProductDetails";
 import Breadcrumb from "@/components/Product/Breadcrumb";
 import ProductImages from "@/components/Product/ProductImages";
 import ProductInfo from "@/components/Product/ProductInfo";
-import ProductServices from "@/components/Product/ProductServices";
+// import ProductServices from "@/components/Product/ProductServices";
 import ProductVariants from "@/components/Product/ProductVariants";
 import ProductActions from "@/components/Product/ProductActions";
 import ProductTabs from "@/components/Product/ProductTabs";
@@ -205,7 +205,7 @@ const Product = () => {
               )}
 
               {/* Services */}
-              <ProductServices
+              {/* <ProductServices
                 freeDelivery={product.freeShipping}
                 deliveryCharge={product.deliveryCharge}
                 warranty={product.warranty}
@@ -213,7 +213,7 @@ const Product = () => {
                 returnPolicy={product.returnPolicy}
                 returnable={product.returnable}
                 stock={getVariantStock()}
-              />
+              /> */}
 
               {/* CTA Buttons */}
               <div className="hidden lg:block">
