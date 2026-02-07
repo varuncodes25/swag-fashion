@@ -1,19 +1,21 @@
+// Home.jsx - CORRECT VERSION
 import FilterMenu from "@/components/custom/FilterMenu";
 import HeaderDisplay from "@/components/custom/HeaderDisplay";
 import ProductList from "@/components/custom/ProductList";
-import HomeCollections from "@/components/Home/HomeCollection";
-import React from "react";
+import React, { useState } from "react";
 
 const Home = () => {
+  const [search, setSearch] = useState("");
 
 
   return (
-    <div>
-      <HeaderDisplay />
-        <HomeCollections/>
-      <FilterMenu />
-      <ProductList/>
-
+    <div className="">
+       <HeaderDisplay />
+      {/* FilterMenu ko onSearch prop pass karo */}
+      <FilterMenu onSearch={setSearch} />
+      
+      {/* ProductList ko search prop pass karo */}
+      <ProductList search={search} />
     </div>
   );
 };
