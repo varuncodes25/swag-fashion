@@ -117,7 +117,7 @@ export default function CategoryPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" px-4 sm:px-6 lg:px-8">
         {/* Mobile Header with Filter Button */}
         <div className="lg:hidden py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
