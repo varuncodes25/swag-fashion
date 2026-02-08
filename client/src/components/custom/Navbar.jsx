@@ -27,8 +27,8 @@ const Navbar = () => {
   }, [isAuthenticated, user?.id, dispatch]);
 
   return (
-    <nav className="relative border-b dark:bg-zinc-900 bg-white px-4 sm:px-6 py-3 sm:py-4">
-      {/* Top nav row */}
+      <> <div className="h-16 sm:h-20 lg:h-24"></div>
+<nav className="fixed top-0 left-0 right-0 z-50 border-b dark:bg-background bg-white px-4 sm:px-6 py-3 sm:py-4">      {/* Top nav row */}
       <div className="flex justify-between items-center relative">
         {/* Left arrow */}
         <div className="flex items-center z-10">
@@ -180,6 +180,7 @@ const Navbar = () => {
         </div>
       )}
     </nav>
+    </>
   );
 };
 

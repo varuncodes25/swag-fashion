@@ -8,6 +8,7 @@ import MobileFilterButton from "@/components/category/MobileFilterButton";
 
 export default function CategoryPage() {
   const { slug, subSlug } = useParams();
+  const [mounted, setMounted] = useState(false);
   
   // ✅ MOBILE FILTER DRAWER STATE
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -110,31 +111,41 @@ export default function CategoryPage() {
     fetchProducts(1, false);
   }, [queryFilters, slug, subSlug, fetchProducts]);
 
+  // ✅ Handle mount to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Calculate applied filters count
   const appliedFilterCount = Object.values(selectedFilters)
     .flat()
     .filter(Boolean).length;
 
+  // Don't render until mounted (to avoid hydration mismatch)
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white dark:bg-background text-gray-900 dark:text-gray-100 transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Mobile Header with Filter Button */}
-        <div className="lg:hidden py-4 border-b border-gray-200">
+        <div className="lg:hidden py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 {subSlug
                   ? `${slug?.replace(/-/g, " ")} / ${subSlug?.replace(/-/g, " ")}`
                   : `${slug?.replace(/-/g, " ")}`
                 }
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {pagination.totalProducts || 0} products
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-300">
                   {appliedFilterCount} filter{appliedFilterCount !== 1 ? 's' : ''}
                 </span>
               </div>
@@ -180,7 +191,7 @@ export default function CategoryPage() {
 
             {/* ERROR MESSAGE */}
             {error && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="mb-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
@@ -196,7 +207,7 @@ export default function CategoryPage() {
               <div className="text-center mt-8">
                 <button
                   onClick={loadMore}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200 disabled:opacity-50"
                   disabled={loading}
                 >
                   Load More ({pagination.totalProducts - products.length} remaining)
@@ -207,7 +218,32 @@ export default function CategoryPage() {
             {/* LOADING INDICATOR */}
             {loading && products.length > 0 && (
               <div className="text-center mt-4">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-500"></div>
+              </div>
+            )}
+
+            {/* NO PRODUCTS FOUND */}
+            {!loading && products.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-400 dark:text-gray-500 mb-4">
+                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  No products found
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Try adjusting your filters or search terms
+                </p>
+                {appliedFilterCount > 0 && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="mt-4 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
+                  >
+                    Clear All Filters
+                  </button>
+                )}
               </div>
             )}
           </section>
@@ -219,20 +255,22 @@ export default function CategoryPage() {
         <div className="fixed inset-0 z-50 lg:hidden">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"
             onClick={() => setIsFilterDrawerOpen(false)}
           />
           
           {/* Drawer */}
-          <div className="absolute inset-y-0 right-0 w-full max-w-sm bg-white shadow-xl flex flex-col">
+          <div className="absolute inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-gray-900 shadow-xl flex flex-col transition-transform duration-300 ease-in-out">
             {/* Drawer Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold">Filters</h2>
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Filters</h2>
               <button
                 onClick={() => setIsFilterDrawerOpen(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400 transition-colors duration-200"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -248,17 +286,17 @@ export default function CategoryPage() {
             </div>
 
             {/* Drawer Footer */}
-            <div className="p-4 border-t bg-gray-50">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
               <div className="flex gap-3">
                 <button
                   onClick={clearAllFilters}
-                  className="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  className="flex-1 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
                 >
                   Clear All
                 </button>
                 <button
                   onClick={applyFilters}
-                  className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="flex-1 py-3 px-4 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors duration-200"
                 >
                   Apply Filters
                 </button>
