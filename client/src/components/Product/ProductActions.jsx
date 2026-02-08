@@ -52,15 +52,15 @@ const ProductActions = ({
       </div>
 
       {/* Security Badge */}
-      <div className="flex items-center justify-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+      {/* <div className="flex items-center justify-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
         <Shield className="h-5 w-5 text-green-600" />
         <span className="text-sm text-green-700 dark:text-green-400">
           100% Secure Payment | SSL Encrypted
         </span>
-      </div>
+      </div> */}
 
       {/* Share & Payment Options */}
-      <div className="flex items-center justify-between pt-4 border-t">
+      {/* <div className="flex items-center justify-between pt-4 border-t">
         <Button variant="ghost" size="sm" className="gap-2">
           <Share2 className="h-4 w-4" />
           Share
@@ -75,7 +75,7 @@ const ProductActions = ({
             </div>
           ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

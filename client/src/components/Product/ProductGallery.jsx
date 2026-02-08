@@ -134,7 +134,7 @@ const ProductGallery = ({
         <div
           className={`
             relative
-            h-[400px]
+            h-[450px]
             rounded-xl
             border
             border-gray-300 dark:border-white/10

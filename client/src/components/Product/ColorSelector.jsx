@@ -4,7 +4,6 @@ const ColorSelector = ({
   colors, 
   imagesByColor, // New prop: Object containing images for each color
   value, 
-  imagebycolor,
   onChange 
 }) => {
   if (!colors?.length) return null;
