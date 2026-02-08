@@ -9,10 +9,10 @@ import MobileFilterButton from "@/components/category/MobileFilterButton";
 export default function CategoryPage() {
   const { slug, subSlug } = useParams();
   const [mounted, setMounted] = useState(false);
-  
+
   // ✅ MOBILE FILTER DRAWER STATE
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  
+
   // ✅ FILTER STATE
   const [selectedFilters, setSelectedFilters] = useState({
     priceRange: [],
@@ -26,7 +26,7 @@ export default function CategoryPage() {
   // ✅ Convert filters to query params format
   const queryFilters = useMemo(() => {
     const filters = {};
-    
+
     if (selectedFilters.priceRange.length > 0) {
       filters.priceRange = selectedFilters.priceRange.join(',');
     }
@@ -45,7 +45,7 @@ export default function CategoryPage() {
     if (selectedFilters.brands.length > 0) {
       filters.brands = selectedFilters.brands.join(',');
     }
-    
+
     return filters;
   }, [selectedFilters]);
 
@@ -63,9 +63,10 @@ export default function CategoryPage() {
 
   // ✅ updateFilter FUNCTION
   const updateFilter = useCallback((filterKey, value) => {
+    console.log(filterKey, value)
     setSelectedFilters(prev => {
       const currentValues = prev[filterKey] || [];
-      
+
       if (currentValues.includes(value)) {
         return {
           ...prev,
@@ -133,24 +134,28 @@ export default function CategoryPage() {
         <div className="lg:hidden py-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className=" hidden text-xl font-bold text-gray-900 dark:text-gray-100">
                 {subSlug
                   ? `${slug?.replace(/-/g, " ")} / ${subSlug?.replace(/-/g, " ")}`
                   : `${slug?.replace(/-/g, " ")}`
                 }
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="hidden text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {pagination.totalProducts || 0} products
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-300">
+                <span className=" hidden text-sm font-medium text-gray-900 dark:text-gray-300">
                   {appliedFilterCount} filter{appliedFilterCount !== 1 ? 's' : ''}
                 </span>
               </div>
+              {/* CategoryPage में - Mobile Filter Button */}
               <MobileFilterButton
                 isOpen={isFilterDrawerOpen}
+                selectedFilters={selectedFilters}  // ✅ ये add करें
+                updateFilter={updateFilter}        // ✅ ये add करें
+                clearAllFilters={clearAllFilters}  // ✅ ये पहले से है
                 onOpen={() => setIsFilterDrawerOpen(true)}
                 onClose={() => setIsFilterDrawerOpen(false)}
                 appliedFilterCount={appliedFilterCount}
@@ -163,7 +168,7 @@ export default function CategoryPage() {
           {/* SIDEBAR - Desktop */}
           <aside className="hidden lg:block lg:col-span-3">
             <div className="sticky top-24">
-              <FiltersSidebar 
+              <FiltersSidebar
                 selectedFilters={selectedFilters}
                 updateFilter={updateFilter}
                 clearAllFilters={clearAllFilters}
@@ -197,9 +202,9 @@ export default function CategoryPage() {
             )}
 
             {/* PRODUCTS */}
-            <ProductGrid 
-              loading={loading} 
-              products={products} 
+            <ProductGrid
+              loading={loading}
+              products={products}
             />
 
             {/* LOAD MORE */}
@@ -254,11 +259,11 @@ export default function CategoryPage() {
       {isFilterDrawerOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           {/* Backdrop */}
-          <div 
+          <div
             className="absolute inset-0 bg-black bg-opacity-50 dark:bg-opacity-70"
             onClick={() => setIsFilterDrawerOpen(false)}
           />
-          
+
           {/* Drawer */}
           <div className="absolute inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-gray-900 shadow-xl flex flex-col transition-transform duration-300 ease-in-out">
             {/* Drawer Header */}
