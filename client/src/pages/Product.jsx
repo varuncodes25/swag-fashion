@@ -27,6 +27,7 @@ const Product = () => {
   // ✅ Product details hook
   const {
     product,
+    imagebycolor,
     loading: productLoading, // ✅ Rename loading
     quantity,
     setQuantity,
@@ -191,6 +192,7 @@ const Product = () => {
               {colors && colors.length > 0 && (
                 <ProductVariants
                   colors={colors}
+                  imagebycolor={imagebycolor}
                   selectedColor={color}
                   onColorChange={handleColorChange}
                   sizes={sizes}
