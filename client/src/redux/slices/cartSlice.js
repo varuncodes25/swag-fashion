@@ -5,12 +5,12 @@ import axios from "axios";
 // ✅ Initial State
 const initialState = {
   items: [],
-  cartItems: [], // For CartDrawer compatibility
+  cartItems: [],
   loading: false,
   error: null,
   cartCount: 0,
   totalItems: 0,
-  totalQuantity: 0, // For CartDrawer compatibility
+  totalQuantity: 0,
   totalPrice: 0,
   totalDiscount: 0,
   lastUpdated: null
@@ -29,7 +29,20 @@ const getAuthHeaders = () => {
   };
 };
 
-// ✅ Get cart
+// ✅ Calculate cart totals
+const calculateTotals = (items) => {
+  return {
+    cartCount: items.length,
+    totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+    totalQuantity: items.reduce((sum, item) => sum + item.quantity, 0),
+    totalPrice: items.reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0),
+    totalDiscount: items.reduce((sum, item) => 
+      sum + ((item.price - item.sellingPrice) * item.quantity), 0
+    ),
+  };
+};
+
+// ✅ FETCH CART
 export const fetchCart = createAsyncThunk(
   "cart/fetchCart",
   async (_, { rejectWithValue }) => {
@@ -39,21 +52,19 @@ export const fetchCart = createAsyncThunk(
         getAuthHeaders()
       );
       
-      // Transform response to match your state structure
       const cartData = response.data.cart;
       const items = cartData.items || [];
       
       return {
         items: items,
-        cartItems: items, // For CartDrawer compatibility
+        cartItems: items,
         cartCount: cartData.summary?.itemsCount || items.length,
         totalItems: cartData.summary?.totalItems || items.reduce((sum, item) => sum + item.quantity, 0),
         totalQuantity: cartData.summary?.totalItems || items.reduce((sum, item) => sum + item.quantity, 0),
-        totalPrice: cartData.summary?.totalPrice || items.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+        totalPrice: cartData.summary?.totalPrice || items.reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0),
         totalDiscount: cartData.summary?.totalDiscount || 0,
       };
     } catch (error) {
-      console.error("Fetch cart error:", error);
       return rejectWithValue(
         error.response?.data?.error || error.response?.data?.message || "Failed to fetch cart"
       );
@@ -61,131 +72,146 @@ export const fetchCart = createAsyncThunk(
   }
 );
 
-// ✅ Add to cart
+// ✅ ADD TO CART - WITH OPTIMISTIC UPDATE 🚀
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async ({ productId, variantId, quantity = 1 }, { rejectWithValue, dispatch }) => {
+  async ({ productId, variantId, quantity = 1 }, { dispatch, rejectWithValue }) => {
+    
+    // 🟢 STEP 1: PEHLE UI UPDATE KARO - INSTANT!
+    dispatch(cartSlice.actions.optimisticAddToCart({
+      productId,
+      variantId,
+      quantity
+    }));
+    
     try {
+      // 🟡 STEP 2: API CALL - BACKGROUND MEIN
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/cart`,
         { productId, variantId, quantity },
         getAuthHeaders()
       );
       
-      // ✅ Dispatch fetchCart to refresh cart data
-      if (dispatch) {
-        dispatch(fetchCart());
-      }
+      // 🟢 STEP 3: SERVER SE CONFIRMATION - FETCH LATEST CART
+      dispatch(fetchCart());
       
       return response.data;
+      
     } catch (error) {
-      console.error("Add to cart error:", error);
-      return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to add to cart"
-      );
+      // 🔴 STEP 4: ERROR AAYA TO UI ROLLBACK KARO
+      dispatch(cartSlice.actions.rollbackAddToCart({
+        productId,
+        variantId,
+        quantity
+      }));
+      
+      return rejectWithValue(error.response?.data?.message || "Failed to add to cart");
     }
   }
 );
 
-// ✅ Increase quantity - FIXED: Use your backend endpoint structure
+// ✅ INCREASE QUANTITY - OPTIMISTIC
 export const increaseQuantity = createAsyncThunk(
   "cart/increaseQuantity",
-  async (itemId, { rejectWithValue }) => {
+  async (itemId, { dispatch, rejectWithValue, getState }) => {
+    
+    // 🟢 PEHLE UI UPDATE
+    dispatch(cartSlice.actions.optimisticIncreaseQuantity(itemId));
+    
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/cart/increase/${itemId}`,
         {},
         getAuthHeaders()
       );
+      
+      dispatch(fetchCart());
       return { itemId, data: response.data };
+      
     } catch (error) {
-      console.error("Increase quantity error:", error);
-      return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to increase quantity"
-      );
+      // 🔴 ROLLBACK
+      dispatch(cartSlice.actions.rollbackIncreaseQuantity(itemId));
+      return rejectWithValue(error.response?.data?.message || "Failed to increase quantity");
     }
   }
 );
 
-// ✅ Decrease quantity - FIXED: Use your backend endpoint structure
+// ✅ DECREASE QUANTITY - OPTIMISTIC
 export const decreaseQuantity = createAsyncThunk(
   "cart/decreaseQuantity",
-  async (itemId, { rejectWithValue }) => {
+  async (itemId, { dispatch, rejectWithValue, getState }) => {
+    
+    // 🟢 PEHLE UI UPDATE
+    dispatch(cartSlice.actions.optimisticDecreaseQuantity(itemId));
+    
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/cart/decrease/${itemId}`,
         {},
         getAuthHeaders()
       );
+      
+      dispatch(fetchCart());
       return { itemId, data: response.data };
+      
     } catch (error) {
-      console.error("Decrease quantity error:", error);
-      return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to decrease quantity"
-      );
+      // 🔴 ROLLBACK
+      dispatch(cartSlice.actions.rollbackDecreaseQuantity(itemId));
+      return rejectWithValue(error.response?.data?.message || "Failed to decrease quantity");
     }
   }
 );
 
-// ✅ Update quantity - FIXED: Use your backend endpoint structure
-export const updateQuantity = createAsyncThunk(
-  "cart/updateQuantity",
-  async ({ itemId, quantity }, { rejectWithValue }) => {
-    try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/cart/update/${itemId}`,
-        { quantity },
-        getAuthHeaders()
-      );
-      return { itemId, data: response.data };
-    } catch (error) {
-      console.error("Update quantity error:", error);
-      return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to update quantity"
-      );
-    }
-  }
-);
-
-// ✅ Remove item - FIXED: Use your backend endpoint structure
+// ✅ REMOVE ITEM - OPTIMISTIC
 export const removeFromCart = createAsyncThunk(
   "cart/removeFromCart",
-  async (itemId, { rejectWithValue }) => {
+  async (itemId, { dispatch, rejectWithValue, getState }) => {
+    
+    // 🟢 PEHLE UI UPDATE - ITEM HATAO INSTANTLY
+    dispatch(cartSlice.actions.optimisticRemoveFromCart(itemId));
+    
     try {
       const response = await axios.delete(
         `${import.meta.env.VITE_API_URL}/cart/remove/${itemId}`,
         getAuthHeaders()
       );
+      
+      dispatch(fetchCart());
       return { itemId, data: response.data };
+      
     } catch (error) {
-      console.error("Remove item error:", error);
-      return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to remove item"
-      );
+      // 🔴 ROLLBACK - API FAIL TO WAPIS ITEM ADD KARO
+      dispatch(fetchCart()); // Full refresh as rollback
+      return rejectWithValue(error.response?.data?.message || "Failed to remove item");
     }
   }
 );
 
-// ✅ Clear cart
+// ✅ CLEAR CART
 export const clearCart = createAsyncThunk(
   "cart/clearCart",
-  async (_, { rejectWithValue }) => {
+  async (_, { dispatch, rejectWithValue }) => {
+    
+    // 🟢 PEHLE UI CLEAR KARO
+    dispatch(cartSlice.actions.optimisticClearCart());
+    
     try {
       const response = await axios.delete(
         `${import.meta.env.VITE_API_URL}/cart/clear`,
         getAuthHeaders()
       );
+      
       return response.data;
+      
     } catch (error) {
-      console.error("Clear cart error:", error);
-      return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to clear cart"
-      );
+      // 🔴 ROLLBACK - FETCH OLD CART
+      dispatch(fetchCart());
+      return rejectWithValue(error.response?.data?.message || "Failed to clear cart");
     }
   }
 );
 
-// ✅ Get cart count
+// ✅ FETCH CART COUNT
 export const fetchCartCount = createAsyncThunk(
   "cart/fetchCartCount",
   async (_, { rejectWithValue }) => {
@@ -196,37 +222,187 @@ export const fetchCartCount = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      console.error("Fetch cart count error:", error);
       return rejectWithValue("Failed to fetch cart count");
     }
   }
 );
 
-// ✅ Check stock
-export const checkStock = createAsyncThunk(
-  "cart/checkStock",
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/cart/stock-check`,
-        getAuthHeaders()
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Check stock error:", error);
-      return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to check stock"
-      );
-    }
-  }
-);
-
-// ✅ Cart Slice
+// ✅ CART SLICE
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    // Sync actions
+    
+    // 🟢 OPTIMISTIC ADD TO CART - INSTANT UI UPDATE
+    optimisticAddToCart: (state, action) => {
+      const { productId, variantId, quantity } = action.payload;
+      
+      const existingItem = state.items.find(
+        item => item.productId === productId && 
+        (variantId ? item.variantId === variantId : true)
+      );
+      
+      if (existingItem) {
+        // Existing item - quantity badhao
+        existingItem.quantity += quantity;
+        existingItem.isOptimistic = true;
+      } else {
+        // Naya item - add karo
+        state.items.push({
+          _id: `temp_${Date.now()}`,
+          productId,
+          variantId,
+          quantity,
+          name: "Adding...",
+          price: 0,
+          sellingPrice: 0,
+          image: null,
+          isOptimistic: true,
+          isPending: true
+        });
+      }
+      
+      // Totals update INSTANTLY
+      state.cartCount = state.items.length;
+      state.totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
+      state.totalQuantity = state.totalItems;
+      state.cartItems = [...state.items];
+      state.error = null;
+    },
+    
+    // 🔴 ROLLBACK ADD TO CART
+    rollbackAddToCart: (state, action) => {
+      const { productId, variantId, quantity } = action.payload;
+      
+      const index = state.items.findIndex(
+        item => item.productId === productId && 
+        (variantId ? item.variantId === variantId : true)
+      );
+      
+      if (index !== -1) {
+        const item = state.items[index];
+        
+        if (item.quantity > quantity) {
+          // Quantity kam karo
+          item.quantity -= quantity;
+          delete item.isOptimistic;
+          delete item.isPending;
+        } else {
+          // Item hata do
+          state.items.splice(index, 1);
+        }
+      }
+      
+      // Totals recalculate
+      state.cartCount = state.items.length;
+      state.totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
+      state.totalQuantity = state.totalItems;
+      state.cartItems = [...state.items];
+      state.error = "Failed to add item. Please try again.";
+    },
+    
+    // 🟢 OPTIMISTIC INCREASE QUANTITY
+    optimisticIncreaseQuantity: (state, action) => {
+      const itemId = action.payload;
+      const item = state.items.find(i => i._id === itemId);
+      
+      if (item) {
+        item.quantity += 1;
+        item.isOptimistic = true;
+        
+        // Totals update
+        state.totalItems += 1;
+        state.totalQuantity += 1;
+        state.totalPrice += item.sellingPrice;
+      }
+    },
+    
+    // 🔴 ROLLBACK INCREASE QUANTITY
+    rollbackIncreaseQuantity: (state, action) => {
+      const itemId = action.payload;
+      const item = state.items.find(i => i._id === itemId);
+      
+      if (item && item.quantity > 1) {
+        item.quantity -= 1;
+        delete item.isOptimistic;
+        
+        // Totals update
+        state.totalItems -= 1;
+        state.totalQuantity -= 1;
+        state.totalPrice -= item.sellingPrice;
+      }
+    },
+    
+    // 🟢 OPTIMISTIC DECREASE QUANTITY
+    optimisticDecreaseQuantity: (state, action) => {
+      const itemId = action.payload;
+      const item = state.items.find(i => i._id === itemId);
+      
+      if (item) {
+        if (item.quantity > 1) {
+          item.quantity -= 1;
+          item.isOptimistic = true;
+          
+          // Totals update
+          state.totalItems -= 1;
+          state.totalQuantity -= 1;
+          state.totalPrice -= item.sellingPrice;
+        }
+      }
+    },
+    
+    // 🔴 ROLLBACK DECREASE QUANTITY
+    rollbackDecreaseQuantity: (state, action) => {
+      const itemId = action.payload;
+      const item = state.items.find(i => i._id === itemId);
+      
+      if (item) {
+        item.quantity += 1;
+        delete item.isOptimistic;
+        
+        // Totals update
+        state.totalItems += 1;
+        state.totalQuantity += 1;
+        state.totalPrice += item.sellingPrice;
+      }
+    },
+    
+    // 🟢 OPTIMISTIC REMOVE FROM CART
+    optimisticRemoveFromCart: (state, action) => {
+      const itemId = action.payload;
+      const index = state.items.findIndex(i => i._id === itemId);
+      
+      if (index !== -1) {
+        const item = state.items[index];
+        
+        // Store for potential rollback
+        state.removedItem = item;
+        state.removedIndex = index;
+        
+        // Update totals before removing
+        state.totalItems -= item.quantity;
+        state.totalQuantity -= item.quantity;
+        state.totalPrice -= item.sellingPrice * item.quantity;
+        
+        // Remove item
+        state.items.splice(index, 1);
+        state.cartCount = state.items.length;
+        state.cartItems = [...state.items];
+      }
+    },
+    
+    // 🟢 OPTIMISTIC CLEAR CART
+    optimisticClearCart: (state) => {
+      state.previousItems = [...state.items];
+      state.items = [];
+      state.cartItems = [];
+      state.cartCount = 0;
+      state.totalItems = 0;
+      state.totalQuantity = 0;
+      state.totalPrice = 0;
+    },
+    
+    // 🟢 RESET CART
     resetCart: (state) => {
       state.items = [];
       state.cartItems = [];
@@ -236,42 +412,19 @@ const cartSlice = createSlice({
       state.totalPrice = 0;
       state.totalDiscount = 0;
       state.error = null;
-      state.lastUpdated = null;
     },
     
-    updateCartTotals: (state) => {
-      state.cartCount = state.items.length;
-      state.totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
-      state.totalQuantity = state.totalItems; // Sync for CartDrawer
-      state.totalPrice = state.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-      state.totalDiscount = state.items.reduce((sum, item) => 
-        sum + ((item.originalPrice || item.price * 1.2) - item.price) * item.quantity, 0
-      );
-    },
-    
+    // 🟢 CLEAR ERROR
     clearError: (state) => {
       state.error = null;
-    },
-    
-    // For optimistic updates
-    setCartItems: (state, action) => {
-      state.items = action.payload;
-      state.cartItems = action.payload;
-      state.cartCount = action.payload.length;
-      state.totalItems = action.payload.reduce((sum, item) => sum + item.quantity, 0);
-      state.totalQuantity = state.totalItems;
-      state.totalPrice = action.payload.reduce((sum, item) => 
-        sum + (item.price * item.quantity), 0
-      );
-    },
+    }
   },
   
   extraReducers: (builder) => {
-    // ✅ Fetch Cart
+    // ✅ FETCH CART
     builder
       .addCase(fetchCart.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(fetchCart.fulfilled, (state, action) => {
         state.loading = false;
@@ -283,226 +436,53 @@ const cartSlice = createSlice({
         state.totalPrice = action.payload.totalPrice;
         state.totalDiscount = action.payload.totalDiscount;
         state.lastUpdated = new Date().toISOString();
+        state.error = null;
+        
+        // Clear optimistic flags
+        state.items.forEach(item => {
+          delete item.isOptimistic;
+          delete item.isPending;
+        });
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
     
-    // ✅ Add to Cart
+    // ✅ ADD TO CART
     builder
       .addCase(addToCart.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
-      .addCase(addToCart.fulfilled, (state, action) => {
+      .addCase(addToCart.fulfilled, (state) => {
         state.loading = false;
-        // Update cart count from response
-        if (action.payload.cart) {
-          state.cartCount = action.payload.cart.itemsCount || state.cartCount + 1;
-        }
+        state.error = null;
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });
     
-    // ✅ Increase Quantity - FIXED: Proper state update
+    // ✅ FETCH CART COUNT
     builder
-      .addCase(increaseQuantity.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(increaseQuantity.fulfilled, (state, action) => {
-        state.loading = false;
-        const { itemId, data } = action.payload;
-        
-        // Find and update item
-        const itemIndex = state.items.findIndex(item => item._id === itemId);
-        if (itemIndex !== -1 && data.item) {
-          // Update item quantity
-          state.items[itemIndex].quantity = data.item.quantity;
-          state.cartItems[itemIndex].quantity = data.item.quantity;
-          
-          // Update totals
-          state.totalItems += 1;
-          state.totalQuantity += 1;
-          state.totalPrice += state.items[itemIndex].price;
-        }
-        
-        // Update cart count from response
-        if (data.cart) {
-          state.cartCount = data.cart.itemsCount || state.cartCount;
-        }
-      })
-      .addCase(increaseQuantity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-    
-    // ✅ Decrease Quantity - FIXED: Handle both removal and quantity decrease
-    builder
-      .addCase(decreaseQuantity.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(decreaseQuantity.fulfilled, (state, action) => {
-        state.loading = false;
-        const { itemId, data } = action.payload;
-        
-        if (data.removed) {
-          // Remove item from cart
-          state.items = state.items.filter(item => item._id !== itemId);
-          state.cartItems = state.cartItems.filter(item => item._id !== itemId);
-          state.cartCount = state.items.length;
-        } else if (data.item) {
-          // Update item quantity
-          const itemIndex = state.items.findIndex(item => item._id === itemId);
-          if (itemIndex !== -1) {
-            state.items[itemIndex].quantity = data.item.quantity;
-            state.cartItems[itemIndex].quantity = data.item.quantity;
-            
-            // Update totals
-            state.totalItems -= 1;
-            state.totalQuantity -= 1;
-            state.totalPrice -= state.items[itemIndex].price;
-          }
-        }
-        
-        // Update cart count from response
-        if (data.cart) {
-          state.cartCount = data.cart.itemsCount || state.cartCount;
-        }
-      })
-      .addCase(decreaseQuantity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-    
-    // ✅ Update Quantity
-    builder
-      .addCase(updateQuantity.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateQuantity.fulfilled, (state, action) => {
-        state.loading = false;
-        const { itemId, data } = action.payload;
-        
-        const itemIndex = state.items.findIndex(item => item._id === itemId);
-        if (itemIndex !== -1 && data.item) {
-          const oldQuantity = state.items[itemIndex].quantity;
-          const newQuantity = data.item.quantity;
-          const price = state.items[itemIndex].price;
-          
-          // Update item
-          state.items[itemIndex].quantity = newQuantity;
-          state.cartItems[itemIndex].quantity = newQuantity;
-          
-          // Update totals
-          const quantityDiff = newQuantity - oldQuantity;
-          state.totalItems += quantityDiff;
-          state.totalQuantity += quantityDiff;
-          state.totalPrice += price * quantityDiff;
-        }
-      })
-      .addCase(updateQuantity.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-    
-    // ✅ Remove Item - FIXED: Proper state update
-    builder
-      .addCase(removeFromCart.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(removeFromCart.fulfilled, (state, action) => {
-        state.loading = false;
-        const { itemId, data } = action.payload;
-        
-        // Find the item to get its details before removing
-        const itemIndex = state.items.findIndex(item => item._id === itemId);
-        if (itemIndex !== -1) {
-          const item = state.items[itemIndex];
-          // Update totals before removing
-          state.totalItems -= item.quantity;
-          state.totalQuantity -= item.quantity;
-          state.totalPrice -= item.price * item.quantity;
-          
-          // Remove item
-          state.items.splice(itemIndex, 1);
-          state.cartItems.splice(itemIndex, 1);
-          state.cartCount = state.items.length;
-        }
-        
-        // Update cart count from response
-        if (data.cart) {
-          state.cartCount = data.cart.itemsCount || state.cartCount;
-        }
-      })
-      .addCase(removeFromCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-    
-    // ✅ Clear Cart
-    builder
-      .addCase(clearCart.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(clearCart.fulfilled, (state) => {
-        state.loading = false;
-        state.items = [];
-        state.cartItems = [];
-        state.cartCount = 0;
-        state.totalItems = 0;
-        state.totalQuantity = 0;
-        state.totalPrice = 0;
-        state.totalDiscount = 0;
-        state.lastUpdated = new Date().toISOString();
-      })
-      .addCase(clearCart.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      });
-    
-    // ✅ Fetch Cart Count
-    builder
-      .addCase(fetchCartCount.pending, (state) => {
-        state.loading = true;
-      })
       .addCase(fetchCartCount.fulfilled, (state, action) => {
-        state.loading = false;
-        state.cartCount = action.payload.count || 0;
-        state.totalItems = action.payload.totalItems || 0;
-        state.totalQuantity = action.payload.totalItems || 0;
-      })
-      .addCase(fetchCartCount.rejected, (state) => {
-        state.loading = false;
-      });
-    
-    // ✅ Check Stock
-    builder
-      .addCase(checkStock.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(checkStock.fulfilled, (state) => {
-        state.loading = false;
-      })
-      .addCase(checkStock.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
+        state.cartCount = action.payload.count || state.cartCount;
       });
   }
 });
 
-// Export actions and reducer
+// Export actions
 export const { 
   resetCart, 
-  updateCartTotals, 
-  clearError, 
-  setCartItems 
+  clearError,
+  optimisticAddToCart,
+  rollbackAddToCart,
+  optimisticIncreaseQuantity,
+  rollbackIncreaseQuantity,
+  optimisticDecreaseQuantity,
+  rollbackDecreaseQuantity,
+  optimisticRemoveFromCart,
+  optimisticClearCart
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

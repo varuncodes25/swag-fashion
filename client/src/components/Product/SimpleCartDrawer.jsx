@@ -220,17 +220,7 @@ const SimpleCartDrawer = ({
                 </div>
               )}
               
-              {/* Free Shipping Achieved - Compact */}
-              {isFreeShipping && (
-                <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800 flex items-center gap-2">
-                  <div className="p-1 bg-emerald-500 rounded-full">
-                    <Truck size={12} className="text-white" />
-                  </div>
-                  <span className="text-xs font-medium text-emerald-800 dark:text-emerald-300">
-                    FREE shipping applied!
-                  </span>
-                </div>
-              )}
+             
 
               {/* ✅ Cart Items - Proper spacing for products */}
               <div className="space-y-2 max-h-[calc(100vh-280px)]">
@@ -269,15 +259,7 @@ const SimpleCartDrawer = ({
                 </div>
               )}
               
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                  <Truck size={12} className="text-emerald-600" />
-                  Shipping
-                </span>
-                <span className={`font-medium ${isFreeShipping ? 'text-emerald-600' : 'text-gray-900 dark:text-white'}`}>
-                  {isFreeShipping ? 'FREE' : '₹99'}
-                </span>
-              </div>
+              
 
               {/* Total - Compact */}
               <div className="pt-2 border-t dark:border-gray-800">

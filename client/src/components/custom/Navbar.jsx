@@ -130,9 +130,8 @@ const Navbar = () => {
                     : "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 hover:from-emerald-100 hover:to-green-100 dark:hover:from-emerald-800/30 dark:hover:to-green-800/30 border border-emerald-100 dark:border-emerald-800/30 hover:shadow-sm hover:scale-105"
                   }`}
               >
-                {loading ? (
-                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-                ) : (
+                
+               
                   <ShoppingCart
                     size={18}
                     className={isCheckoutPage 
@@ -141,7 +140,7 @@ const Navbar = () => {
                     }
                     strokeWidth={1.5}
                   />
-                )}
+              
               </button>
 
               {/* ✅ FIXED: Cart Badge - Using displayCartCount */}
