@@ -31,6 +31,7 @@
   import TermsAndConditions from "./components/TermsAndConditions";
 import CategoryPage from "./pages/CategoryPage";
 import OrderDetails from "./components/order/OrderDetails";
+import WishlistPage from "./pages/Wishlist";
 
 
 
@@ -94,6 +95,14 @@ import OrderDetails from "./components/order/OrderDetails";
       element: (
         <ProtectedRoute>
           <RootLayout children={<ResetPassword />} />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "account/wishlist" ,
+      element: (
+        <ProtectedRoute>
+          <RootLayout children={<WishlistPage />} />
         </ProtectedRoute>
       ),
     },

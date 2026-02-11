@@ -51,7 +51,7 @@ const Product = () => {
 
   // ✅ Handle mobile zoom
   const handleMobileZoomChange = (isOpen) => {
-    console.log("Mobile zoom status:", isOpen);
+
     setIsMobileZoomOpen(isOpen);
   };
 
@@ -81,10 +81,11 @@ const Product = () => {
 
   // ✅ Buy Now Function
   const handleBuyNowClick = () => {
-    if (!selectedVariant) {
-      alert("Please select color and size");
-      return;
-    }
+    console.log("inside")
+    // if (!selectedVariant) {
+    //   alert("Please select color and size");
+    //   return;
+    // }
 
       buyNow({
     productId: product._id,
@@ -102,7 +103,6 @@ const Product = () => {
 
     if (getVariantImages) {
       const newColorImages = getVariantImages(newColor);
-      console.log("New color images:", newColorImages);
 
       if (newColorImages && newColorImages.length > 0) {
         // Reset to first image of new color
@@ -139,7 +139,6 @@ const Product = () => {
   const variantImages = getVariantImages
     ? getVariantImages(color)
     : images || [];
-  console.log("Variant Images:", variantImages);
 
   // ✅ Get variant stock
   const getVariantStock = () => {

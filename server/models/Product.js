@@ -832,6 +832,7 @@ productSchema.methods.getProductCardData = function() {
 };
 
 // Get specifications in readable format
+// Get ALL specifications in ONE formatted object
 productSchema.methods.getFormattedSpecifications = function() {
   const specs = {
     "Product Details": {
@@ -846,17 +847,27 @@ productSchema.methods.getFormattedSpecifications = function() {
       "Sleeve": this.sleeveType,
       "Neck": this.neckType
     },
+    
     "Care Instructions": this.careInstructions,
+    
     "Package Details": {
       "Package Content": this.packageContent,
       "Country of Origin": this.countryOfOrigin
     },
-    "Dimensions": {
+    
+    "Dimensions & Weight": {
       "Length": `${this.productDimensions.length} cm`,
       "Width": `${this.productDimensions.width} cm`,
       "Height": `${this.productDimensions.height} cm`,
       "Weight": `${this.productDimensions.weight} kg`
-    }
+    },
+    
+    "Season & Occasion": {
+      "Season": this.season.join(", "),
+      "Occasion": this.occasion.join(", ")
+    },
+    
+    "Features": this.features
   };
   
   // Add custom specifications
@@ -891,16 +902,6 @@ productSchema.methods.getProductDetailData = function() {
     fullDescription: this.description || this.fullDescription,
     keyFeatures: this.keyFeatures,
     specifications: this.getFormattedSpecifications(),
-    fabric: this.fabric,
-    fabricComposition: this.fabricComposition,
-    careInstructions: this.careInstructions,
-    fit: this.fit,
-    pattern: this.pattern,
-    sleeveType: this.sleeveType,
-    neckType: this.neckType,
-    season: this.season,
-    occasion: this.occasion,
-    features: this.features,
     offerDetails: this.getOfferDetails(),
     
     // Variants WITHOUT duplicate images in each
@@ -911,6 +912,9 @@ productSchema.methods.getProductDetailData = function() {
       size: v.size,
       stock: v.stock,
       price: v.price,
+      sellingPrice: v.sellingPrice, 
+      discountPrice: v.discountPrice, // ✅ Discount Amount
+      discountPercentage: v.discountPercentage, // ✅ Discount %
       sku: v.sku,
       barcode: v.barcode,
       isInStock: v.stock > 0,
@@ -924,11 +928,9 @@ productSchema.methods.getProductDetailData = function() {
     // Helper for frontend
     imagesByColor: Object.fromEntries(this.imagesByColor || new Map()),
     
-    // Additional info
-    packageContent: this.packageContent,
-    countryOfOrigin: this.countryOfOrigin,
-    dimensions: this.productDimensions,
-    warranty: this.warranty,
+    season: this.season,
+    occasion: this.occasion,
+    features: this.features,
     returnPolicy: this.returnPolicy,
     estimatedDelivery: this.estimatedDelivery,
     createdAt: this.createdAt,

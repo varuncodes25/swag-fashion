@@ -220,52 +220,76 @@ useEffect(() => {
             {currentStep === "summary" && (
               <div className="space-y-6 animate-fadeIn">
                 {/* Address Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                        <CheckCircle className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 dark:text-white text-lg">Delivery Address</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Confirmed for delivery</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setCurrentStep("address")}
-                      className="px-4 py-2 text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium bg-pink-50 dark:bg-pink-900/20 rounded-lg transition-colors"
-                    >
-                      Change
-                    </button>
-                  </div>
-                  
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl p-5 border dark:border-gray-700">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                        <span className="text-blue-600 dark:text-blue-400 text-lg">📍</span>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 dark:text-white">{selectedAddress?.name}</p>
-                        <p className="text-gray-700 dark:text-gray-300 mt-2">{selectedAddress?.address_line1}</p>
-                        <p className="text-gray-600 dark:text-gray-400">
-                          {selectedAddress?.city}, {selectedAddress?.state} - {selectedAddress?.pincode}
-                        </p>
-                        <div className="flex items-center gap-6 mt-3">
-                          <span className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                            <span className="text-lg">📱</span>
-                            {selectedAddress?.phone}
-                          </span>
-                          {selectedAddress?.email && (
-                            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                              <span className="text-lg">✉️</span>
-                              {selectedAddress.email}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-4 sm:p-6 transition-colors">
+  {/* Header - Mobile Optimized */}
+  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-4">
+    <div className="flex items-center gap-3 sm:gap-4">
+      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg flex-shrink-0">
+        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="font-bold text-gray-900 dark:text-white text-base sm:text-lg truncate">
+          Delivery Address
+        </h3>
+        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 truncate">
+          Confirmed for delivery
+        </p>
+      </div>
+    </div>
+    
+    <button
+      onClick={() => setCurrentStep("address")}
+      className="px-3 py-1.5 sm:px-4 sm:py-2 text-pink-600 dark:text-pink-400 hover:text-pink-700 dark:hover:text-pink-300 font-medium bg-pink-50 dark:bg-pink-900/20 rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto text-center"
+    >
+      Change
+    </button>
+  </div>
+  
+  {/* Address Details - Mobile Optimized */}
+  <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl p-4 sm:p-5 border dark:border-gray-700">
+    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+      {/* Icon - Hidden on very small screens or adjust size */}
+      <div className="hidden xs:flex w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+        <span className="text-blue-600 dark:text-blue-400 text-base sm:text-lg">📍</span>
+      </div>
+      
+      {/* Address Content - With proper text wrapping */}
+      <div className="flex-1 min-w-0 w-full">
+        {/* Name */}
+        <p className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base break-words">
+          {selectedAddress?.name}
+        </p>
+        
+        {/* Address lines - Break long words */}
+        <p className="text-gray-700 dark:text-gray-300 mt-1.5 sm:mt-2 text-xs sm:text-sm break-words">
+          {selectedAddress?.address_line1}
+        </p>
+        
+        {/* City, State, Pincode */}
+        <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm break-words mt-1">
+          {selectedAddress?.city}, {selectedAddress?.state} - {selectedAddress?.pincode}
+        </p>
+        
+        {/* Contact Info - Stack on mobile, row on larger screens */}
+        <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-4 sm:gap-6 mt-3">
+          {/* Phone */}
+          <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm break-all">
+            <span className="text-base sm:text-lg flex-shrink-0">📱</span>
+            <span className="truncate">{selectedAddress?.phone}</span>
+          </span>
+          
+          {/* Email - Optional, hide on very small screens if too long */}
+          {selectedAddress?.email && (
+            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm break-all">
+              <span className="text-base sm:text-lg flex-shrink-0">✉️</span>
+              <span className="truncate">{selectedAddress.email}</span>
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
                 {/* Price Details Card */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
@@ -367,13 +391,13 @@ useEffect(() => {
                 </div>
 
                 {/* Order Summary Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
+                {/* <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg">
                       <Package className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-lg">Order Summary</h3>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-lg">Order Summary111</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Review your items</p>
                     </div>
                   </div>
@@ -416,7 +440,7 @@ useEffect(() => {
 
                   <div className="mt-6 pt-6 border-t dark:border-gray-700">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-gray-900 dark:text-white text-lg">Total Amount</span>
+                      <span className="font-bold text-gray-900 dark:text-white text-lg">Total Amountgggg</span>
                       <div className="text-right">
                         <p className="font-bold text-gray-900 dark:text-white text-2xl">₹{total.toFixed(2)}</p>
                         {discount > 0 && (
@@ -425,7 +449,7 @@ useEffect(() => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Desktop Place Order Button */}
                 <div className="hidden lg:block">
@@ -446,7 +470,7 @@ useEffect(() => {
           </div>
 
           {/* Right Column - Order Summary (Desktop Only) */}
-          <div className="hidden lg:block">
+          <div className="">
             <div className="sticky top-32">
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
                 <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-6 pb-4 border-b dark:border-gray-700">Order Summary</h3>
@@ -520,12 +544,7 @@ useEffect(() => {
                 </div>
 
                 {/* Delivery Info */}
-                <div className="mt-6 pt-6 border-t dark:border-gray-700">
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                    <Truck className="w-4 h-4" />
-                    <span>Free delivery on orders above ₹299</span>
-                  </div>
-                </div>
+                
 
                 {/* Security Info */}
                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">

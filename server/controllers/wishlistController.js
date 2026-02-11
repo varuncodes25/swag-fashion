@@ -86,58 +86,42 @@ exports.getWishlist = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 12;
     const skip = (page - 1) * limit;
 
-    // 1️⃣ Fetch wishlist + populate product
+    // 1️⃣ Fetch wishlist + populate product WITHOUT lean()
     const [wishlistItems, totalItems] = await Promise.all([
       Wishlist.find({ user: userId })
-        .populate({
-          path: "product",
-          select:
-            "name price rating discount offerValidTill images variants stock",
-        })
+        .populate('product') // Populate full product
         .sort({ addedAt: -1 })
         .skip(skip)
-        .limit(limit)
-        .lean(), // ✅ important (performance + easy transform)
+        .limit(limit),
+        // ❌ No lean() - so methods are available
       Wishlist.countDocuments({ user: userId }),
     ]);
 
-    // 2️⃣ Filter deleted products
+    // 2️⃣ Filter deleted/blacklisted products
     const validItems = wishlistItems.filter(
-      (item) => item.product
+      (item) => item.product && !item.product.blacklisted
     );
 
-    // 3️⃣ Normalize response (ONLY ONE IMAGE)
+    // 3️⃣ DIRECTLY USE getProductCardData() method! 🎯
     const data = validItems.map((item) => {
       const product = item.product;
-
-      const image =
-        product.images?.[0] ||
-        product.variants?.[0]?.images?.[0] ||
-        null;
-
+      
+      // ✅ Just call the method - it returns everything properly formatted!
+      const cardData = product.getProductCardData();
+      
       return {
-        _id: product._id,
-        name: product.name,
-        price: product.price,
-        rating: product.rating,
-        discount: product.discount || 0,
-        offerValidTill: product.offerValidTill || null,
-        stock: product.stock,
-        image: image
-          ? {
-              url: image.url || null,
-              id: image.id || null,
-            }
-          : null,
+        ...cardData,
+        // Add wishlist-specific fields
+        wishlistId: item._id,
+        addedAt: item.addedAt
       };
     });
 
     const totalPages = Math.ceil(totalItems / limit);
 
-    // 4️⃣ Send response
     return res.status(200).json({
       success: true,
-      message: "Wishlist fetched",
+      message: "Wishlist fetched successfully",
       data,
       pagination: {
         totalItems,
@@ -146,6 +130,7 @@ exports.getWishlist = async (req, res) => {
         pageSize: limit,
       },
     });
+    
   } catch (error) {
     console.error("Get wishlist error:", error);
     return res.status(500).json({
