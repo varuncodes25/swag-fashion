@@ -12,12 +12,12 @@ const { createShiprocketOrder } = require("../service/shiprocketService");
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?._id || req.id;
-    const { productId, variantId, quantity, addressId } = req.body; // ✅ ADD variantId
+    const { productId, variantId, quantity, addressId } = req.body;
     
     console.log("🔄 createRazorpayOrder called:", {
       userId,
       productId,
-      variantId, // ✅ Log variantId
+      variantId,
       quantity,
       addressId
     });
@@ -37,7 +37,6 @@ exports.createRazorpayOrder = async (req, res) => {
       });
     }
 
-    // ✅ VALIDATION: For Buy Now, variantId is REQUIRED
     if (productId && !variantId) {
       return res.status(400).json({
         success: false,
@@ -45,7 +44,7 @@ exports.createRazorpayOrder = async (req, res) => {
       });
     }
 
-    // ✅ Address pehle get karo
+    // Get address
     const addressDoc = await Address.findOne({
       _id: addressId,
       userId: userId
@@ -63,7 +62,7 @@ exports.createRazorpayOrder = async (req, res) => {
       userId, 
       { 
         productId, 
-        variantId, // ✅ PASS VARIANT ID
+        variantId,
         quantity 
       },
       addressDoc
@@ -73,18 +72,9 @@ exports.createRazorpayOrder = async (req, res) => {
       itemsCount: orderData.items?.length || 0,
       subtotal: orderData.summary?.subtotal,
       shipping: orderData.summary?.shipping,
-      total: orderData.summary?.total
+      total: orderData.summary?.total,
+      checkoutType: orderData.checkoutType
     });
-
-    // ✅ Debug first item details
-    if (orderData.items && orderData.items.length > 0) {
-      console.log("📦 First item details:", {
-        variantId: orderData.items[0].variantId,
-        color: orderData.items[0].color,
-        size: orderData.items[0].size,
-        price: orderData.items[0].price
-      });
-    }
 
     if (!orderData || !orderData.summary || typeof orderData.summary.total !== "number") {
       return res.status(400).json({
@@ -111,13 +101,13 @@ exports.createRazorpayOrder = async (req, res) => {
       notes: {
         userId: userId.toString(),
         productId: productId || null,
-        variantId: variantId || null, // ✅ Store variantId in notes
+        variantId: variantId || null,
         addressId: addressId,
-        checkoutType: orderData.checkoutType || "BUY_NOW"
+        checkoutType: orderData.checkoutType || "BUY_NOW",
+        quantity: quantity || null
       },
     });
 
-    /* ================= SUCCESS RESPONSE ================= */
     return res.status(200).json({
       success: true,
       razorpayOrderId: rpOrder.id,
@@ -130,7 +120,6 @@ exports.createRazorpayOrder = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Create Razorpay Order Error:", error);
-
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to initiate payment",
@@ -149,7 +138,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
       productId,
-      variantId, // ✅ ADD THIS
+      variantId,
       quantity,
       addressId,
     } = req.body;
@@ -163,8 +152,13 @@ exports.verifyRazorpayPayment = async (req, res) => {
       addressId
     });
 
+    // ✅ Basic validation
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       throw new Error("Missing payment details");
+    }
+
+    if (!addressId) {
+      throw new Error("Address ID is required");
     }
 
     // ✅ Signature verify
@@ -195,7 +189,9 @@ exports.verifyRazorpayPayment = async (req, res) => {
       session.endSession();
       return res.json({ 
         success: true, 
-        orderId: existingOrder._id 
+        orderId: existingOrder._id,
+        orderNumber: existingOrder.orderNumber,
+        message: "Order already verified" 
       });
     }
 
@@ -214,7 +210,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
       userId, 
       { 
         productId, 
-        variantId, // ✅ PASS VARIANT ID
+        variantId,
         quantity 
       },
       addressDoc
@@ -222,13 +218,22 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     console.log("✅ Recalculated order data:", {
       items: orderData.items?.map(item => ({
-        variantId: item.variantId,
         productId: item.productId,
+        variantId: item.variantId,
         color: item.color,
         size: item.size,
-        quantity: item.quantity
+        quantity: item.quantity,
+        sellingPrice: item.sellingPrice,
+        weight: item.weight,
+        length: item.length,
+        width: item.width,
+        height: item.height
       })),
-      total: orderData.summary?.total
+      subtotal: orderData.summary?.subtotal,
+      shipping: orderData.summary?.shipping,
+      discount: orderData.summary?.discount,
+      total: orderData.summary?.total,
+      checkoutType: orderData.checkoutType
     });
 
     // ✅ Amount verify
@@ -238,53 +243,55 @@ exports.verifyRazorpayPayment = async (req, res) => {
       console.error("❌ Amount Mismatch:", {
         razorpayAmount: rpOrder.amount,
         calculatedAmount: expectedAmount,
-        orderTotal: orderData.summary.total,
-        shipping: orderData.summary.shipping,
-        subtotal: orderData.summary.subtotal
+        orderTotal: orderData.summary.total
       });
       throw new Error(`Payment amount mismatch. Expected: ₹${orderData.summary.total}, Got: ₹${rpOrder.amount/100}`);
     }
 
-    // ✅ Shipping address
+    // ✅ Prepare shipping address
     const shippingAddress = {
       name: addressDoc.name,
       phone: addressDoc.phone,
-      email: addressDoc.email || `${userId}@example.com`,
-      address: addressDoc.address_line1,
+      email: addressDoc.email || req.user?.email,
+      addressLine1: addressDoc.address_line1,
+      addressLine2: addressDoc.address_line2 || "",
       city: addressDoc.city,
       state: addressDoc.state,
       pincode: addressDoc.pincode,
       country: addressDoc.country || "India"
     };
 
-    // ✅ Prepare order items with snapshot
-    const orderItems = orderData.items.map(item => {
-      return {
-        productId: item.productId,
-        variantId: item.variantId, // ✅ Store variantId
-        quantity: item.quantity,
-        priceAtOrder: item.sellingPrice,
-        
-        snapshot: {
-          name: item.name,
-          brand: item.brand,
-          color: item.color,
-          size: item.size,
-          sku: item.sku,
-          image: item.image,
-          price: item.price,
-          sellingPrice: item.sellingPrice
-        }
-      };
-    });
+    // ✅ Prepare order items with dimensions
+    const orderItems = orderData.items.map(item => ({
+      productId: item.productId,
+      variantId: item.variantId,
+      
+      // Required fields
+      name: item.name,
+      image: item.image || "",
+      
+      // Price fields
+      price: item.price,
+      discountPercent: item.discountPercent || 0,
+      discountAmount: (item.price - item.sellingPrice) * item.quantity,
+      finalPrice: item.sellingPrice,
+      
+      quantity: item.quantity,
+      lineTotal: item.sellingPrice * item.quantity,
+      
+      // Dimensions
+      weight: item.weight || 0.5,
+      length: item.length || 20,
+      width: item.width || 15,
+      height: item.height || 10,
+      
+      color: item.color || "",
+      size: item.size || "",
+      sku: item.sku || ""
+    }));
 
     // ✅ Generate order number
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const random = Math.floor(1000 + Math.random() * 9000);
-    const orderNumber = `ORD${year}${month}${day}${random}`;
+    const orderNumber = await Order.generateOrderNumber();
 
     // ✅ Create order
     const [order] = await Order.create(
@@ -292,23 +299,47 @@ exports.verifyRazorpayPayment = async (req, res) => {
         {
           orderNumber,
           userId,
-          products: orderItems, // ✅ Use products field (not items)
+          items: orderItems,
+          
           subtotal: orderData.summary.subtotal,
-          shipping: orderData.summary.shipping,
+          shippingCharge: orderData.summary.shipping,
+          taxAmount: orderData.summary.tax || 0,
           discount: orderData.summary.discount,
-          amount: orderData.summary.total,
+          totalAmount: orderData.summary.total,
+          
           shippingAddress,
-          payment: {
-            mode: "prepaid",
-            status: "paid",
-            razorpayOrderId: razorpay_order_id,
-            razorpayPaymentId: razorpay_payment_id
+          
+          paymentMethod: "RAZORPAY",
+          paymentStatus: "PAID",
+          paymentGateway: {
+            orderId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+            signature: razorpay_signature
           },
+          
+          shippingMeta: {
+            courierId: "",
+            courierName: "",
+            estimatedDelivery: "",
+            serviceType: ""
+          },
+          
           shiprocket: {
-            status: "NEW"
+            status: "PENDING"
           },
-          status: "confirmed",
-          confirmedAt: new Date()
+          
+          status: "CONFIRMED",
+          confirmedAt: new Date(),
+          
+          statusHistory: [
+            {
+              status: "CONFIRMED",
+              changedAt: new Date(),
+              reason: "Payment verified successfully"
+            }
+          ],
+          
+          isCancelled: false
         }
       ],
       { session }
@@ -317,29 +348,44 @@ exports.verifyRazorpayPayment = async (req, res) => {
     console.log("✅ Order created in DB:", {
       orderId: order._id,
       orderNumber: order.orderNumber,
-      productsCount: order.products.length
+      itemsCount: order.items.length,
+      totalAmount: order.totalAmount
     });
 
-    // ✅ Reduce stock for each variant
-    for (const item of order.products) {
+    /* ===================== 📦 STOCK MANAGEMENT - USING PRODUCT METHODS ===================== */
+    
+    // ✅ Reserve stock for each variant using Product model methods
+    for (const item of order.items) {
       const product = await Product.findById(item.productId).session(session);
+      
       if (!product) {
         throw new Error(`Product ${item.productId} not found`);
       }
 
-      const variant = product.variants.id(item.variantId);
+      // 🔥 METHOD 1: Check available stock using product method
+      const availableStock = product.availableStock; // Virtual field
+      console.log(`📊 Product ${product.name} - Total available stock: ${availableStock}`);
+
+      // 🔥 METHOD 2: Use getVariant() method to find variant
+      const variant = product.getVariant(item.color, item.size);
+      
       if (!variant) {
-        throw new Error(`Variant ${item.variantId} not found in product ${product.name}`);
+        throw new Error(`Variant ${item.color}-${item.size} not found in product ${product.name}`);
       }
 
-      // Check stock
-      const availableStock = variant.stock - (variant.reservedStock || 0);
-      if (availableStock < item.quantity) {
-        throw new Error(`${product.name} (${variant.color}-${variant.size}) out of stock`);
+      // 🔥 METHOD 3: Use reserveVariantStock() method - YE SABSE IMPORTANT HAI!
+      const reserved = product.reserveVariantStock(variant._id, item.quantity);
+      
+      if (!reserved) {
+        // Check individual variant stock for better error message
+        const variantStock = variant.stock - (variant.reservedStock || 0);
+        throw new Error(
+          `${product.name} (${variant.color}-${variant.size}) - ` +
+          `Requested: ${item.quantity}, Available: ${variantStock}`
+        );
       }
 
-      // Reserve stock
-      variant.reservedStock = (variant.reservedStock || 0) + item.quantity;
+      // ✅ Save product with updated reservedStock
       await product.save({ session });
       
       console.log(`📦 Stock reserved for ${product.name}:`, {
@@ -347,9 +393,27 @@ exports.verifyRazorpayPayment = async (req, res) => {
         color: variant.color,
         size: variant.size,
         quantity: item.quantity,
-        reservedStock: variant.reservedStock
+        method: 'reserveVariantStock()',
+        reservedStock: variant.reservedStock,
+        remainingStock: variant.stock - variant.reservedStock
       });
     }
+
+    // ✅ Alternative: Agar aapko direct variantId se kaam karna hai
+    /*
+    for (const item of order.items) {
+      const product = await Product.findById(item.productId).session(session);
+      
+      // 🔥 Direct variantId se reserve karo
+      const reserved = product.reserveVariantStock(item.variantId, item.quantity);
+      
+      if (!reserved) {
+        throw new Error(`Failed to reserve stock for variant ${item.variantId}`);
+      }
+      
+      await product.save({ session });
+    }
+    */
 
     // ✅ Clear cart if cart checkout
     if (orderData.checkoutType === "CART") {
@@ -357,21 +421,33 @@ exports.verifyRazorpayPayment = async (req, res) => {
       console.log("🛒 Cart cleared for user:", userId);
     }
 
-    // ✅ Commit transaction FIRST
+    // ✅ Commit transaction
     await session.commitTransaction();
     session.endSession();
 
     console.log("✅ Database transaction committed");
 
-    // ✅ NOW call Shiprocket (outside transaction)
+    // ✅ Call Shiprocket
     let shiprocketCreated = false;
     try {
-      await createShiprocketOrder(order);
+      const shiprocketResponse = await createShiprocketOrder(order);
       shiprocketCreated = true;
+      
+      Order.findByIdAndUpdate(order._id, {
+        "shiprocket.orderId": shiprocketResponse.order_id,
+        "shiprocket.shipmentId": shiprocketResponse.shipment_id,
+        "shiprocket.awb": shiprocketResponse.awb,
+        "shiprocket.channelId": shiprocketResponse.channel_order_id,
+        "shiprocket.status": "NEW"
+      }).catch(err => console.error("Failed to update Shiprocket details:", err));
+      
       console.log("🚀 Shiprocket order created successfully");
     } catch (shiprocketError) {
-      console.error("⚠️ Shiprocket order creation failed:", shiprocketError.message);
-      // Continue even if Shiprocket fails
+      console.error("⚠️ Shiprocket order creation failed:", {
+        error: shiprocketError.message,
+        orderId: order._id,
+        orderNumber: order.orderNumber
+      });
     }
 
     return res.json({
@@ -381,23 +457,25 @@ exports.verifyRazorpayPayment = async (req, res) => {
       orderNumber: order.orderNumber,
       orderSummary: {
         subtotal: order.subtotal,
-        shipping: order.shipping,
+        shipping: order.shippingCharge,
         discount: order.discount,
-        totalAmount: order.amount
+        totalAmount: order.totalAmount
       },
       shiprocketCreated,
       nextStep: "/order-confirmation"
     });
 
   } catch (error) {
-    // ✅ Rollback if still in transaction
     if (session.inTransaction()) {
       await session.abortTransaction();
       console.log("🔄 Transaction aborted due to error");
     }
     session.endSession();
 
-    console.error("❌ Verify Razorpay Payment Error:", error);
+    console.error("❌ Verify Razorpay Payment Error:", {
+      message: error.message,
+      stack: error.stack
+    });
     
     return res.status(400).json({ 
       success: false,

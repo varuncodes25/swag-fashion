@@ -314,7 +314,7 @@ export const verifyRazorpayPayment = createAsyncThunk(
       });
 
       const res = await axios.post(
-        `${API}/payment/verify-payment`,
+        `${API}/verify-payment`,
         {
           ...paymentData,
           addressId,

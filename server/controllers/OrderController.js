@@ -169,10 +169,7 @@ const getOrdersByUserId = async (req, res) => {
     });
   }
 };
-/**
- * GET /api/orders/:orderId - Get single order with full details
- * For Order Details page
- */
+
 const getOrderDetails = async (req, res) => {
   const userId = req.id;
   const { orderId } = req.params;
@@ -630,16 +627,18 @@ const createOrder = async (req, res) => {
     };
 
     // ============ 3. GET ORDER DATA FROM HELPER ============
-    // ✅ YEH FUNCTION ITEM LEVEL DISCOUNT CALCULATE KAR CHUKA HAI
     const orderData = await calculateOrderValidation(
       userId,
       { productId, variantId, quantity },
       shippingAddress
     );
 
-    console.log("Order Data:", {
-      items: orderData.items,
-      summary: orderData.summary
+    console.log("📊 Order Data:", {
+      items: orderData.items.length,
+      subtotal: orderData.summary.subtotal,
+      itemDiscount: orderData.summary.discount,
+      shipping: orderData.summary.shipping,
+      total: orderData.summary.total
     });
 
     // ============ 4. VALIDATE SHIPPING ============
@@ -647,7 +646,6 @@ const createOrder = async (req, res) => {
     let shippingDetails = null;
 
     try {
-      // Aapka shipping calculation logic
       const shippingPreview = await calculateShippingCharge({
         deliveryPincode: shippingAddress.pincode,
         totalWeight: orderData.summary.totalWeight,
@@ -671,77 +669,91 @@ const createOrder = async (req, res) => {
     }
 
     // ============ 5. CALCULATE TOTALS ============
-    // ✅ orderData.summary mein already item discount included hai
-    const subtotal = orderData.summary.subtotal; // Selling price total (after item discount)
-    const itemLevelDiscount = orderData.summary.discount; // TOTAL item discount
+    const subtotal = orderData.summary.subtotal;
+    const itemLevelDiscount = orderData.summary.discount;
     const couponDiscountAmount = Number(couponDiscount) || 0;
-    const taxAmount = 0; // Add tax calculation
+    const taxAmount = 0;
     
-    // Final total
     const totalAmount = subtotal + shippingCharge + taxAmount - couponDiscountAmount;
 
     // ============ 6. PREPARE ORDER ITEMS ============
-    // ✅ calculateOrderValidation ke items use karo
     const orderItems = orderData.items.map(item => {
-      // Calculate per unit discount
       const unitDiscount = (item.price - item.sellingPrice);
-      const discountPercent = (unitDiscount / item.price) * 100;
+      const discountPercent = item.price > 0 ? (unitDiscount / item.price) * 100 : 0;
       
       return {
         productId: item.productId,
         variantId: item.variantId,
         name: item.name,
-        image: item.image,
-        price: item.price,          // MRP
-        finalPrice: item.sellingPrice, // Selling price (after item discount)
-        discountPercent: round2(discountPercent), // ITEM LEVEL DISCOUNT %
-        discountAmount: round2(unitDiscount),     // ITEM LEVEL DISCOUNT ₹
+        image: item.image || "",
+        price: item.price,
+        finalPrice: item.sellingPrice,
+        discountPercent: Math.round(discountPercent * 100) / 100,
+        discountAmount: unitDiscount,
         quantity: item.quantity,
-        lineTotal: item.lineTotal,  // sellingPrice × quantity
-        weight: item.weight,
-        length: item.length || 10,
-        width: item.width || 10,
+        lineTotal: item.sellingPrice * item.quantity,
+        weight: item.weight || 0.5,
+        length: item.length || 25,
+        width: item.width || 20,
         height: item.height || 5,
-        color: item.color,
-        size: item.size,
+        color: item.color || "",
+        size: item.size || "",
         sku: item.sku || `SKU-${item.productId}`
       };
     });
 
     // ============ 7. DETERMINE PAYMENT STATUS ============
-    const isPrepaidPaid = paymentMethod === "PREPAID" && razorpayPaymentId && razorpaySignature;
-    const paymentStatus = isPrepaidPaid ? "PAID" : 
-                         (paymentMethod === "COD" ? "PENDING" : "PENDING");
-    const orderStatus = isPrepaidPaid ? "CONFIRMED" : 
-                       (paymentMethod === "COD" ? "PENDING" : "PENDING");
+    const isPrepaidPaid = paymentMethod === "RAZORPAY" && razorpayPaymentId && razorpaySignature;
+    const paymentMethodValue = paymentMethod === "COD" ? "COD" : "RAZORPAY";
+    
+    const paymentStatus = isPrepaidPaid ? "PAID" : "PENDING";
+    const orderStatus = isPrepaidPaid ? "CONFIRMED" : "PENDING";
 
-    // ============ 8. CREATE ORDER ============
+    // ============ 8. GENERATE ORDER NUMBER ============
+    const orderNumber = await Order.generateOrderNumber();
+
+    // ============ 9. CREATE ORDER ============
     const order = new Order({
-      userId: userId,
+      orderNumber, // ✅ IMPORTANT!
+      userId,
+      
+      // Items
       items: orderItems,
-      subtotal: subtotal,
-      shippingCharge: shippingCharge,
-      discount: couponDiscountAmount, // ✅ ORDER LEVEL COUPON DISCOUNT ONLY
-      taxAmount: taxAmount,
-      totalAmount: totalAmount,
-      shippingAddress: shippingAddress,
-      paymentMethod: paymentMethod === "COD" ? "COD" : "RAZORPAY",
-      paymentStatus: paymentStatus,
+      
+      // Amounts
+      subtotal,
+      shippingCharge,
+      discount: couponDiscountAmount, // Only coupon discount
+      taxAmount,
+      totalAmount,
+      
+      // Address
+      shippingAddress,
+      
+      // Payment
+      paymentMethod: paymentMethodValue,
+      paymentStatus,
       paymentGateway: razorpayOrderId ? {
         orderId: razorpayOrderId,
         paymentId: razorpayPaymentId,
         signature: razorpaySignature || ""
       } : undefined,
+      
+      // Shipping
       shippingMeta: {
         courierId: shippingDetails.courierId,
         courierName: shippingDetails.courierName,
         estimatedDelivery: shippingDetails.estimatedDelivery,
         serviceType: shippingDetails.serviceType
       },
+      
+      // Shiprocket
       shiprocket: {
         status: "PENDING",
         channelId: shippingMeta?.channelId || "YOUR_CHANNEL_ID"
       },
+      
+      // Order status
       status: orderStatus,
       statusHistory: [{
         status: orderStatus,
@@ -749,13 +761,17 @@ const createOrder = async (req, res) => {
         changedAt: new Date(),
         reason: "Order created"
       }],
-      customerNotes: req.body.customerNotes
+      
+      customerNotes: req.body.customerNotes,
+      isCancelled: false
     });
 
-    // Save order
     await order.save({ session });
+    console.log(`✅ Order created: ${order.orderNumber}`);
 
-    // ============ 9. UPDATE PRODUCT STOCK ============
+    // ============ 10. ✅ RESERVE PRODUCT STOCK (NOT DEDUCT!) ============
+    console.log("📦 Reserving stock...");
+    
     for (const item of orderData.items) {
       const product = await Product.findById(item.productId).session(session);
       if (!product) throw new Error(`Product ${item.productId} not found`);
@@ -764,34 +780,52 @@ const createOrder = async (req, res) => {
         const variant = product.variants.id(item.variantId);
         if (!variant) throw new Error(`Variant ${item.variantId} not found`);
         
-        if (variant.stock < item.quantity) {
-          throw new Error(`${item.name} (${variant.color}-${variant.size}) out of stock`);
+        // Check available stock
+        const availableStock = variant.stock - (variant.reservedStock || 0);
+        if (availableStock < item.quantity) {
+          throw new Error(
+            `${item.name} (${variant.color}-${variant.size}) out of stock. ` +
+            `Available: ${availableStock}, Requested: ${item.quantity}`
+          );
         }
-        variant.stock -= item.quantity;
+        
+        // ✅ RESERVE STOCK - NOT DEDUCT!
+        const reserved = product.reserveVariantStock(item.variantId, item.quantity);
+        
+        if (!reserved) {
+          throw new Error(`Failed to reserve stock for ${item.name}`);
+        }
+        
+        console.log(`   ✅ Reserved: ${product.name} - ${variant.color}/${variant.size} x${item.quantity}`);
+        
       } else {
+        // Simple product (no variants)
         if (product.stock < item.quantity) {
           throw new Error(`${item.name} out of stock`);
         }
-        product.stock -= item.quantity;
+        product.reservedStock = (product.reservedStock || 0) + item.quantity;
       }
       
       await product.save({ session });
     }
 
-    // ============ 10. CLEAR CART (if cart checkout) ============
-    if (!productId) { // Cart checkout
+    // ============ 11. CLEAR CART ============
+    if (!productId) {
       await Cart.findOneAndUpdate(
         { user: userId },
-        { products: [] },
+        { $set: { products: [] } }, // ✅ $set use karo
         { session }
       );
+      console.log("🛒 Cart cleared");
     }
 
-    // ============ 11. COMMIT TRANSACTION ============
+    // ============ 12. COMMIT TRANSACTION ============
     await session.commitTransaction();
     session.endSession();
 
-    // ============ 12. SEND RESPONSE ============
+    console.log(`🎉 Order completed: ${order.orderNumber}`);
+
+    // ============ 13. SEND RESPONSE ============
     res.status(201).json({
       success: true,
       message: `Order created successfully${paymentMethod === "COD" ? " (COD)" : ""}`,
@@ -799,20 +833,21 @@ const createOrder = async (req, res) => {
         order: {
           id: order._id,
           orderNumber: order.orderNumber,
+          status: order.status,
+          paymentStatus: order.paymentStatus,
           pricing: {
-            mrpTotal: orderData.summary.mrpTotal,         // Total MRP
-            subtotal: order.subtotal,                    // After item discount
-            itemLevelDiscount: itemLevelDiscount,        // Total item discount
-            couponDiscount: order.discount,              // Coupon discount
+            mrpTotal: orderData.summary.mrpTotal,
+            subtotal: order.subtotal,
+            itemLevelDiscount: itemLevelDiscount,
+            couponDiscount: order.discount,
             shippingCharge: order.shippingCharge,
             totalAmount: order.totalAmount
           },
-          status: order.status,
           items: order.items.map(item => ({
             name: item.name,
             mrp: item.price,
             sellingPrice: item.finalPrice,
-            itemDiscount: item.discountAmount,           // Per unit item discount
+            itemDiscount: item.discountAmount,
             totalItemDiscount: item.discountAmount * item.quantity,
             quantity: item.quantity
           }))
@@ -824,7 +859,7 @@ const createOrder = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
 
-    console.error("Create Order Error:", error);
+    console.error("❌ Create Order Error:", error);
 
     let statusCode = 400;
     let message = error.message;
@@ -844,11 +879,8 @@ const createOrder = async (req, res) => {
   }
 };
 
-// Helper function for rounding
+// Helper function
 const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
-
-
-
 
 const cancelOrder = async (req, res) => {
   const session = await mongoose.startSession();
@@ -1124,8 +1156,6 @@ const cancelOrder = async (req, res) => {
     });
   }
 };
-
-
 
 // Exchange Paid Delivered Orders
 const exchangeOrder = async (req, res) => {
