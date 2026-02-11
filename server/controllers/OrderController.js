@@ -633,13 +633,7 @@ const createOrder = async (req, res) => {
       shippingAddress
     );
 
-    console.log("📊 Order Data:", {
-      items: orderData.items.length,
-      subtotal: orderData.summary.subtotal,
-      itemDiscount: orderData.summary.discount,
-      shipping: orderData.summary.shipping,
-      total: orderData.summary.total
-    });
+   
 
     // ============ 4. VALIDATE SHIPPING ============
     let shippingCharge = 0;
@@ -767,10 +761,8 @@ const createOrder = async (req, res) => {
     });
 
     await order.save({ session });
-    console.log(`✅ Order created: ${order.orderNumber}`);
 
     // ============ 10. ✅ RESERVE PRODUCT STOCK (NOT DEDUCT!) ============
-    console.log("📦 Reserving stock...");
     
     for (const item of orderData.items) {
       const product = await Product.findById(item.productId).session(session);
@@ -796,7 +788,6 @@ const createOrder = async (req, res) => {
           throw new Error(`Failed to reserve stock for ${item.name}`);
         }
         
-        console.log(`   ✅ Reserved: ${product.name} - ${variant.color}/${variant.size} x${item.quantity}`);
         
       } else {
         // Simple product (no variants)
@@ -816,14 +807,12 @@ const createOrder = async (req, res) => {
         { $set: { products: [] } }, // ✅ $set use karo
         { session }
       );
-      console.log("🛒 Cart cleared");
     }
 
     // ============ 12. COMMIT TRANSACTION ============
     await session.commitTransaction();
     session.endSession();
 
-    console.log(`🎉 Order completed: ${order.orderNumber}`);
 
     // ============ 13. SEND RESPONSE ============
     res.status(201).json({
@@ -859,7 +848,7 @@ const createOrder = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
 
-    console.error("❌ Create Order Error:", error);
+
 
     let statusCode = 400;
     let message = error.message;
@@ -963,14 +952,12 @@ const cancelOrder = async (req, res) => {
     }
 
     // ============ 6. ✅ RESTORE PRODUCT STOCK - USING METHODS ============
-    console.log("🔄 Restoring stock for cancelled order:", order.orderNumber);
     const restoredItems = [];
     
     for (const item of order.items) {
       const product = await Product.findById(item.productId).session(session);
       
       if (!product) {
-        console.warn(`⚠️ Product ${item.productId} not found, skipping stock restore`);
         restoredItems.push({
           name: item.name,
           restored: false,
@@ -989,7 +976,6 @@ const cancelOrder = async (req, res) => {
         const released = product.releaseVariantStock(item.variantId, item.quantity);
         
         if (stockUpdated) {
-          console.log(`✅ Method used: updateVariantStock(${item.variantId}, +${item.quantity})`);
           
           // Get variant details for response
           const variant = product.variants.id(item.variantId);
@@ -1005,7 +991,6 @@ const cancelOrder = async (req, res) => {
       } else {
         // ✅ Simple product - manual restore (no method for this)
         product.stock += item.quantity;
-        console.log(`✅ Manual restore: ${product.name} +${item.quantity}`);
         
         restoredItems.push({
           name: item.name,
@@ -1054,7 +1039,6 @@ const cancelOrder = async (req, res) => {
             reason: reason || "Order cancelled"
           };
 
-          console.log(`💰 Refund initiated: ${refund.id} for ₹${refund.amount / 100}`);
         }
       } catch (refundError) {
         console.error("❌ Refund failed:", refundError);

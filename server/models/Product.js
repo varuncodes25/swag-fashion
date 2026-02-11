@@ -496,7 +496,7 @@ productSchema.index({ sizes: 1 });
 // ==================== PRE-VALIDATE MIDDLEWARE ====================
 // ✅ पहले ये ADD करें (सबसे ऊपर)
 productSchema.pre('validate', function(next) {
-  console.log('🔄 Pre-validate: Setting sellingPrice for variants');
+
   
   this.variants.forEach((variant) => {
     // 1. Agar sellingPrice nahi hai ya 0 hai to calculate karo
@@ -504,18 +504,15 @@ productSchema.pre('validate', function(next) {
       if (this.discount > 0) {
         // Product level discount apply करो
         variant.sellingPrice = Math.round(variant.price * (100 - this.discount) / 100);
-        console.log(`✅ Variant: ${variant.color}-${variant.size}, Price: ${variant.price}, Discount: ${this.discount}%, SellingPrice: ${variant.sellingPrice}`);
       } else {
         // No discount
         variant.sellingPrice = variant.price;
-        console.log(`✅ Variant: ${variant.color}-${variant.size}, Price: ${variant.price}, SellingPrice: ${variant.sellingPrice} (No discount)`);
       }
     }
     
     // 2. Safety check - kabhi bhi undefined ya 0 na ho
     if (!variant.sellingPrice || variant.sellingPrice <= 0) {
       variant.sellingPrice = variant.price || 100; // Default minimum price
-      console.log(`⚠️ Variant: ${variant.color}-${variant.size}, Setting default sellingPrice: ${variant.sellingPrice}`);
     }
   });
   
@@ -524,7 +521,6 @@ productSchema.pre('validate', function(next) {
 
 // ==================== PRE-SAVE MIDDLEWARE ====================
 productSchema.pre('save', function(next) {
-  console.log('💾 Pre-save: Processing product data');
   
   // Extract unique colors and sizes from variants
   const colorsSet = new Set();
@@ -537,7 +533,6 @@ productSchema.pre('save', function(next) {
   
   this.colors = Array.from(colorsSet);
   this.sizes = Array.from(sizesSet);
-  console.log(`🎨 Colors: ${this.colors.join(', ')}, Sizes: ${this.sizes.join(', ')}`);
   
   // ✅ पहले SKU generate करो
   this.variants.forEach((variant, index) => {
@@ -547,7 +542,6 @@ productSchema.pre('save', function(next) {
       const sizeCode = variant.size;
       const randomNum = Math.floor(1000 + Math.random() * 9000);
       variant.sku = `${skuPrefix}-${randomNum}-${colorCode}-${sizeCode}`;
-      console.log(`📦 Generated SKU for ${variant.color}-${variant.size}: ${variant.sku}`);
     }
   });
   
@@ -563,7 +557,6 @@ productSchema.pre('save', function(next) {
       variant.discountPercentage = 0;
     }
     
-    console.log(`💰 Variant ${variant.color}-${variant.size}: Price=${variant.price}, Selling=${variant.sellingPrice}, Discount=${variant.discountPrice} (${variant.discountPercentage}%)`);
   });
   
   // Generate slug if not exists
@@ -573,7 +566,6 @@ productSchema.pre('save', function(next) {
       .replace(/\s+/g, '-');
     const randomSuffix = Math.floor(100000 + Math.random() * 900000);
     this.slug = `${baseSlug}-${randomSuffix}`;
-    console.log(`🔗 Generated slug: ${this.slug}`);
   }
   
   // Set default blacklisted to false if not set
@@ -595,7 +587,6 @@ productSchema.pre('save', function(next) {
       this.mrp = Math.round(maxPrice * 1.1); // 10% markup
     }
     
-    console.log(`📊 Product prices - Selling: ${this.sellingPrice}, MRP: ${this.mrp}`);
   }
   
   // Organize images by color for quick lookup
@@ -625,7 +616,6 @@ productSchema.pre('save', function(next) {
     });
     
     this.imagesByColor = imagesMap;
-    console.log(`🖼️ Organized ${this.allImages.length} images by color`);
   }
   
   next();
