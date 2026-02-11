@@ -14,8 +14,7 @@ const ProductGallery = ({
   const [showZoom, setShowZoom] = useState(false);
   const [bgPos, setBgPos] = useState("50% 50%");
   
-  console.log("ProductGallery images:", images);
-  console.log("Selected image index:", selectedImage);
+  
   
   const activeImage = images[selectedImage]?.url;
   

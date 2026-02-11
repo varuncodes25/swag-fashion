@@ -1,26 +1,44 @@
+// ProtectedRoute.jsx
 import React from "react";
 import { useSelector } from "react-redux";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, Outlet } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname, search } = location;
+
   const { isAuthenticated, role } = useSelector((state) => state.auth);
-  const { cartItems } = useSelector((state) => state.cart);
+  
+  // ✅ CORRECT: 'items' access करें, 'cartItems' नहीं
+  const { items = [] } = useSelector((state) => state.cart); // 'items' है slice में
 
-  if (isAuthenticated && role === "admin" && pathname === "/admin/login") {
-    return <Navigate to="/admin/dashboard" />;
+  const params = new URLSearchParams(search);
+  const isBuyNow = Boolean(params.get("productId"));
+
+  const render = children || <Outlet />;
+
+  // ============================
+  // ADMIN ROUTES
+  // ============================
+  if (pathname.startsWith("/admin")) {
+    if (!isAuthenticated) return <Navigate to="/admin/login" replace />;
+    if (role !== "admin") return <Navigate to="/" replace />;
   }
 
+  // ============================
+  // USER ROUTES
+  // ============================
+  if (!isAuthenticated && (pathname === "/orders" || pathname === "/account")) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 🟢 FIXED: 'items' use करें
   if (
-    isAuthenticated &&
-    role === "user" &&
-    (pathname.startsWith("/admin/dashboard") || pathname === "/admin/login")
+    pathname === "/checkout" &&
+    items.length === 0 &&  // ✅ अब 'items' है
+    !isBuyNow
   ) {
-    return <Navigate to="/" />;
-  }
-
-  if (!isAuthenticated && pathname.startsWith("/admin/dashboard")) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   if (
@@ -28,17 +46,10 @@ const ProtectedRoute = ({ children }) => {
     role === "user" &&
     (pathname === "/login" || pathname === "/signup")
   ) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
-  if (!isAuthenticated && pathname === "/orders") {
-    return <Navigate to="/login" />;
-  }
-
-  if (isAuthenticated && cartItems.length === 0 && pathname === "/checkout") {
-    return <Navigate to="/" />;
-  }
-  return children;
+  return render;
 };
 
 export default ProtectedRoute;
