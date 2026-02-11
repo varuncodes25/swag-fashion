@@ -1297,44 +1297,99 @@ const getProductBySlug = async (req, res) => {
 };
 
 // ==================== GET RELATED PRODUCTS ====================
-const getRelatedProducts = async (req, res) => {
+const getSimilarProducts = async (req, res) => {
   try {
-    const { productId } = req.params;
+    console.log("📦 Similar products request:", req.params, req.query);
+    
+    let { productId } = req.params;
+    let { limit } = req.query;
 
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({
+    // Default limit
+    limit = parseInt(limit) || 6;
+    
+    if (!productId) {
+      return res.status(400).json({
         success: false,
-        message: "Product not found",
+        message: "Product ID is required"
       });
     }
 
-    const relatedProducts = await Product.find({
-      category: product.category,
-      _id: { $ne: productId },
-      status: "published",
-      blacklisted: false,
-    })
-      .limit(8)
-      .sort({ rating: -1, createdAt: -1 });
+    console.log("🔍 Getting similar products for:", productId);
 
-    const formattedProducts = relatedProducts.map((p) =>
-      p.getProductCardData(),
-    );
+    // 1. Find current product
+    const currentProduct = await Product.findById(productId);
+    
+    if (!currentProduct) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found"
+      });
+    }
 
-    res.status(200).json({
-      success: true,
-      data: formattedProducts,
+    // 2. Get current product's card data (if needed)
+    const currentProductCardData = currentProduct.getProductCardData();
+    
+    // 3. Build query for similar products
+    // यहाँ similarity logic डालो - category, tags, price range, etc.
+    const query = {
+      _id: { $ne: productId },  // Exclude current product
+     
+    };
+
+    // Similarity criteria (choose based on your business logic)
+    
+    // Option 1: Same category
+    if (currentProduct.category) {
+      query.category = currentProduct.category;
+    }
+    
+    // Option 2: Same tags (at least one matching tag)
+    // if (currentProduct.tags && currentProduct.tags.length > 0) {
+    //   query.tags = { $in: currentProduct.tags };
+    // }
+    
+    // // Option 3: Similar price range (±20%)
+    // const minPrice = currentProduct.price * 0.8;
+    // const maxPrice = currentProduct.price * 1.2;
+    // query.price = { $gte: minPrice, $lte: maxPrice };
+
+    // 4. Fetch similar products
+    const similarProducts = await Product.find(query)
+      .limit(limit)
+      .sort({ 
+        // Sorting logic - most relevant first
+        rating: -1,        // Higher rating first
+        reviewCount: -1,   // More reviews first
+        createdAt: -1      // Newer products first
+      })
+      .lean(); // For better performance
+
+    console.log(`✅ Found ${similarProducts.length} similar products`);
+
+    // 5. Format each product using your existing method
+    const formattedProducts = similarProducts.map(product => {
+      // Create a temporary Product instance to call the method
+      const productInstance = new Product(product);
+      return productInstance.getProductCardData();
     });
+
+    return res.status(200).json({
+      success: true,
+      message: formattedProducts.length > 0 
+        ? `Found ${formattedProducts.length} similar products` 
+        : "No similar products found",
+      data: formattedProducts,
+      currentProduct: currentProductCardData // Optional: include current product info
+    });
+
   } catch (error) {
-    console.error("Get related products error:", error);
-    res.status(500).json({
+    console.error("❌ Get similar products error:", error);
+    return res.status(500).json({
       success: false,
-      message: error.message || "Failed to fetch related products",
+      message: error.message || "Internal server error"
     });
   }
 };
-
 module.exports = {
   createProduct,
   updateProduct,
@@ -1349,5 +1404,5 @@ module.exports = {
   getProductStats,
   getProductsByCategory,
   getProductBySlug,
-  getRelatedProducts,
+  getSimilarProducts,
 };

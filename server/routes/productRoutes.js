@@ -9,7 +9,8 @@ const {
   removeFromBlacklist,
   getProductById,
   getProductsforadmin,
-  getProductsByCategory  // ✅ Ensure this is imported
+  getProductsByCategory ,
+  getSimilarProducts // ✅ Ensure this is imported
 } = require("../controllers/productController");
 const verifyToken = require("../middlewares/verifyToken");
 const upload = require("../middlewares/multer");
@@ -42,5 +43,5 @@ router.get("/products/category/:slug/:subSlug", getProductsByCategory);
 // ============ ADMIN ROUTES ============
 router.put("/blacklist-product/:id", verifyToken, blacklistProduct);
 router.put("/remove-from-blacklist/:id", verifyToken, removeFromBlacklist);
-
+router.get('/similar-products/:productId', getSimilarProducts);
 module.exports = router;
