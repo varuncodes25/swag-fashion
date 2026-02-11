@@ -370,41 +370,90 @@ const getOrderDetails = async (req, res) => {
 };
 const getAllOrders = async (req, res) => {
   if (req.role !== ROLES.admin) {
-    return res.status(403).json({
-      success: false,
-      message: "You are not authorized to access this resource",
-    });
+    return res.status(403).json({ success: false, message: "Unauthorized" });
   }
 
-  const { page, limit } = req.query;
-
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+    
+    // Fetch orders - NO PRODUCT POPULATION
     const orders = await Order.find()
-      .populate({
-        path: "products.id",
-        select: "name price category variants",
+      .select({
+        orderNumber: 1,
+        userId: 1,
+        items: {
+          productId: 1,
+          variantId: 1,
+          name: 1,
+          image: 1,
+          color: 1,
+          size: 1,
+          quantity: 1,
+          price: 1,
+          finalPrice: 1,
+          lineTotal: 1
+        },
+        subtotal: 1,
+        shippingCharge: 1,
+        totalAmount: 1,
+        status: 1,
+        paymentStatus: 1,
+        paymentMethod: 1,
+        createdAt: 1,
+        shippingAddress: { city: 1, state: 1, pincode: 1 },
+        shiprocket: { awb: 1, status: 1 }
       })
-      .populate({
-        path: "userId",
-        select: "name email",
-      })
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
-      .sort({ createdAt: -1 });
+      .populate("userId", "name email phone")
+      .limit(limit)
+      .skip(skip)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    if (!orders)
-      return res
-        .status(404)
-        .json({ success: false, message: "No orders to show" });
+    const totalOrders = await Order.countDocuments();
 
-    const count = await Order.countDocuments();
+    // Simple formatting - sirf order snapshot data
+    const formattedOrders = orders.map(order => ({
+      id: order._id,
+      orderNumber: order.orderNumber,
+      customer: order.userId ? {
+        name: order.userId.name,
+        phone: order.userId.phone
+      } : {
+        name: order.shippingAddress?.name
+      },
+      summary: {
+        totalItems: order.items?.reduce((s, i) => s + i.quantity, 0) || 0,
+        total: order.totalAmount || 0,
+        status: order.status
+      },
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      orderDate: order.createdAt,
+      itemsPreview: order.items?.slice(0, 2).map(i => ({
+        name: i.name,
+        image: i.image,
+        quantity: i.quantity,
+        price: i.finalPrice
+      })),
+      shipping: {
+        city: order.shippingAddress?.city,
+        awb: order.shiprocket?.awb
+      }
+    }));
 
-    return res.status(200).json({
+    return res.json({
       success: true,
-      data: orders,
-      totalPages: Math.ceil(count / limit),
-      currentPage: Number(page),
+      data: formattedOrders,
+      pagination: {
+        total: totalOrders,
+        page,
+        limit,
+        pages: Math.ceil(totalOrders / limit)
+      }
     });
+
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
