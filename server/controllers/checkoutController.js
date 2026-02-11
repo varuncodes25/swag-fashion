@@ -3,8 +3,7 @@ const Address = require("../models/address");
 
 exports.checkoutInit = async (req, res) => {
   try {
-    console.log("=== CHECKOUT INIT ===");
-    console.log("Query params:", req.query);
+    
     
     // Get user ID
     const userId = req.id || req.user?._id;
@@ -12,13 +11,7 @@ exports.checkoutInit = async (req, res) => {
     
     const { productId, variantId, qty, addressId } = req.query; // ✅ ADD variantId
 
-    console.log("🛒 Checkout request details:", {
-      productId,
-      variantId, // ✅ Log variantId
-      qty,
-      addressId,
-      userId
-    });
+   
 
     // ✅ VALIDATION: For Buy Now, variantId is REQUIRED
     if (productId && !variantId) {
@@ -42,7 +35,7 @@ exports.checkoutInit = async (req, res) => {
       _id: addressId,
       userId: userId
     });
-
+console.log(userAddress)
     if (!userAddress) {
       console.log("❌ Address not found or doesn't belong to user");
       return res.status(403).json({ 
@@ -75,15 +68,15 @@ exports.checkoutInit = async (req, res) => {
       userAddress
     );
 
-    console.log("✅ Order calculated:", {
-      itemsCount: order.items?.length || 0,
-      firstItem: order.items?.[0] ? {
-        variantId: order.items[0].variantId,
-        color: order.items[0].color,
-        size: order.items[0].size,
-        price: order.items[0].price
-      } : null
-    });
+    // console.log("✅ Order calculated:", {
+    //   itemsCount: order.items?.length || 0,
+    //   firstItem: order.items?.[0] ? {
+    //     variantId: order.items[0].variantId,
+    //     color: order.items[0].color,
+    //     size: order.items[0].size,
+    //     price: order.items[0].price
+    //   } : null
+    // });
 
     return res.status(200).json({
       success: true,
