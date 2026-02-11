@@ -70,48 +70,6 @@ const Navbar = () => {
               />
             </div>
 
-            <div className="ml-2 hidden sm:block">
-              <div className="relative inline-block">
-                <span className="
-                  text-lg font-extrabold 
-                  bg-gradient-to-r 
-                  from-purple-600 via-pink-500 to-rose-500
-                  dark:from-purple-400 dark:via-pink-400 dark:to-rose-400
-                  bg-clip-text text-transparent
-                  tracking-tight
-                  relative z-10
-                ">
-                  ShreeLaxmiShop
-                </span>
-                
-                <div className="
-                  absolute -inset-1 -z-10
-                  bg-gradient-to-r 
-                  from-purple-500/30 via-pink-500/20 to-rose-500/30
-                  blur-lg opacity-70
-                  dark:from-purple-400/40 dark:via-pink-400/30 dark:to-rose-400/40
-                "></div>
-              </div>
-
-              <div className="flex items-center gap-1.5 mt-1">
-                <div className="
-                  w-2.5 h-2.5 rounded-full
-                  bg-gradient-to-br from-amber-400 to-yellow-500
-                  dark:from-yellow-300 dark:to-amber-400
-                  flex items-center justify-center
-                ">
-                  <Sparkles size={7} className="text-white" />
-                </div>
-                
-                <span className="
-                  text-[10px] font-medium tracking-wider
-                  text-gray-600 dark:text-gray-300
-                  uppercase
-                ">
-                  Premium Fashion
-                </span>
-              </div>
-            </div>
           </Link>
 
           {/* RIGHT ICONS */}
