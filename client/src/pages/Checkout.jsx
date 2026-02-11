@@ -367,13 +367,13 @@ useEffect(() => {
                 </div>
 
                 {/* Order Summary Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
+                {/* <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg">
                       <Package className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-lg">Order Summary</h3>
+                      <h3 className="font-bold text-gray-900 dark:text-white text-lg">Order Summary111</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300">Review your items</p>
                     </div>
                   </div>
@@ -416,7 +416,7 @@ useEffect(() => {
 
                   <div className="mt-6 pt-6 border-t dark:border-gray-700">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-gray-900 dark:text-white text-lg">Total Amount</span>
+                      <span className="font-bold text-gray-900 dark:text-white text-lg">Total Amountgggg</span>
                       <div className="text-right">
                         <p className="font-bold text-gray-900 dark:text-white text-2xl">₹{total.toFixed(2)}</p>
                         {discount > 0 && (
@@ -425,7 +425,7 @@ useEffect(() => {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Desktop Place Order Button */}
                 <div className="hidden lg:block">
@@ -446,7 +446,7 @@ useEffect(() => {
           </div>
 
           {/* Right Column - Order Summary (Desktop Only) */}
-          <div className="hidden lg:block">
+          <div className="">
             <div className="sticky top-32">
               <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
                 <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-6 pb-4 border-b dark:border-gray-700">Order Summary</h3>
@@ -520,18 +520,13 @@ useEffect(() => {
                 </div>
 
                 {/* Delivery Info */}
-                <div className="mt-6 pt-6 border-t dark:border-gray-700">
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                    <Truck className="w-4 h-4" />
-                    <span>Free delivery on orders above ₹299</span>
-                  </div>
-                </div>
+                
 
                 {/* Security Info */}
                 <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm text-blue-700 dark:text-blue-300">100% Secure Payment</span>
+                    <span className="text-sm text-blue-700 dark:text-blue-300">100% Secure Payment6666</span>
                   </div>
                 </div>
               </div>
