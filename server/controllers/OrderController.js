@@ -510,128 +510,483 @@ const getMetrics = async (req, res) => {
     });
   }
 
-  const { startDate, endDate } = req.query;
-
   try {
-    const start = new Date(
-      startDate || new Date().setMonth(new Date().getMonth() - 1),
-    );
-    const end = new Date(endDate || new Date());
-
-    // Orders in selected date range
-    const ordersInRange = await Order.find({
-      createdAt: { $gte: start, $lte: end },
-    });
-
-    const totalSales = ordersInRange.reduce(
-      (acc, order) => acc + (order.amount || 0),
-      0,
-    );
-
-    // This month & last month orders
-    const thisMonthOrders = ordersInRange;
-    const lastMonth = new Date(new Date().setMonth(new Date().getMonth() - 1));
-
-    const lastMonthOrders = await Order.find({
-      createdAt: { $gte: lastMonth, $lte: start },
-    });
-
-    const totalThisMonth = thisMonthOrders.reduce(
-      (acc, order) => acc + (order.amount || 0),
-      0,
-    );
-    const totalLastMonth = lastMonthOrders.reduce(
-      (acc, order) => acc + (order.amount || 0),
-      0,
-    );
-
-    const salesGrowth = totalLastMonth
-      ? ((totalThisMonth - totalLastMonth) / totalLastMonth) * 100
-      : 0;
-
-    // Users this month vs last month
-    const thisMonthUsers = await User.find({
-      createdAt: { $gte: start, $lte: end },
-    });
-    const lastMonthUsers = await User.find({
-      createdAt: { $gte: lastMonth, $lte: start },
-    });
-
-    const usersGrowth = lastMonthUsers.length
-      ? ((thisMonthUsers.length - lastMonthUsers.length) /
-          lastMonthUsers.length) *
-        100
-      : 0;
-
-    // Active now (last hour) vs previous day
+    // ============ DATE RANGES ============
+    const now = new Date();
+    const today = new Date(now.setHours(0, 0, 0, 0));
     const lastHour = new Date(new Date().setHours(new Date().getHours() - 1));
-    const lastHourOrders = await Order.find({
-      createdAt: { $gte: lastHour, $lte: new Date() },
-    });
+    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
+    yesterday.setHours(0, 0, 0, 0);
+    
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    const previousDayOrders = await Order.find({
-      createdAt: {
-        $gte: new Date(new Date().setDate(new Date().getDate() - 1)),
-      },
-    });
+    // ============ SINGLE AGGREGATION PIPELINE ============
+    const metrics = await Order.aggregate([
+      {
+        $facet: {
+          // 1️⃣ OVERALL METRICS
+          overall: [
+            {
+              $group: {
+                _id: null,
+                totalOrders: { $sum: 1 },
+                totalRevenue: { $sum: "$totalAmount" },
+                totalCOD: {
+                  $sum: { $cond: [{ $eq: ["$paymentMethod", "COD"] }, 1, 0] }
+                },
+                totalPrepaid: {
+                  $sum: { $cond: [{ $eq: ["$paymentMethod", "RAZORPAY"] }, 1, 0] }
+                },
+                avgOrderValue: { $avg: "$totalAmount" }
+              }
+            }
+          ],
 
-    const lastHourGrowth = previousDayOrders.length
-      ? (lastHourOrders.length / previousDayOrders.length) * 100
-      : 0;
+          // 2️⃣ TODAY'S METRICS
+          today: [
+            {
+              $match: {
+                createdAt: { $gte: today }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                orders: { $sum: 1 },
+                revenue: { $sum: "$totalAmount" }
+              }
+            }
+          ],
 
-    // Recent sales
-    const recentOrders = await Order.find()
-      .populate({ path: "userId", select: "name email" })
-      .select("amount")
-      .sort({ createdAt: -1 })
-      .limit(9);
+          // 3️⃣ LAST HOUR METRICS
+          lastHour: [
+            {
+              $match: {
+                createdAt: { $gte: lastHour }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                revenue: { $sum: "$totalAmount" }
+              }
+            }
+          ],
 
-    // Products delivered in last 6 months grouped by category/month
-    const sixMonthsAgo = new Date(
-      new Date().setMonth(new Date().getMonth() - 6),
-    );
+          // 4️⃣ YESTERDAY METRICS (for growth)
+          yesterday: [
+            {
+              $match: {
+                createdAt: {
+                  $gte: yesterday,
+                  $lt: today
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                revenue: { $sum: "$totalAmount" }
+              }
+            }
+          ],
 
-    const sixMonthsOrders = await Order.find({
-      createdAt: { $gte: sixMonthsAgo },
-    }).populate({
-      path: "products.id",
-      select: "category",
-    });
+          // 5️⃣ THIS MONTH METRICS
+          thisMonth: [
+            {
+              $match: {
+                createdAt: { $gte: startOfMonth },
+                status: { $ne: "CANCELLED" }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                orders: { $sum: 1 },
+                revenue: { $sum: "$totalAmount" }
+              }
+            }
+          ],
 
-    const monthWise = sixMonthsOrders.reduce((acc, order) => {
-      const month = new Date(order.createdAt).toLocaleString("default", {
-        month: "short",
-      });
+          // 6️⃣ LAST MONTH METRICS
+          lastMonth: [
+            {
+              $match: {
+                createdAt: {
+                  $gte: startOfLastMonth,
+                  $lte: endOfLastMonth
+                },
+                status: { $ne: "CANCELLED" }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                orders: { $sum: 1 },
+                revenue: { $sum: "$totalAmount" }
+              }
+            }
+          ],
 
-      order.products.forEach((product) => {
-        // Skip missing or unlinked products
-        if (!product.id || !product.id.category) return;
+          // 7️⃣ STATUS WISE COUNTS
+          statusCounts: [
+            {
+              $group: {
+                _id: "$status",
+                count: { $sum: 1 }
+              }
+            }
+          ],
 
-        if (!acc[month]) acc[month] = {};
-        if (!acc[month][product.id.category]) {
-          acc[month][product.id.category] = 1;
-        } else {
-          acc[month][product.id.category]++;
+          // 8️⃣ PAYMENT STATUS COUNTS
+          paymentStatusCounts: [
+            {
+              $group: {
+                _id: "$paymentStatus",
+                count: { $sum: 1 }
+              }
+            }
+          ],
+
+          // 9️⃣ RECENT ORDERS (Last 9)
+          recentOrders: [
+            {
+              $sort: { createdAt: -1 }
+            },
+            {
+              $limit: 9
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "userId",
+                foreignField: "_id",
+                as: "user"
+              }
+            },
+            {
+              $project: {
+                _id: 1,
+                orderNumber: 1,
+                totalAmount: 1,
+                status: 1,
+                paymentMethod: 1,
+                createdAt: 1,
+                "user.name": 1,
+                "user.email": 1,
+                items: { $slice: ["$items", 2] } // First 2 items only
+              }
+            }
+          ],
+
+          // 🔟 MONTHLY SALES (Last 6 months)
+          monthlySales: [
+            {
+              $match: {
+                createdAt: { $gte: sixMonthsAgo },
+                status: { $ne: "CANCELLED" }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  year: { $year: "$createdAt" },
+                  month: { $month: "$createdAt" }
+                },
+                revenue: { $sum: "$totalAmount" },
+                orders: { $sum: 1 }
+              }
+            },
+            {
+              $sort: { "_id.year": 1, "_id.month": 1 }
+            }
+          ],
+
+          // 1️⃣1️⃣ CATEGORY WISE SALES (Last 6 months)
+          categorySales: [
+            {
+              $match: {
+                createdAt: { $gte: sixMonthsAgo },
+                status: { $ne: "CANCELLED" }
+              }
+            },
+            {
+              $unwind: "$items"
+            },
+            {
+              $lookup: {
+                from: "products",
+                localField: "items.productId",
+                foreignField: "_id",
+                as: "product"
+              }
+            },
+            {
+              $unwind: { path: "$product", preserveNullAndEmptyArrays: true }
+            },
+            {
+              $lookup: {
+                from: "categories",
+                localField: "product.category",
+                foreignField: "_id",
+                as: "category"
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  month: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+                  category: { $arrayElemAt: ["$category.name", 0] }
+                },
+                count: { $sum: "$items.quantity" },
+                revenue: { $sum: "$items.lineTotal" }
+              }
+            },
+            {
+              $sort: { "_id.month": 1 }
+            }
+          ],
+
+          // 1️⃣2️⃣ TOP PRODUCTS
+          topProducts: [
+            {
+              $match: {
+                status: { $ne: "CANCELLED" }
+              }
+            },
+            {
+              $unwind: "$items"
+            },
+            {
+              $group: {
+                _id: {
+                  productId: "$items.productId",
+                  name: "$items.name"
+                },
+                totalQuantity: { $sum: "$items.quantity" },
+                totalRevenue: { $sum: "$items.lineTotal" },
+                orderCount: { $sum: 1 }
+              }
+            },
+            {
+              $sort: { totalQuantity: -1 }
+            },
+            {
+              $limit: 5
+            }
+          ],
+
+          // 1️⃣3️⃣ AVERAGE DELIVERY TIME
+          avgDeliveryTime: [
+            {
+              $match: {
+                deliveredAt: { $ne: null },
+                confirmedAt: { $ne: null }
+              }
+            },
+            {
+              $project: {
+                deliveryDays: {
+                  $divide: [
+                    { $subtract: ["$deliveredAt", "$confirmedAt"] },
+                    1000 * 60 * 60 * 24
+                  ]
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                avgDays: { $avg: "$deliveryDays" }
+              }
+            }
+          ]
         }
-      });
+      }
+    ]);
 
-      return acc;
-    }, {});
+    const result = metrics[0];
+
+    // ============ FORMAT RESPONSE ============
+    const formatCurrency = (amount) => Math.round(amount || 0);
+    const formatGrowth = (current, previous) => {
+      if (!previous || previous === 0) return 0;
+      return Number(((current - previous) / previous * 100).toFixed(1));
+    };
+
+    // Get counts with defaults
+    const overall = result.overall[0] || { 
+      totalOrders: 0, 
+      totalRevenue: 0, 
+      totalCOD: 0, 
+      totalPrepaid: 0,
+      avgOrderValue: 0 
+    };
+    
+    const todayData = result.today[0] || { orders: 0, revenue: 0 };
+    const yesterdayData = result.yesterday[0] || { count: 0, revenue: 0 };
+    const lastHourData = result.lastHour[0] || { count: 0, revenue: 0 };
+    const thisMonthData = result.thisMonth[0] || { orders: 0, revenue: 0 };
+    const lastMonthData = result.lastMonth[0] || { orders: 0, revenue: 0 };
+    const avgDelivery = result.avgDeliveryTime[0] || { avgDays: 0 };
+
+    // Format monthly sales data
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthlySalesData = (result.monthlySales || []).map(item => ({
+      month: monthNames[item._id.month - 1],
+      year: item._id.year,
+      revenue: item.revenue,
+      orders: item.orders
+    }));
+
+    // Format category sales for chart
+    const categoryChartData = {};
+    (result.categorySales || []).forEach(item => {
+      const month = item._id.month;
+      const category = item._id.category || "Uncategorized";
+      
+      if (!categoryChartData[month]) {
+        categoryChartData[month] = {};
+      }
+      categoryChartData[month][category] = item.count;
+    });
+
+    // Status counts object
+    const statusCounts = {};
+    (result.statusCounts || []).forEach(item => {
+      statusCounts[item._id] = item.count;
+    });
+
+    // Payment status counts
+    const paymentStatusCounts = {};
+    (result.paymentStatusCounts || []).forEach(item => {
+      paymentStatusCounts[item._id] = item.count;
+    });
 
     return res.status(200).json({
       success: true,
       data: {
-        totalSales: { count: totalSales, growth: salesGrowth },
-        users: { count: thisMonthUsers.length, growth: usersGrowth },
-        sales: { count: totalThisMonth, growth: salesGrowth },
-        activeNow: { count: lastHourOrders.length, growth: lastHourGrowth },
-        recentSales: { count: totalThisMonth, users: recentOrders },
-        sixMonthsBarChartData: monthWise,
-      },
+        // 🎯 OVERVIEW CARDS
+        overview: {
+          totalOrders: overall.totalOrders,
+          totalRevenue: formatCurrency(overall.totalRevenue),
+          totalCOD: overall.totalCOD,
+          totalPrepaid: overall.totalPrepaid,
+          avgOrderValue: formatCurrency(overall.avgOrderValue),
+          
+          // Today's metrics
+          todayOrders: todayData.orders,
+          todayRevenue: formatCurrency(todayData.revenue),
+          todayGrowth: formatGrowth(todayData.orders, yesterdayData.count),
+          
+          // This month vs last month
+          thisMonthOrders: thisMonthData.orders,
+          thisMonthRevenue: formatCurrency(thisMonthData.revenue),
+          monthlyGrowth: formatGrowth(thisMonthData.revenue, lastMonthData.revenue),
+          
+          // Active now
+          activeOrders: lastHourData.count,
+          activeRevenue: formatCurrency(lastHourData.revenue),
+          activeGrowth: formatGrowth(lastHourData.count, yesterdayData.count / 24 || 0),
+          
+          // Delivery metrics
+          avgDeliveryDays: Math.round(avgDelivery.avgDays * 10) / 10
+        },
+
+        // 📊 STATUS DISTRIBUTION
+        statusDistribution: {
+          pending: statusCounts["PENDING"] || 0,
+          confirmed: statusCounts["CONFIRMED"] || 0,
+          shipped: statusCounts["SHIPPED"] || 0,
+          delivered: statusCounts["DELIVERED"] || 0,
+          cancelled: statusCounts["CANCELLED"] || 0
+        },
+
+        // 💳 PAYMENT STATUS
+        paymentStatus: {
+          paid: paymentStatusCounts["PAID"] || 0,
+          pending: paymentStatusCounts["PENDING"] || 0,
+          failed: paymentStatusCounts["FAILED"] || 0,
+          refunded: paymentStatusCounts["REFUNDED"] || 0
+        },
+
+        // 📈 CHARTS DATA
+        charts: {
+          // Monthly revenue trend
+          monthlyRevenue: monthlySalesData.map(d => ({
+            month: `${d.month} ${d.year}`,
+            revenue: d.revenue,
+            orders: d.orders
+          })),
+          
+          // Category wise distribution (last 6 months)
+          categorySales: categoryChartData,
+          
+          // Top products
+          topProducts: (result.topProducts || []).map(p => ({
+            name: p._id.name || "Unknown Product",
+            quantity: p.totalQuantity,
+            revenue: formatCurrency(p.totalRevenue),
+            orders: p.orderCount
+          }))
+        },
+
+        // 🕒 RECENT ORDERS
+        recentOrders: (result.recentOrders || []).map(order => ({
+          id: order._id,
+          orderNumber: order.orderNumber,
+          amount: order.totalAmount,
+          status: order.status,
+          paymentMethod: order.paymentMethod,
+          date: order.createdAt,
+          customer: order.user?.[0] ? {
+            name: order.user[0].name,
+            email: order.user[0].email
+          } : null,
+          itemsPreview: (order.items || []).map(item => ({
+            name: item.name,
+            image: item.image,
+            quantity: item.quantity
+          }))
+        })),
+
+        // 📋 SUMMARY STATS
+        summary: {
+          totalRevenue: formatCurrency(overall.totalRevenue),
+          totalOrders: overall.totalOrders,
+          conversionRate: overall.totalOrders && overall.totalUsers ? 
+            Number(((overall.totalOrders / overall.totalUsers) * 100).toFixed(1)) : 0,
+          codPercentage: overall.totalOrders ? 
+            Number(((overall.totalCOD / overall.totalOrders) * 100).toFixed(1)) : 0,
+          prepaidPercentage: overall.totalOrders ? 
+            Number(((overall.totalPrepaid / overall.totalOrders) * 100).toFixed(1)) : 0
+        },
+
+        // 📌 TIMESTAMPS
+        timestamps: {
+          fetchedAt: new Date(),
+          period: {
+            start: req.query.startDate || startOfMonth,
+            end: req.query.endDate || now
+          }
+        }
+      }
     });
+
   } catch (error) {
-    console.error("Error in getMetrics:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("❌ Error in getMetrics:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch analytics",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 };
 
