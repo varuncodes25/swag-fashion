@@ -27,6 +27,7 @@ const Product = () => {
   // ✅ Product details hook
   const {
     product,
+    imagebycolor,
     loading: productLoading, // ✅ Rename loading
     quantity,
     setQuantity,
@@ -150,7 +151,7 @@ const Product = () => {
     variantImages.length > 0 ? variantImages : product.allImages || [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-background ">
       {/* Breadcrumb */}
       <Breadcrumb
         category={product.clothingType}
@@ -191,6 +192,7 @@ const Product = () => {
               {colors && colors.length > 0 && (
                 <ProductVariants
                   colors={colors}
+                  imagebycolor={imagebycolor}
                   selectedColor={color}
                   onColorChange={handleColorChange}
                   sizes={sizes}

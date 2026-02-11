@@ -1,10 +1,14 @@
-// ColorSelector.jsx
 import { Check } from "lucide-react";
 
-const ColorSelector = ({ colors, value, onChange }) => {
+const ColorSelector = ({ 
+  colors, 
+  imagesByColor, // New prop: Object containing images for each color
+  value, 
+  onChange 
+}) => {
   if (!colors?.length) return null;
 
-  // Color name to hex mapping
+  // Color name to hex mapping (fallback if no image)
   const COLOR_MAP = {
     'Red': '#ef4444',
     'Blue': '#3b82f6',
@@ -29,11 +33,25 @@ const ColorSelector = ({ colors, value, onChange }) => {
     return COLOR_MAP[colorName] || colorName;
   };
 
+  // Get first image for a color
+  const getFirstImageForColor = (colorName) => {
+    if (!imagesByColor || !imagesByColor[colorName]) return null;
+    
+    const colorImages = imagesByColor[colorName];
+    if (Array.isArray(colorImages) && colorImages.length > 0) {
+      // Find main image first, otherwise first image
+      const mainImage = colorImages.find(img => img.isMain);
+      return mainImage || colorImages[0];
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-4">
         {colors.map((color) => {
           const isSelected = value === color;
+          const firstImage = getFirstImageForColor(color);
           const hexColor = getColorHex(color);
 
           return (
@@ -41,14 +59,14 @@ const ColorSelector = ({ colors, value, onChange }) => {
               key={color}
               className="relative group"
             >
-              {/* MAIN COLOR BUTTON */}
+              {/* COLOR BUTTON WITH IMAGE OR COLOR */}
               <button
                 onClick={() => onChange(color)}
                 className={`
                   relative
-                  w-12
-                  h-12
-                  rounded-full
+                  w-14
+                  h-14
+                  rounded-lg
                   transition-all
                   duration-200
                   flex
@@ -57,24 +75,40 @@ const ColorSelector = ({ colors, value, onChange }) => {
                   overflow-hidden
                   hover:scale-105
                   hover:shadow-md
+                  border-2
                   ${isSelected 
-                    ? 'ring-4 ring-offset-2 ring-orange-500 dark:ring-orange-400 shadow-lg' 
-                    : 'ring-2 ring-gray-200 dark:ring-gray-700 hover:ring-gray-300 dark:hover:ring-gray-600'
+                    ? 'border-orange-500 dark:border-orange-400 shadow-lg' 
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                   }
                 `}
-                style={{ backgroundColor: hexColor }}
                 aria-label={`Select ${color} color`}
               >
-                {/* Inner circle with same background color */}
-                <div 
-                  className="w-10 h-10 rounded-full"
-                  style={{ backgroundColor: hexColor }}
-                />
+                {/* Show image if available */}
+                {firstImage ? (
+                  <div className="w-full h-full relative">
+                    <img
+                      src={firstImage.url || firstImage.preview}
+                      alt={color}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    {/* Overlay for better text visibility */}
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-orange-500 bg-opacity-20" />
+                    )}
+                  </div>
+                ) : (
+                  // Fallback to solid color
+                  <div 
+                    className="w-full h-full rounded-lg"
+                    style={{ backgroundColor: hexColor }}
+                  />
+                )}
                 
                 {/* Checkmark for selected */}
                 {isSelected && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Check className="w-5 h-5 text-white drop-shadow-lg" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
+                    <Check className="w-6 h-6 text-white drop-shadow-lg" />
                   </div>
                 )}
               </button>
@@ -92,12 +126,12 @@ const ColorSelector = ({ colors, value, onChange }) => {
                 </span>
               </div>
               
-              {/* Selection indicator (corner dot) */}
-              {isSelected && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center z-10 border-2 border-white dark:border-gray-800 shadow-sm">
-                  <div className="w-1.5 h-1.5 bg-white rounded-full" />
+              {/* Stock indicator (if available) */}
+              {/* {stockByColor && stockByColor[color] > 0 && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center z-10 border border-white text-[8px] text-white font-bold">
+                  {stockByColor[color] > 9 ? '9+' : stockByColor[color]}
                 </div>
-              )}
+              )} */}
             </div>
           );
         })}

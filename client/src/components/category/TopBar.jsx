@@ -15,7 +15,7 @@ export default function TopBar({ productsCount }) {
         border-gray-200 dark:border-zinc-800
       "
     >
-      <p className="text-sm text-gray-700 dark:text-zinc-300">
+      <p className="hidden lg:block text-sm text-gray-700 dark:text-zinc-300">
         Showing{" "}
         <span className="font-semibold text-gray-900 dark:text-zinc-100">
           {productsCount}

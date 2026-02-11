@@ -6,6 +6,7 @@ import { Ruler, Info } from "lucide-react";
 
 const ProductVariants = ({
   colors = [],
+  imagebycolor,
   selectedColor,
   onColorChange,
   sizes = [],
@@ -42,6 +43,7 @@ const ProductVariants = ({
           <ColorSelector
             colors={colors}
             value={selectedColor}
+            imagesByColor={imagebycolor}
             onChange={onColorChange}
           />
         </div>

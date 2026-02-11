@@ -20,7 +20,7 @@ const validate = require("../middlewares/validate");
 // ============ PRODUCT CRUD ROUTES ============
 router.post(
   "/create-product",
-  validate(createProductSchema),
+  // validate(createProductSchema),
   verifyToken,
   upload.array("images", 15),
   createProduct

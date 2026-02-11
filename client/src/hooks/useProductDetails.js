@@ -11,9 +11,9 @@ const useProductDetails = () => {
   const [color, setColor] = useState("");
   const [size, setSize] = useState("");
   const [selectedVariant, setSelectedVariant] = useState(null);
-  
+  const [imagebycolor, setImageByColor] = useState(null);
 
- const { productId } = useParams(); // ✅ Change from productName to productId
+  const { productId } = useParams(); // ✅ Change from productName to productId
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -22,20 +22,20 @@ const useProductDetails = () => {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/get-product-by-id/${productId}` // ✅ Change endpoint
         );
-        
+
         if (res.data.success) {
           const data = res.data.data;
           setProduct(data);
-
+          setImageByColor(data.imagesByColor)
           if (data?.colors && data.colors.length > 0) {
             const firstColor = data.colors[0];
             setColor(firstColor);
-            
+
             const sizesForFirstColor = getSizesForColor(data, firstColor);
             if (sizesForFirstColor.length > 0) {
               const firstSize = sizesForFirstColor[0];
               setSize(firstSize);
-              
+
               const variant = findVariant(data, firstColor, firstSize);
               setSelectedVariant(variant);
             }
@@ -56,21 +56,21 @@ const useProductDetails = () => {
   // Helper: Get sizes for a color
   const getSizesForColor = (productData, colorName) => {
     if (!productData?.variants) return [];
-    
+
     const uniqueSizes = [];
     productData.variants.forEach(v => {
       if (v.color === colorName && !uniqueSizes.includes(v.size)) {
         uniqueSizes.push(v.size);
       }
     });
-    
+
     return uniqueSizes;
   };
 
   // Helper: Find variant
   const findVariant = (productData, colorName, sizeName) => {
     if (!productData?.variants) return null;
-    return productData.variants.find(v => 
+    return productData.variants.find(v =>
       v.color === colorName && v.size === sizeName
     );
   };
@@ -79,32 +79,32 @@ const useProductDetails = () => {
   const getImagesByColor = (colorName) => {
     console.log("gjhbjhb")
     if (!product || !colorName) return [];
-    
+
     // Option 1: Use imagesByColor if available (from API)
     if (product.allImages && product.imagesByColor[colorName]) {
       return product.imagesByColor[colorName];
     }
-    
+
     // Option 2: Create from allImages
     if (product.allImages) {
-      const filteredImages = product.allImages.filter(img => 
+      const filteredImages = product.allImages.filter(img =>
         img.color === colorName
       );
-      
-      console.log(filteredImages,"filteredImages")
+
+      console.log(filteredImages, "filteredImages")
       // If no images found for this color, return first image
       if (filteredImages.length === 0 && product.allImages.length > 0) {
         return [product.allImages[0]];
       }
-      
+
       return filteredImages;
     }
-    
+
     // Option 3: Fallback to single image
     if (product.image) {
       return [product.image];
     }
-    
+
     return [];
   };
 
@@ -112,13 +112,13 @@ const useProductDetails = () => {
   const handleColorChange = (newColor) => {
     setColor(newColor);
     setSelectedImageIndex(0);
-    
+
     // Get available sizes for new color
     const availableSizes = getSizesForColor(product, newColor);
     if (availableSizes.length > 0) {
       const firstSize = availableSizes[0];
       setSize(firstSize);
-      
+
       // Find variant
       const variant = findVariant(product, newColor, firstSize);
       setSelectedVariant(variant);
@@ -137,29 +137,30 @@ const useProductDetails = () => {
 
   // Current images based on selected color
   const currentImages = getImagesByColor(color);
-  
+
   // Get selected image
-  const selectedImage = currentImages[selectedImageIndex] || 
-                       currentImages[0] || 
-                       product?.image || 
-                       null;
-  
+  const selectedImage = currentImages[selectedImageIndex] ||
+    currentImages[0] ||
+    product?.image ||
+    null;
+
   // Stock from selected variant
   const stock = selectedVariant?.stock || product?.totalStock || 0;
-  
+
   // Calculate display price
   const isOfferActive = product?.isOfferActive || false;
   const basePrice = selectedVariant?.price || product?.price || 0;
   const displayPrice = isOfferActive && product?.discount > 0
     ? basePrice * (100 - product.discount) / 100
     : basePrice;
-  
+
   // Colors and sizes
   const colors = product?.colors || [];
   const sizes = getSizesForColor(product, color);
 
   return {
     product,
+    imagebycolor,
     loading,
     quantity,
     setQuantity,

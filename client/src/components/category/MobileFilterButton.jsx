@@ -23,56 +23,90 @@ export default function MobileFilterButton({
   return (
     <>
       {/* MODERN FILTER BUTTON */}
-      <button
-        onClick={() => setOpen(true)}
-        className="
-          w-full max-w-md mx-auto
-          px-5 py-3
-          flex items-center justify-between
-          bg-gradient-to-r from-blue-500 to-indigo-600
-          dark:from-blue-600 dark:to-indigo-700
-          text-white font-semibold rounded-2xl
-          shadow-lg shadow-blue-500/25 dark:shadow-blue-600/25
-          hover:shadow-xl hover:shadow-blue-500/35 dark:hover:shadow-blue-600/35
-          active:scale-[0.98] transition-all duration-300
-          relative overflow-hidden
-          group
-        "
-      >
-        {/* Glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent 
-          translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-        
-        {/* Left content */}
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
-            <SlidersHorizontal size={20} className="text-white" />
-          </div>
-          <div className="text-left">
-            <div className="text-lg font-bold">Filters</div>
-            <div className="text-sm font-medium text-white/90 opacity-90">
-              {appliedFilterCount > 0 
-                ? `${appliedFilterCount} filter${appliedFilterCount > 1 ? 's' : ''} applied`
-                : 'Tap to filter products'}
-            </div>
-          </div>
-        </div>
+<button
+  onClick={() => setOpen(true)}
+  className="
+    fixed bottom-8 right-8 z-50
+    lg:hidden
+    p-3.5
+    bg-gradient-to-br from-blue-500 to-indigo-600
+    dark:from-blue-600 dark:to-indigo-700
+    text-white rounded-2xl
+    shadow-lg
+    hover:shadow-xl
+    active:scale-95
+    transition-all duration-300
+    group
+    overflow-visible
+    border border-white/20
+  "
+>
+  {/* Applied filters badge - OUTSIDE the button */}
+  {appliedFilterCount > 0 && (
+    <div className="
+      absolute -top-2 -right-2 z-20
+      w-7 h-7
+      bg-white
+      border-2 border-blue-500
+      text-blue-600 dark:text-blue-700
+      font-bold text-sm rounded-full
+      flex items-center justify-center
+     
+      transform group-hover:scale-110 group-hover:-rotate-12
+      transition-all duration-300
+      animate-bounce-subtle
+    ">
+      {appliedFilterCount}
+    </div>
+  )}
+  
+  {/* Glow effect */}
+  <div className=" "/>
 
-        {/* Right content */}
-        <div className="flex items-center gap-2 relative z-10">
-          {appliedFilterCount > 0 && (
-            <div className="
-              px-3 py-1.5 
-              bg-white text-blue-600 dark:text-blue-700
-              font-bold text-sm rounded-full
-              animate-pulse-subtle
-            ">
-              {appliedFilterCount}
-            </div>
-          )}
-          <ChevronRight size={20} className="text-white/90" />
-        </div>
-      </button>
+  {/* Shine effect */}
+  <div className="" />
+  
+  {/* Main icon with 3D effect */}
+  <div className="relative z-10 transform group-hover:scale-110 group-active:scale-95 transition-transform duration-300">
+    <SlidersHorizontal size={26} className="text-white drop-shadow-lg" />
+  </div>
+  
+  {/* Pulse animation ring */}
+  <div className="absolute inset-0 rounded-2xl border-2 border-white/30 animate-ping-slow opacity-0 group-hover:opacity-100"></div>
+  
+  {/* Floating particles */}
+  
+  
+  {/* Tooltip */}
+  <div className="
+    absolute bottom-full right-0 mb-3
+    px-4 py-3
+    bg-gradient-to-r from-gray-900 to-gray-800
+    dark:from-gray-800 dark:to-gray-900
+    text-white text-sm font-medium rounded-xl
+    opacity-0 group-hover:opacity-100
+    transition-all duration-300
+    whitespace-nowrap
+    shadow-2xl
+    transform translate-y-2 group-hover:translate-y-0
+    pointer-events-none
+    border border-gray-700
+    backdrop-blur-sm
+  ">
+    <div className="flex items-center gap-2">
+      <Filter size={16} className="text-blue-300" />
+      {appliedFilterCount > 0 
+        ? `${appliedFilterCount} filter${appliedFilterCount > 1 ? 's' : ''} applied`
+        : 'Open filters'}
+    </div>
+    
+    {/* Tooltip arrow */}
+    <div className="absolute top-full right-3 -mt-1 w-3 h-3 
+      bg-gradient-to-r from-gray-900 to-gray-800 
+      dark:from-gray-800 dark:to-gray-900
+      transform rotate-45 border-r border-b border-gray-700"></div>
+  </div>
+</button>
 
       {/* MODERN DRAWER OVERLAY */}
       {open && (
@@ -158,7 +192,7 @@ export default function MobileFilterButton({
             </div>
 
             {/* Drawer Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1  p-6">
               <FiltersSidebar 
                 selectedFilters={selectedFilters}
                 updateFilter={updateFilter}

@@ -123,9 +123,9 @@ export const useProductForm = (initialData = null) => {
 
   const [colors, setColors] = useState([]);
   const [sizes, setSizes] = useState([]);
-  const [stockMatrix, setStockMatrix] = useState({}); // NEW: Changed from colorStocks to stockMatrix
+  const [stockMatrix, setStockMatrix] = useState({});
   const [variantImages, setVariantImages] = useState({});
-  const [colorImageMap, setColorImageMap] = useState({}); // NEW: For tracking image indices
+  const [colorImageMap, setColorImageMap] = useState({});
   const [selectedSize, setSelectedSize] = useState('M');
   const [currentColor, setCurrentColor] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -184,7 +184,7 @@ export const useProductForm = (initialData = null) => {
     setColors(productColors);
     setSizes(productSizes);
 
-    // NEW: Create stock matrix from variants (color x size matrix)
+    // Create stock matrix from variants (color x size matrix)
     const matrix = {};
     product.variants?.forEach(variant => {
       if (!matrix[variant.color]) {
@@ -194,7 +194,7 @@ export const useProductForm = (initialData = null) => {
     });
     setStockMatrix(matrix);
 
-    // NEW: Create color-image map from allImages
+    // Create color-image map from allImages
     const imageMap = {};
     if (product.allImages) {
       product.allImages.forEach((img, index) => {
@@ -213,6 +213,26 @@ export const useProductForm = (initialData = null) => {
     if (product.imagesByColor) {
       Object.keys(product.imagesByColor).forEach(color => {
         images[color] = product.imagesByColor[color].map(img => ({
+          file: null,
+          preview: img.url,
+          id: img.id,
+          isMain: img.isMain || false,
+        }));
+      });
+    } else if (product.allImages) {
+      // Fallback to allImages if imagesByColor doesn't exist
+      const imagesByColor = {};
+      product.allImages.forEach(img => {
+        if (img.color) {
+          if (!imagesByColor[img.color]) {
+            imagesByColor[img.color] = [];
+          }
+          imagesByColor[img.color].push(img);
+        }
+      });
+      
+      Object.keys(imagesByColor).forEach(color => {
+        images[color] = imagesByColor[color].map(img => ({
           file: null,
           preview: img.url,
           id: img.id,
@@ -392,7 +412,7 @@ export const useProductForm = (initialData = null) => {
     });
   };
 
-  // NEW: Stock handlers for matrix
+  // Stock handlers for matrix
   const updateStock = (colorName, sizeName, stock) => {
     setStockMatrix(prev => ({
       ...prev,
@@ -403,14 +423,13 @@ export const useProductForm = (initialData = null) => {
     }));
   };
 
-  // Image handlers
-  // Image handlers - FIXED
-const handleImageUpload = (colorName) => (e) => {
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
+  // ============ CORRECTED: Image Handlers ============
+  const handleImageUpload = (colorName) => (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
 
-  setVariantImages((prev) => {
-    const existingImages = prev[colorName] || [];
+    // Get current images for this color
+    const existingImages = variantImages[colorName] || [];
     const currentCount = existingImages.length;
 
     if (currentCount >= MAX_IMAGES_PER_COLOR) {
@@ -418,74 +437,93 @@ const handleImageUpload = (colorName) => (e) => {
         title: "Limit Reached",
         description: `You can upload a maximum of ${MAX_IMAGES_PER_COLOR} images for ${colorName}.`,
       });
-      return prev;
+      return;
     }
 
-    // ✅ FIX: Define allowedFiles here
     const allowedFiles = files.slice(0, MAX_IMAGES_PER_COLOR - currentCount);
-    const newFiles = allowedFiles.map((file) => ({
+    
+    const newFiles = allowedFiles.map((file, index) => ({
       file,
       preview: URL.createObjectURL(file),
-      isMain: existingImages.length === 0,
+      isMain: existingImages.length === 0 && index === 0, // Only first image of batch if no images exist
     }));
 
-    return {
+    // Update variant images
+    setVariantImages((prev) => ({
       ...prev,
       [colorName]: [...existingImages, ...newFiles],
-    };
-  });
+    }));
 
-  // ✅ FIX: Calculate allowedFiles again for colorImageMap
-  setColorImageMap(prev => {
-    const existingImages = variantImages[colorName] || [];
-    const currentCount = existingImages.length;
-    const allowedFiles = files.slice(0, MAX_IMAGES_PER_COLOR - currentCount);
+    // Calculate total images before this upload to get correct indices
+    let totalImagesBefore = 0;
+    colors.forEach(color => {
+      if (color !== colorName) {
+        totalImagesBefore += (variantImages[color] || []).length;
+      }
+    });
     
-    const existingIndices = prev[colorName] || [];
-    const newIndices = Array.from(
-      { length: allowedFiles.length }, 
-      (_, i) => currentCount + i
-    );
-    
-    return {
-      ...prev,
-      [colorName]: [...existingIndices, ...newIndices]
-    };
-  });
+    // Calculate new indices for this color
+    const existingCountForThisColor = existingImages.length;
+    const newIndices = [];
+    for (let i = 0; i < allowedFiles.length; i++) {
+      newIndices.push(totalImagesBefore + existingCountForThisColor + i);
+    }
 
-  e.target.value = "";
-};
+    // Update colorImageMap
+    setColorImageMap(prev => {
+      const existingIndices = prev[colorName] || [];
+      return {
+        ...prev,
+        [colorName]: [...existingIndices, ...newIndices]
+      };
+    });
+
+    e.target.value = "";
+  };
 
   const removeImage = (colorName, index) => {
     setVariantImages((prev) => {
-      const updatedImages = prev[colorName].filter((_, i) => i !== index);
+      const existingImages = prev[colorName] || [];
+      const updatedImages = existingImages.filter((_, i) => i !== index);
+      
       // If we removed the main image, make the first image main
-      if (updatedImages.length > 0 && prev[colorName][index]?.isMain) {
+      if (updatedImages.length > 0 && existingImages[index]?.isMain) {
         updatedImages[0].isMain = true;
       }
+      
       return {
         ...prev,
         [colorName]: updatedImages,
       };
     });
 
-    // Update colorImageMap indices
+    // Recalculate all indices in colorImageMap
     setColorImageMap(prev => {
-      const existingIndices = prev[colorName] || [];
-      const updatedIndices = existingIndices
-        .filter(idx => idx !== index)
-        .map(idx => idx > index ? idx - 1 : idx);
+      const newMap = {};
+      let globalIndex = 0;
       
-      return {
-        ...prev,
-        [colorName]: updatedIndices
-      };
+      colors.forEach(color => {
+        const images = color === colorName 
+          ? variantImages[colorName]?.filter((_, i) => i !== index) || []
+          : variantImages[color] || [];
+        
+        if (images.length > 0) {
+          const indices = [];
+          for (let i = 0; i < images.length; i++) {
+            indices.push(globalIndex++);
+          }
+          newMap[color] = indices;
+        }
+      });
+      
+      return newMap;
     });
   };
 
   const setMainImage = (colorName, index) => {
     setVariantImages((prev) => {
-      const updatedImages = prev[colorName].map((img, i) => ({
+      const existingImages = prev[colorName] || [];
+      const updatedImages = existingImages.map((img, i) => ({
         ...img,
         isMain: i === index,
       }));
@@ -496,10 +534,10 @@ const handleImageUpload = (colorName) => (e) => {
     });
   };
 
-  // Prepare form data for submission - UPDATED FOR NEW SCHEMA
+  // ============ CORRECTED: Prepare form data for submission ============
   const prepareFormData = () => {
     try {
-      console.log("🚀 Preparing form data for new schema...");
+      console.log("🚀 Preparing form data...");
       
       // Validate required fields first
       if (!formData.name || !formData.description || !formData.category) {
@@ -513,7 +551,7 @@ const handleImageUpload = (colorName) => (e) => {
         const value = formData[key];
         
         if (value === undefined || value === null) {
-          return; // Skip undefined/null
+          return;
         }
         
         if (key === 'season' || key === 'occasion' || key === 'features' || 
@@ -523,7 +561,6 @@ const handleImageUpload = (colorName) => (e) => {
             formDataObj.append(key, JSON.stringify(arrayValue));
           }
         } else if (key === 'specifications') {
-          // Convert Map to object and stringify
           const specsObj = Object.fromEntries(value);
           if (Object.keys(specsObj).length > 0) {
             formDataObj.append(key, JSON.stringify(specsObj));
@@ -531,14 +568,12 @@ const handleImageUpload = (colorName) => (e) => {
         } else if (['freeShipping', 'isFeatured', 'isNewArrival', 'isBestSeller'].includes(key)) {
           formDataObj.append(key, value.toString());
         } else if (key === 'basePrice') {
-          // Validate and add basePrice
           const price = parseFloat(value);
           if (isNaN(price) || price <= 0) {
             throw new Error("Please enter a valid price");
           }
           formDataObj.append(key, price.toString());
         } else if (key === 'discount') {
-          // Only add discount if it has a value
           const discount = parseFloat(value);
           if (!isNaN(discount) && discount > 0) {
             formDataObj.append(key, discount.toString());
@@ -549,7 +584,6 @@ const handleImageUpload = (colorName) => (e) => {
             formDataObj.append(key, window.toString());
           }
         } else if (value !== '' && value !== false) {
-          // Add other non-empty values
           formDataObj.append(key, value);
         }
       });
@@ -566,7 +600,7 @@ const handleImageUpload = (colorName) => (e) => {
       formDataObj.append('colors', JSON.stringify(colors));
       formDataObj.append('sizes', JSON.stringify(sizes));
       
-      // NEW: Add stock matrix (color x size)
+      // Add stock matrix
       formDataObj.append('stockMatrix', JSON.stringify(stockMatrix));
       
       // Add color codes
@@ -576,48 +610,68 @@ const handleImageUpload = (colorName) => (e) => {
       });
       formDataObj.append('colorCodes', JSON.stringify(colorCodesArray));
 
-      // NEW: Prepare images data for new schema
-      const allImageFiles = [];
-      let imageCount = 0;
+      // ============ CORRECTED: Prepare images and colorImageMap ============
+      console.log("🖼️ Preparing images data...");
       
-      // Check if each color has at least one image
+      // First, validate all colors have images
       colors.forEach(colorName => {
         const images = variantImages[colorName] || [];
         if (images.length === 0) {
           throw new Error(`Please upload at least one image for color: ${colorName}`);
         }
+      });
+
+      // Recalculate colorImageMap to ensure correct indices
+      const finalColorImageMap = {};
+      const allImageFiles = [];
+      let globalIndex = 0;
+      
+      // Process colors in order
+      colors.forEach(colorName => {
+        const images = variantImages[colorName] || [];
+        const indices = [];
         
-        images.forEach((imgObj) => {
+        images.forEach((imgObj, localIndex) => {
           if (imgObj && imgObj.file) {
+            // Add file to array
             allImageFiles.push(imgObj.file);
-            imageCount++;
+            // Add index to map
+            indices.push(globalIndex);
+            globalIndex++;
+            
+            console.log(`📸 ${colorName} - Image ${localIndex} -> Global Index: ${indices[indices.length-1]}`);
+          } else {
+            console.warn(`⚠️ ${colorName} - Image ${localIndex} has no file object`);
           }
         });
+        
+        if (indices.length > 0) {
+          finalColorImageMap[colorName] = indices;
+        }
       });
 
-      if (imageCount === 0) {
-        throw new Error("No images uploaded. Please upload images for all colors.");
+      if (allImageFiles.length === 0) {
+        throw new Error("No valid images uploaded. Please upload images for all colors.");
       }
       
-      // Add all images to FormData
-      allImageFiles.forEach((file) => {
+      // Add all images to FormData in correct order
+      allImageFiles.forEach((file, index) => {
         formDataObj.append('images', file);
+        console.log(`📤 Uploading image ${index}: ${file.name}`);
       });
       
-      // NEW: Add colorImageMap
-      formDataObj.append('colorImageMap', JSON.stringify(colorImageMap));
+      // Add colorImageMap
+      console.log("🔗 Final colorImageMap:", JSON.stringify(finalColorImageMap, null, 2));
+      formDataObj.append('colorImageMap', JSON.stringify(finalColorImageMap));
 
-      // Debug: Log what's being sent
-      console.log("📤 FormData prepared successfully for new schema:", {
-        name: formData.name,
-        basePrice: formData.basePrice,
-        colors: colors.length,
-        sizes: sizes.length,
-        images: imageCount,
-        stockMatrix: stockMatrix,
-        colorImageMap: colorImageMap,
-        hasCategory: !!formData.category
-      });
+      // Debug info
+      console.log("✅ FormData prepared successfully:");
+      console.log("- Name:", formData.name);
+      console.log("- Base Price:", formData.basePrice);
+      console.log("- Colors:", colors);
+      console.log("- Sizes:", sizes);
+      console.log("- Total Images:", allImageFiles.length);
+      console.log("- Color Image Map entries:", Object.keys(finalColorImageMap).length);
 
       return formDataObj;
       
@@ -738,7 +792,7 @@ const handleImageUpload = (colorName) => (e) => {
         return false;
       }
 
-      // NEW: Validate stock for all color-size combinations
+      // Validate stock for all color-size combinations
       for (const colorName of colors) {
         for (const sizeName of sizes) {
           const stock = stockMatrix[colorName]?.[sizeName];
@@ -760,6 +814,17 @@ const handleImageUpload = (colorName) => (e) => {
           toast({
             title: "Error",
             description: `Please upload at least one image for color: ${colorName}`,
+            variant: "destructive",
+          });
+          return false;
+        }
+        
+        // Check if at least one image has a file
+        const hasValidImage = images.some(img => img && (img.file || img.preview));
+        if (!hasValidImage) {
+          toast({
+            title: "Error",
+            description: `Please upload valid images for color: ${colorName}`,
             variant: "destructive",
           });
           return false;
@@ -815,7 +880,7 @@ const handleImageUpload = (colorName) => (e) => {
     updateFormData,
     colors,
     sizes,
-    stockMatrix, // Changed from colorStocks
+    stockMatrix,
     variantImages,
     colorImageMap,
     selectedSize,
@@ -850,7 +915,7 @@ const handleImageUpload = (colorName) => (e) => {
     addColor,
     removeColor,
     setCurrentColor,
-    updateStock, // Changed from updateColorStock
+    updateStock,
     handleImageUpload,
     removeImage,
     setMainImage,
@@ -867,6 +932,6 @@ const handleImageUpload = (colorName) => (e) => {
     toggleFeature,
     toggleSeason,
     toggleOccasion,
-    getTotalStockForColor, // New helper
+    getTotalStockForColor,
   };
 };
