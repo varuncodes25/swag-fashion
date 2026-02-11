@@ -1,78 +1,43 @@
-// src/pages/OrderDetails.jsx (Simplified)
-import React, { useState, useEffect } from "react";
+// src/pages/OrderDetails.jsx
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { ArrowLeft, Home } from "lucide-react";
+import { ArrowLeft, Home, Package } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";  // ✅ Import
+import { fetchOrderDetails } from "@/redux/slices/order";  // ✅ Import thunk
 import OrderData from "../../components/custom/OrderData";
-import useErrorLogout from "@/hooks/use-error-logout";
 import { formatPrice, formatDate, StatusDisplay } from "../../utils/orderHelpers";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const { handleErrorLogout } = useErrorLogout();
+  const dispatch = useDispatch();
+  
+  // ============ ✅ REDUX STATE - DIRECT LO! ============
+  const { 
+    currentOrder: order, 
+    loading, 
+    error 
+  } = useSelector((state) => state.order);
 
+  // ============ ✅ FETCH ORDER DETAILS ============
   useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/orders/${orderId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        
-        const orderData = res.data.data || res.data.order || res.data;
-        setOrder(orderData);
-      } catch (error) {
-        console.error("OrderDetails error:", error);
-        if (error.response?.status === 404) {
-          setError("Order not found");
-        } else if (error.response?.status === 401) {
-          setError("Please login to view order details");
-        } else {
-          setError("Failed to load order details");
-        }
-        handleErrorLogout(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrderDetails();
-  }, [orderId]);
-
-  const handleCancelOrder = async () => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-
-    try {
-      await axios.post(
-        `${import.meta.env.VITE_API_URL}/cancel-order`,
-        { orderId },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      alert("Order cancelled successfully");
-      navigate("/orders");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to cancel order");
+    if (orderId) {
+      dispatch(fetchOrderDetails(orderId));
     }
+  }, [dispatch, orderId]);
+
+  // ============ ✅ CANCEL SUCCESS HANDLER ============
+  const handleCancelSuccess = () => {
+    // Order details refresh karo
+    dispatch(fetchOrderDetails(orderId));
   };
 
-  if (loading) {
+  // ============ LOADING STATE ============
+  if (loading && !order) {
     return <LoadingSkeleton />;
   }
 
+  // ============ ERROR STATE ============
   if (error || !order) {
     return <ErrorPage error={error} navigate={navigate} />;
   }
@@ -89,7 +54,7 @@ const OrderDetails = () => {
   const paymentMethod = order.payment?.method || order.paymentMethod || "COD";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header with Back Navigation */}
@@ -97,39 +62,39 @@ const OrderDetails = () => {
             <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={() => navigate("/orders")}
-                className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+                className="flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
                 Back to Orders
               </button>
               <button
                 onClick={() => navigate("/")}
-                className="ml-auto flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                className="ml-auto flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <Home className="w-5 h-5" />
                 Home
               </button>
             </div>
 
-            {/* Simple Order Header - Only essential info */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200 dark:border-gray-700 mb-6">
+            {/* Simple Order Header */}
+            <div className="bg-card rounded-xl p-5 border border-border mb-6 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h1 className="text-xl font-bold text-foreground mb-2">
                     Order #{orderNumber}
                   </h1>
                   <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                    <span className="text-sm text-muted-foreground">
                       {formatDate(orderDate)}
                     </span>
                     <StatusDisplay status={orderStatus} />
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <div className="text-2xl font-bold text-foreground">
                     {formatPrice(orderAmount)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-muted-foreground">
                     {orderItems.length} {orderItems.length === 1 ? "item" : "items"}
                   </div>
                 </div>
@@ -156,22 +121,22 @@ const OrderDetails = () => {
               itemCount: orderItems.length,
               totalQuantity: orderItems.reduce((sum, item) => sum + (item.quantity || 1), 0)
             }}
-            onCancel={handleCancelOrder}
+            onCancelSuccess={handleCancelSuccess}  // ✅ Cancel ke baad refresh
           />
 
-          {/* Additional Info in a Simple Card */}
-          <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
+          {/* Additional Info Card */}
+          <div className="mt-8 bg-card rounded-xl p-6 border border-border transition-colors">
+            <h3 className="font-semibold text-foreground mb-4 text-lg">
               Additional Information
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Shipping Address */}
               <div>
-                <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <h4 className="font-medium text-foreground/80 mb-2">
                   Shipping Address
                 </h4>
                 {address && address.name ? (
-                  <div className="text-gray-600 dark:text-gray-400 text-sm space-y-1">
+                  <div className="text-muted-foreground text-sm space-y-1">
                     <p>{address.name}</p>
                     <p>{address.addressLine1 || address.street}</p>
                     {address.addressLine2 && <p>{address.addressLine2}</p>}
@@ -179,7 +144,7 @@ const OrderDetails = () => {
                     <p className="mt-2">📞 {address.phone || "Not available"}</p>
                   </div>
                 ) : (
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                  <p className="text-muted-foreground/70 text-sm">
                     Address information not available
                   </p>
                 )}
@@ -187,13 +152,13 @@ const OrderDetails = () => {
 
               {/* Payment Info */}
               <div>
-                <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <h4 className="font-medium text-foreground/80 mb-2">
                   Payment Information
                 </h4>
-                <div className="text-gray-600 dark:text-gray-400 text-sm space-y-2">
+                <div className="text-muted-foreground text-sm space-y-2">
                   <div>
-                    <p className="font-medium">{paymentMethod}</p>
-                    <p className="text-gray-500">Payment Method</p>
+                    <p className="font-medium text-foreground/90">{paymentMethod}</p>
+                    <p className="text-muted-foreground/70">Payment Method</p>
                   </div>
                 </div>
               </div>
@@ -204,13 +169,13 @@ const OrderDetails = () => {
           <div className="mt-8 flex gap-4">
             <button
               onClick={() => navigate("/orders")}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors"
+              className="px-6 py-3 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground font-medium transition-colors"
             >
               Back to Orders
             </button>
             <button
               onClick={() => window.print()}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
             >
               Print Invoice
             </button>
@@ -221,21 +186,21 @@ const OrderDetails = () => {
   );
 };
 
-// Extract loading and error components
+// Loading Skeleton (same as before)
 const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+  <div className="min-h-screen bg-background">
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <div className="h-8 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-6"></div>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4"></div>
-            <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="h-8 w-32 bg-muted rounded animate-pulse mb-6"></div>
+          <div className="bg-card rounded-xl p-6 border border-border">
+            <div className="h-6 w-48 bg-muted rounded animate-pulse mb-4"></div>
+            <div className="h-4 w-32 bg-muted rounded animate-pulse"></div>
           </div>
         </div>
         <div className="space-y-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"></div>
+            <div key={i} className="h-32 bg-muted rounded-xl animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -243,28 +208,29 @@ const LoadingSkeleton = () => (
   </div>
 );
 
+// Error Page (same as before)
 const ErrorPage = ({ error, navigate }) => (
-  <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+  <div className="min-h-screen bg-background flex items-center justify-center">
     <div className="text-center max-w-md p-8">
-      <div className="w-20 h-20 mx-auto mb-6 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
-        <Package className="w-10 h-10 text-red-600 dark:text-red-400" />
+      <div className="w-20 h-20 mx-auto mb-6 bg-destructive/10 rounded-full flex items-center justify-center">
+        <Package className="w-10 h-10 text-destructive" />
       </div>
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+      <h2 className="text-2xl font-bold text-foreground mb-3">
         Order Not Found
       </h2>
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
+      <p className="text-muted-foreground mb-6">
         {error || "The order you're looking for doesn't exist."}
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           onClick={() => navigate("/orders")}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+          className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-lg transition-colors shadow-sm"
         >
           Back to Orders
         </button>
         <button
           onClick={() => navigate("/")}
-          className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="px-6 py-3 border border-border text-muted-foreground hover:bg-muted hover:text-foreground font-medium rounded-lg transition-colors"
         >
           Go Home
         </button>

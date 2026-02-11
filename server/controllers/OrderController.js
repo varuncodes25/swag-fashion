@@ -849,29 +849,283 @@ const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 
 
 
-// Cancel COD orders within 24 hours
+
 const cancelOrder = async (req, res) => {
-  const { orderId, reason } = req.body;
-  const order = await Order.findById(orderId);
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  if (!order) return res.status(404).json({ message: "Order not found" });
-  if (order.paymentMode !== "COD")
-    return res.status(400).json({ message: "Only COD can cancel" });
-  if (!["pending", "packed"].includes(order.status))
-    return res.status(400).json({ message: "Cannot cancel now" });
+  try {
+    const userId = req.id;
+    const userRole = req.role;
+    const { orderId, reason } = req.body;
 
-  const hoursDiff = (new Date() - order.createdAt) / 36e5;
-  if (hoursDiff > 24)
-    return res.status(400).json({ message: "Cancel allowed within 24h only" });
+    // ============ 1. VALIDATE INPUT ============
+    if (!orderId) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        success: false,
+        message: "Order ID is required"
+      });
+    }
 
-  order.isCancelled = true;
-  order.cancelReason = reason;
-  order.cancelledAt = new Date();
-  order.status = "cancelled";
-  await order.save();
+    // ============ 2. FETCH ORDER WITH SESSION ============
+    const order = await Order.findById(orderId).session(session);
+    
+    if (!order) {
+      await session.abortTransaction();
+      return res.status(404).json({ 
+        success: false, 
+        message: "Order not found" 
+      });
+    }
 
-  res.json({ success: true, message: "Order cancelled", order });
+    // ============ 3. AUTHORIZATION CHECK ============
+    const isAdmin = userRole === ROLES.admin;
+    const isOwner = order.userId.toString() === userId;
+    
+    if (!isAdmin && !isOwner) {
+      await session.abortTransaction();
+      return res.status(403).json({ 
+        success: false, 
+        message: "You are not authorized to cancel this order" 
+      });
+    }
+
+    // ============ 4. ALREADY CANCELLED? ============
+    if (order.status === "CANCELLED" || order.isCancelled) {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: "Order is already cancelled" 
+      });
+    }
+
+    // ============ 5. ELIGIBILITY CHECK ============
+    if (!order.canCancel()) {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: `Order cannot be cancelled in ${order.status} status` 
+      });
+    }
+
+    // Time window check (24 hours) - Admin can bypass
+    if (!isAdmin) {
+      const hoursDiff = (new Date() - order.createdAt) / (1000 * 60 * 60);
+      if (hoursDiff > 24) {
+        await session.abortTransaction();
+        return res.status(400).json({ 
+          success: false, 
+          message: "Cancellation allowed only within 24 hours of placing order" 
+        });
+      }
+    }
+
+    // Already shipped check
+    if (order.shiprocket?.status === "SHIPPED" || order.shippedAt) {
+      await session.abortTransaction();
+      return res.status(400).json({ 
+        success: false, 
+        message: "Order already shipped - cannot cancel. Please request return after delivery." 
+      });
+    }
+
+    // ============ 6. ✅ RESTORE PRODUCT STOCK - USING METHODS ============
+    console.log("🔄 Restoring stock for cancelled order:", order.orderNumber);
+    const restoredItems = [];
+    
+    for (const item of order.items) {
+      const product = await Product.findById(item.productId).session(session);
+      
+      if (!product) {
+        console.warn(`⚠️ Product ${item.productId} not found, skipping stock restore`);
+        restoredItems.push({
+          name: item.name,
+          restored: false,
+          reason: "Product not found"
+        });
+        continue;
+      }
+
+      // ✅ USING PRODUCT SCHEMA METHODS - YE LO IMPORTANT PART!
+      
+      if (item.variantId) {
+        // METHOD 1: updateVariantStock - Stock restore
+        const stockUpdated = product.updateVariantStock(item.variantId, item.quantity);
+        
+        // METHOD 2: releaseVariantStock - Reserved stock release
+        const released = product.releaseVariantStock(item.variantId, item.quantity);
+        
+        if (stockUpdated) {
+          console.log(`✅ Method used: updateVariantStock(${item.variantId}, +${item.quantity})`);
+          
+          // Get variant details for response
+          const variant = product.variants.id(item.variantId);
+          restoredItems.push({
+            name: item.name,
+            variant: variant ? `${variant.color}-${variant.size}` : 'N/A',
+            quantity: item.quantity,
+            restored: true,
+            method: 'updateVariantStock',
+            reservedReleased: released
+          });
+        }
+      } else {
+        // ✅ Simple product - manual restore (no method for this)
+        product.stock += item.quantity;
+        console.log(`✅ Manual restore: ${product.name} +${item.quantity}`);
+        
+        restoredItems.push({
+          name: item.name,
+          quantity: item.quantity,
+          restored: true,
+          method: 'manual'
+        });
+      }
+
+      // Decrease sold count - manual (no method for this)
+      product.soldCount = Math.max((product.soldCount || 0) - item.quantity, 0);
+      
+      await product.save({ session });
+    }
+
+    // ============ 7. 💰 PROCESS REFUND (For Prepaid Orders) ============
+    let refundDetails = null;
+    
+    if (order.paymentMethod !== "COD" && order.paymentStatus === "PAID") {
+      try {
+        const Razorpay = require("razorpay");
+        const razorpay = new Razorpay({
+          key_id: process.env.RAZORPAY_KEY_ID,
+          key_secret: process.env.RAZORPAY_KEY_SECRET
+        });
+
+        if (order.paymentGateway?.paymentId) {
+          const refund = await razorpay.payments.refund(
+            order.paymentGateway.paymentId,
+            {
+              amount: Math.round(order.totalAmount * 100),
+              notes: {
+                orderId: order._id.toString(),
+                orderNumber: order.orderNumber,
+                reason: reason || "Order cancelled by customer"
+              }
+            }
+          );
+
+          refundDetails = {
+            refundId: refund.id,
+            amount: refund.amount / 100,
+            status: refund.status === "processed" ? "COMPLETED" : "INITIATED",
+            initiatedAt: new Date(),
+            completedAt: refund.status === "processed" ? new Date() : null,
+            reason: reason || "Order cancelled"
+          };
+
+          console.log(`💰 Refund initiated: ${refund.id} for ₹${refund.amount / 100}`);
+        }
+      } catch (refundError) {
+        console.error("❌ Refund failed:", refundError);
+        refundDetails = {
+          status: "FAILED",
+          error: refundError.message,
+          initiatedAt: new Date(),
+          reason: reason || "Order cancelled"
+        };
+      }
+    }
+
+    // ============ 8. 📝 UPDATE ORDER ============
+    order.status = "CANCELLED";
+    order.isCancelled = true;
+    order.cancelReason = reason || (isAdmin ? "Cancelled by admin" : "Cancelled by customer");
+    order.cancelledAt = new Date();
+    order.cancelledBy = userId;
+    
+    if (refundDetails) {
+      if (refundDetails.status === "COMPLETED" || refundDetails.status === "INITIATED") {
+        order.paymentStatus = "REFUNDED";
+      }
+      order.refund = refundDetails;
+    }
+
+    if (!order.statusHistory) order.statusHistory = [];
+    order.statusHistory.push({
+      status: "CANCELLED",
+      changedBy: userId,
+      changedAt: new Date(),
+      reason: order.cancelReason,
+      meta: {
+        stockRestored: restoredItems.length > 0,
+        refundInitiated: !!refundDetails,
+        cancelledBy: isAdmin ? "ADMIN" : "CUSTOMER",
+        restoredItemsCount: restoredItems.filter(r => r.restored).length,
+        methodsUsed: {
+          updateVariantStock: restoredItems.some(i => i.method === 'updateVariantStock'),
+          releaseVariantStock: restoredItems.some(i => i.reservedReleased)
+        }
+      }
+    });
+
+    await order.save({ session });
+
+    // ============ 9. ✅ COMMIT TRANSACTION ============
+    await session.commitTransaction();
+    session.endSession();
+
+    // ============ 10. 📤 SEND RESPONSE ============
+    const response = {
+      success: true,
+      message: "Order cancelled successfully",
+      data: {
+        orderId: order._id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        cancelledAt: order.cancelledAt,
+        cancelReason: order.cancelReason,
+        stockRestored: {
+          total: restoredItems.length,
+          successful: restoredItems.filter(r => r.restored).length,
+          items: restoredItems,
+          methods: {
+            updateVariantStock: "✅ Used for variant products",
+            releaseVariantStock: "✅ Used for reserved stock"
+          }
+        }
+      }
+    };
+
+    if (refundDetails) {
+      response.data.refund = {
+        initiated: true,
+        amount: refundDetails.amount,
+        status: refundDetails.status,
+        refundId: refundDetails.refundId,
+        message: refundDetails.status === "FAILED" 
+          ? "Refund failed. Our team will process it manually."
+          : "Refund initiated successfully"
+      };
+      
+      if (refundDetails.status === "FAILED") {
+        response.message = "Order cancelled but refund failed. Our team will process it manually.";
+      }
+    }
+
+    return res.status(200).json(response);
+
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error("❌ Cancel order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to cancel order",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
+  }
 };
+
+
 
 // Exchange Paid Delivered Orders
 const exchangeOrder = async (req, res) => {

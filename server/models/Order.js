@@ -147,6 +147,33 @@ const orderSchema = new mongoose.Schema(
         reason: String,
       },
     ],
+
+     isCancelled: {
+      type: Boolean,
+      default: false
+    },
+    
+    cancelReason: String,
+    cancelledAt: Date,
+    
+    cancelledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User"
+    },
+    
+    /* 💸 REFUND FIELDS */
+    refund: {
+      refundId: String,
+      amount: Number,
+      status: {
+        type: String,
+        enum: ["INITIATED", "PROCESSING", "COMPLETED", "FAILED"]
+      },
+      initiatedAt: Date,
+      completedAt: Date,
+      reason: String,
+      error: String
+    }
   },
   { timestamps: true }
 );

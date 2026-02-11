@@ -1,5 +1,5 @@
 // src/components/custom/OrderData/OrderActions.jsx
-import React from "react";
+import React, { useState } from "react";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -7,26 +7,46 @@ import {
   XCircle, 
   Truck,
   RefreshCw,
-  Package 
+  Package
 } from "lucide-react";
+import CancelOrderModal from "./CancelOrderModal";
+import { useSelector, useDispatch } from "react-redux";  // ✅ useDispatch import
+import { clearCancelStatus } from "@/redux/slices/order";  // ✅ import action
 
 const OrderActions = ({
-  status,
+  orderId,
+  status: propStatus,
   loading = false,
   showActions = false,
   setShowActions,
   handleTrackOrder,
-  handleCancelClick,
   handleDownloadInvoice,
   handleReturnOrder,
 }) => {
   
-  // Determine which actions are available based on status
+  const dispatch = useDispatch();  // ✅ dispatch lo
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  
+  const { currentOrder } = useSelector((state) => state.order);
+  
+  const status = currentOrder?.id === orderId || currentOrder?._id === orderId
+    ? currentOrder.status
+    : propStatus;
+
+  const handleCancelClick = () => {
+    setShowCancelModal(true);
+  };
+
+  // ✅ CALLBACK FUNCTION - Modal success pe call hoga
+  const handleCancelSuccess = () => {
+    console.log("✅ Cancel success, clearing status...");
+    dispatch(clearCancelStatus());  // 🔥 YAHAN DISPATCH KARO!
+  };
+
   const getAvailableActions = () => {
     const actions = [];
     const statusUpper = status?.toUpperCase() || "PENDING";
     
-    // Always show download invoice
     actions.push({
       label: "Download Invoice",
       icon: <Download className="w-4 h-4" />,
@@ -35,8 +55,7 @@ const OrderActions = ({
       disabled: false
     });
     
-    // Track order for shipped orders
-    if (["SHIPPED", "IN_TRANSIT"].includes(statusUpper)) {
+    if (["SHIPPED", "IN_TRANSIT", "PROCESSING"].includes(statusUpper)) {
       actions.push({
         label: loading ? "Loading..." : "Track Order",
         icon: <Truck className="w-4 h-4" />,
@@ -46,7 +65,6 @@ const OrderActions = ({
       });
     }
     
-    // Cancel order for cancellable statuses
     if (["PENDING", "CONFIRMED", "PROCESSING"].includes(statusUpper)) {
       actions.push({
         label: "Cancel Order",
@@ -57,7 +75,6 @@ const OrderActions = ({
       });
     }
     
-    // Return/Exchange for delivered orders
     if (statusUpper === "DELIVERED") {
       actions.push({
         label: "Return/Exchange",
@@ -73,21 +90,21 @@ const OrderActions = ({
   
   const availableActions = getAvailableActions();
   
-  // Button variant classes
   const buttonVariantClasses = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white",
-    secondary: "bg-gray-600 hover:bg-gray-700 text-white",
-    danger: "bg-red-600 hover:bg-red-700 text-white",
-    warning: "bg-orange-600 hover:bg-orange-700 text-white"
+    primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow",
+    secondary: "bg-gray-600 hover:bg-gray-700 text-white shadow-sm hover:shadow",
+    danger: "bg-red-600 hover:bg-red-700 text-white shadow-sm hover:shadow",
+    warning: "bg-orange-600 hover:bg-orange-700 text-white shadow-sm hover:shadow"
   };
   
   const ActionButton = ({ button }) => (
     <button
       onClick={button.onClick}
       disabled={button.disabled}
-      className={`px-5 py-3 font-semibold rounded-xl transition-all duration-200 hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-1 min-w-[140px] ${
-        buttonVariantClasses[button.variant]
-      }`}
+      className={`px-5 py-3 font-semibold rounded-xl transition-all duration-200 
+        hover:shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed 
+        flex items-center justify-center gap-2 flex-1 min-w-[140px] 
+        ${buttonVariantClasses[button.variant]}`}
     >
       {button.icon}
       {button.label}
@@ -129,6 +146,13 @@ const OrderActions = ({
           </div>
         )}
       </div>
+
+      <CancelOrderModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        orderId={orderId}
+        onCancelSuccess={handleCancelSuccess}  // ✅ CALLBACK PASS KARO!
+      />
     </div>
   );
 };

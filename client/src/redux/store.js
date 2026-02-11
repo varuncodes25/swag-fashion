@@ -8,6 +8,7 @@ import categorySlice from "./slices/admin/categorySlice";
 import wishlistReducer from "./slices/wishlistSlice"
 import checkoutReducer from "./slices/checkoutSlice";
 import reviewsReducer from './slices/reviewsSlice';
+import orderSlice from './slices/order'
 const persistConfig = {
   key: "root",
   storage,
@@ -18,6 +19,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authSlice,
   cart: cartSlice,
+  order:orderSlice,
   products: productSlice,  // Changed from product to products (plural)
   categories: categorySlice,
    wishlist: wishlistReducer,

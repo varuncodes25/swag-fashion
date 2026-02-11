@@ -1,13 +1,13 @@
 // src/components/custom/OrderData/OrderData.jsx
 import React, { useState, useMemo, useEffect } from "react";
-import ProductItem from "../order/ProductItem"; // Updated import path
+import ProductItem from "../order/ProductItem";
 import OrderSummary from "../../components/order/OrderSummary";
 import OrderActions from "../../components/order/OrderActions";
 import TrackingSection from "../../components/order/TrackingSection";
 import { getStatusIcon, getStatusColor, formatDate } from "@/utils/orderHelpers";
 
 const OrderData = ({
-  id,
+  id,              // ✅ YEH HAI ORDER ID!
   orderNumber,
   date,
   status = "PENDING",
@@ -94,17 +94,24 @@ const OrderData = ({
     alert("Return/exchange to be implemented");
   };
 
+  // ✅ CANCEL SUCCESS HANDLER
+  const handleCancelSuccess = (data) => {
+    console.log("Order cancelled successfully:", data);
+    // Parent component ko batao (OrderDetails.jsx)
+    if (onCancel) {
+      onCancel(data);
+    }
+  };
+
   return (
     <div className="space-y-6">
-     
-
       {/* Products List Section */}
       <div className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between px-2 sm:px-0">
-          <h3 className="font-semibold text-gray-900 dark:text-white text-base sm:text-lg">
+          <h3 className="font-semibold text-foreground text-base sm:text-lg">
             Order Items
           </h3>
-          <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
+          <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
             {items.length} {items.length === 1 ? "item" : "items"}
           </span>
         </div>
@@ -113,7 +120,7 @@ const OrderData = ({
           {items.map((item, idx) => (
             <ProductItem 
               key={item.productId || idx} 
-              item={item} // Pass item directly (not product)
+              item={item}
             />
           ))}
         </div>
@@ -131,16 +138,17 @@ const OrderData = ({
         setShowBreakdown={setShowBreakdown}
       />
 
-      {/* Order Actions Section */}
+      {/* Order Actions Section - ✅ FIXED: orderId and onCancelSuccess PASS KARO! */}
       <OrderActions
+        orderId={id}                    // ✅ ORDER ID PASS KARO!
         status={status}
         loading={loading}
         showActions={showActions}
         setShowActions={setShowActions}
         handleTrackOrder={handleTrackOrder}
-        handleCancelClick={handleCancelClick}
         handleDownloadInvoice={handleDownloadInvoice}
         handleReturnOrder={handleReturnOrder}
+        onCancelSuccess={handleCancelSuccess}  // ✅ CANCEL SUCCESS CALLBACK!
       />
 
       {/* Tracking Section */}
