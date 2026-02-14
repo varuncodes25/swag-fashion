@@ -23,6 +23,7 @@ const Signup = () => {
     signupLoading, 
     signupError, 
     signupSuccess,
+    fieldErrors,        // ✅ Field-specific errors from backend
     message,
     isAuthenticated 
   } = useSelector((state) => state.auth);
@@ -37,8 +38,11 @@ const Signup = () => {
   
   const [showPassword, setShowPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [localErrors, setLocalErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
+
+  // ✅ Combine local and backend errors
+  const errors = { ...localErrors, ...fieldErrors };
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -47,11 +51,11 @@ const Signup = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Handle password strength
+  // Handle password strength - ✅ Updated to 8 characters
   useEffect(() => {
     if (formData.password) {
       let strength = 0;
-      if (formData.password.length >= 6) strength += 25;
+      if (formData.password.length >= 8) strength += 25;      // Changed from 6 to 8
       if (/[A-Z]/.test(formData.password)) strength += 25;
       if (/[0-9]/.test(formData.password)) strength += 25;
       if (/[^A-Za-z0-9]/.test(formData.password)) strength += 25;
@@ -79,26 +83,45 @@ const Signup = () => {
     }
   }, [signupSuccess, message, navigate, dispatch, toast]);
 
-  // Handle signup error
+  // Handle signup error - ✅ Show field errors in toast
   useEffect(() => {
     if (signupError) {
       toast({
         title: "Registration Failed",
         description: signupError,
         variant: "destructive",
-        icon: <AlertCircle className="h-5 w-5" />,
       });
     }
   }, [signupError, toast]);
 
+  // ✅ Show validation errors toast
+ useEffect(() => {
+  if (fieldErrors && fieldErrors.length > 0) {
+    console.log("🔥 fieldErrors:", fieldErrors);
+    
+    // ✅ Array of objects se messages nikaalo
+    const errorMessages = fieldErrors
+      .map(err => err.message)  // Sirf message nikaalo
+      .join(". ");              // String me convert karo
+    
+    console.log("✅ errorMessages:", errorMessages);
+    
+    toast({
+      title: "Registration Failed",
+      description: errorMessages,
+      variant: "destructive",
+    });
+  }
+}, [fieldErrors, toast]);
+  // ✅ Validate form - Updated to match backend
   const validateForm = () => {
     const newErrors = {};
     
     // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name is required";
-    } else if (formData.name.trim().length < 3) {
-      newErrors.name = "Name must be at least 3 characters";
+    } else if (formData.name.trim().length < 2) {  // Changed from 3 to 2
+      newErrors.name = "Name must be at least 2 characters";
     }
     
     // Email validation
@@ -109,53 +132,68 @@ const Signup = () => {
       newErrors.email = "Please enter a valid email address";
     }
     
-    // Phone validation
-    const phoneRegex = /^[0-9]{10,15}$/;
+    // ✅ Phone validation - Match with backend (Indian format)
+    const phoneRegex = /^[6-9]\d{9}$/;  // Indian mobile number
     if (!formData.phone.trim()) {
       newErrors.phone = "Phone number is required";
     } else if (!phoneRegex.test(formData.phone.trim())) {
-      newErrors.phone = "Enter a valid phone number (10-15 digits)";
+      newErrors.phone = "Please enter a valid 10-digit Indian mobile number (starting with 6-9)";
     }
     
-    // Password validation
+    // ✅ Password validation - Match with backend (8 characters)
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.trim().length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    } else if (passwordStrength < 50) {
-      newErrors.password = "Password is too weak. Include uppercase, numbers, and symbols";
+    } else if (formData.password.trim().length < 8) {  // Changed from 6 to 8
+      newErrors.password = "Password must be at least 8 characters";
     }
+    // Optional: Add password strength check
+    // else if (passwordStrength < 50) {
+    //   newErrors.password = "Password is too weak. Include uppercase, numbers, and symbols";
+    // }
     
     // Terms validation
     if (!acceptedTerms) {
       newErrors.terms = "You must accept the terms and conditions";
     }
     
-    setErrors(newErrors);
+    setLocalErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Clear previous field errors
+    dispatch(clearSignupState());
+    
     if (validateForm()) {
-      dispatch(signupUser(formData));
+      // ✅ Clean phone number (remove non-digits)
+      const cleanedData = {
+        ...formData,
+        phone: formData.phone.replace(/\D/g, '')
+      };
+      dispatch(signupUser(cleanedData));
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // ✅ Clean phone input
+    let processedValue = value;
+    if (name === 'phone') {
+      processedValue = value.replace(/\D/g, ''); // Only digits
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
     
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ""
-      }));
+    // Clear errors for this field
+    if (localErrors[name] || fieldErrors[name]) {
+      setLocalErrors(prev => ({ ...prev, [name]: "" }));
+      // Note: fieldErrors will be cleared by Redux on next submission
     }
   };
 
@@ -274,7 +312,7 @@ const Signup = () => {
               )}
             </div>
 
-            {/* Phone Input */}
+            {/* Phone Input - Updated placeholder */}
             <div className="space-y-3">
               <label className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center gap-2">
                 <Phone className="h-4 w-4" />
@@ -282,11 +320,12 @@ const Signup = () => {
               </label>
               <div className="relative group">
                 <Input
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="9876543210"  // Changed to Indian format
                   type="tel"
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
+                  maxLength={10}  // Added maxlength
                   disabled={signupLoading || signupSuccess}
                   className={`pl-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.phone ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
                 />
@@ -357,7 +396,7 @@ const Signup = () => {
               ) : (
                 <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
                   <Shield className="h-3 w-3" />
-                  Use at least 6 characters with uppercase, numbers, and symbols
+                  Use at least 8 characters with uppercase, numbers, and symbols  {/* Changed from 6 to 8 */}
                 </p>
               )}
             </div>
@@ -371,7 +410,7 @@ const Signup = () => {
                   onCheckedChange={(checked) => {
                     setAcceptedTerms(checked);
                     if (errors.terms) {
-                      setErrors(prev => ({ ...prev, terms: "" }));
+                      setLocalErrors(prev => ({ ...prev, terms: "" }));
                     }
                   }}
                   disabled={signupLoading || signupSuccess}
@@ -464,7 +503,7 @@ const Signup = () => {
         </div>
       </div>
 
-      {/* Add custom animations to global CSS or define inline styles */}
+      {/* Add custom animations */}
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) rotate(0deg); }

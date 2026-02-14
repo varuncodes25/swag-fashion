@@ -3,7 +3,7 @@
 import * as React from "react"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 3000  // 5 seconds
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -55,8 +55,6 @@ export const reducer = (state, action) => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -69,41 +67,41 @@ export const reducer = (state, action) => {
         ...state,
         toasts: state.toasts.map((t) =>
           t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t),
+            ? { ...t, open: false }
+            : t
+        ),
       };
     }
+    
     case "REMOVE_TOAST":
       if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-        }
+        return { ...state, toasts: [] }
       }
       return {
         ...state,
         toasts: state.toasts.filter((t) => t.id !== action.toastId),
       };
+      
+    default:
+      return state;
   }
 }
 
 const listeners = []
-
 let memoryState = { toasts: [] }
 
 function dispatch(action) {
   memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
-    listener(memoryState)
-  })
+  listeners.forEach((listener) => listener(memoryState))
 }
 
-function toast({
-  ...props
-}) {
+// 🎨 Main Toast Function with Auto Dismiss
+function toast(props = {}) {
+  const { 
+    duration = TOAST_REMOVE_DELAY,  // Default 5 seconds
+    ...rest 
+  } = props
+  
   const id = genId()
 
   const update = (props) =>
@@ -111,12 +109,20 @@ function toast({
       type: "UPDATE_TOAST",
       toast: { ...props, id },
     })
+    
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
+
+  // ✅ Auto dismiss after duration
+  if (duration > 0) {
+    setTimeout(() => {
+      dismiss()
+    }, duration)
+  }
 
   dispatch({
     type: "ADD_TOAST",
     toast: {
-      ...props,
+      ...rest,
       id,
       open: true,
       onOpenChange: (open) => {
@@ -125,11 +131,7 @@ function toast({
     },
   })
 
-  return {
-    id: id,
-    dismiss,
-    update,
-  }
+  return { id, dismiss, update }
 }
 
 function useToast() {
@@ -139,10 +141,8 @@ function useToast() {
     listeners.push(setState)
     return () => {
       const index = listeners.indexOf(setState)
-      if (index > -1) {
-        listeners.splice(index, 1)
-      }
-    };
+      if (index > -1) listeners.splice(index, 1)
+    }
   }, [state])
 
   return {

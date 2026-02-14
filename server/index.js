@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const { readdirSync } = require("fs");
 const { connectDb } = require("./db/connection");
+const { notFound, errorHandler } = require("./middlewares/error.middleware");
 
 dotenv.config();
 const app = express();
@@ -47,10 +48,10 @@ readdirSync("./routes").forEach((route) => {
 });
 
 // Catch-all 404
-app.use((req, res) => {
-  res.status(404).send({ message: "Route not found" });
-});
+app.use(notFound);
 
+// ✅ Error Handler (last middleware)
+app.use(errorHandler);
 // Start server
 app.listen(port, () => {
   console.log(`🚀 Server running on PORT: ${port}`);

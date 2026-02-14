@@ -334,7 +334,7 @@ const Analytics = () => {
                 <CardTitle>Revenue & Orders Trend</CardTitle>
               </CardHeader>
               <CardContent className="h-[400px]">
-                <ComboSalesChart data={charts?.monthlyRevenue || []} />
+                <ComboSalesChart data={metrics || []} />
               </CardContent>
             </Card>
 
@@ -344,7 +344,7 @@ const Analytics = () => {
                 <CardTitle>Monthly Performance</CardTitle>
               </CardHeader>
               <CardContent className="h-[350px]">
-                <LineSalesChart data={charts?.monthlyRevenue || []} />
+                <LineSalesChart data={metrics || []} />
               </CardContent>
             </Card>
 
@@ -357,7 +357,7 @@ const Analytics = () => {
                   <CardTitle>Sales by Category</CardTitle>
                 </CardHeader>
                 <CardContent className="h-[350px]">
-                  <CategoryPieChart data={charts?.categorySales || {}} />
+                  <CategoryPieChart data={metrics || {}} />
                 </CardContent>
               </Card>
 

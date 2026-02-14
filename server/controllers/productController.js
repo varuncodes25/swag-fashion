@@ -160,7 +160,6 @@ const createProduct = async (req, res) => {
 
     // ============ IMPORTANT FIX: Parse color-image mapping ============
     let colorImageMapping = {};
-    console.log("🔄 Original colorImageMap received:", colorImageMap);
     
     if (colorImageMap) {
       try {
@@ -169,7 +168,6 @@ const createProduct = async (req, res) => {
             ? JSON.parse(colorImageMap)
             : colorImageMap;
         
-        console.log("✅ Parsed colorImageMapping:", JSON.stringify(colorImageMapping, null, 2));
         
       } catch (error) {
         console.warn("❌ Invalid colorImageMap format:", error);
@@ -217,7 +215,6 @@ const createProduct = async (req, res) => {
 
     // Upload images to Cloudinary
     const uploadedImages = [];
-    console.log(`📤 Uploading ${req.files.length} images to Cloudinary...`);
     
     for (let i = 0; i < req.files.length; i++) {
       const file = req.files[i];
@@ -243,19 +240,15 @@ const createProduct = async (req, res) => {
         sortOrder: i,
       });
       
-      console.log(`✅ Uploaded image ${i}: ${result.secure_url.substring(0, 50)}...`);
     }
 
     // ============ CRITICAL FIX: Create allImages array with correct color assignment ============
     const allImages = [];
     
-    console.log("🎨 Available colors:", colorsArray);
-    console.log("🖼️ Total uploaded images:", uploadedImages.length);
-    console.log("🔗 colorImageMapping keys:", Object.keys(colorImageMapping));
-
+    
     // Check if we have valid color-image mapping
     if (Object.keys(colorImageMapping).length > 0) {
-      console.log("📊 Processing with color-image mapping...");
+    
       
       // Create a reverse mapping: image index -> color
       const imageIndexToColorMap = {};
@@ -265,9 +258,8 @@ const createProduct = async (req, res) => {
           indices.forEach(imgIndex => {
             if (imgIndex >= 0 && imgIndex < uploadedImages.length) {
               imageIndexToColorMap[imgIndex] = colorName;
-              console.log(`📍 Image ${imgIndex} -> Color: ${colorName}`);
+
             } else {
-              console.warn(`⚠️ Invalid image index ${imgIndex} for color ${colorName}`);
             }
           });
         }
@@ -287,7 +279,7 @@ const createProduct = async (req, res) => {
             colorCode: colorCode,
           });
           
-          console.log(`✅ Image ${imageIndex} assigned to ${colorName}`);
+
         } else {
           // Fallback: assign to first color
           const firstColor = colorsArray[0];
@@ -299,12 +291,10 @@ const createProduct = async (req, res) => {
             colorCode: firstColorCode,
           });
           
-          console.warn(`⚠️ Image ${imageIndex} has no color mapping, assigned to ${firstColor}`);
         }
       });
     } else {
       // Fallback: All images belong to first color
-      console.warn("⚠️ No color-image mapping, using fallback (all images to first color)");
       
       const firstColor = colorsArray[0];
       const firstColorCode = colorCodesArray[0] || getColorCode(firstColor);
@@ -323,11 +313,10 @@ const createProduct = async (req, res) => {
     const colorsWithoutImages = colorsArray.filter(color => !colorsWithImages.includes(color));
     
     if (colorsWithoutImages.length > 0) {
-      console.warn("🚨 Colors without images:", colorsWithoutImages);
       // You might want to return error here or assign default images
     }
 
-    console.log("📸 Final image assignment:");
+
     allImages.forEach((img, idx) => {
       console.log(`  ${idx}: ${img.color} ${img.isMain ? '⭐' : ''}`);
     });
@@ -458,7 +447,7 @@ const createProduct = async (req, res) => {
 
 // ==================== GET ALL PRODUCTS ====================
 const getProducts = async (req, res) => {
-  console.log("🔄 Fetching products...");
+
   try {
     let { page, limit, category, price, search, sort } = req.query;
 
@@ -492,24 +481,19 @@ const getProducts = async (req, res) => {
       .limit(limit);
     // ❌ REMOVE: .lean() - We need Mongoose documents for methods
 
-    console.log(`📊 Found ${products.length} products`);
-
-    // ✅ USE THE EXISTING METHOD: getProductCardData()
+   
     const enhancedProducts = products.map((product) => {
-      console.log(`Processing: ${product.name}`);
-      console.log("Using getProductCardData() method");
-
+     
       // ✅ This returns ALL card data including image
       const cardData = product.getProductCardData();
 
-      console.log("Card data image:", cardData.image?.url);
+    
 
       return cardData;
     });
 
     const totalPages = Math.ceil(totalProducts / limit);
 
-    console.log(`✅ Returning ${enhancedProducts.length} products`);
 
     return res.status(200).json({
       success: true,
@@ -743,7 +727,7 @@ const deleteProduct = async (req, res) => {
 
 // ==================== GET PRODUCT BY NAME ====================
 const getProductByName = async (req, res) => {
-  console.log("iiiiii");
+
   const { name } = req.params;
   console.log(name);
   try {

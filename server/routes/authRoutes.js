@@ -1,24 +1,25 @@
 const {
   signup,
   login,
-  adminSignup,
-  adminLogin,
-  resetPasword,
+  // adminSignup,
+  // adminLogin,
+  // resetPasword,
   forgotPassword,
 } = require("../controllers/authController");
+const decryptRequest = require("../utils/decryptResponse");
 const router = require("express").Router();
 
-router.post("/signup", signup);
+router.post("/signup",decryptRequest, signup);
 
-router.post("/login", login);
+router.post("/login",decryptRequest, login);
 
 router.post("/forgot-password", forgotPassword);
 
-router.post("/reset-password/:token", resetPasword);
+// router.post("/reset-password/:token", resetPasword);
 
 
-router.post("/admin-signup", adminSignup);
+// router.post("/admin-signup", adminSignup);
 
-router.post("/admin-login", adminLogin);
+// router.post("/admin-login", adminLogin);
 
 module.exports = router;
