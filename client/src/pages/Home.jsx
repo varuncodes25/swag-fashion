@@ -1,5 +1,5 @@
 import FilterMenu from "@/components/custom/FilterMenu";
-import Banner from "@/components/custom/Banner";
+import Banner from "@/components/custom/banner";
 import ProductList from "@/components/custom/ProductList";
 import HomeCollections from "@/components/Home/HomeCollection";
 
