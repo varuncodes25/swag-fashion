@@ -15,10 +15,10 @@ export const signupUser = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Registration failed",
-        errors: errorData.errors || {}  // Field-specific errors
+        errors: errorData.errors || {}, // Field-specific errors
       });
     }
-  }
+  },
 );
 
 // 2. LOGIN - FIXED
@@ -33,10 +33,10 @@ export const loginUser = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Login failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 3. VERIFY EMAIL - FIXED
@@ -50,10 +50,10 @@ export const verifyEmail = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Email verification failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 4. REFRESH TOKEN - FIXED
@@ -68,10 +68,10 @@ export const refreshToken = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Token refresh failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 5. LOGOUT - FIXED
@@ -87,16 +87,16 @@ export const logoutUser = createAsyncThunk(
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
-      
+
       // Clear localStorage
       localStorage.removeItem("role");
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("deviceId");
-      
+
       return response.data;
     } catch (error) {
       // Still clear localStorage even if API fails
@@ -104,14 +104,14 @@ export const logoutUser = createAsyncThunk(
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       localStorage.removeItem("refreshToken");
-      
+
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || error.message || "Logout failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 6. FORGOT PASSWORD - FIXED
@@ -125,10 +125,10 @@ export const forgotPassword = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Failed to send reset email",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 7. RESET PASSWORD - FIXED
@@ -136,16 +136,18 @@ export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
   async ({ token, password }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post(`/reset-password/${token}`, { password });
+      const response = await apiClient.post(`/reset-password/${token}`, {
+        password,
+      });
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Password reset failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 8. CHANGE PASSWORD - FIXED
@@ -154,24 +156,20 @@ export const changePassword = createAsyncThunk(
   async (passwordData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await apiClient.put(
-        "/change-password",
-        passwordData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await apiClient.put("/change-password", passwordData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Password change failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 9. GET PROFILE - FIXED
@@ -190,10 +188,10 @@ export const getProfile = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Failed to fetch profile",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 10. UPDATE PROFILE - FIXED
@@ -212,10 +210,10 @@ export const updateProfile = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Profile update failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 11. TOGGLE WISHLIST - FIXED
@@ -224,20 +222,24 @@ export const toggleWishlist = createAsyncThunk(
   async (productId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await apiClient.post(`/wishlist/${productId}`, {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await apiClient.post(
+        `/wishlist/${productId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Failed to update wishlist",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 12. GET SESSIONS - FIXED
@@ -256,10 +258,10 @@ export const getSessions = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Failed to fetch sessions",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 13. REQUEST OTP - FIXED
@@ -275,17 +277,17 @@ export const requestOTP = createAsyncThunk(
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Failed to send OTP",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 14. VERIFY OTP - FIXED
@@ -301,17 +303,17 @@ export const verifyOTP = createAsyncThunk(
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "OTP verification failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // ============ ADMIN THUNKS ============
@@ -327,10 +329,10 @@ export const adminSignup = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Admin signup failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 16. ADMIN LOGIN - FIXED
@@ -344,10 +346,10 @@ export const adminLogin = createAsyncThunk(
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Admin login failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 17. ADMIN REFRESH TOKEN - FIXED
@@ -356,16 +358,18 @@ export const adminRefreshToken = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const refreshToken = localStorage.getItem("adminRefreshToken");
-      const response = await apiClient.post("/admin/refresh-token", { refreshToken });
+      const response = await apiClient.post("/admin/refresh-token", {
+        refreshToken,
+      });
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || "Admin token refresh failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // 18. ADMIN LOGOUT - FIXED
@@ -381,28 +385,28 @@ export const adminLogout = createAsyncThunk(
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
-      
+
       localStorage.removeItem("adminRole");
       localStorage.removeItem("adminUser");
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminRefreshToken");
-      
+
       return response.data;
     } catch (error) {
       localStorage.removeItem("adminRole");
       localStorage.removeItem("adminUser");
       localStorage.removeItem("adminToken");
       localStorage.removeItem("adminRefreshToken");
-      
+
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || error.message || "Admin logout failed",
-        errors: errorData.errors || {}
+        errors: errorData.errors || {},
       });
     }
-  }
+  },
 );
 
 // ============ SLICE INITIAL STATE ============
@@ -414,75 +418,75 @@ const initialState = {
   token: localStorage.getItem("token") || "",
   refreshToken: localStorage.getItem("refreshToken") || "",
   isAuthenticated: !!localStorage.getItem("token"),
-  
+
   // Admin auth state
   adminRole: localStorage.getItem("adminRole") || "",
   adminUser: JSON.parse(localStorage.getItem("adminUser")) || null,
   adminToken: localStorage.getItem("adminToken") || "",
   adminRefreshToken: localStorage.getItem("adminRefreshToken") || "",
   isAdminAuthenticated: !!localStorage.getItem("adminToken"),
-  
+
   // Profile data
   profile: null,
   sessions: [],
   wishlist: [],
-  
+
   // Loading states
   loading: false,
   error: null,
   message: "",
   success: false,
-  
+
   // ✅ NEW: Field-specific errors
   fieldErrors: {},
-  
+
   // Auth specific loading states
   signupLoading: false,
   signupError: null,
   signupSuccess: false,
-  
+
   loginLoading: false,
   loginError: null,
-  
+
   adminSignupLoading: false,
   adminSignupError: null,
-  
+
   adminLoginLoading: false,
   adminLoginError: null,
-  
+
   // Password states
   forgotPasswordLoading: false,
   forgotPasswordSuccess: false,
   forgotPasswordError: null,
-  
+
   resetPasswordLoading: false,
   resetPasswordSuccess: false,
   resetPasswordError: null,
-  
+
   changePasswordLoading: false,
   changePasswordError: null,
   changePasswordSuccess: false,
-  
+
   // OTP states
   otpLoading: false,
   otpSent: false,
   otpVerified: false,
   otpError: null,
-  
+
   // Profile states
   profileLoading: false,
   profileError: null,
   profileUpdateLoading: false,
   profileUpdateSuccess: false,
-  
+
   // Wishlist states
   wishlistLoading: false,
   wishlistError: null,
-  
+
   // Sessions states
   sessionsLoading: false,
   sessionsError: null,
-  
+
   // Email verification
   emailVerified: false,
   emailVerificationLoading: false,
@@ -494,37 +498,77 @@ const initialState = {
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  
+
   reducers: {
     // Manual login setter
     setUserLogin: (state, action) => {
-      state.role = action.payload.user?.role || "";
-      state.user = action.payload.user || null;
-      state.token = action.payload.token || "";
-      state.refreshToken = action.payload.refreshToken || "";
+      console.log("📦 User login payload:", action.payload);
+
+      // ✅ Handle both { data: {...} } and direct {...}
+      const payload = action.payload.data || action.payload;
+      const userData = payload.user || {};
+
+      console.log("📦 Extracted user data:", userData);
+      console.log("📦 Extracted token:", payload.token);
+
+      // ✅ Set state correctly
+      state.role = userData.role || "";
+      state.user = userData;
+      state.token = payload.token || "";
+      state.refreshToken = payload.refreshToken || "";
       state.isAuthenticated = true;
 
-      localStorage.setItem("role", state.role);
-      localStorage.setItem("user", JSON.stringify(state.user));
-      localStorage.setItem("token", state.token);
-      if (state.refreshToken) {
-        localStorage.setItem("refreshToken", state.refreshToken);
+      // ✅ Save to localStorage
+      try {
+        localStorage.setItem("role", state.role);
+        localStorage.setItem("user", JSON.stringify(state.user));
+        localStorage.setItem("token", state.token);
+        if (state.refreshToken) {
+          localStorage.setItem("refreshToken", state.refreshToken);
+        }
+
+        console.log("✅ User login successful:", {
+          role: state.role,
+          user: state.user?.email || state.user?.name,
+          token: state.token ? "Present" : "Missing",
+        });
+      } catch (error) {
+        console.error("❌ Error saving to localStorage:", error);
       }
     },
-
-    // Manual admin login setter
     setAdminLogin: (state, action) => {
-      state.adminRole = action.payload.admin?.role || "";
-      state.adminUser = action.payload.admin || null;
-      state.adminToken = action.payload.token || "";
-      state.adminRefreshToken = action.payload.refreshToken || "";
-      state.isAdminAuthenticated = true;
+      console.log("📦 User login payload:", action.payload);
 
-      localStorage.setItem("adminRole", state.adminRole);
-      localStorage.setItem("adminUser", JSON.stringify(state.adminUser));
-      localStorage.setItem("adminToken", state.adminToken);
-      if (state.adminRefreshToken) {
-        localStorage.setItem("adminRefreshToken", state.adminRefreshToken);
+      // ✅ Handle both { data: {...} } and direct {...}
+      const payload = action.payload.data || action.payload;
+      const userData = payload.user || {};
+
+      console.log("📦 Extracted user data:", userData);
+      console.log("📦 Extracted token:", payload.token);
+
+      // ✅ Set state correctly
+      state.role = userData.role || "";
+      state.user = userData;
+      state.token = payload.token || "";
+      state.refreshToken = payload.refreshToken || "";
+      state.isAuthenticated = true;
+
+      // ✅ Save to localStorage
+      try {
+        localStorage.setItem("role", state.role);
+        localStorage.setItem("user", JSON.stringify(state.user));
+        localStorage.setItem("token", state.token);
+        if (state.refreshToken) {
+          localStorage.setItem("refreshToken", state.refreshToken);
+        }
+
+        console.log("✅ User login successful:", {
+          role: state.role,
+          user: state.user?.email || state.user?.name,
+          token: state.token ? "Present" : "Missing",
+        });
+      } catch (error) {
+        console.error("❌ Error saving to localStorage:", error);
       }
     },
 
@@ -694,7 +738,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loginLoading = false;
-        console.log(action.payload,"gggg")
+        console.log(action.payload, "gggg");
         state.loginError = action.payload?.message || "Login failed";
         state.fieldErrors = action.payload?.errors || {};
         state.loading = false;
@@ -711,9 +755,10 @@ const authSlice = createSlice({
       .addCase(verifyEmail.fulfilled, (state, action) => {
         state.emailVerificationLoading = false;
         state.emailVerified = true;
-        state.message = action.payload.message || "Email verified successfully!";
+        state.message =
+          action.payload.message || "Email verified successfully!";
         state.fieldErrors = {};
-        
+
         if (state.user) {
           state.user.isEmailVerified = true;
           localStorage.setItem("user", JSON.stringify(state.user));
@@ -721,7 +766,8 @@ const authSlice = createSlice({
       })
       .addCase(verifyEmail.rejected, (state, action) => {
         state.emailVerificationLoading = false;
-        state.emailVerificationError = action.payload?.message || "Email verification failed";
+        state.emailVerificationError =
+          action.payload?.message || "Email verification failed";
         state.fieldErrors = action.payload?.errors || {};
         state.emailVerified = false;
         state.error = action.payload?.message;
@@ -787,7 +833,8 @@ const authSlice = createSlice({
       })
       .addCase(forgotPassword.rejected, (state, action) => {
         state.forgotPasswordLoading = false;
-        state.forgotPasswordError = action.payload?.message || "Failed to send reset email";
+        state.forgotPasswordError =
+          action.payload?.message || "Failed to send reset email";
         state.fieldErrors = action.payload?.errors || {};
         state.error = action.payload?.message;
       })
@@ -802,12 +849,14 @@ const authSlice = createSlice({
       .addCase(resetPassword.fulfilled, (state, action) => {
         state.resetPasswordLoading = false;
         state.resetPasswordSuccess = true;
-        state.message = action.payload.message || "Password reset successfully!";
+        state.message =
+          action.payload.message || "Password reset successfully!";
         state.fieldErrors = {};
       })
       .addCase(resetPassword.rejected, (state, action) => {
         state.resetPasswordLoading = false;
-        state.resetPasswordError = action.payload?.message || "Password reset failed";
+        state.resetPasswordError =
+          action.payload?.message || "Password reset failed";
         state.fieldErrors = action.payload?.errors || {};
         state.error = action.payload?.message;
       })
@@ -824,12 +873,14 @@ const authSlice = createSlice({
         state.changePasswordLoading = false;
         state.changePasswordSuccess = true;
         state.loading = false;
-        state.message = action.payload.message || "Password updated successfully";
+        state.message =
+          action.payload.message || "Password updated successfully";
         state.fieldErrors = {};
       })
       .addCase(changePassword.rejected, (state, action) => {
         state.changePasswordLoading = false;
-        state.changePasswordError = action.payload?.message || "Password change failed";
+        state.changePasswordError =
+          action.payload?.message || "Password change failed";
         state.fieldErrors = action.payload?.errors || {};
         state.loading = false;
         state.error = action.payload?.message;
@@ -847,7 +898,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.profile = action.payload.data || action.payload;
         state.fieldErrors = {};
-        
+
         if (action.payload.data?.user) {
           state.user = { ...state.user, ...action.payload.data.user };
           localStorage.setItem("user", JSON.stringify(state.user));
@@ -855,7 +906,8 @@ const authSlice = createSlice({
       })
       .addCase(getProfile.rejected, (state, action) => {
         state.profileLoading = false;
-        state.profileError = action.payload?.message || "Failed to fetch profile";
+        state.profileError =
+          action.payload?.message || "Failed to fetch profile";
         state.fieldErrors = action.payload?.errors || {};
         state.loading = false;
       })
@@ -871,9 +923,10 @@ const authSlice = createSlice({
         state.profileUpdateLoading = false;
         state.profileUpdateSuccess = true;
         state.loading = false;
-        state.message = action.payload.message || "Profile updated successfully";
+        state.message =
+          action.payload.message || "Profile updated successfully";
         state.fieldErrors = {};
-        
+
         if (action.payload.data?.user) {
           state.user = { ...state.user, ...action.payload.data.user };
           localStorage.setItem("user", JSON.stringify(state.user));
@@ -898,13 +951,15 @@ const authSlice = createSlice({
       })
       .addCase(toggleWishlist.fulfilled, (state, action) => {
         state.wishlistLoading = false;
-        state.wishlist = action.payload.data?.wishlist || action.payload.wishlist || [];
+        state.wishlist =
+          action.payload.data?.wishlist || action.payload.wishlist || [];
         state.message = action.payload.message || "Wishlist updated";
         state.fieldErrors = {};
       })
       .addCase(toggleWishlist.rejected, (state, action) => {
         state.wishlistLoading = false;
-        state.wishlistError = action.payload?.message || "Failed to update wishlist";
+        state.wishlistError =
+          action.payload?.message || "Failed to update wishlist";
         state.fieldErrors = action.payload?.errors || {};
         state.error = action.payload?.message;
       })
@@ -917,12 +972,17 @@ const authSlice = createSlice({
       })
       .addCase(getSessions.fulfilled, (state, action) => {
         state.sessionsLoading = false;
-        state.sessions = action.payload.data?.sessions || action.payload.sessions || action.payload || [];
+        state.sessions =
+          action.payload.data?.sessions ||
+          action.payload.sessions ||
+          action.payload ||
+          [];
         state.fieldErrors = {};
       })
       .addCase(getSessions.rejected, (state, action) => {
         state.sessionsLoading = false;
-        state.sessionsError = action.payload?.message || "Failed to fetch sessions";
+        state.sessionsError =
+          action.payload?.message || "Failed to fetch sessions";
         state.fieldErrors = action.payload?.errors || {};
         state.error = action.payload?.message;
       })
@@ -981,7 +1041,8 @@ const authSlice = createSlice({
       })
       .addCase(adminSignup.rejected, (state, action) => {
         state.adminSignupLoading = false;
-        state.adminSignupError = action.payload?.message || "Admin signup failed";
+        state.adminSignupError =
+          action.payload?.message || "Admin signup failed";
         state.fieldErrors = action.payload?.errors || {};
         state.error = action.payload?.message;
       })

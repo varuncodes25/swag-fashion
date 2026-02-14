@@ -1,7 +1,8 @@
+import apiClient from "@/api/axiosConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { setUserLogin } from "@/redux/slices/authSlice";
+import { setAdminLogin, setUserLogin } from "@/redux/slices/authSlice";
 import axios from "axios";
 import React from "react";
 import { useDispatch } from "react-redux";
@@ -25,11 +26,11 @@ const AdminLogin = () => {
     }
 
     try {
-      const res = await axios.post(
-        import.meta.env.VITE_API_URL + "/admin-login",
-        { username, password }
-      );
-      const data = await res.data;
+       const response = await apiClient.post("/admin-login", { 
+        username, 
+        password 
+      });
+      const data = await response.data;
       dispatch(setUserLogin(data));
       toast({
         title: data.message,

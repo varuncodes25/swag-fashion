@@ -1,15 +1,11 @@
 import {
-  Calendar,
-  ChartBar,
   FilePlus2Icon,
   GalleryVerticalEnd,
-  Home,
-  Inbox,
   PackageSearch,
-  Search,
-  Settings,
+  ChartBar,
   CircleX,
-  
+  Settings,
+  LogOut,
 } from "lucide-react";
 
 import {
@@ -17,17 +13,15 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarHeader,
 } from "@/components/ui/sidebar";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useDispatch } from "react-redux";
-import { setUserLogout } from "@/redux/slices/authSlice";
+import { setAdminLogout  } from "@/redux/slices/authSlice"; // ✅ Admin logout action
 
 // Menu items.
 const items = [
@@ -51,9 +45,9 @@ const items = [
     url: "/admin/dashboard/analytics",
     icon: ChartBar,
   },
-   {
+  {
     title: "Delete Product",
-    url: "/admin/dashboard/Delete-product",
+    url: "/admin/dashboard/delete-product",
     icon: CircleX,
   },
   {
@@ -61,18 +55,24 @@ const items = [
     url: "/admin/dashboard/settings",
     icon: Settings,
   },
- 
 ];
 
 const AppSidebar = () => {
   const { pathname } = useLocation();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(setAdminLogout()); // ✅ Admin logout
+    navigate("/admin/login");
+  };
 
   return (
     <Sidebar>
       <SidebarHeader>
-        <h3 className="text-xl font-bold">Dashboard</h3>
+        <h3 className="text-xl font-bold px-4 py-2">Admin Dashboard</h3>
       </SidebarHeader>
+      
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
@@ -81,7 +81,9 @@ const AppSidebar = () => {
                 <SidebarMenuButton
                   asChild
                   className={`${
-                    pathname === item.url && "bg-zinc-200 dark:bg-zinc-600"
+                    pathname === item.url 
+                      ? "bg-zinc-200 dark:bg-zinc-600 text-primary" 
+                      : ""
                   }`}
                 >
                   <Link to={item.url}>
@@ -94,8 +96,16 @@ const AppSidebar = () => {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
-        <Button onClick={() => dispatch(setUserLogout())}>Logout</Button>
+      
+      <SidebarFooter className="p-4">
+        <Button 
+          onClick={handleLogout}
+          variant="destructive"
+          className="w-full gap-2"
+        >
+          <LogOut size={16} />
+          Logout
+        </Button>
       </SidebarFooter>
     </Sidebar>
   );
