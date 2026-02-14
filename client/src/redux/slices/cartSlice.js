@@ -1,8 +1,8 @@
 // redux/slices/cartSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../api/axiosConfig";  // ✅ Import apiClient
 
-// ✅ Initial State
+// ✅ Initial State - ADD isCartOpen
 const initialState = {
   items: [],
   cartItems: [],
@@ -13,10 +13,14 @@ const initialState = {
   totalQuantity: 0,
   totalPrice: 0,
   totalDiscount: 0,
-  lastUpdated: null
+  lastUpdated: null,
+  isCartOpen: false,  // ✅ ADD THIS - Cart open/close state
+  previousItems: [],  // For rollback
+  removedItem: null,  // For rollback
+  removedIndex: -1,   // For rollback
 };
 
-// ✅ Helper function to get auth headers
+// ✅ Helper function to get auth headers (apiClient already handles token)
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -42,17 +46,16 @@ const calculateTotals = (items) => {
   };
 };
 
-// ✅ FETCH CART
+// ✅ FETCH CART - Using apiClient
 export const fetchCart = createAsyncThunk(
   "cart/fetchCart",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/cart`,
-        getAuthHeaders()
-      );
+      // ✅ Use apiClient instead of axios
+      const response = await apiClient.get("/cart");
       
-      const cartData = response.data.cart;
+      // ✅ Response structure based on your apiClient
+      const cartData = response.data?.data || response.data?.cart || response.data;
       const items = cartData.items || [];
       
       return {
@@ -66,7 +69,7 @@ export const fetchCart = createAsyncThunk(
       };
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || error.response?.data?.message || "Failed to fetch cart"
+        error.response?.data?.message || error.message || "Failed to fetch cart"
       );
     }
   }
@@ -85,12 +88,12 @@ export const addToCart = createAsyncThunk(
     }));
     
     try {
-      // 🟡 STEP 2: API CALL - BACKGROUND MEIN
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/cart`,
-        { productId, variantId, quantity },
-        getAuthHeaders()
-      );
+      // 🟡 STEP 2: API CALL USING API CLIENT
+      const response = await apiClient.post("/cart", { 
+        productId, 
+        variantId, 
+        quantity 
+      });
       
       // 🟢 STEP 3: SERVER SE CONFIRMATION - FETCH LATEST CART
       dispatch(fetchCart());
@@ -113,17 +116,14 @@ export const addToCart = createAsyncThunk(
 // ✅ INCREASE QUANTITY - OPTIMISTIC
 export const increaseQuantity = createAsyncThunk(
   "cart/increaseQuantity",
-  async (itemId, { dispatch, rejectWithValue, getState }) => {
+  async (itemId, { dispatch, rejectWithValue }) => {
     
     // 🟢 PEHLE UI UPDATE
     dispatch(cartSlice.actions.optimisticIncreaseQuantity(itemId));
     
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/cart/increase/${itemId}`,
-        {},
-        getAuthHeaders()
-      );
+      // ✅ Use apiClient
+      const response = await apiClient.put(`/cart/increase/${itemId}`, {});
       
       dispatch(fetchCart());
       return { itemId, data: response.data };
@@ -139,17 +139,14 @@ export const increaseQuantity = createAsyncThunk(
 // ✅ DECREASE QUANTITY - OPTIMISTIC
 export const decreaseQuantity = createAsyncThunk(
   "cart/decreaseQuantity",
-  async (itemId, { dispatch, rejectWithValue, getState }) => {
+  async (itemId, { dispatch, rejectWithValue }) => {
     
     // 🟢 PEHLE UI UPDATE
     dispatch(cartSlice.actions.optimisticDecreaseQuantity(itemId));
     
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/cart/decrease/${itemId}`,
-        {},
-        getAuthHeaders()
-      );
+      // ✅ Use apiClient
+      const response = await apiClient.put(`/cart/decrease/${itemId}`, {});
       
       dispatch(fetchCart());
       return { itemId, data: response.data };
@@ -165,16 +162,14 @@ export const decreaseQuantity = createAsyncThunk(
 // ✅ REMOVE ITEM - OPTIMISTIC
 export const removeFromCart = createAsyncThunk(
   "cart/removeFromCart",
-  async (itemId, { dispatch, rejectWithValue, getState }) => {
+  async (itemId, { dispatch, rejectWithValue }) => {
     
     // 🟢 PEHLE UI UPDATE - ITEM HATAO INSTANTLY
     dispatch(cartSlice.actions.optimisticRemoveFromCart(itemId));
     
     try {
-      const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/cart/remove/${itemId}`,
-        getAuthHeaders()
-      );
+      // ✅ Use apiClient
+      const response = await apiClient.delete(`/cart/remove/${itemId}`);
       
       dispatch(fetchCart());
       return { itemId, data: response.data };
@@ -196,10 +191,8 @@ export const clearCart = createAsyncThunk(
     dispatch(cartSlice.actions.optimisticClearCart());
     
     try {
-      const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/cart/clear`,
-        getAuthHeaders()
-      );
+      // ✅ Use apiClient
+      const response = await apiClient.delete("/cart/clear");
       
       return response.data;
       
@@ -216,10 +209,8 @@ export const fetchCartCount = createAsyncThunk(
   "cart/fetchCartCount",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/cart/count`,
-        getAuthHeaders()
-      );
+      // ✅ Use apiClient
+      const response = await apiClient.get("/cart/count");
       return response.data;
     } catch (error) {
       return rejectWithValue("Failed to fetch cart count");
@@ -232,6 +223,24 @@ const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
+    
+    // ✅ OPEN CART - ADD THIS REDUCER
+    openCart: (state) => {
+      console.log("🔓 Opening cart...");
+      state.isCartOpen = true;
+    },
+    
+    // ✅ CLOSE CART - ADD THIS REDUCER
+    closeCart: (state) => {
+      console.log("🔒 Closing cart...");
+      state.isCartOpen = false;
+    },
+    
+    // ✅ TOGGLE CART - ADD THIS REDUCER
+    toggleCart: (state) => {
+      state.isCartOpen = !state.isCartOpen;
+      console.log("🔄 Toggling cart to:", state.isCartOpen);
+    },
     
     // 🟢 OPTIMISTIC ADD TO CART - INSTANT UI UPDATE
     optimisticAddToCart: (state, action) => {
@@ -473,6 +482,9 @@ const cartSlice = createSlice({
 
 // Export actions
 export const { 
+  openCart,           // ✅ ADD THIS
+  closeCart,          // ✅ ADD THIS
+  toggleCart,         // ✅ ADD THIS
   resetCart, 
   clearError,
   optimisticAddToCart,

@@ -1,8 +1,6 @@
 // redux/slices/checkoutSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const API = import.meta.env.VITE_API_URL;
+import apiClient from "../../api/axiosConfig";  // ✅ Import apiClient
 
 const authHeader = () => ({
   Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -18,7 +16,7 @@ export const initCheckout = createAsyncThunk(
   async (
     {
       productId,
-      variantId, // ✅ ADD THIS
+      variantId,
       qty,
       addressId,
       checkoutType = "PRODUCT",
@@ -28,11 +26,9 @@ export const initCheckout = createAsyncThunk(
     try {
       const params = new URLSearchParams();
 
-      // ✅ सभी cases handle करो
       if (checkoutType === "PRODUCT" && productId) {
         params.append("productId", productId);
 
-        // ✅ VARIANT ID ADD KARO (MOST IMPORTANT!)
         if (variantId) {
           params.append("variantId", variantId);
         } else {
@@ -42,36 +38,29 @@ export const initCheckout = createAsyncThunk(
         params.append("qty", qty || 1);
         params.append("addressId", addressId);
       } else if (checkoutType === "CART") {
-        // ✅ Cart checkout के लिए सिर्फ addressId और checkoutType भेजो
         params.append("checkoutType", "CART");
         params.append("addressId", addressId);
       }
 
-      // ✅ अगर addressId है तो हमेशा add करो
       if (addressId) {
         params.append("addressId", addressId);
       }
 
-      // ✅ DEBUG LOGS
       console.log("🔄 initCheckout API Call:", {
-        url: `${API}/checkout/init?${params.toString()}`,
+        url: `/checkout/init?${params.toString()}`,
         params: Object.fromEntries(params.entries()),
         hasVariantId: !!variantId,
       });
 
-      const res = await axios.get(`${API}/checkout/init?${params.toString()}`, {
-        headers: authHeader(),
-      });
+      // ✅ USE APICLIENT
+      const res = await apiClient.get(`/checkout/init?${params.toString()}`);
 
       return {
         ...res.data,
-        checkoutType, // ✅ Frontend को भी checkoutType return करो
+        checkoutType,
       };
     } catch (err) {
-      console.error(
-        "❌ initCheckout error:",
-        err.response?.data || err.message,
-      );
+      console.error("❌ initCheckout error:", err.response?.data || err.message);
       return rejectWithValue(
         err.response?.data?.message || "Checkout init failed",
       );
@@ -84,9 +73,8 @@ export const fetchAddresses = createAsyncThunk(
   "checkout/fetchAddresses",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API}/addresses`, {
-        headers: authHeader(),
-      });
+      // ✅ USE APICLIENT
+      const res = await apiClient.get("/addresses");
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -101,9 +89,8 @@ export const createAddress = createAsyncThunk(
   "checkout/createAddress",
   async (data, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API}/addresses`, data, {
-        headers: authHeader(),
-      });
+      // ✅ USE APICLIENT
+      const res = await apiClient.post("/addresses", data);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -118,9 +105,8 @@ export const updateAddress = createAsyncThunk(
   "checkout/updateAddress",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${API}/addresses/${id}`, data, {
-        headers: authHeader(),
-      });
+      // ✅ USE APICLIENT
+      const res = await apiClient.put(`/addresses/${id}`, data);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
@@ -135,9 +121,8 @@ export const deleteAddress = createAsyncThunk(
   "checkout/deleteAddress",
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API}/addresses/${id}`, {
-        headers: authHeader(),
-      });
+      // ✅ USE APICLIENT
+      await apiClient.delete(`/addresses/${id}`);
       return id;
     } catch (err) {
       return rejectWithValue(
@@ -161,10 +146,10 @@ export const applyCoupon = createAsyncThunk(
         params.append("qty", qty || 1);
       }
 
-      const res = await axios.post(
-        `${API}/coupons/apply?${params.toString()}`,
-        { code },
-        { headers: authHeader() },
+      // ✅ USE APICLIENT
+      const res = await apiClient.post(
+        `/coupons/apply?${params.toString()}`,
+        { code }
       );
 
       return {
@@ -178,23 +163,24 @@ export const applyCoupon = createAsyncThunk(
   },
 );
 
+/* 7️⃣ PLACE COD ORDER */
 export const placeCodOrder = createAsyncThunk(
   "checkout/placeCodOrder",
   async (_, { rejectWithValue, getState }) => {
     try {
       const state = getState();
-      const { addressId, productId, qty, summary,variantId } = state.checkout;
-      // console.log(addressId, productId, qty, .courierId)
+      const { addressId, productId, qty, summary, variantId } = state.checkout;
+
       if (!addressId) {
         return rejectWithValue("Address is required");
       }
+      
       const shippingInfo = summary.shippingInfo;
       if (!shippingInfo?.courierId) {
         return rejectWithValue("Shipping info missing. Please re-checkout.");
       }
 
-      const endpoint = `${API}/orders/create`;
-
+      // ✅ USE APICLIENT
       const payload = productId
         ? {
             addressId,
@@ -204,17 +190,15 @@ export const placeCodOrder = createAsyncThunk(
             shippingMeta: {
               courierId: shippingInfo.courierId,
             },
-          } // BUY NOW
+          }
         : {
             addressId,
             shippingMeta: {
               courierId: shippingInfo.courierId,
             },
-          }; // CART
+          };
 
-      const res = await axios.post(endpoint, payload, {
-        headers: authHeader(),
-      });
+      const res = await apiClient.post("/orders/create", payload);
 
       return res.data;
     } catch (err) {
@@ -236,7 +220,7 @@ export const createRazorpayOrder = createAsyncThunk(
       const {
         addressId,
         productId,
-        variantId, // ✅ GET VARIANT ID FROM STATE
+        variantId,
         qty,
         summary,
       } = state.checkout;
@@ -244,33 +228,26 @@ export const createRazorpayOrder = createAsyncThunk(
       console.log("🔄 createRazorpayOrder thunk:", {
         addressId,
         productId,
-        variantId, // ✅ Log variantId
+        variantId,
         qty,
         totalAmount: summary?.total,
       });
 
-      // ✅ VALIDATION
       if (!addressId) {
         throw new Error("Address is required");
       }
 
-      // ✅ For Buy Now, variantId is REQUIRED
       if (productId && !variantId) {
         throw new Error("Variant ID is required for Buy Now");
       }
- const res = await axios.post(
-        `${API}/generate-payment`,
-        {
-          addressId,
-          productId,
-          variantId, // ✅ PASS VARIANT ID
-          quantity: qty || 1, // Total amount from checkout summary
-        },
-        {
-          headers: authHeader(),
-        }
-      );
-      
+
+      // ✅ USE APICLIENT
+      const res = await apiClient.post("/generate-payment", {
+        addressId,
+        productId,
+        variantId,
+        quantity: qty || 1,
+      });
 
       console.log("✅ Razorpay order created:", {
         razorpayOrderId: res.data.razorpayOrderId,
@@ -282,7 +259,7 @@ export const createRazorpayOrder = createAsyncThunk(
         throw new Error(res.data.message);
       }
 
-      return res.data; // { razorpayOrderId, amount, key, success: true }
+      return res.data;
     } catch (err) {
       console.error("❌ createRazorpayOrder error:", err);
       return rejectWithValue(
@@ -301,7 +278,7 @@ export const verifyRazorpayPayment = createAsyncThunk(
       const {
         addressId,
         productId,
-        variantId, // ✅ GET VARIANT ID
+        variantId,
         qty,
       } = state.checkout;
 
@@ -313,19 +290,14 @@ export const verifyRazorpayPayment = createAsyncThunk(
         addressId,
       });
 
-      const res = await axios.post(
-        `${API}/verify-payment`,
-        {
-          ...paymentData,
-          addressId,
-          productId,
-          variantId, // ✅ PASS VARIANT ID
-          quantity: qty || 1,
-        },
-        {
-          headers: authHeader(),
-        },
-      );
+      // ✅ USE APICLIENT
+      const res = await apiClient.post("/verify-payment", {
+        ...paymentData,
+        addressId,
+        productId,
+        variantId,
+        quantity: qty || 1,
+      });
 
       console.log("✅ Payment verified:", res.data);
 
@@ -333,7 +305,7 @@ export const verifyRazorpayPayment = createAsyncThunk(
         throw new Error(res.data.message);
       }
 
-      return res.data; // { success: true, orderId, message }
+      return res.data;
     } catch (err) {
       console.error("❌ verifyRazorpayPayment error:", err);
       return rejectWithValue(
@@ -370,17 +342,17 @@ const checkoutSlice = createSlice({
     addressId: null,
 
     /* PAYMENT */
-    paymentMethod: "COD", // "COD" | "RAZORPAY"
+    paymentMethod: "COD",
 
     /* COUPON */
     coupon: null,
     appliedCoupon: null,
 
     /* PAYMENT DATA */
-    razorpayOrder: null, // { id, amount, key }
+    razorpayOrder: null,
 
     /* ORDER RESULT */
-    placedOrder: null, // { id, paymentMethod, totalAmount }
+    placedOrder: null,
 
     /* UI */
     loading: false,
@@ -407,6 +379,7 @@ const checkoutSlice = createSlice({
     setVariantId(state, action) {
       state.variantId = action.payload;
     },
+
     setRazorpayOrder(state, action) {
       state.razorpayOrder = action.payload;
     },
@@ -414,7 +387,6 @@ const checkoutSlice = createSlice({
     clearCoupon(state) {
       state.coupon = null;
       state.appliedCoupon = null;
-      // Reset summary to original (you might need to recalculate)
     },
 
     resetCheckout() {
@@ -434,16 +406,15 @@ const checkoutSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-         .addCase(initCheckout.fulfilled, (state, action) => {
-      state.loading = false;
-      state.items = action.payload.items;
-      state.summary = action.payload.summary;
-      
-      // ✅ ACTION SE VARIANT ID BHI SET KARO (agar aati hai to)
-      if (action.payload.variantId) {
-        state.variantId = action.payload.items[0].variantId;
-      }
-    })
+      .addCase(initCheckout.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload.items;
+        state.summary = action.payload.summary;
+        
+        if (action.payload.variantId) {
+          state.variantId = action.payload.items[0]?.variantId;
+        }
+      })
       .addCase(initCheckout.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
@@ -464,7 +435,6 @@ const checkoutSlice = createSlice({
       /* CREATE ADDRESS */
       .addCase(createAddress.fulfilled, (state, action) => {
         state.addresses.unshift(action.payload);
-        // Auto-select new address
         state.addressId = action.payload._id;
       })
 
@@ -552,12 +522,12 @@ const checkoutSlice = createSlice({
           paymentMethod: "RAZORPAY",
           totalAmount: action.payload.totalAmount || state.summary.total,
         };
-        state.razorpayOrder = null; // Clear after successful verification
+        state.razorpayOrder = null;
       })
       .addCase(verifyRazorpayPayment.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        state.razorpayOrder = null; // Clear on failure
+        state.razorpayOrder = null;
       });
   },
 });

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/redux/slices/cartSlice";
-import { toast } from "@/hooks/use-toast";
+import toast from 'react-hot-toast';  // ✅ Import hot toast
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -33,37 +33,44 @@ const useAddToCart = () => {
     // ✅ Step 1: Validation
     if (!isAuthenticated) {
       setError("Please login to add items to cart");
-      toast({
-        title: "Login Required",
-        description: "Please login to add items to cart",
-        variant: "destructive",
+      
+      // Show error toast
+      toast.error("Please login to add items to cart", {
+        icon: '🔒',
+        duration: 3000,
       });
+      
       navigate("/login");
       return { success: false, error: "Login required" };
     }
 
     if (!cartData.productId || !cartData.variantId) {
       setError("Product or variant not selected");
-      toast({
-        title: "Selection Required",
-        description: "Please select color and size",
-        variant: "destructive",
+      
+      toast.error("Please select color and size", {
+        icon: '⚠️',
+        duration: 3000,
       });
+      
       return { success: false, error: "Variant not selected" };
     }
 
     if (!cartData.quantity || cartData.quantity < 1) {
       setError("Quantity must be at least 1");
-      toast({
-        title: "Invalid Quantity",
-        description: "Quantity must be at least 1",
-        variant: "destructive",
+      
+      toast.error("Quantity must be at least 1", {
+        icon: '⚠️',
+        duration: 3000,
       });
+      
       return { success: false, error: "Invalid quantity" };
     }
 
     // ✅ Step 2: Start loading
     setLoading(true);
+    
+    // Show loading toast
+    const loadingToast = toast.loading('Adding to cart...');
 
     try {
       // ✅ Step 3: Dispatch to Redux
@@ -77,13 +84,14 @@ const useAddToCart = () => {
 
       // ✅ Step 4: Success handling
       const successMessage = cartData.productName
-        ? `✅ ${cartData.productName} added to cart!`
-        : "✅ Added to cart successfully!";
+        ? `${cartData.productName} added to cart!`
+        : "Added to cart successfully!";
       
-      toast({
-        title: "Success!",
-        description: successMessage,
-        variant: "default",
+      // Dismiss loading and show success
+      toast.dismiss(loadingToast);
+      toast.success(successMessage, {
+        icon: '🛒',
+        duration: 3000,
       });
 
       setLoading(false);
@@ -96,10 +104,11 @@ const useAddToCart = () => {
       const errorMessage = error || "Failed to add to cart. Please try again.";
       setError(errorMessage);
       
-      toast({
-        title: "Failed",
-        description: errorMessage,
-        variant: "destructive",
+      // Dismiss loading and show error
+      toast.dismiss(loadingToast);
+      toast.error(errorMessage, {
+        icon: '❌',
+        duration: 4000,
       });
 
       setLoading(false);
@@ -112,8 +121,15 @@ const useAddToCart = () => {
    */
   const addToCartAndGo = async (cartData) => {
     const result = await addToCartHandler(cartData);
+    
     if (result.success) {
-      // 2 second wait then navigate to cart
+      // Show navigating toast
+      toast.success('Redirecting to cart...', {
+        icon: '🛒',
+        duration: 2000,
+      });
+      
+      // Navigate after 2 seconds
       setTimeout(() => {
         navigate("/cart");
       }, 2000);

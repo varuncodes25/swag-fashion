@@ -8,18 +8,19 @@ const {
   updateAddress,
   deleteAddress,
 } = require("../controllers/addressController");
+const decryptRequest = require("../utils/decryptResponse");
 
 // 🔒 All routes protected
 // router.use(verifyToken);
 
 // ➕ Add address
-router.post("/addresses",verifyToken, createAddress);
+router.post("/addresses",verifyToken,decryptRequest, createAddress);
 
 // 📥 Get all addresses
 router.get("/addresses",verifyToken, getAddresses);
 
 // ✏️ Update address
-router.put("/:addressId",verifyToken, updateAddress);
+router.put("/:addressId",verifyToken,decryptRequest, updateAddress);
 
 // ❌ Delete address
 router.delete("/:addressId",verifyToken, deleteAddress);

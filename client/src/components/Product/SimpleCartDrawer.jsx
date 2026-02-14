@@ -1,21 +1,15 @@
 // components/Product/SimpleCartDrawer.jsx
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { 
   ShoppingCart, 
   X, 
   ShoppingBag, 
   ArrowRight,
-  Shield,
-  Truck,
-  Gift,
-  Sparkles,
-  Heart,
   Tag,
   ChevronRight
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchCart } from "@/redux/slices/cartSlice";
 import CartProduct from "../custom/CartProduct";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -29,6 +23,7 @@ const SimpleCartDrawer = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const itemsContainerRef = useRef(null);
   
   const { isAuthenticated } = useSelector((state) => state.auth);
   const { 
@@ -44,9 +39,15 @@ const SimpleCartDrawer = ({
   // Calculate savings
   const totalSavings = totalDiscount || (subtotal - totalPrice) || 0;
   const itemCount = items.length;
-  const isFreeShipping = totalPrice >= 999;
 
-  // ✅ Icon only mode - Premium Style
+  // ✅ Scroll to top when drawer opens
+  useEffect(() => {
+    if (open && itemsContainerRef.current) {
+      itemsContainerRef.current.scrollTop = 0;
+    }
+  }, [open]);
+
+  // ✅ Icon only mode
   if (showIconOnly) {
     return (
       <button
@@ -55,10 +56,7 @@ const SimpleCartDrawer = ({
         className={`relative group ${className}`}
         aria-label="Open cart"
       >
-        {/* Animated background */}
         <div className="absolute inset-0 bg-emerald-100 dark:bg-emerald-900/30 rounded-full scale-0 group-hover:scale-100 transition-transform duration-300"></div>
-        
-        {/* Icon */}
         <ShoppingCart
           size={iconSize}
           className={`relative z-10 transition-all duration-300 ${
@@ -68,8 +66,6 @@ const SimpleCartDrawer = ({
           }`}
           strokeWidth={1.5}
         />
-        
-        {/* Hover glow effect */}
         <div className="absolute -inset-1 bg-emerald-500/20 dark:bg-emerald-400/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </button>
     );
@@ -79,22 +75,20 @@ const SimpleCartDrawer = ({
 
   return (
     <>
-      {/* Backdrop with blur */}
+      {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-in fade-in duration-300"
         onClick={() => onOpenChange?.(false)}
       />
 
-      {/* Drawer - Premium Design */}
+      {/* Drawer */}
       <div className="fixed right-0 top-0 h-full w-full sm:w-[380px] lg:w-[420px] bg-white dark:bg-gray-900 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
         
-        {/* ✅ COMPACT HEADER - Chota kiya */}
-        <div className="relative bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-500 dark:to-green-500 px-4 py-3">
-          {/* Decorative elements - Chhote */}
+        {/* ✅ HEADER */}
+        <div className="relative bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-500 dark:to-green-500 px-4 py-3 flex-shrink-0">
           <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
           <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full translate-y-8 -translate-x-8"></div>
           
-          {/* Header Content - Compact */}
           <div className="relative flex justify-between items-center">
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -113,7 +107,6 @@ const SimpleCartDrawer = ({
               </div>
             </div>
             
-            {/* Close Button - Chhota */}
             <button
               onClick={() => onOpenChange?.(false)}
               className="relative group p-1"
@@ -125,11 +118,18 @@ const SimpleCartDrawer = ({
           </div>
         </div>
 
-        {/* ✅ ITEMS SECTION - Full height with proper scrolling */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800/50" style={{
-    scrollbarWidth: 'none', /* Firefox */
-    msOverflowStyle: 'none', /* IE/Edge */
-  }}>
+        {/* ✅ ITEMS SECTION - FIXED HEIGHT CALCULATION */}
+        <div 
+          ref={itemsContainerRef}
+          className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800/50"
+          style={{
+            height: isAuthenticated && items.length > 0 
+              ? 'calc(100vh - 180px)' // ✅ Fixed: Header 60px + Footer 120px
+              : '100%',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+          }}
+        >
           {!isAuthenticated ? (
             <div className="h-full flex flex-col items-center justify-center p-6 text-center">
               <div className="relative mb-4">
@@ -202,28 +202,8 @@ const SimpleCartDrawer = ({
             </div>
           ) : (
             <div className="p-3 space-y-3">
-              {/* Free Shipping Progress - Compact */}
-              {!isFreeShipping && (
-                <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 rounded-lg p-3 border border-amber-200 dark:border-amber-800">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Truck size={14} className="text-amber-600 dark:text-amber-400" />
-                    <span className="text-xs font-medium text-amber-800 dark:text-amber-300">
-                      Add ₹{(999 - totalPrice).toLocaleString()} more for free shipping
-                    </span>
-                  </div>
-                  <div className="h-1.5 bg-amber-200 dark:bg-amber-900 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min((totalPrice / 999) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-              
-             
-
-              {/* ✅ Cart Items - Proper spacing for products */}
-              <div className="space-y-2 max-h-[calc(100vh-280px)]">
+              {/* Cart Items */}
+              <div className="space-y-2">
                 {items.map((item, index) => (
                   <CartProduct 
                     key={item._id || item.cartItemId || index}
@@ -231,14 +211,16 @@ const SimpleCartDrawer = ({
                   />
                 ))}
               </div>
+              {/* ✅ Extra padding for mobile */}
+              <div className="h-24"></div>
             </div>
           )}
         </div>
 
-        {/* ✅ COMPACT FOOTER - Chhota kiya */}
+        {/* ✅ FOOTER - FIXED AT BOTTOM */}
         {isAuthenticated && items.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 border-t dark:border-gray-800 shadow-lg px-4 py-3">
-            {/* Price Summary - Compact */}
+          <div className="bg-white dark:bg-gray-900 border-t dark:border-gray-800 shadow-lg px-4 py-3 flex-shrink-0">
+            {/* Price Summary */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
                 <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
@@ -259,15 +241,13 @@ const SimpleCartDrawer = ({
                 </div>
               )}
               
-              
-
-              {/* Total - Compact */}
+              {/* Total */}
               <div className="pt-2 border-t dark:border-gray-800">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-gray-900 dark:text-white">Total</span>
                   <div className="text-right">
                     <span className="text-lg font-bold text-gray-900 dark:text-white">
-                      ₹{(totalPrice + (isFreeShipping ? 0 : 99)).toLocaleString('en-IN')}
+                      ₹{totalPrice.toLocaleString('en-IN')}
                     </span>
                     <p className="text-[10px] text-gray-500 dark:text-gray-400">
                       incl. taxes
@@ -276,7 +256,7 @@ const SimpleCartDrawer = ({
                 </div>
               </div>
 
-              {/* Checkout Button - Compact */}
+              {/* Checkout Button */}
               <Button 
                 className="w-full bg-gradient-to-r from-emerald-600 to-green-600 
                   hover:from-emerald-700 hover:to-green-700 
@@ -286,7 +266,7 @@ const SimpleCartDrawer = ({
                   rounded-lg shadow-md hover:shadow-lg 
                   transition-all duration-300 transform hover:scale-[1.01]
                   disabled:opacity-50 disabled:cursor-not-allowed
-                  group mt-2"
+                  group"
                 disabled={loading}
                 onClick={() => {
                   onOpenChange?.(false);

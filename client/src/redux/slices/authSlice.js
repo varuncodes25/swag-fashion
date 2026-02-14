@@ -694,6 +694,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loginLoading = false;
+        console.log(action.payload,"gggg")
         state.loginError = action.payload?.message || "Login failed";
         state.fieldErrors = action.payload?.errors || {};
         state.loading = false;

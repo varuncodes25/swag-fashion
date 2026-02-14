@@ -1,6 +1,6 @@
 // src/redux/slices/orderSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import apiClient from "../../api/axiosConfig";  // ✅ Import apiClient
 
 // ============ INITIAL STATE ============
 const initialState = {
@@ -13,25 +13,13 @@ const initialState = {
   refundStatus: null
 };
 
-// ============ GET AUTH HEADERS ============
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
-};
-
 // ============ 1. FETCH USER ORDERS ============
 export const fetchUserOrders = createAsyncThunk(
   "order/fetchUserOrders",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/get-orders-by-user-id`,
-        getAuthHeaders()
-      );
+      // ✅ USE APICLIENT
+      const response = await apiClient.get("/get-orders-by-user-id");
       return response.data.data || response.data.orders || [];
     } catch (error) {
       return rejectWithValue(
@@ -46,10 +34,8 @@ export const fetchOrderDetails = createAsyncThunk(
   "order/fetchOrderDetails",
   async (orderId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/orders/${orderId}`,
-        getAuthHeaders()
-      );
+      // ✅ USE APICLIENT
+      const response = await apiClient.get(`/orders/${orderId}`);
       return response.data.data || response.data.order || response.data;
     } catch (error) {
       return rejectWithValue(
@@ -64,11 +50,11 @@ export const cancelOrder = createAsyncThunk(
   "order/cancelOrder",
   async ({ orderId, reason }, { rejectWithValue, dispatch }) => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/cancel-order`,
-        { orderId, reason },
-        getAuthHeaders()
-      );
+      // ✅ USE APICLIENT
+      const response = await apiClient.post("/cancel-order", {
+        orderId, 
+        reason 
+      });
 
       // ✅ Order list refresh karo
       dispatch(fetchUserOrders());
