@@ -9,6 +9,7 @@ import {
   revertOptimisticToggle,
   toggleWishlist,
 } from "@/redux/slices/wishlistSlice";
+import { formatPriceShort } from "@/utils/productCard";
 
 /* ================= BEAUTIFUL PRODUCT CARD ================= */
 const ProductCard = ({
@@ -197,41 +198,40 @@ const ProductCard = ({
             </div>
 
             {/* Price Section */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-1">
   {/* Price section */}
-  <div className="flex items-baseline gap-2">
-    <span className="text-lg font-bold text-gray-900 dark:text-white">
-      {formatPrice(safeSellingPrice)}
+  <div className="flex items-baseline gap-1 sm:gap-2">
+    <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+      {formatPriceShort(safeSellingPrice)}
     </span>
     {hasRealDiscount && (
-      <span className="text-xs text-gray-400 dark:text-gray-500 line-through">
-        {formatPrice(safePrice)}
+      <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 line-through">
+        {formatPriceShort(safePrice)}
       </span>
     )}
   </div>
 
-  {/* Rating - Flipkart Style */}
-{safeRating > 0 && (
-  <div className="flex items-center gap-2 h-6">
-    {/* Rating number with green star */}
-    <div className="flex items-center gap-1 h-full">
-      <span className="text-sm font-semibold text-gray-900 dark:text-white leading-none">
-        {safeRating.toFixed(1)}
-      </span>
-      <Star 
-        size={14} 
-        className="text-green-500 fill-green-500" 
-      />
+  {/* Rating - Flipkart Style with formatted numbers */}
+  {safeRating > 0 && (
+    <div className="flex items-center gap-1 h-5 shrink-0">
+      {/* Rating number with star */}
+      <div className="flex items-center gap-0.5">
+        <span className="text-xs font-semibold text-gray-900 dark:text-white">
+          {safeRating.toFixed(1)}
+        </span>
+        <Star size={12} className="text-green-500 fill-green-500" />
+      </div>
+      
+      {/* Ratings count - formatted */}
+      {/* {reviewCount > 0 && (
+        <span className="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          ({reviewCount >= 1000 
+            ? (reviewCount/1000).toFixed(1) + 'k' 
+            : reviewCount})
+        </span>
+      )} */}
     </div>
-    
-    {/* Ratings count */}
-    {reviewCount > 0 && (
-      <span className="text-xs text-gray-500 dark:text-gray-400 leading-none">
-        ({reviewCount} {reviewCount === 1 ? 'rating' : 'ratings'})
-      </span>
-    )}
-  </div>
-)}
+  )}
 </div>
 
 
