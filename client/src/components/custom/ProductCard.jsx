@@ -183,7 +183,7 @@ const ProductCard = ({
           </div>
 
           {/* Product Info */}
-          <div className="p-3 flex-1 flex flex-col gap-2">
+          <div className="p-3 flex-1 flex flex-col ">
             
             {/* Product Name & Type */}
             <div>
