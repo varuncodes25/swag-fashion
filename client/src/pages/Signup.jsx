@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { signupUser, clearSignupState } from "@/redux/slices/authSlice"
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 const Signup = () => {
   const dispatch = useDispatch();
@@ -472,6 +473,7 @@ const Signup = () => {
                 </p>
               )}
             </div>
+            <GoogleLoginButton/>
           </form>
 
           {/* Login Link */}

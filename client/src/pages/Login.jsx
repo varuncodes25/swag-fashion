@@ -16,6 +16,7 @@ import {
   LogIn,
   CheckCircle
 } from "lucide-react";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 const Login = () => {
   const { toast } = useToast();
@@ -94,11 +95,11 @@ const Login = () => {
       newErrors.email = "Please enter a valid email";
     }
     
-    // Password validation
+    // ✅ FIXED: Password validation - 8 characters (backend match)
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.trim().length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (formData.password.trim().length < 8) {  // 6 → 8
+      newErrors.password = "Password must be at least 8 characters";
     }
     
     setErrors(newErrors);
@@ -145,8 +146,8 @@ const Login = () => {
       </div>
 
       <div className="w-full max-w-md z-10">
-        {/* Success Overlay */}
-        {isAuthenticated && (
+        {/* Success Overlay - Only show when authenticated */}
+        {isAuthenticated && !loginLoading && (
           <div className="fixed inset-0 bg-white/90 dark:bg-gray-900/90 flex items-center justify-center z-50 transition-all duration-300">
             <div className="text-center p-8">
               <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -170,7 +171,6 @@ const Login = () => {
           
           {/* Header */}
           <div className="text-center mb-8">
-            
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2 transition-colors duration-300">
               Welcome Back
             </h1>
@@ -326,6 +326,9 @@ const Login = () => {
                 </>
               )}
             </Button>
+
+            {/* Google Login Button */}
+          <GoogleLoginButton type="token" />  
 
             {/* Signup Link */}
             <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
