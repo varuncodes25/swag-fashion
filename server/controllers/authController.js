@@ -101,9 +101,25 @@ const login = asyncHandler(async (req, res, next) => {
 
     // Get user with password field
     const user = await userRepository.findByEmail(email, true);
-
+    console.log("user",user)
     if (!user) {
       return next(new UnauthorizedError("Invalid email or password"));
+    }
+
+    // ✅ NEW: Check if user is Google-only
+    if (user.provider === 'google' && !user.password) {
+      return res.status(400).json({
+        success: false,
+        message: "This account was created with Google. Please login with Google or set a password first.",
+        needsPasswordSetup: true,
+        provider: 'google',
+        email: user.email
+      });
+    }
+
+    // ✅ NEW: Check if user has password (for 'both' provider)
+    if (!user.password) {
+      return next(new UnauthorizedError("No password set for this account. Please use Google login."));
     }
 
     // Check if account is locked
@@ -130,6 +146,12 @@ const login = asyncHandler(async (req, res, next) => {
     // Reset login attempts
     await userRepository.resetLoginAttempts(user._id);
 
+    // ✅ NEW: Update provider if needed
+    if (user.provider === 'google') {
+      user.provider = 'both';
+      await user.save();
+    }
+
     // Generate tokens
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
@@ -152,17 +174,66 @@ const login = asyncHandler(async (req, res, next) => {
       phone: user.phone,
       role: user.role,
       isEmailVerified: user.isEmailVerified,
-      avatar: user.avatar
+      avatar: user.avatar,
+      provider: user.provider  // ✅ Send provider info
     };
 
-    // ✅ Success response with encryption
-    const response = new ApiResponse(200, { token: accessToken, refreshToken, user: userData }, "Login successful");
+    const response = new ApiResponse(200, { 
+      token: accessToken, 
+      refreshToken, 
+      user: userData 
+    }, "Login successful");
+    
     return res.status(200).json(await encryptResponse(response));
+    
   } catch (error) {
     next(error);
   }
 });
+// controllers/authController.js - Add this new function
 
+const setPasswordForGoogleUser = asyncHandler(async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return next(new ValidationError({
+        email: !email ? "Email is required" : undefined,
+        password: !password ? "Password is required" : undefined
+      }));
+    }
+
+    if (password.length < 8) {
+      return next(new ValidationError({
+        password: "Password must be at least 8 characters"
+      }));
+    }
+
+    const user = await userRepository.findByEmail(email, true);
+
+    if (!user) {
+      return next(new NotFoundError("User not found"));
+    }
+
+    // ✅ Check if user is Google-only
+    if (user.provider !== 'google' && user.provider !== 'both') {
+      return next(new UnauthorizedError("This account already has a password"));
+    }
+
+    // Set new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(password, salt);
+    user.provider = user.provider === 'google' ? 'both' : user.provider;
+    
+    await user.save();
+
+    const response = new ApiResponse(200, null, "Password set successfully. You can now login with email/password.");
+    return res.json(await encryptResponse(response));
+
+  } catch (error) {
+    next(error);
+  }
+});
 // ============ REFRESH TOKEN ============
 const refreshToken = asyncHandler(async (req, res, next) => {
   try {
@@ -525,5 +596,6 @@ module.exports = {
   toggleWishlist,
   getSessions,
   requestOTP,
-  verifyOTP
+  verifyOTP,
+  setPasswordForGoogleUser
 };

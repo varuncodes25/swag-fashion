@@ -376,3 +376,48 @@ const Login = () => {
 };
 
 export default Login;
+
+
+const PasswordSetupModal = ({ email, onClose }) => {
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSetPassword = async () => {
+    setLoading(true);
+    try {
+      await axios.post('/api/set-password', { email, password });
+      toast.success("Password set! Please login again.");
+      onClose();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to set password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md">
+        <h3 className="text-lg font-bold mb-2">Set Password</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Your account was created with Google. Set a password to enable email login.
+        </p>
+        <Input
+          type="password"
+          placeholder="Enter password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="mb-4"
+        />
+        <div className="flex gap-2">
+          <Button onClick={handleSetPassword} disabled={loading}>
+            {loading ? "Setting..." : "Set Password"}
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};

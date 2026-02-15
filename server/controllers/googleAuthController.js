@@ -27,8 +27,8 @@ const googleOneTapLogin = async (req, res) => {
 
     if (!user) {
       // Create new user
-      const randomPassword = Math.random().toString(36) + Date.now().toString();
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      // const randomPassword = Math.random().toString(36) + Date.now().toString();
+      // const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
       user = new User({
         name,
@@ -37,7 +37,7 @@ const googleOneTapLogin = async (req, res) => {
         provider: "google",
         isEmailVerified: email_verified || true,
         avatar: picture,
-        password: hashedPassword
+        // password: hashedPassword
       });
       await user.save();
     } else {
