@@ -6,9 +6,9 @@ const AdminLayout = ({ children }) => {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main>
+      <main className="w-full">
         <SidebarTrigger />
-        <div className="sm:m-10">{children}</div>
+        <div className="sm:m-10 ">{children}</div>
       </main>
     </SidebarProvider>
   );

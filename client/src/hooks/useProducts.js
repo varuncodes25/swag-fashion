@@ -8,8 +8,14 @@ import {
   clearCurrentProduct,
   setFilters,
   clearError,
-  updateVariantStock,
+  // updateVariantStock,
 } from '../redux/slices/admin/productSlice';
+
+// Import admin-specific actions from admin slice
+import {
+  blacklistProduct,
+  removeFromBlacklist,
+} from '../redux/slices/admin/productSlice'; // Make sure this path is correct
 
 export const useProducts = () => {
   const dispatch = useDispatch();
@@ -51,8 +57,17 @@ export const useProducts = () => {
     dispatch(clearError());
   };
 
-  const updateStock = (productId, variantId, stock) => {
-    return dispatch(updateVariantStock({ productId, variantId, stock }));
+  // const updateStock = (productId, variantId, stock) => {
+  //   return dispatch(updateVariantStock({ productId, variantId, stock }));
+  // };
+
+  // Admin-specific functions
+  const blacklist = (id) => {
+    return dispatch(blacklistProduct(id));
+  };
+
+  const unblacklist = (id) => {
+    return dispatch(removeFromBlacklist(id));
   };
 
   return {
@@ -65,6 +80,9 @@ export const useProducts = () => {
     clearProduct,
     setProductFilters,
     clearProductError,
-    updateStock,
+    // updateStock,
+    // Add admin functions
+    blacklist,
+    unblacklist,
   };
 };

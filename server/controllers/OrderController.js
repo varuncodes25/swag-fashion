@@ -511,19 +511,42 @@ const getMetrics = async (req, res) => {
   }
 
   try {
-    // ============ DATE RANGES ============
+    // ============ GET YEAR & HALF FROM QUERY PARAM ============
+    const selectedYear = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+    const half = req.query.half || "full"; // "full", "H1", "H2"
+    
+    console.log(`📅 Fetching metrics for year: ${selectedYear}, half: ${half}`);
+
+    // ============ BUILD DATE RANGE BASED ON YEAR + HALF ============
+    let startDate, endDate;
+
+    if (half === "H1") {
+      // Jan 1 to June 30
+      startDate = new Date(selectedYear, 0, 1);
+      endDate = new Date(selectedYear, 5, 30, 23, 59, 59);
+    } else if (half === "H2") {
+      // July 1 to Dec 31
+      startDate = new Date(selectedYear, 6, 1);
+      endDate = new Date(selectedYear, 11, 31, 23, 59, 59);
+    } else {
+      // Full year
+      startDate = new Date(selectedYear, 0, 1);
+      endDate = new Date(selectedYear, 11, 31, 23, 59, 59);
+    }
+
+    // ============ DATE RANGES FOR TODAY/YESTERDAY/THIS MONTH ============
     const now = new Date();
     const today = new Date(now.setHours(0, 0, 0, 0));
     const lastHour = new Date(new Date().setHours(new Date().getHours() - 1));
     const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
     yesterday.setHours(0, 0, 0, 0);
-    
+
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-    
-    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    // Get total users count
+    const totalUsers = await User.countDocuments({ role: "user" });
 
     // ============ SINGLE AGGREGATION PIPELINE ============
     const metrics = await Order.aggregate([
@@ -579,7 +602,7 @@ const getMetrics = async (req, res) => {
             }
           ],
 
-          // 4️⃣ YESTERDAY METRICS (for growth)
+          // 4️⃣ YESTERDAY METRICS
           yesterday: [
             {
               $match: {
@@ -655,7 +678,7 @@ const getMetrics = async (req, res) => {
             }
           ],
 
-          // 9️⃣ RECENT ORDERS (Last 9)
+          // 9️⃣ RECENT ORDERS
           recentOrders: [
             {
               $sort: { createdAt: -1 }
@@ -681,16 +704,19 @@ const getMetrics = async (req, res) => {
                 createdAt: 1,
                 "user.name": 1,
                 "user.email": 1,
-                items: { $slice: ["$items", 2] } // First 2 items only
+                items: { $slice: ["$items", 2] }
               }
             }
           ],
 
-          // 🔟 MONTHLY SALES (Last 6 months)
+          // 🔟 MONTHLY SALES (Based on selected year + half)
           monthlySales: [
             {
               $match: {
-                createdAt: { $gte: sixMonthsAgo },
+                createdAt: {
+                  $gte: startDate,
+                  $lte: endDate
+                },
                 status: { $ne: "CANCELLED" }
               }
             },
@@ -709,11 +735,14 @@ const getMetrics = async (req, res) => {
             }
           ],
 
-          // 1️⃣1️⃣ CATEGORY WISE SALES (Last 6 months)
+          // 1️⃣1️⃣ CATEGORY WISE SALES (Based on selected year + half)
           categorySales: [
             {
               $match: {
-                createdAt: { $gte: sixMonthsAgo },
+                createdAt: {
+                  $gte: startDate,
+                  $lte: endDate
+                },
                 status: { $ne: "CANCELLED" }
               }
             },
@@ -807,6 +836,33 @@ const getMetrics = async (req, res) => {
                 avgDays: { $avg: "$deliveryDays" }
               }
             }
+          ],
+
+          // 1️⃣4️⃣ QUARTERLY SUMMARY
+          quarterlySummary: [
+            {
+              $match: {
+                createdAt: {
+                  $gte: startDate,
+                  $lte: endDate
+                },
+                status: { $ne: "CANCELLED" }
+              }
+            },
+            {
+              $group: {
+                _id: {
+                  quarter: {
+                    $ceil: { $divide: [{ $month: "$createdAt" }, 3] }
+                  }
+                },
+                revenue: { $sum: "$totalAmount" },
+                orders: { $sum: 1 }
+              }
+            },
+            {
+              $sort: { "_id.quarter": 1 }
+            }
           ]
         }
       }
@@ -870,9 +926,25 @@ const getMetrics = async (req, res) => {
       paymentStatusCounts[item._id] = item.count;
     });
 
+    // Format quarterly data
+    const quarterNames = ["Q1", "Q2", "Q3", "Q4"];
+    const quarterlyData = (result.quarterlySummary || []).map(item => ({
+      quarter: quarterNames[item._id.quarter - 1],
+      revenue: item.revenue,
+      orders: item.orders
+    }));
+
     return res.status(200).json({
       success: true,
       data: {
+        // ✅ Selected year & half info
+        metadata: {
+          selectedYear,
+          half,
+          availableYears: await getAvailableYears(),
+          isCurrentYear: selectedYear === new Date().getFullYear()
+        },
+
         // 🎯 OVERVIEW CARDS
         overview: {
           totalOrders: overall.totalOrders,
@@ -881,24 +953,27 @@ const getMetrics = async (req, res) => {
           totalPrepaid: overall.totalPrepaid,
           avgOrderValue: formatCurrency(overall.avgOrderValue),
           
-          // Today's metrics
           todayOrders: todayData.orders,
           todayRevenue: formatCurrency(todayData.revenue),
           todayGrowth: formatGrowth(todayData.orders, yesterdayData.count),
           
-          // This month vs last month
           thisMonthOrders: thisMonthData.orders,
           thisMonthRevenue: formatCurrency(thisMonthData.revenue),
           monthlyGrowth: formatGrowth(thisMonthData.revenue, lastMonthData.revenue),
           
-          // Active now
           activeOrders: lastHourData.count,
           activeRevenue: formatCurrency(lastHourData.revenue),
           activeGrowth: formatGrowth(lastHourData.count, yesterdayData.count / 24 || 0),
           
-          // Delivery metrics
-          avgDeliveryDays: Math.round(avgDelivery.avgDays * 10) / 10
+          avgDeliveryDays: Math.round(avgDelivery.avgDays * 10) / 10,
+          
+          // Year/Half specific
+          periodRevenue: monthlySalesData.reduce((sum, m) => sum + m.revenue, 0),
+          periodOrders: monthlySalesData.reduce((sum, m) => sum + m.orders, 0)
         },
+
+        // 📊 QUARTERLY SUMMARY
+        quarterlySummary: quarterlyData,
 
         // 📊 STATUS DISTRIBUTION
         statusDistribution: {
@@ -919,17 +994,14 @@ const getMetrics = async (req, res) => {
 
         // 📈 CHARTS DATA
         charts: {
-          // Monthly revenue trend
           monthlyRevenue: monthlySalesData.map(d => ({
             month: `${d.month} ${d.year}`,
             revenue: d.revenue,
             orders: d.orders
           })),
           
-          // Category wise distribution (last 6 months)
           categorySales: categoryChartData,
           
-          // Top products
           topProducts: (result.topProducts || []).map(p => ({
             name: p._id.name || "Unknown Product",
             quantity: p.totalQuantity,
@@ -961,8 +1033,8 @@ const getMetrics = async (req, res) => {
         summary: {
           totalRevenue: formatCurrency(overall.totalRevenue),
           totalOrders: overall.totalOrders,
-          conversionRate: overall.totalOrders && overall.totalUsers ? 
-            Number(((overall.totalOrders / overall.totalUsers) * 100).toFixed(1)) : 0,
+          conversionRate: overall.totalOrders && totalUsers ? 
+            Number(((overall.totalOrders / totalUsers) * 100).toFixed(1)) : 0,
           codPercentage: overall.totalOrders ? 
             Number(((overall.totalCOD / overall.totalOrders) * 100).toFixed(1)) : 0,
           prepaidPercentage: overall.totalOrders ? 
@@ -973,8 +1045,8 @@ const getMetrics = async (req, res) => {
         timestamps: {
           fetchedAt: new Date(),
           period: {
-            start: req.query.startDate || startOfMonth,
-            end: req.query.endDate || now
+            start: startDate,
+            end: endDate
           }
         }
       }
@@ -989,6 +1061,21 @@ const getMetrics = async (req, res) => {
     });
   }
 };
+
+// Helper function to get available years
+async function getAvailableYears() {
+  const years = await Order.aggregate([
+    {
+      $group: {
+        _id: { $year: "$createdAt" }
+      }
+    },
+    {
+      $sort: { _id: -1 }
+    }
+  ]);
+  return years.map(y => y._id);
+}
 
 const createOrder = async (req, res) => {
   const session = await mongoose.startSession();

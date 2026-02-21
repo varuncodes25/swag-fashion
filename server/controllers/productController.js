@@ -551,55 +551,163 @@ const getProductById = async (req, res) => {
 // ==================== GET PRODUCTS FOR ADMIN ====================
 const getProductsforadmin = async (req, res) => {
   try {
-    let { page, limit, category, search } = req.query;
+    let { page, limit, category, price, search, sort, minPrice, maxPrice, gender, inStock } = req.query;
 
     page = parseInt(page) || 1;
-    limit = parseInt(limit) || 10;
+    limit = parseInt(limit) || 9;
 
-    const query = {};
+    // ==================== BASE AGGREGATION PIPELINE ====================
+    const pipeline = [];
 
-    // Category filter
+    // ==================== MATCH STAGE (FILTERS) ====================
+    const matchStage = {};
+
+    // 1️⃣ CATEGORY FILTER
     if (category && category.toLowerCase() !== "all") {
-      query.category = category.trim();
+      const categoryDoc = await Category.findOne({ 
+        name: { $regex: new RegExp(`^${category.trim()}$`, 'i') } 
+      });
+      
+      if (categoryDoc) {
+        matchStage.category = categoryDoc._id;
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: "Products fetched successfully",
+          data: [],
+          pagination: {
+            totalProducts: 0,
+            totalPages: 0,
+            currentPage: page,
+            pageSize: limit,
+            hasNextPage: false,
+            hasPrevPage: false,
+          },
+        });
+      }
     }
 
-    // Search filter
+    // 2️⃣ SEARCH FILTER
     if (search && search.trim() !== "") {
-      query.name = { $regex: search.trim(), $options: "i" };
+      matchStage.name = { $regex: search.trim(), $options: "i" };
     }
 
-    // Get total count
-    const totalProducts = await Product.countDocuments(query);
+    // 3️⃣ GENDER FILTER
+    if (gender && gender !== "all") {
+      matchStage.gender = gender;
+    }
 
-    // Get products with pagination
-    const products = await Product.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("category", "name");
+    // 4️⃣ IN STOCK FILTER
+    if (inStock && inStock !== "all") {
+      if (inStock === "true") {
+        matchStage["variants.stock"] = { $gt: 0 };
+      } else if (inStock === "false") {
+        matchStage["variants.stock"] = { $lte: 0 };
+      }
+    }
+
+    // Add match stage to pipeline
+    if (Object.keys(matchStage).length > 0) {
+      pipeline.push({ $match: matchStage });
+    }
+
+    // ==================== PRICE FILTER (CRITICAL FIX) ====================
+    // Price filter variants ke andar se check karna hoga
+    if (price && !isNaN(price)) {
+      pipeline.push({
+        $match: {
+          "variants.sellingPrice": { $lte: Number(price) }
+        }
+      });
+    }
+
+    // Min-Max Price Filter
+    if (minPrice || maxPrice) {
+      const priceFilter = {};
+      if (minPrice && !isNaN(minPrice)) priceFilter.$gte = Number(minPrice);
+      if (maxPrice && !isNaN(maxPrice)) priceFilter.$lte = Number(maxPrice);
+      
+      pipeline.push({
+        $match: {
+          "variants.sellingPrice": priceFilter
+        }
+      });
+    }
+
+    // ==================== ADD MIN SELLING PRICE FIELD ====================
+    pipeline.push({
+      $addFields: {
+        minSellingPrice: {
+          $min: "$variants.sellingPrice"
+        }
+      }
+    });
+
+    // ==================== SORTING ====================
+    if (sort === "priceLowToHigh") {
+      pipeline.push({ $sort: { minSellingPrice: 1 } });
+    } else if (sort === "priceHighToLow") {
+      pipeline.push({ $sort: { minSellingPrice: -1 } });
+    } else {
+      pipeline.push({ $sort: { createdAt: -1 } }); // Default
+    }
+
+    // ==================== GET TOTAL COUNT ====================
+    // Count ke liye alag pipeline
+    const countPipeline = [...pipeline];
+    // Remove sorting and pagination from count pipeline
+    const finalCountPipeline = countPipeline.filter(stage => 
+      !stage.$sort && !stage.$skip && !stage.$limit
+    );
+    
+    const countResult = await Product.aggregate([
+      ...finalCountPipeline,
+      { $count: "total" }
+    ]);
+    
+    const totalProducts = countResult.length > 0 ? countResult[0].total : 0;
+
+    // ==================== PAGINATION ====================
+    pipeline.push(
+      { $skip: (page - 1) * limit },
+      { $limit: limit }
+    );
+
+    // ==================== EXECUTE AGGREGATION ====================
+    let products = await Product.aggregate(pipeline);
+
+    // Convert to Mongoose documents for methods
+    products = products.map(p => new Product(p));
+
+    // ==================== ENHANCE PRODUCTS ====================
+    const enhancedProducts = products.map((product) => {
+      const cardData = product.getProductCardData();
+      return cardData;
+    });
 
     const totalPages = Math.ceil(totalProducts / limit);
 
     return res.status(200).json({
       success: true,
-      message: "Products fetched for admin",
-      data: products,
+      message: "Products fetched successfully",
+      data: enhancedProducts,
       pagination: {
         totalProducts,
         totalPages,
         currentPage: page,
         pageSize: limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
       },
     });
   } catch (error) {
-    console.error("Get Products for Admin Error:", error);
+    console.error("❌ Get Products Error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to fetch products",
     });
   }
 };
-
 // ==================== UPDATE PRODUCT ====================
 const updateProduct = async (req, res) => {
   if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
@@ -1221,92 +1329,6 @@ const getProductsByCategory = async (req, res) => {
       message: error.message || "Failed to fetch products",
       error: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
-  }
-};
-
-// ==================== GET AVAILABLE FILTER OPTIONS ====================
-const getAvailableFilters = async (categoryId, currentQuery) => {
-  try {
-    // Remove pagination fields
-    const filterQuery = { ...currentQuery };
-    delete filterQuery.limit;
-    delete filterQuery.skip;
-    delete filterQuery.sort;
-
-    const products = await Product.find(filterQuery);
-
-    // Extract unique values with counts
-    const colors = [...new Set(products.flatMap((p) => p.colors))];
-    const sizes = [...new Set(products.flatMap((p) => p.sizes))];
-    const brands = [...new Set(products.map((p) => p.brand).filter(Boolean))];
-    const fabrics = [...new Set(products.map((p) => p.fabric).filter(Boolean))];
-    const genders = [...new Set(products.map((p) => p.gender).filter(Boolean))];
-    const ageGroups = [
-      ...new Set(products.map((p) => p.ageGroup).filter(Boolean)),
-    ];
-    const clothingTypes = [
-      ...new Set(products.map((p) => p.clothingType).filter(Boolean)),
-    ];
-
-    // Price range
-    const prices = products.map((p) => p.getMinPrice()).filter((p) => p > 0);
-    const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
-    const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-
-    // Discounts
-    const discounts = [
-      ...new Set(products.map((p) => p.discount).filter((d) => d > 0)),
-    ].sort((a, b) => a - b);
-
-    // Ratings
-    const ratings = [
-      ...new Set(
-        products.map((p) => Math.floor(p.rating)).filter((r) => r > 0),
-      ),
-    ].sort((a, b) => a - b);
-
-    return {
-      priceRange: { min: minPrice, max: maxPrice },
-      discounts: discounts.map((d) => ({
-        value: d.toString(),
-        count: products.filter((p) => p.discount >= d).length,
-      })),
-      ratings: ratings.map((r) => ({
-        value: r.toString(),
-        count: products.filter((p) => Math.floor(p.rating) >= r).length,
-      })),
-      colors: colors.map((c) => ({
-        value: c,
-        count: products.filter((p) => p.colors.includes(c)).length,
-      })),
-      sizes: sizes.map((s) => ({
-        value: s,
-        count: products.filter((p) => p.sizes.includes(s)).length,
-      })),
-      brands: brands.map((b) => ({
-        value: b,
-        count: products.filter((p) => p.brand === b).length,
-      })),
-      fabrics: fabrics.map((f) => ({
-        value: f,
-        count: products.filter((p) => p.fabric === f).length,
-      })),
-      genders: genders.map((g) => ({
-        value: g,
-        count: products.filter((p) => p.gender === g).length,
-      })),
-      ageGroups: ageGroups.map((a) => ({
-        value: a,
-        count: products.filter((p) => p.ageGroup === a).length,
-      })),
-      clothingTypes: clothingTypes.map((c) => ({
-        value: c,
-        count: products.filter((p) => p.clothingType === c).length,
-      })),
-    };
-  } catch (error) {
-    console.error("Get filter options error:", error);
-    return {};
   }
 };
 

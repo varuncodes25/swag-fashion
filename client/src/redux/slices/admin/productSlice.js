@@ -1,18 +1,37 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Async Thunks
+const API_URL = import.meta.env.VITE_API_URL;
+
+// Helper to get auth token
+const getAuthHeaders = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+  },
+});
+
+// Async Thunks - Updated to match your backend routes
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async ({ page = 1, limit = 9, filters = {} }, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const params = new URLSearchParams({
-        page,
-        limit,
-        ...filters,
-      }).toString();
+      const queryParams = {
+        page: params.page || 1,
+        limit: params.limit || 9,
+        ...(params.category && params.category !== 'all' && { category: params.category }),
+        ...(params.search && params.search.trim() && { search: params.search.trim() }),
+        ...(params.price && !isNaN(params.price) && { price: params.price }),
+        ...(params.minPrice && !isNaN(params.minPrice) && { minPrice: params.minPrice }),
+        ...(params.maxPrice && !isNaN(params.maxPrice) && { maxPrice: params.maxPrice }),
+        ...(params.gender && params.gender !== 'all' && { gender: params.gender }),
+        ...(params.inStock && params.inStock !== 'all' && { inStock: params.inStock }),
+        ...(params.sort && params.sort !== 'createdAt' && { sort: params.sort }),
+      };
       
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/products?${params}`);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/get-products-admin`, {
+        params: queryParams
+      });
+      
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -24,8 +43,9 @@ export const createProduct = createAsyncThunk(
   'products/createProduct',
   async (formData, { rejectWithValue }) => {
     try {
+      // Using your route: /create-product
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/create-product`,
+        `${API_URL}/product/create-product`,
         formData,
         {
           headers: {
@@ -45,14 +65,11 @@ export const updateProduct = createAsyncThunk(
   'products/updateProduct',
   async ({ id, data }, { rejectWithValue }) => {
     try {
+      // Using your route: /update-product/:id
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/products/${id}`,
+        `${API_URL}/product/update-product/${id}`,
         data,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
+        getAuthHeaders()
       );
       return response.data;
     } catch (error) {
@@ -65,13 +82,10 @@ export const deleteProduct = createAsyncThunk(
   'products/deleteProduct',
   async (id, { rejectWithValue }) => {
     try {
+      // Using your route: /delete-product/:id
       const response = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/products/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
+        `${API_URL}/product/delete-product/${id}`,
+        getAuthHeaders()
       );
       return { id, ...response.data };
     } catch (error) {
@@ -84,7 +98,8 @@ export const fetchProductById = createAsyncThunk(
   'products/fetchProductById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/products/${id}`);
+      // Using your route: /get-product-by-id/:id
+      const response = await axios.get(`${API_URL}/product/get-product-by-id/${id}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -92,19 +107,76 @@ export const fetchProductById = createAsyncThunk(
   }
 );
 
-export const updateVariantStock = createAsyncThunk(
-  'products/updateVariantStock',
-  async ({ productId, variantId, stock }, { rejectWithValue }) => {
+export const fetchProductByName = createAsyncThunk(
+  'products/fetchProductByName',
+  async (name, { rejectWithValue }) => {
     try {
+      // Using your route: /get-product-by-name/:name
+      const response = await axios.get(`${API_URL}/product/get-product-by-name/${name}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const fetchProductsByCategory = createAsyncThunk(
+  'products/fetchProductsByCategory',
+  async ({ slug, subSlug = '' }, { rejectWithValue }) => {
+    try {
+      // Using your route: /products/category/:slug or /products/category/:slug/:subSlug
+      const url = subSlug 
+        ? `${API_URL}/product/products/category/${slug}/${subSlug}`
+        : `${API_URL}/product/products/category/${slug}`;
+      
+      const response = await axios.get(url);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const blacklistProduct = createAsyncThunk(
+  'products/blacklistProduct',
+  async (id, { rejectWithValue }) => {
+    try {
+      // Using your route: /blacklist-product/:id
       const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/products/${productId}/variants/${variantId}/stock`,
-        { stock },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
+        `${API_URL}/product/blacklist-product/${id}`,
+        {},
+        getAuthHeaders()
       );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const removeFromBlacklist = createAsyncThunk(
+  'products/removeFromBlacklist',
+  async (id, { rejectWithValue }) => {
+    try {
+      // Using your route: /remove-from-blacklist/:id
+      const response = await axios.put(
+        `${API_URL}/product/remove-from-blacklist/${id}`,
+        {},
+        getAuthHeaders()
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const fetchSimilarProducts = createAsyncThunk(
+  'products/fetchSimilarProducts',
+  async (productId, { rejectWithValue }) => {
+    try {
+      // Using your route: /similar-products/:productId
+      const response = await axios.get(`${API_URL}/product/similar-products/${productId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -116,6 +188,7 @@ export const updateVariantStock = createAsyncThunk(
 const initialState = {
   products: [],
   currentProduct: null,
+  similarProducts: [],
   loading: false,
   error: null,
   pagination: {
@@ -145,6 +218,7 @@ const productSlice = createSlice({
       state.products = [];
       state.currentProduct = null;
       state.error = null;
+      state.similarProducts = [];
     },
   },
   extraReducers: (builder) => {
@@ -156,8 +230,17 @@ const productSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = action.payload.data || [];
-        state.pagination = action.payload.pagination || initialState.pagination;
+        state.products = action.payload.products || action.payload.data || [];
+       if (action.payload.pagination) {
+          state.pagination = {
+            currentPage: action.payload.pagination.currentPage || 1,
+            totalPages: action.payload.pagination.totalPages || 1,
+            totalProducts: action.payload.pagination.totalProducts || 0,
+            pageSize: action.payload.pagination.pageSize || 9,
+            hasNextPage: action.payload.pagination.hasNextPage || false,
+            hasPrevPage: action.payload.pagination.hasPrevPage || false
+          };
+        }
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
@@ -171,7 +254,7 @@ const productSlice = createSlice({
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false;
-        state.products.unshift(action.payload.data);
+        state.products.unshift(action.payload.product || action.payload.data);
       })
       .addCase(createProduct.rejected, (state, action) => {
         state.loading = false;
@@ -185,12 +268,13 @@ const productSlice = createSlice({
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.products.findIndex((p) => p._id === action.payload.data._id);
+        const updatedProduct = action.payload.product || action.payload.data;
+        const index = state.products.findIndex((p) => p._id === updatedProduct._id);
         if (index !== -1) {
-          state.products[index] = action.payload.data;
+          state.products[index] = updatedProduct;
         }
-        if (state.currentProduct?._id === action.payload.data._id) {
-          state.currentProduct = action.payload.data;
+        if (state.currentProduct?._id === updatedProduct._id) {
+          state.currentProduct = updatedProduct;
         }
       })
       .addCase(updateProduct.rejected, (state, action) => {
@@ -217,29 +301,72 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentProduct = action.payload.data;
+        state.currentProduct = action.payload.product || action.payload.data;
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
 
-      // Update Variant Stock
-      .addCase(updateVariantStock.pending, (state) => {
+      // Fetch Product by Name
+      .addCase(fetchProductByName.pending, (state) => {
         state.loading = true;
       })
-      .addCase(updateVariantStock.fulfilled, (state, action) => {
+      .addCase(fetchProductByName.fulfilled, (state, action) => {
         state.loading = false;
-        if (state.currentProduct) {
-          const variantIndex = state.currentProduct.variants.findIndex(
-            (v) => v._id === action.payload.data.variantId
-          );
-          if (variantIndex !== -1) {
-            state.currentProduct.variants[variantIndex].stock = action.payload.data.stock;
-          }
+        state.currentProduct = action.payload.product || action.payload.data;
+      })
+      .addCase(fetchProductByName.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Fetch Products by Category
+      .addCase(fetchProductsByCategory.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchProductsByCategory.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload.products || action.payload.data || [];
+      })
+      .addCase(fetchProductsByCategory.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // Blacklist Product
+      .addCase(blacklistProduct.fulfilled, (state, action) => {
+        const product = action.payload.product || action.payload.data;
+        const index = state.products.findIndex(p => p._id === product._id);
+        if (index !== -1) {
+          state.products[index].isBlacklisted = true;
+        }
+        if (state.currentProduct?._id === product._id) {
+          state.currentProduct.isBlacklisted = true;
         }
       })
-      .addCase(updateVariantStock.rejected, (state, action) => {
+
+      // Remove from Blacklist
+      .addCase(removeFromBlacklist.fulfilled, (state, action) => {
+        const product = action.payload.product || action.payload.data;
+        const index = state.products.findIndex(p => p._id === product._id);
+        if (index !== -1) {
+          state.products[index].isBlacklisted = false;
+        }
+        if (state.currentProduct?._id === product._id) {
+          state.currentProduct.isBlacklisted = false;
+        }
+      })
+
+      // Fetch Similar Products
+      .addCase(fetchSimilarProducts.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchSimilarProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.similarProducts = action.payload.products || action.payload.data || [];
+      })
+      .addCase(fetchSimilarProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

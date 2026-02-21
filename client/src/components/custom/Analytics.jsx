@@ -4,20 +4,30 @@ import {
   Activity,
   CreditCard,
   DollarSign,
-  Users,
   ShoppingBag,
   Truck,
   Package,
   ArrowUpRight,
   ArrowDownRight,
+  Calendar,
+  BarChart3,
+  PieChart,
+  TrendingUp,
 } from "lucide-react";
 
 import { SidebarInset } from "../ui/sidebar";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-// import { Progress } from "../ui/progress";
 import { Skeleton } from "../ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
 
 import useErrorLogout from "@/hooks/use-error-logout";
 import LineSalesChart from "../chart/LineChart";
@@ -34,6 +44,10 @@ const formatCurrency = (amount = 0) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+};
+
+const formatNumber = (num = 0) => {
+  return num.toLocaleString("en-IN");
 };
 
 const formatPercent = (value = 0) => {
@@ -64,13 +78,19 @@ const Analytics = () => {
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const { handleErrorLogout } = useErrorLogout();
+  
+  // Filters
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedHalf, setSelectedHalf] = useState("full");
+  const [availableYears, setAvailableYears] = useState([]);
 
+  // Fetch metrics when filters change
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
         setLoading(true);
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/get-metrics`,
+          `${import.meta.env.VITE_API_URL}/get-metrics?year=${selectedYear}&half=${selectedHalf}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -79,6 +99,10 @@ const Analytics = () => {
         );
 
         setMetrics(res.data.data);
+        
+        if (res.data.data?.metadata?.availableYears) {
+          setAvailableYears(res.data.data.metadata.availableYears);
+        }
       } catch (error) {
         handleErrorLogout(error);
       } finally {
@@ -87,7 +111,7 @@ const Analytics = () => {
     };
 
     fetchMetrics();
-  }, []);
+  }, [selectedYear, selectedHalf]);
 
   if (loading) {
     return <AnalyticsSkeleton />;
@@ -101,31 +125,115 @@ const Analytics = () => {
     );
   }
 
-  const { overview, statusDistribution, paymentStatus, charts, recentOrders, summary } = metrics;
+  const { overview, statusDistribution, paymentStatus, charts, recentOrders, summary, metadata } = metrics;
   
   const revenueGrowth = formatPercent(overview?.monthlyGrowth);
-  const usersGrowth = formatPercent(0); // You can add user growth later
   const todayGrowth = formatPercent(overview?.todayGrowth);
+
+  // Get period label based on selection
+  const getPeriodLabel = () => {
+    if (selectedHalf === "H1") return "January - June";
+    if (selectedHalf === "H2") return "July - December";
+    return "Full Year";
+  };
 
   return (
     <div className="w-full max-w-screen-2xl mx-auto px-2 sm:px-4">
       <SidebarInset>
         <div className="flex flex-1 flex-col gap-6 p-2 sm:p-4">
           
-          {/* HEADER */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-              Analytics Dashboard
-            </h1>
-            <Badge variant="outline" className="text-xs">
-              Last updated: {formatDate(metrics?.timestamps?.fetchedAt)}
-            </Badge>
+          {/* HEADER WITH FILTERS */}
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                Analytics Dashboard
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {getPeriodLabel()} {selectedYear}
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-3">
+              {/* HALF YEAR SELECTOR */}
+              <Select value={selectedHalf} onValueChange={setSelectedHalf}>
+                <SelectTrigger className="w-[140px]">
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Select Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full">Full Year</SelectItem>
+                  <SelectItem value="H1">Jan - Jun (H1)</SelectItem>
+                  <SelectItem value="H2">Jul - Dec (H2)</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* YEAR SELECTOR */}
+              <Select
+                value={selectedYear.toString()}
+                onValueChange={(value) => setSelectedYear(parseInt(value))}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears.length > 0 ? (
+                    availableYears.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value={selectedYear.toString()}>
+                      {selectedYear}
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              
+              <Badge variant="outline" className="text-xs whitespace-nowrap">
+                Updated: {formatDate(metrics?.timestamps?.fetchedAt)}
+              </Badge>
+            </div>
           </div>
 
-          {/* ================= KPI CARDS ================= */}
+          {/* PERIOD SUMMARY CARD */}
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">Period Revenue</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {formatCurrency(overview?.periodRevenue || 0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">Period Orders</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {formatNumber(overview?.periodOrders || 0)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">Avg Monthly</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {formatCurrency((overview?.periodRevenue || 0) / 
+                      (selectedHalf === "full" ? 12 : 6))}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">Best Month</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {charts?.monthlyRevenue?.length > 0 
+                      ? formatCurrency(Math.max(...charts.monthlyRevenue.map(m => m.revenue)))
+                      : '₹0'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* KPI CARDS */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            
-            {/* TOTAL REVENUE */}
             <MetricCard
               title="Total Revenue"
               value={formatCurrency(overview?.totalRevenue)}
@@ -139,10 +247,9 @@ const Analytics = () => {
               }}
             />
 
-            {/* TOTAL ORDERS */}
             <MetricCard
               title="Total Orders"
-              value={overview?.totalOrders?.toLocaleString() || 0}
+              value={formatNumber(overview?.totalOrders)}
               subtitle="All time orders"
               icon={ShoppingBag}
               badge={{
@@ -151,7 +258,6 @@ const Analytics = () => {
               }}
             />
 
-            {/* TODAY'S REVENUE */}
             <MetricCard
               title="Today's Revenue"
               value={formatCurrency(overview?.todayRevenue)}
@@ -165,7 +271,6 @@ const Analytics = () => {
               }}
             />
 
-            {/* ACTIVE NOW */}
             <MetricCard
               title="Active Orders"
               value={overview?.activeOrders || 0}
@@ -180,10 +285,8 @@ const Analytics = () => {
             />
           </div>
 
-          {/* ================= SECONDARY METRICS ================= */}
+          {/* SECONDARY METRICS */}
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            
-            {/* THIS MONTH */}
             <SimpleMetricCard
               title="This Month"
               value={formatCurrency(overview?.thisMonthRevenue)}
@@ -191,21 +294,18 @@ const Analytics = () => {
               trend={revenueGrowth}
             />
 
-            {/* AVG ORDER VALUE */}
             <SimpleMetricCard
               title="Avg. Order Value"
               value={formatCurrency(overview?.avgOrderValue)}
               subtitle="Per order"
             />
 
-            {/* AVG DELIVERY TIME */}
             <SimpleMetricCard
               title="Avg. Delivery"
               value={`${overview?.avgDeliveryDays || 0} days`}
               subtitle="From confirmation"
             />
 
-            {/* CONVERSION RATE */}
             <SimpleMetricCard
               title="COD vs Prepaid"
               value={`${summary?.codPercentage || 0}% / ${summary?.prepaidPercentage || 0}%`}
@@ -213,92 +313,22 @@ const Analytics = () => {
             />
           </div>
 
-          {/* ================= STATUS DISTRIBUTION ================= */}
+          {/* STATUS DISTRIBUTION */}
           <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-            
-            {/* ORDER STATUS */}
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Order Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <StatusBar
-                    label="Pending"
-                    count={statusDistribution?.pending || 0}
-                    total={overview?.totalOrders}
-                    color="bg-yellow-500"
-                  />
-                  <StatusBar
-                    label="Confirmed"
-                    count={statusDistribution?.confirmed || 0}
-                    total={overview?.totalOrders}
-                    color="bg-blue-500"
-                  />
-                  <StatusBar
-                    label="Shipped"
-                    count={statusDistribution?.shipped || 0}
-                    total={overview?.totalOrders}
-                    color="bg-purple-500"
-                  />
-                  <StatusBar
-                    label="Delivered"
-                    count={statusDistribution?.delivered || 0}
-                    total={overview?.totalOrders}
-                    color="bg-emerald-500"
-                  />
-                  <StatusBar
-                    label="Cancelled"
-                    count={statusDistribution?.cancelled || 0}
-                    total={overview?.totalOrders}
-                    color="bg-rose-500"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <StatusCard
+              title="Order Status"
+              icon={Package}
+              data={statusDistribution}
+              total={overview?.totalOrders}
+            />
 
-            {/* PAYMENT STATUS */}
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Status
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <StatusBar
-                    label="Paid"
-                    count={paymentStatus?.paid || 0}
-                    total={overview?.totalOrders}
-                    color="bg-emerald-500"
-                  />
-                  <StatusBar
-                    label="Pending"
-                    count={paymentStatus?.pending || 0}
-                    total={overview?.totalOrders}
-                    color="bg-yellow-500"
-                  />
-                  <StatusBar
-                    label="Failed"
-                    count={paymentStatus?.failed || 0}
-                    total={overview?.totalOrders}
-                    color="bg-rose-500"
-                  />
-                  <StatusBar
-                    label="Refunded"
-                    count={paymentStatus?.refunded || 0}
-                    total={overview?.totalOrders}
-                    color="bg-gray-500"
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <StatusCard
+              title="Payment Status"
+              icon={CreditCard}
+              data={paymentStatus}
+              total={overview?.totalOrders}
+            />
 
-            {/* QUICK STATS */}
             <Card className="lg:col-span-1">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -318,32 +348,34 @@ const Analytics = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">Delivered Today</p>
-                    <p className="text-2xl font-bold">0</p>
+                    <p className="text-2xl font-bold">
+                      {statusDistribution?.delivered || 0}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* ================= CHARTS ================= */}
+          {/* CHARTS SECTION */}
           <div className="flex flex-col gap-6">
             
-            {/* COMBO CHART - Revenue + Orders */}
+            {/* COMBO CHART */}
             <Card className="w-full">
               <CardHeader>
                 <CardTitle>Revenue & Orders Trend</CardTitle>
               </CardHeader>
-              <CardContent className="h-[400px]">
+              <CardContent className="h-full">
                 <ComboSalesChart data={metrics || []} />
               </CardContent>
             </Card>
 
-            {/* LINE CHART - Monthly Performance */}
+            {/* LINE CHART */}
             <Card className="w-full">
               <CardHeader>
                 <CardTitle>Monthly Performance</CardTitle>
               </CardHeader>
-              <CardContent className="h-[350px]">
+              <CardContent className="h-full">
                 <LineSalesChart data={metrics || []} />
               </CardContent>
             </Card>
@@ -351,12 +383,12 @@ const Analytics = () => {
             {/* BOTTOM GRID */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
-              {/* CATEGORY PIE CHART */}
+              {/* PIE CHART */}
               <Card>
                 <CardHeader>
                   <CardTitle>Sales by Category</CardTitle>
                 </CardHeader>
-                <CardContent className="h-[350px]">
+                <CardContent className="h-full">
                   <CategoryPieChart data={metrics || {}} />
                 </CardContent>
               </Card>
@@ -463,19 +495,55 @@ const SimpleMetricCard = ({ title, value, subtitle, trend }) => (
   </Card>
 );
 
-const StatusBar = ({ label, count, total, color }) => {
-  const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-  
+const StatusCard = ({ title, icon: Icon, data, total }) => {
+  const statusConfig = {
+    pending: { label: "Pending", color: "bg-yellow-500" },
+    confirmed: { label: "Confirmed", color: "bg-blue-500" },
+    shipped: { label: "Shipped", color: "bg-purple-500" },
+    delivered: { label: "Delivered", color: "bg-emerald-500" },
+    cancelled: { label: "Cancelled", color: "bg-rose-500" },
+    paid: { label: "Paid", color: "bg-emerald-500" },
+    failed: { label: "Failed", color: "bg-rose-500" },
+    refunded: { label: "Refunded", color: "bg-gray-500" },
+  };
+
   return (
-    <div>
-      <div className="flex justify-between text-sm mb-1">
-        <span className="text-gray-700 dark:text-gray-300">{label}</span>
-        <span className="font-medium text-gray-900 dark:text-white">
-          {count} ({percentage}%)
-        </span>
-      </div>
-      {/* <Progress value={percentage} className={`h-2 ${color}`} /> */}
-    </div>
+    <Card className="lg:col-span-1">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Icon className="h-5 w-5" />
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {Object.entries(data || {}).map(([key, value]) => {
+            if (value === 0) return null;
+            const config = statusConfig[key];
+            if (!config) return null;
+            
+            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+            
+            return (
+              <div key={key}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-700 dark:text-gray-300">{config.label}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {value} ({percentage}%)
+                  </span>
+                </div>
+                <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${config.color}`} 
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -549,6 +617,11 @@ const AnalyticsSkeleton = () => (
   <div className="w-full max-w-screen-2xl mx-auto px-2 sm:px-4">
     <SidebarInset>
       <div className="flex flex-1 flex-col gap-6 p-2 sm:p-4">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-64" />
+        </div>
+        
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
             <Card key={i}>
