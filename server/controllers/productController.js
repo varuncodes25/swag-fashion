@@ -58,386 +58,163 @@ function getColorCode(colorName) {
 const createProduct = async (req, res) => {
   try {
     const {
-      name,
-      description,
-      shortDescription,
-      category,
-      clothingType,
-      gender,
-      fabric,
-      brand,
-      // Variant data
-      colors,
-      sizes,
-      basePrice,
-      stocks,
-      colorCodes,
-      // Stock matrix for better stock management
-      stockMatrix,
-      // Color-Image mapping - IMPORTANT: This tells which image belongs to which color
-      colorImageMap,
-      // Optional fields
-      ageGroup = "Adult",
-      fabricComposition = "100% Cotton",
-      fit = "Regular",
-      pattern = "Solid",
-      sleeveType = "Full Sleeve",
-      neckType = "Round Neck",
-      discount = 0,
-      offerTitle,
-      offerDescription,
-      offerValidFrom,
-      offerValidTill,
-      freeShipping = false,
-      season = "All Season",
-      occasion = "Casual",
-      features = [],
-      packageContent = "1 Piece",
-      countryOfOrigin = "India",
-      productDimensions = {},
-      warranty = "No Warranty",
-      returnPolicy = "7 Days Return Available",
+      name, description, shortDescription, category, clothingType, gender, fabric, brand,
+      colors, sizes, basePrice, colorCodes, stockMatrix, colorImageMap,
+      ageGroup = "Adult", fabricComposition = "100% Cotton", fit = "Regular",
+      pattern = "Solid", sleeveType = "Full Sleeve", neckType = "Round Neck",
+      discount = 0, offerTitle, offerDescription, offerValidFrom, offerValidTill,
+      freeShipping = false, season = "All Season", occasion = "Casual", features = [],
+      packageContent = "1 Piece", countryOfOrigin = "India", careInstructions,
+      productDimensions, warranty = "No Warranty", returnPolicy = "7 Days Return Available",
     } = req.body;
 
-    // Basic validation
-    if (
-      !name ||
-      !description ||
-      !category ||
-      !clothingType ||
-      !gender ||
-      !fabric ||
-      !brand
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Name, description, category, clothing type, gender, fabric and brand are required.",
-      });
+    // ============ VALIDATION (Minimal) ============
+    if (!name || !description || !category || !clothingType || !gender || !fabric || !brand) {
+      return res.status(400).json({ success: false, message: "Required fields missing" });
     }
-
     if (!colors || !sizes || !basePrice) {
-      return res.status(400).json({
-        success: false,
-        message: "Colors, sizes and base price are required for variants.",
-      });
+      return res.status(400).json({ success: false, message: "Colors, sizes and base price are required." });
     }
-
     if (!req.files || req.files.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Please upload at least one image.",
-      });
+      return res.status(400).json({ success: false, message: "Please upload at least one image." });
     }
 
-    // Parse arrays
-    const colorsArray = Array.isArray(colors)
-      ? colors
-      : JSON.parse(colors || "[]");
-    const sizesArray = Array.isArray(sizes) ? sizes : JSON.parse(sizes || "[]");
-    const stocksArray = Array.isArray(stocks)
-      ? stocks
-      : JSON.parse(stocks || "[]");
-    const colorCodesArray = Array.isArray(colorCodes)
-      ? colorCodes
-      : JSON.parse(colorCodes || "[]");
-    const featuresArray = Array.isArray(features)
-      ? features
-      : JSON.parse(features || "[]");
+    // ============ 1-LINE PARSING HELPER ============
+    const parse = (data, def) => !data ? def : (Array.isArray(data) ? data : (() => { try { return JSON.parse(data); } catch { return def; } })());
 
-    // Parse stock matrix if provided
-    let stockMatrixObj = {};
-    if (stockMatrix) {
-      try {
-        stockMatrixObj =
-          typeof stockMatrix === "string"
-            ? JSON.parse(stockMatrix)
-            : stockMatrix;
-      } catch (error) {
-        console.warn("Invalid stock matrix format:", error);
-      }
-    }
-
-    // ============ IMPORTANT FIX: Parse color-image mapping ============
-    let colorImageMapping = {};
+    // ============ PARSE ALL DATA (5 lines) ============
+    const colorsArray = parse(colors, []);
+    const sizesArray = parse(sizes, []);
+    const featuresArray = parse(features, []);
+    const colorCodesArray = parse(colorCodes, []);
+    const stockMatrixObj = parse(stockMatrix, {});
+    const colorImageMapping = parse(colorImageMap, {});
+    const seasonArray = parse(season, ['All Season']);
+    const occasionArray = parse(occasion, ['Casual']);
+    const careInstructionsArray = parse(careInstructions, ['Machine Wash']);
     
-    if (colorImageMap) {
-      try {
-        colorImageMapping =
-          typeof colorImageMap === "string"
-            ? JSON.parse(colorImageMap)
-            : colorImageMap;
-        
-        
-      } catch (error) {
-        console.warn("❌ Invalid colorImageMap format:", error);
-        console.warn("colorImageMap string:", colorImageMap);
-      }
-    } else {
-      console.warn("⚠️ No colorImageMap received from frontend");
-    }
+    // Parse dimensions
+    const parsedDimensions = productDimensions 
+      ? (typeof productDimensions === 'string' ? JSON.parse(productDimensions) : productDimensions)
+      : { length: 0, width: 0, height: 0, weight: 0.2 };
 
-    // Parse season and occasion
-    let seasonArray = ["All Season"];
-    let occasionArray = ["Casual"];
-
-    if (season) {
-      if (Array.isArray(season)) {
-        seasonArray = season;
-      } else if (typeof season === "string") {
-        try {
-          seasonArray = JSON.parse(season);
-        } catch {
-          seasonArray = [season];
-        }
-      }
-    }
-
-    if (occasion) {
-      if (Array.isArray(occasion)) {
-        occasionArray = occasion;
-      } else if (typeof occasion === "string") {
-        try {
-          occasionArray = JSON.parse(occasion);
-        } catch {
-          occasionArray = [occasion];
-        }
-      }
-    }
-
-    // Validate arrays
+    // Validate colors and sizes
     if (colorsArray.length === 0 || sizesArray.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one color and one size is required.",
-      });
+      return res.status(400).json({ success: false, message: "At least one color and size required." });
     }
 
-    // Upload images to Cloudinary
-    const uploadedImages = [];
-    
-    for (let i = 0; i < req.files.length; i++) {
-      const file = req.files[i];
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            folder: "clothing/products",
-            resource_type: "image",
-            transformation: [
-              { width: 800, height: 800, crop: "limit" },
-              { quality: "auto" },
-            ],
-          },
-          (error, result) => (error ? reject(error) : resolve(result)),
-        );
-        stream.end(file.buffer);
-      });
-
-      uploadedImages.push({
-        url: result.secure_url,
-        id: result.public_id,
-        isMain: i === 0, // First image is main by default
-        sortOrder: i,
-      });
-      
-    }
-
-    // ============ CRITICAL FIX: Create allImages array with correct color assignment ============
-    const allImages = [];
-    
-    
-    // Check if we have valid color-image mapping
-    if (Object.keys(colorImageMapping).length > 0) {
-    
-      
-      // Create a reverse mapping: image index -> color
-      const imageIndexToColorMap = {};
-      
-      Object.entries(colorImageMapping).forEach(([colorName, indices]) => {
-        if (Array.isArray(indices)) {
-          indices.forEach(imgIndex => {
-            if (imgIndex >= 0 && imgIndex < uploadedImages.length) {
-              imageIndexToColorMap[imgIndex] = colorName;
-
-            } else {
-            }
-          });
-        }
-      });
-
-      // Assign each image to its color
-      uploadedImages.forEach((image, imageIndex) => {
-        const colorName = imageIndexToColorMap[imageIndex];
-        
-        if (colorName && colorsArray.includes(colorName)) {
-          const colorIndex = colorsArray.indexOf(colorName);
-          const colorCode = colorCodesArray[colorIndex] || getColorCode(colorName);
-          
-          allImages.push({
-            ...image,
-            color: colorName,
-            colorCode: colorCode,
-          });
-          
-
-        } else {
-          // Fallback: assign to first color
-          const firstColor = colorsArray[0];
-          const firstColorCode = colorCodesArray[0] || getColorCode(firstColor);
-          
-          allImages.push({
-            ...image,
-            color: firstColor,
-            colorCode: firstColorCode,
-          });
-          
-        }
-      });
-    } else {
-      // Fallback: All images belong to first color
-      
-      const firstColor = colorsArray[0];
-      const firstColorCode = colorCodesArray[0] || getColorCode(firstColor);
-
-      uploadedImages.forEach((img, index) => {
-        allImages.push({
-          ...img,
-          color: firstColor,
-          colorCode: firstColorCode,
-        });
-      });
-    }
-
-    // Validate that all colors have at least one image
-    const colorsWithImages = [...new Set(allImages.map(img => img.color))];
-    const colorsWithoutImages = colorsArray.filter(color => !colorsWithImages.includes(color));
-    
-    if (colorsWithoutImages.length > 0) {
-      // You might want to return error here or assign default images
-    }
-
-
-    allImages.forEach((img, idx) => {
-      console.log(`  ${idx}: ${img.color} ${img.isMain ? '⭐' : ''}`);
-    });
-
-    // ============ Create variants WITHOUT images array ============
-    const variants = [];
-    const price = parseFloat(basePrice);
-    let variantCounter = 0;
-
-    colorsArray.forEach((color, colorIndex) => {
-      sizesArray.forEach((size, sizeIndex) => {
-        // Calculate stock - using stockMatrix if available, otherwise flat array
-        let stockValue = 0;
-
-        if (
-          stockMatrixObj[color] &&
-          stockMatrixObj[color][size] !== undefined
-        ) {
-          stockValue = parseInt(stockMatrixObj[color][size]);
-        } else if (stocksArray.length > 0) {
-          // Try to get stock from flat array
-          const flatIndex = colorIndex * sizesArray.length + sizeIndex;
-          stockValue = parseInt(
-            stocksArray[flatIndex] || stocksArray[colorIndex] || 0,
+    // ============ UPLOAD IMAGES (Parallel) ============
+    const uploadedImages = await Promise.all(
+      req.files.map(async (file, index) => {
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "clothing/products", transformation: [{ width: 800, height: 800, crop: "limit" }] },
+            (error, result) => error ? reject(error) : resolve(result)
           );
-        }
-
-        const variant = {
-          color: color,
-          colorCode: colorCodesArray[colorIndex] || getColorCode(color),
-          size: size,
-          price: price,
-          stock: stockValue,
-          // NO images field here - saving database space
+          stream.end(file.buffer);
+        });
+        return {
+          url: result.secure_url,
+          id: result.public_id,
+          isMain: index === 0,
+          sortOrder: index,
         };
+      })
+    );
 
-        variants.push(variant);
-        variantCounter++;
-      });
-    });
-
-    // Parse product dimensions
-    let parsedDimensions = {
-      length: 0,
-      width: 0,
-      height: 0,
-      weight: 0.2,
-    };
-
-    if (productDimensions) {
-      try {
-        const dims =
-          typeof productDimensions === "string"
-            ? JSON.parse(productDimensions)
-            : productDimensions;
-
-        parsedDimensions = {
-          ...parsedDimensions,
-          ...dims,
-        };
-      } catch (error) {
-        console.warn("Invalid dimensions format:", error);
-      }
-    }
-
-    // ============ Create product with optimized structure ============
+    // ============ CREATE PRODUCT (Let schema methods do the heavy lifting) ============
     const product = new Product({
-      name,
-      description,
+      // Basic Info
+      name, description,
       shortDescription: shortDescription || description.substring(0, 150),
-      category,
-      clothingType,
-      gender,
-      ageGroup,
-      fabric,
-      fabricComposition,
-      fit,
-      pattern,
-      sleeveType,
-      neckType,
-      brand,
+      category, clothingType, gender, ageGroup, fabric, fabricComposition,
+      fit, pattern, sleeveType, neckType, brand,
+      
+      // Arrays (already parsed)
       season: seasonArray,
       occasion: occasionArray,
       features: featuresArray,
-      packageContent,
-      countryOfOrigin,
-
-      // Centralized images storage - NOW WITH CORRECT COLOR ASSIGNMENT
-      allImages: allImages,
-
-      // Variants WITHOUT duplicate images
-      variants,
-
-      // Additional fields
+      careInstructions: careInstructionsArray,
+      
+      // Dimensions
+      productDimensions: parsedDimensions,
+      
+      // Images (schema will handle imagesByColor via pre-save)
+      allImages: uploadedImages.map((img, idx) => ({
+        ...img,
+        color: colorsArray[0], // Temporary - will be fixed below
+        colorCode: colorCodesArray[0] || '#808080',
+      })),
+      
+      // Variants (schema will handle SKU, sellingPrice, etc.)
+      variants: colorsArray.flatMap((color, cIdx) => 
+        sizesArray.map((size) => ({
+          color,
+          colorCode: colorCodesArray[cIdx] || '#808080',
+          size,
+          price: parseFloat(basePrice),
+          stock: stockMatrixObj[color]?.[size] || 0,
+        }))
+      ),
+      
+      // Offer & Discount
       discount: parseInt(discount) || 0,
-      offerTitle: offerTitle || null,
-      offerDescription: offerDescription || null,
+      offerTitle, offerDescription,
       offerValidFrom: offerValidFrom ? new Date(offerValidFrom) : null,
       offerValidTill: offerValidTill ? new Date(offerValidTill) : null,
       freeShipping: freeShipping === "true" || freeShipping === true,
-
-      // Dimensions
-      productDimensions: parsedDimensions,
-
-      // Warranty & Returns
-      warranty,
-      returnPolicy,
-
-      // Admin
+      
+      // Other
+      warranty, returnPolicy, packageContent, countryOfOrigin,
       createdBy: req.userId,
+      status: "published",
     });
 
-    await product.save();
+    // ============ FIX COLOR-IMAGE MAPPING ============
+    if (Object.keys(colorImageMapping).length > 0) {
+      const fixedImages = [];
+      const colorToIndex = {};
+      
+      Object.entries(colorImageMapping).forEach(([color, indices]) => {
+        colorToIndex[color] = indices;
+      });
+      
+      let globalIdx = 0;
+      colorsArray.forEach(color => {
+        const indices = colorToIndex[color] || [];
+        indices.forEach(idx => {
+          if (idx < uploadedImages.length) {
+            fixedImages.push({
+              ...uploadedImages[idx],
+              color,
+              colorCode: colorCodesArray[colorsArray.indexOf(color)] || '#808080',
+            });
+          }
+        });
+      });
+      
+      product.allImages = fixedImages;
+    }
 
+    // ============ SAVE (Schema methods handle the rest) ============
+    await product.save();
+    
+    console.log("✅ Product saved:", {
+      id: product._id,
+      name: product.name,
+      variants: product.variants.length,
+      images: product.allImages.length
+    });
+
+    // ============ RESPONSE (Using schema method) ============
     res.status(201).json({
       success: true,
       message: "Product created successfully",
       data: product.getProductDetailData(),
     });
+
   } catch (error) {
-    console.error("Create product error:", error);
+    console.error("❌ Error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Failed to create product",
@@ -447,7 +224,6 @@ const createProduct = async (req, res) => {
 
 // ==================== GET ALL PRODUCTS ====================
 const getProducts = async (req, res) => {
-
   try {
     let { page, limit, category, price, search, sort } = req.query;
 
@@ -481,19 +257,14 @@ const getProducts = async (req, res) => {
       .limit(limit);
     // ❌ REMOVE: .lean() - We need Mongoose documents for methods
 
-   
     const enhancedProducts = products.map((product) => {
-     
       // ✅ This returns ALL card data including image
       const cardData = product.getProductCardData();
-
-    
 
       return cardData;
     });
 
     const totalPages = Math.ceil(totalProducts / limit);
-
 
     return res.status(200).json({
       success: true,
@@ -582,7 +353,18 @@ const getProductByIdForAdmin = async (req, res) => {
 // ==================== GET PRODUCTS FOR ADMIN ====================
 const getProductsforadmin = async (req, res) => {
   try {
-    let { page, limit, category, price, search, sort, minPrice, maxPrice, gender, inStock } = req.query;
+    let {
+      page,
+      limit,
+      category,
+      price,
+      search,
+      sort,
+      minPrice,
+      maxPrice,
+      gender,
+      inStock,
+    } = req.query;
 
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 9;
@@ -595,10 +377,10 @@ const getProductsforadmin = async (req, res) => {
 
     // 1️⃣ CATEGORY FILTER
     if (category && category.toLowerCase() !== "all") {
-      const categoryDoc = await Category.findOne({ 
-        name: { $regex: new RegExp(`^${category.trim()}$`, 'i') } 
+      const categoryDoc = await Category.findOne({
+        name: { $regex: new RegExp(`^${category.trim()}$`, "i") },
       });
-      
+
       if (categoryDoc) {
         matchStage.category = categoryDoc._id;
       } else {
@@ -647,8 +429,8 @@ const getProductsforadmin = async (req, res) => {
     if (price && !isNaN(price)) {
       pipeline.push({
         $match: {
-          "variants.sellingPrice": { $lte: Number(price) }
-        }
+          "variants.sellingPrice": { $lte: Number(price) },
+        },
       });
     }
 
@@ -657,11 +439,11 @@ const getProductsforadmin = async (req, res) => {
       const priceFilter = {};
       if (minPrice && !isNaN(minPrice)) priceFilter.$gte = Number(minPrice);
       if (maxPrice && !isNaN(maxPrice)) priceFilter.$lte = Number(maxPrice);
-      
+
       pipeline.push({
         $match: {
-          "variants.sellingPrice": priceFilter
-        }
+          "variants.sellingPrice": priceFilter,
+        },
       });
     }
 
@@ -669,9 +451,9 @@ const getProductsforadmin = async (req, res) => {
     pipeline.push({
       $addFields: {
         minSellingPrice: {
-          $min: "$variants.sellingPrice"
-        }
-      }
+          $min: "$variants.sellingPrice",
+        },
+      },
     });
 
     // ==================== SORTING ====================
@@ -687,28 +469,25 @@ const getProductsforadmin = async (req, res) => {
     // Count ke liye alag pipeline
     const countPipeline = [...pipeline];
     // Remove sorting and pagination from count pipeline
-    const finalCountPipeline = countPipeline.filter(stage => 
-      !stage.$sort && !stage.$skip && !stage.$limit
+    const finalCountPipeline = countPipeline.filter(
+      (stage) => !stage.$sort && !stage.$skip && !stage.$limit,
     );
-    
+
     const countResult = await Product.aggregate([
       ...finalCountPipeline,
-      { $count: "total" }
+      { $count: "total" },
     ]);
-    
+
     const totalProducts = countResult.length > 0 ? countResult[0].total : 0;
 
     // ==================== PAGINATION ====================
-    pipeline.push(
-      { $skip: (page - 1) * limit },
-      { $limit: limit }
-    );
+    pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
 
     // ==================== EXECUTE AGGREGATION ====================
     let products = await Product.aggregate(pipeline);
 
     // Convert to Mongoose documents for methods
-    products = products.map(p => new Product(p));
+    products = products.map((p) => new Product(p));
 
     // ==================== ENHANCE PRODUCTS ====================
     const enhancedProducts = products.map((product) => {
@@ -866,7 +645,6 @@ const deleteProduct = async (req, res) => {
 
 // ==================== GET PRODUCT BY NAME ====================
 const getProductByName = async (req, res) => {
-
   const { name } = req.params;
   console.log(name);
   try {
@@ -1188,7 +966,7 @@ const getProductsByCategory = async (req, res) => {
 
     // ✅ COLOR FILTER - FIXED
     if (queryParams.colors) {
-      console.log("col")
+      console.log("col");
       const colors = queryParams.colors
         .split(",")
         .map((c) => c.trim().toLowerCase());
@@ -1401,17 +1179,17 @@ const getProductBySlug = async (req, res) => {
 const getSimilarProducts = async (req, res) => {
   try {
     console.log("📦 Similar products request:", req.params, req.query);
-    
+
     let { productId } = req.params;
     let { limit } = req.query;
 
     // Default limit
     limit = parseInt(limit) || 6;
-    
+
     if (!productId) {
       return res.status(400).json({
         success: false,
-        message: "Product ID is required"
+        message: "Product ID is required",
       });
     }
 
@@ -1419,36 +1197,35 @@ const getSimilarProducts = async (req, res) => {
 
     // 1. Find current product
     const currentProduct = await Product.findById(productId);
-    
+
     if (!currentProduct) {
       return res.status(404).json({
         success: false,
-        message: "Product not found"
+        message: "Product not found",
       });
     }
 
     // 2. Get current product's card data (if needed)
     const currentProductCardData = currentProduct.getProductCardData();
-    
+
     // 3. Build query for similar products
     // यहाँ similarity logic डालो - category, tags, price range, etc.
     const query = {
-      _id: { $ne: productId },  // Exclude current product
-     
+      _id: { $ne: productId }, // Exclude current product
     };
 
     // Similarity criteria (choose based on your business logic)
-    
+
     // Option 1: Same category
     if (currentProduct.category) {
       query.category = currentProduct.category;
     }
-    
+
     // Option 2: Same tags (at least one matching tag)
     // if (currentProduct.tags && currentProduct.tags.length > 0) {
     //   query.tags = { $in: currentProduct.tags };
     // }
-    
+
     // // Option 3: Similar price range (±20%)
     // const minPrice = currentProduct.price * 0.8;
     // const maxPrice = currentProduct.price * 1.2;
@@ -1457,18 +1234,18 @@ const getSimilarProducts = async (req, res) => {
     // 4. Fetch similar products
     const similarProducts = await Product.find(query)
       .limit(limit)
-      .sort({ 
+      .sort({
         // Sorting logic - most relevant first
-        rating: -1,        // Higher rating first
-        reviewCount: -1,   // More reviews first
-        createdAt: -1      // Newer products first
+        rating: -1, // Higher rating first
+        reviewCount: -1, // More reviews first
+        createdAt: -1, // Newer products first
       })
       .lean(); // For better performance
 
     console.log(`✅ Found ${similarProducts.length} similar products`);
 
     // 5. Format each product using your existing method
-    const formattedProducts = similarProducts.map(product => {
+    const formattedProducts = similarProducts.map((product) => {
       // Create a temporary Product instance to call the method
       const productInstance = new Product(product);
       return productInstance.getProductCardData();
@@ -1476,18 +1253,18 @@ const getSimilarProducts = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: formattedProducts.length > 0 
-        ? `Found ${formattedProducts.length} similar products` 
-        : "No similar products found",
+      message:
+        formattedProducts.length > 0
+          ? `Found ${formattedProducts.length} similar products`
+          : "No similar products found",
       data: formattedProducts,
-      currentProduct: currentProductCardData // Optional: include current product info
+      currentProduct: currentProductCardData, // Optional: include current product info
     });
-
   } catch (error) {
     console.error("❌ Get similar products error:", error);
     return res.status(500).json({
       success: false,
-      message: error.message || "Internal server error"
+      message: error.message || "Internal server error",
     });
   }
 };
@@ -1506,5 +1283,5 @@ module.exports = {
   getProductsByCategory,
   getProductBySlug,
   getSimilarProducts,
-  getProductByIdForAdmin
+  getProductByIdForAdmin,
 };

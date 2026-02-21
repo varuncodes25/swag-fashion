@@ -45,7 +45,7 @@ export const createProduct = createAsyncThunk(
     try {
       // Using your route: /create-product
       const response = await axios.post(
-        `${API_URL}/product/create-product`,
+        `${API_URL}/create-product`,
         formData,
         {
           headers: {

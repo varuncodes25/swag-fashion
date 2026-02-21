@@ -119,6 +119,12 @@ export const useProductForm = (initialData = null) => {
     warranty: 'No Warranty',
     returnPolicy: '7 Days Return Available',
     returnWindow: 7,
+    productDimensions: {  // <--- YEH ADD KARO
+      length: 0,
+      width: 0,
+      height: 0,
+      weight: 0.2
+    },
   });
 
   const [colors, setColors] = useState([]);
@@ -175,6 +181,7 @@ export const useProductForm = (initialData = null) => {
       warranty: product.warranty || 'No Warranty',
       returnPolicy: product.returnPolicy || '7 Days Return Available',
       returnWindow: product.returnWindow || 7,
+      productDimensions: product.productDimensions 
     });
 
     // Set colors and sizes from variants
@@ -535,151 +542,188 @@ export const useProductForm = (initialData = null) => {
   };
 
   // ============ CORRECTED: Prepare form data for submission ============
-  const prepareFormData = () => {
-    try {
-      console.log("🚀 Preparing form data...");
-      
-      // Validate required fields first
-      if (!formData.name || !formData.description || !formData.category) {
-        throw new Error("Name, description, and category are required");
-      }
-
-      const formDataObj = new FormData();
-      
-      // Add basic fields
-      Object.keys(formData).forEach(key => {
-        const value = formData[key];
-        
-        if (value === undefined || value === null) {
-          return;
-        }
-        
-        if (key === 'season' || key === 'occasion' || key === 'features' || 
-            key === 'keyFeatures' || key === 'careInstructions') {
-          const arrayValue = Array.isArray(value) ? value : [];
-          if (arrayValue.length > 0) {
-            formDataObj.append(key, JSON.stringify(arrayValue));
-          }
-        } else if (key === 'specifications') {
-          const specsObj = Object.fromEntries(value);
-          if (Object.keys(specsObj).length > 0) {
-            formDataObj.append(key, JSON.stringify(specsObj));
-          }
-        } else if (['freeShipping', 'isFeatured', 'isNewArrival', 'isBestSeller'].includes(key)) {
-          formDataObj.append(key, value.toString());
-        } else if (key === 'basePrice') {
-          const price = parseFloat(value);
-          if (isNaN(price) || price <= 0) {
-            throw new Error("Please enter a valid price");
-          }
-          formDataObj.append(key, price.toString());
-        } else if (key === 'discount') {
-          const discount = parseFloat(value);
-          if (!isNaN(discount) && discount > 0) {
-            formDataObj.append(key, discount.toString());
-          }
-        } else if (key === 'returnWindow') {
-          const window = parseInt(value);
-          if (!isNaN(window) && window > 0) {
-            formDataObj.append(key, window.toString());
-          }
-        } else if (value !== '' && value !== false) {
-          formDataObj.append(key, value);
-        }
-      });
-
-      // Validate colors and sizes
-      if (colors.length === 0) {
-        throw new Error("Please add at least one color");
-      }
-      if (sizes.length === 0) {
-        throw new Error("Please add at least one size");
-      }
-
-      // Add colors and sizes
-      formDataObj.append('colors', JSON.stringify(colors));
-      formDataObj.append('sizes', JSON.stringify(sizes));
-      
-      // Add stock matrix
-      formDataObj.append('stockMatrix', JSON.stringify(stockMatrix));
-      
-      // Add color codes
-      const colorCodesArray = colors.map(color => {
-        const colorObj = COLOR_OPTIONS.find(c => c.name === color);
-        return colorObj?.code || '#000000';
-      });
-      formDataObj.append('colorCodes', JSON.stringify(colorCodesArray));
-
-      // ============ CORRECTED: Prepare images and colorImageMap ============
-      console.log("🖼️ Preparing images data...");
-      
-      // First, validate all colors have images
-      colors.forEach(colorName => {
-        const images = variantImages[colorName] || [];
-        if (images.length === 0) {
-          throw new Error(`Please upload at least one image for color: ${colorName}`);
-        }
-      });
-
-      // Recalculate colorImageMap to ensure correct indices
-      const finalColorImageMap = {};
-      const allImageFiles = [];
-      let globalIndex = 0;
-      
-      // Process colors in order
-      colors.forEach(colorName => {
-        const images = variantImages[colorName] || [];
-        const indices = [];
-        
-        images.forEach((imgObj, localIndex) => {
-          if (imgObj && imgObj.file) {
-            // Add file to array
-            allImageFiles.push(imgObj.file);
-            // Add index to map
-            indices.push(globalIndex);
-            globalIndex++;
-            
-            console.log(`📸 ${colorName} - Image ${localIndex} -> Global Index: ${indices[indices.length-1]}`);
-          } else {
-            console.warn(`⚠️ ${colorName} - Image ${localIndex} has no file object`);
-          }
-        });
-        
-        if (indices.length > 0) {
-          finalColorImageMap[colorName] = indices;
-        }
-      });
-
-      if (allImageFiles.length === 0) {
-        throw new Error("No valid images uploaded. Please upload images for all colors.");
-      }
-      
-      // Add all images to FormData in correct order
-      allImageFiles.forEach((file, index) => {
-        formDataObj.append('images', file);
-        console.log(`📤 Uploading image ${index}: ${file.name}`);
-      });
-      
-      // Add colorImageMap
-      console.log("🔗 Final colorImageMap:", JSON.stringify(finalColorImageMap, null, 2));
-      formDataObj.append('colorImageMap', JSON.stringify(finalColorImageMap));
-
-      // Debug info
-      console.log("✅ FormData prepared successfully:");
-      console.log("- Name:", formData.name);
-      console.log("- Base Price:", formData.basePrice);
-      console.log("- Colors:", colors);
-      console.log("- Sizes:", sizes);
-      console.log("- Total Images:", allImageFiles.length);
-      console.log("- Color Image Map entries:", Object.keys(finalColorImageMap).length);
-
-      return formDataObj;
-      
-    } catch (error) {
-      console.error("❌ Error in prepareFormData:", error);
-      throw error;
+const prepareFormData = () => {
+  try {
+    console.log("🚀 Preparing form data...");
+    
+    // Validate required fields first
+    if (!formData.name || !formData.description || !formData.category) {
+      throw new Error("Name, description, and category are required");
     }
-  };
+
+    const formDataObj = new FormData();
+    
+    // Add basic fields
+    Object.keys(formData).forEach(key => {
+      const value = formData[key];
+      
+      if (value === undefined || value === null) {
+        return;
+      }
+      
+      // ✅ FIX 1: Arrays ko JSON string bhejo (MULTIPLE ENTRIES NAHI)
+      if (key === 'season' || key === 'occasion' || key === 'features' || 
+          key === 'keyFeatures' || key === 'careInstructions') {
+        if (Array.isArray(value) && value.length > 0) {
+          // ✅ JSON string bhejo
+          formDataObj.append(key, JSON.stringify(value));
+          console.log(`📤 ${key}:`, JSON.stringify(value));
+        }
+      } 
+      else if (key === 'specifications') {
+        const specsObj = Object.fromEntries(value);
+        if (Object.keys(specsObj).length > 0) {
+          formDataObj.append(key, JSON.stringify(specsObj));
+        }
+      } 
+      // ✅ FIX 2: productDimensions ko JSON string bhejo
+      else if (key === 'productDimensions') {
+        if (value && typeof value === 'object') {
+          console.log("📦 Adding productDimensions:", value);
+          formDataObj.append(key, JSON.stringify(value));
+        } else {
+          formDataObj.append(key, value || '{}');
+        }
+      }
+      else if (['freeShipping', 'isFeatured', 'isNewArrival', 'isBestSeller'].includes(key)) {
+        formDataObj.append(key, value.toString());
+      } 
+      else if (key === 'basePrice') {
+        const price = parseFloat(value);
+        if (isNaN(price) || price <= 0) {
+          throw new Error("Please enter a valid price");
+        }
+        formDataObj.append(key, price.toString());
+      } 
+      else if (key === 'discount') {
+        const discount = parseFloat(value);
+        if (!isNaN(discount) && discount > 0) {
+          formDataObj.append(key, discount.toString());
+        }
+      } 
+      else if (key === 'returnWindow') {
+        const window = parseInt(value);
+        if (!isNaN(window) && window > 0) {
+          formDataObj.append(key, window.toString());
+        }
+      } 
+      else if (value !== '' && value !== false) {
+        formDataObj.append(key, value);
+      }
+    });
+
+    // ❌ FIX 3: YEH SAB HATHA DO - ye double entries create kar rahe hain
+    // if (formData.season && Array.isArray(formData.season)) {
+    //   formData.season.forEach(s => {
+    //     if (s) formDataObj.append('season', s);
+    //   });
+    // }
+    // if (formData.occasion && Array.isArray(formData.occasion)) {
+    //   formData.occasion.forEach(o => {
+    //     if (o) formDataObj.append('occasion', o);
+    //   });
+    // }
+    // if (formData.careInstructions && Array.isArray(formData.careInstructions)) {
+    //   formData.careInstructions.forEach(c => {
+    //     if (c) formDataObj.append('careInstructions', c);
+    //   });
+    // }
+
+    // Validate colors and sizes
+    if (colors.length === 0) {
+      throw new Error("Please add at least one color");
+    }
+    if (sizes.length === 0) {
+      throw new Error("Please add at least one size");
+    }
+
+    // Add colors and sizes (yeh JSON string hi rehne do)
+    formDataObj.append('colors', JSON.stringify(colors));
+    formDataObj.append('sizes', JSON.stringify(sizes));
+    
+    // Add stock matrix
+    formDataObj.append('stockMatrix', JSON.stringify(stockMatrix));
+    
+    // Add color codes
+    const colorCodesArray = colors.map(color => {
+      const colorObj = COLOR_OPTIONS.find(c => c.name === color);
+      return colorObj?.code || '#000000';
+    });
+    formDataObj.append('colorCodes', JSON.stringify(colorCodesArray));
+
+    // Prepare images and colorImageMap
+    console.log("🖼️ Preparing images data...");
+    
+    // First, validate all colors have images
+    colors.forEach(colorName => {
+      const images = variantImages[colorName] || [];
+      if (images.length === 0) {
+        throw new Error(`Please upload at least one image for color: ${colorName}`);
+      }
+    });
+
+    // Recalculate colorImageMap to ensure correct indices
+    const finalColorImageMap = {};
+    const allImageFiles = [];
+    let globalIndex = 0;
+    
+    // Process colors in order
+    colors.forEach(colorName => {
+      const images = variantImages[colorName] || [];
+      const indices = [];
+      
+      images.forEach((imgObj, localIndex) => {
+        if (imgObj && imgObj.file) {
+          // Add file to array
+          allImageFiles.push(imgObj.file);
+          // Add index to map
+          indices.push(globalIndex);
+          globalIndex++;
+          
+          console.log(`📸 ${colorName} - Image ${localIndex} -> Global Index: ${indices[indices.length-1]}`);
+        } else {
+          console.warn(`⚠️ ${colorName} - Image ${localIndex} has no file object`);
+        }
+      });
+      
+      if (indices.length > 0) {
+        finalColorImageMap[colorName] = indices;
+      }
+    });
+
+    if (allImageFiles.length === 0) {
+      throw new Error("No valid images uploaded. Please upload images for all colors.");
+    }
+    
+    // Add all images to FormData in correct order
+    allImageFiles.forEach((file, index) => {
+      formDataObj.append('images', file);
+      console.log(`📤 Uploading image ${index}: ${file.name}`);
+    });
+    
+    // Add colorImageMap
+    console.log("🔗 Final colorImageMap:", JSON.stringify(finalColorImageMap, null, 2));
+    formDataObj.append('colorImageMap', JSON.stringify(finalColorImageMap));
+
+    // Debug info
+    console.log("✅ FormData prepared successfully:");
+    console.log("- Name:", formData.name);
+    console.log("- Base Price:", formData.basePrice);
+    console.log("- Colors:", colors);
+    console.log("- Sizes:", sizes);
+    console.log("- Season:", JSON.stringify(formData.season));
+    console.log("- Occasion:", JSON.stringify(formData.occasion));
+    console.log("- Care Instructions:", JSON.stringify(formData.careInstructions));
+    console.log("- Product Dimensions:", JSON.stringify(formData.productDimensions));
+    console.log("- Total Images:", allImageFiles.length);
+
+    return formDataObj;
+    
+  } catch (error) {
+    console.error("❌ Error in prepareFormData:", error);
+    throw error;
+  }
+};
 
   // Reset form
   const resetForm = () => {
