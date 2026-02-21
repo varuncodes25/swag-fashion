@@ -106,12 +106,6 @@ const ProductCard = ({
     }
   };
 
-  const formatPrice = (price) => {
-    const num = Number(price);
-    if (isNaN(num)) return "₹0";
-    return `₹${num.toLocaleString("en-IN")}`;
-  };
-
   return (
     <div 
       className="group relative h-full"
@@ -119,10 +113,10 @@ const ProductCard = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/product/${_id}`} className="block h-full">
-        <div className="overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-100 dark:border-gray-800">
+        <div className="overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200 dark:border-gray-800">
           
           {/* Image Container */}
-          <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-50 dark:bg-gray-800">
+          <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800">
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 animate-pulse" />
             )}
@@ -141,23 +135,23 @@ const ProductCard = ({
               } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             />
 
-            {/* Badges */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {/* Top Left Badges */}
+            {/* <div className="absolute top-2 left-2 flex flex-col gap-1">
               {isNewArrival && (
-                <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full shadow-lg backdrop-blur-sm bg-opacity-90 flex items-center gap-1">
+                <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full shadow-lg flex items-center gap-1">
                   <Clock size={12} />
                   New
                 </span>
               )}
               {isBestSeller && (
-                <span className="px-2 py-1 bg-amber-500 text-white text-xs font-medium rounded-full shadow-lg backdrop-blur-sm bg-opacity-90 flex items-center gap-1">
+                <span className="px-2 py-1 bg-amber-500 text-white text-xs font-medium rounded-full shadow-lg flex items-center gap-1">
                   <TrendingUp size={12} />
                   Best Seller
                 </span>
               )}
-            </div>
+            </div> */}
 
-            {/* Discount Badge */}
+            {/* Top Right - Discount Badge */}
             {hasRealDiscount && (
               <div className="absolute top-2 right-2">
                 <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
@@ -166,24 +160,38 @@ const ProductCard = ({
               </div>
             )}
 
-            {/* Wishlist Button */}
+            {/* Top Right - Wishlist Button (below discount) */}
             <button
               onClick={handleWishlistToggle}
               disabled={isToggling}
-              className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 transform ${
-                isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
-              } ${
+              className={`absolute bottom-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
                 wishlisted 
-                  ? 'bg-red-500 text-white shadow-lg' 
-                  : 'bg-white/90 dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 backdrop-blur-sm hover:bg-red-500 hover:text-white'
+                  ? 'bg-red-500 text-white hover:bg-red-600' 
+                  : 'bg-white/90 dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 hover:bg-red-500 hover:text-white backdrop-blur-sm'
               }`}
             >
               <Heart size={16} fill={wishlisted ? "currentColor" : "none"} />
             </button>
+
+            {/* ===== FLIPKART STYLE RATING - Bottom Right ===== */}
+           {safeRating > 0 && (
+  <div className="absolute bottom-2 right-2">
+<div className="flex items-center gap-1 bg-green-800 text-white px-2 py-1 rounded-sm shadow">      <span className="text-xs font-bold">
+        {safeRating.toFixed(1)}
+      </span>
+      <Star size={12} className="text-white fill-white" />
+      {reviewCount > 0 && (
+        <span className="text-xs text-white/80 ml-1">
+          ({reviewCount})
+        </span>
+      )}
+    </div>
+  </div>
+)}
           </div>
 
           {/* Product Info */}
-          <div className="p-3 flex-1 flex flex-col ">
+          <div className="p-3 flex-1 flex flex-col bg-white dark:bg-gray-900">
             
             {/* Product Name & Type */}
             <div>
@@ -198,69 +206,55 @@ const ProductCard = ({
             </div>
 
             {/* Price Section */}
-            <div className="flex items-center justify-between gap-1">
-  {/* Price section */}
-  <div className="flex items-baseline gap-1 sm:gap-2">
-    <span className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-      {formatPriceShort(safeSellingPrice)}
-    </span>
-    {hasRealDiscount && (
-      <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 line-through">
-        {formatPriceShort(safePrice)}
-      </span>
-    )}
-  </div>
-
-  {/* Rating - Flipkart Style with formatted numbers */}
-  {safeRating > 0 && (
-    <div className="flex items-center gap-1 h-5 shrink-0">
-      {/* Rating number with star */}
-      <div className="flex items-center gap-0.5">
-        <span className="text-xs font-semibold text-gray-900 dark:text-white">
-          {safeRating.toFixed(1)}
-        </span>
-        <Star size={12} className="text-green-500 fill-green-500" />
-      </div>
-      
-      {/* Ratings count - formatted */}
-      {/* {reviewCount > 0 && (
-        <span className="text-[10px] text-gray-500 dark:text-gray-400 whitespace-nowrap">
-          ({reviewCount >= 1000 
-            ? (reviewCount/1000).toFixed(1) + 'k' 
-            : reviewCount})
-        </span>
-      )} */}
-    </div>
-  )}
-</div>
-
+            <div className="flex items-baseline gap-2 mt-2">
+              <span className="text-base font-bold text-gray-900 dark:text-white">
+                ₹{safeSellingPrice.toLocaleString("en-IN")}
+              </span>
+              {hasRealDiscount && (
+                <span className="text-xs text-gray-400 dark:text-gray-500 line-through">
+                  ₹{safePrice.toLocaleString("en-IN")}
+                </span>
+              )}
+            </div>
 
             {/* Color/Size Indicators */}
             {(colors?.length > 0 || sizes?.length > 0) && (
-              <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                 {colors?.length > 0 && (
-                  <div className="flex -space-x-1">
-                    {colors.slice(0, 3).map((color, idx) => (
-                      <div
-                        key={idx}
-                        className="w-4 h-4 rounded-full border border-white dark:border-gray-800 shadow-sm"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
+                  <div className="flex items-center gap-1">
+                    <div className="flex -space-x-1">
+                      {colors.slice(0, 3).map((color, idx) => (
+                        <div
+                          key={idx}
+                          className="w-4 h-4 rounded-full border border-white dark:border-gray-800 shadow-sm"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
                     {colors.length > 3 && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         +{colors.length - 3}
                       </span>
                     )}
                   </div>
                 )}
+                
                 {sizes?.length > 0 && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {sizes.slice(0, 3).join(', ')}
-                    {sizes.length > 3 && ' +more'}
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {sizes.slice(0, 3).join(', ')}
+                      {sizes.length > 3 && ' +more'}
+                    </span>
+                  </div>
                 )}
               </div>
+            )}
+
+            {/* Stock Status */}
+            {totalStock === 0 && (
+              <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+                Out of Stock
+              </p>
             )}
           </div>
         </div>
