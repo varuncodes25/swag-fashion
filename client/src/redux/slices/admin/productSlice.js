@@ -95,11 +95,20 @@ export const deleteProduct = createAsyncThunk(
 );
 
 export const fetchProductById = createAsyncThunk(
-  'products/fetchProductById',
+  'adminProducts/fetchById',
   async (id, { rejectWithValue }) => {
     try {
-      // Using your route: /get-product-by-id/:id
-      const response = await axios.get(`${API_URL}/product/get-product-by-id/${id}`);
+      // ✅ Admin route with token
+      const response = await axios.get(
+        `${API_URL}/admin/product/${id}`, 
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      
+      // Response structure: { success, message, data }
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

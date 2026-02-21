@@ -547,7 +547,38 @@ const getProductById = async (req, res) => {
     });
   }
 };
+const getProductByIdForAdmin = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate("category", "name")
+      .populate("subCategory")
+      .populate("reviews")
+      .populate("createdBy", "name email")
+      .populate("updatedBy", "name email");
 
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // ✅ Admin method use karo
+    const productData = product.getAdminProductData();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product fetched successfully",
+      data: productData,
+    });
+  } catch (err) {
+    console.error("Get product by ID error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 // ==================== GET PRODUCTS FOR ADMIN ====================
 const getProductsforadmin = async (req, res) => {
   try {
@@ -1475,4 +1506,5 @@ module.exports = {
   getProductsByCategory,
   getProductBySlug,
   getSimilarProducts,
+  getProductByIdForAdmin
 };

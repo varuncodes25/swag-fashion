@@ -29,6 +29,7 @@ import TermsAndConditions from "./components/TermsAndConditions";
 import CategoryPage from "./pages/CategoryPage";
 import OrderDetails from "./components/order/OrderDetails";
 import WishlistPage from "./pages/Wishlist";
+import AdminProductDetails from "./components/Admin/AdminProductDetails";
 
 export default function App() {
   const router = createBrowserRouter([
@@ -168,6 +169,14 @@ export default function App() {
       element: (
         <ProtectedRoute requireAdmin={true}>
           <AdminLayout children={<Analytics />} />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/admin/products/:productId",
+      element: (
+        <ProtectedRoute requireAdmin={true}>
+          <AdminLayout children={<AdminProductDetails />} />
         </ProtectedRoute>
       ),
     },

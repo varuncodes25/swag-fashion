@@ -927,7 +927,104 @@ productSchema.methods.getProductDetailData = function() {
     updatedAt: this.updatedAt
   };
 };
-
+productSchema.methods.getAdminProductData = function() {
+  return {
+    // Sab kuch jo user ko milta hai
+    ...this.getProductDetailData(),
+    
+    // + Extra admin fields
+    
+    // Full descriptions
+    fullDescription: this.fullDescription,
+    keyFeatures: this.keyFeatures,
+    shortDescription: this.shortDescription,
+    
+    // Complete specifications
+    specifications: this.getFormattedSpecifications?.(),
+    
+    // Admin fields
+    createdAt: this.createdAt,
+    updatedAt: this.updatedAt,
+    createdBy: this.createdBy,
+    updatedBy: this.updatedBy,
+    status: this.status,
+    blacklisted: this.blacklisted,
+    
+    // Analytics
+    viewCount: this.viewCount,
+    soldCount: this.soldCount,
+    wishlistCount: this.wishlistCount,
+    
+    // Complete variants with ALL fields
+    variants: this.variants.map(v => ({
+      ...v.toObject(),
+      reservedStock: v.reservedStock,
+      sku: v.sku,
+      barcode: v.barcode,
+      sizeDetails: v.sizeDetails,
+      discountPrice: v.discountPrice,
+      discountPercentage: v.discountPercentage,
+      createdAt: v.createdAt,
+      updatedAt: v.updatedAt
+    })),
+    
+    // All images with metadata
+    allImages: this.allImages,
+    imagesByColor: Object.fromEntries(this.imagesByColor || new Map()),
+    
+    // Complete product details
+    category: this.category,
+    subCategory: this.subCategory,
+    ageGroup: this.ageGroup,
+    fabricComposition: this.fabricComposition,
+    careInstructions: this.careInstructions,
+    sleeveType: this.sleeveType,
+    neckType: this.neckType,
+    season: this.season,
+    occasion: this.occasion,
+    features: this.features,
+    
+    // Package & Shipping
+    packageContent: this.packageContent,
+    countryOfOrigin: this.countryOfOrigin,
+    productDimensions: this.productDimensions,
+    handlingTime: this.handlingTime,
+    estimatedDelivery: this.estimatedDelivery,
+    
+    // Flags
+    isFeatured: this.isFeatured,
+    isNewArrival: this.isNewArrival,
+    isBestSeller: this.isBestSeller,
+    isTrending: this.isTrending,
+    
+    // Pricing
+    mrp: this.mrp,
+    sellingPrice: this.sellingPrice,
+    
+    // Offer
+    offerTitle: this.offerTitle,
+    offerDescription: this.offerDescription,
+    offerValidFrom: this.offerValidFrom,
+    offerValidTill: this.offerValidTill,
+    offerCode: this.offerCode,
+    
+    // Warranty & Return
+    warranty: this.warranty,
+    returnPolicy: this.returnPolicy,
+    returnWindow: this.returnWindow,
+    
+    // SEO
+    metaTitle: this.metaTitle,
+    metaDescription: this.metaDescription,
+    keywords: this.keywords,
+    tags: this.tags,
+    
+    // Stock analytics
+    totalStock: this.totalStock,
+    availableStock: this.availableStock,
+    reservedStock: this.variants.reduce((sum, v) => sum + (v.reservedStock || 0), 0)
+  };
+};
 // Add new variant
 productSchema.methods.addVariant = function(variantData) {
   this.variants.push(variantData);

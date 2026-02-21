@@ -237,7 +237,7 @@ const AllProducts = () => {
           </p>
         </div>
         <Button 
-          onClick={() => navigate("/admin/products/create")}
+          onClick={() => navigate("/admin/dashboard")}
           className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-md"
           size="sm"
         >

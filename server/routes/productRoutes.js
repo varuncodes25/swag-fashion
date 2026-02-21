@@ -10,7 +10,8 @@ const {
   getProductById,
   getProductsforadmin,
   getProductsByCategory ,
-  getSimilarProducts // ✅ Ensure this is imported
+  getSimilarProducts, // ✅ Ensure this is imported
+  getProductByIdForAdmin
 } = require("../controllers/productController");
 const verifyToken = require("../middlewares/verifyToken");
 const upload = require("../middlewares/multer");
@@ -34,6 +35,7 @@ router.get("/get-products", getProducts);
 router.get("/get-product-by-id/:id", getProductById);
 router.get("/get-products-admin", getProductsforadmin);
 router.get("/get-product-by-name/:name", getProductByName);
+router.get("/admin/product/:id", getProductByIdForAdmin);
 
 // ============ CATEGORY ROUTES ============
 // ✅ IMPORTANT: Category routes ko specific path dena
