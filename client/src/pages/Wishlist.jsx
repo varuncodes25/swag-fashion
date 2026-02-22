@@ -158,16 +158,7 @@ const WishlistPage = () => {
               
               <ProductCard {...product} />
               
-              {/* Quick Actions */}
-              <div className="mt-3 flex gap-2">
-                <button
-                  onClick={() => navigate(`/product/${product.slug || product._id}`)}
-                  className="flex-1 py-2 text-center border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  View Details
-                </button>
-                
-              </div>
+            
             </div>
           ))}
         </div>

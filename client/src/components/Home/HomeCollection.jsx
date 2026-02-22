@@ -3,9 +3,6 @@ import React ,{ useEffect, useState } from "react";
 import axios from "axios";
 import { 
   ArrowRight, 
-  Sparkles,
-  Shirt,
-  ShirtIcon,
   Baby,
   Package,
   Sparkles as StyleIcon,
