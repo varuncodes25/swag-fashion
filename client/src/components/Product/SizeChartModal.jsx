@@ -1,6 +1,6 @@
 // components/Product/SizeChartModal.jsx
 import React, { useState } from 'react';
-import { X, Ruler, HelpCircle, ChevronDown, ChevronUp, User } from 'lucide-react';
+import { X, Ruler, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType }) => {
   const [unit, setUnit] = useState('inches');
@@ -8,205 +8,201 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
   
   if (!isOpen || !variant?.sizeDetails) return null;
 
-  const sizeDetails = variant.sizeDetails;
-
-  // Measurement labels mapping
-  const measurementLabels = {
-    chest: 'Chest',
-    waist: 'Waist',
-    hips: 'Hips',
-    length: 'Length',
-    shoulder: 'Shoulder',
-    sleeve: 'Sleeve',
-    inseam: 'Inseam'
+  // ============ SAMPLE DATA - Multiple Sizes ke liye ============
+  const sizeChartData = {
+    "S": { chest: 38, length: 25, shoulder: 18, sleeve: 22, hips: 40 },
+    "M": { chest: 40, length: 26, shoulder: 19, sleeve: 22.5, hips: 42 },
+    "L": { chest: 42, length: 27, shoulder: 18, sleeve: 23, hips: 44 },
+    "XL": { chest: 44, length: 28, shoulder: 19, sleeve: 23.5, hips: 46 }
   };
 
-  // ============ CLOTHING TYPE CATEGORIES ============
-  const categories = {
-    topWear: ['T-Shirt', 'Shirt', 'Jacket', 'Sweater', 'Hoodie', 'Sweatshirt', 'Top', 'Kurta', 'Blouse', 'Sherwani'],
-    bottomWear: ['Jeans', 'Trousers', 'Shorts', 'Skirt', 'Track Suit', 'Leggings', 'Capris'],
-    fullBody: ['Dress', 'Saree', 'Lehenga', 'Gown', 'Jumpsuit', 'Bodysuit'],
-    innerWear: ['Innerwear', 'Bra', 'Panties', 'Boxers', 'Briefs'],
-    accessories: ['Socks', 'Cap', 'Scarf', 'Gloves', 'Hat']
-  };
+  // ============ GET TABLE HEADERS ============
+  const headers = [
+    { key: 'size', label: 'Size' },
+    { key: 'chest', label: 'Chest (in)' },
+    { key: 'length', label: 'Front Length (in)' },
+    { key: 'shoulder', label: 'Across Shoulder (in)' },
+    { key: 'sleeve', label: 'Sleeve-Length (in)' },
+    { key: 'hips', label: 'Hips (in)' }
+  ];
 
-  // ============ GET RELEVANT MEASUREMENTS ============
-  const getRelevantMeasurements = () => {
-    const topWearMeas = ['chest', 'shoulder', 'sleeve', 'length'];
-    const bottomWearMeas = ['waist', 'hips', 'inseam', 'length'];
-    const fullBodyMeas = ['chest', 'waist', 'hips', 'length', 'shoulder', 'sleeve'];
-    const innerWearMeas = ['chest', 'waist', 'hips'];
-    const accessoriesMeas = []; // No measurements for accessories
-
-    if (categories.topWear.includes(clothingType)) {
-      return topWearMeas;
-    } else if (categories.bottomWear.includes(clothingType)) {
-      return bottomWearMeas;
-    } else if (categories.fullBody.includes(clothingType)) {
-      return fullBodyMeas;
-    } else if (categories.innerWear.includes(clothingType)) {
-      return innerWearMeas;
-    } else if (categories.accessories.includes(clothingType)) {
-      return accessoriesMeas;
-    }
-    
-    // Default - all measurements
-    return Object.keys(measurementLabels);
-  };
-
-  // ============ GET DIAGRAM TYPE ============
-  const getDiagramType = () => {
-    if (categories.topWear.includes(clothingType)) return 'top';
-    if (categories.bottomWear.includes(clothingType)) return 'bottom';
-    if (categories.fullBody.includes(clothingType)) return 'full';
-    if (categories.innerWear.includes(clothingType)) return 'inner';
-    return 'default';
-  };
-
-  const measurements = getRelevantMeasurements();
-  const hasMeasurements = measurements.some(m => sizeDetails[m]);
-  const diagramType = getDiagramType();
-
-  // Convert between inches and cm
-  const convertValue = (value, fromUnit, toUnit) => {
-    if (!value) return '-';
-    if (fromUnit === toUnit) return value;
-    return toUnit === 'cm' ? (value * 2.54).toFixed(1) : (value / 2.54).toFixed(1);
-  };
-
-  // Get icon for measurement
-  const getMeasurementIcon = (key) => {
-    switch(key) {
-      case 'chest': return '👕';
-      case 'waist': return '👖';
-      case 'hips': return '📐';
-      case 'length': return '📏';
-      case 'shoulder': return '🦴';
-      case 'sleeve': return '💪';
-      case 'inseam': return '👞';
-      default: return '📏';
-    }
-  };
-
-  // ============ RENDER DIAGRAM BASED ON TYPE ============
-  const renderDiagram = () => {
-    const diagramConfig = {
-      top: {
-        lines: [
-          { type: 'shoulder', top: '25%', left: '20%', width: '60%', color: 'red', label: 'Shoulder' },
-          { type: 'chest', top: '40%', left: '15%', width: '70%', color: 'blue', label: 'Chest' },
-          { type: 'length', vertical: true, top: '20%', left: '75%', height: '60%', color: 'green', label: 'Length' },
-          { type: 'sleeve', top: '30%', left: '75%', width: '20%', rotate: true, color: 'orange', label: 'Sleeve' }
-        ]
-      },
-      bottom: {
-        lines: [
-          { type: 'waist', top: '40%', left: '20%', width: '60%', color: 'purple', label: 'Waist' },
-          { type: 'hips', top: '60%', left: '15%', width: '70%', color: 'pink', label: 'Hips' },
-          { type: 'inseam', vertical: true, top: '40%', left: '50%', height: '40%', color: 'brown', label: 'Inseam' },
-          { type: 'length', vertical: true, top: '20%', left: '75%', height: '70%', color: 'green', label: 'Length' }
-        ]
-      },
-      full: {
-        lines: [
-          { type: 'shoulder', top: '20%', left: '20%', width: '60%', color: 'red', label: 'Shoulder' },
-          { type: 'chest', top: '35%', left: '15%', width: '70%', color: 'blue', label: 'Chest' },
-          { type: 'waist', top: '50%', left: '20%', width: '60%', color: 'purple', label: 'Waist' },
-          { type: 'hips', top: '65%', left: '15%', width: '70%', color: 'pink', label: 'Hips' },
-          { type: 'length', vertical: true, top: '15%', left: '75%', height: '70%', color: 'green', label: 'Length' }
-        ]
-      },
-      inner: {
-        lines: [
-          { type: 'chest', top: '35%', left: '20%', width: '60%', color: 'blue', label: 'Chest' },
-          { type: 'waist', top: '55%', left: '20%', width: '60%', color: 'purple', label: 'Waist' },
-          { type: 'hips', top: '75%', left: '20%', width: '60%', color: 'pink', label: 'Hips' }
-        ]
-      }
-    };
-
-    const config = diagramConfig[diagramType] || diagramConfig.top;
-
-    return (
-      <div className="relative w-full h-full">
-        {/* Human silhouette */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <User className="w-32 h-32 text-gray-400 dark:text-gray-600" />
-        </div>
+  // ============ T-SHIRT DIAGRAM COMPONENT ============
+  const TShirtDiagram = () => (
+    <div className="relative w-full h-64 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
+      {/* T-Shirt Outline */}
+      <svg viewBox="0 0 300 300" className="w-full h-full">
+        {/* T-Shirt Body */}
+        <path 
+          d="M100 50 L200 50 L220 90 L220 200 L150 230 L80 200 L80 90 L100 50" 
+          fill="none" 
+          stroke="#333" 
+          strokeWidth="2"
+          className="dark:stroke-gray-400"
+        />
         
-        {/* Measurement lines */}
-        {config.lines.map((line, index) => {
-          if (!measurements.includes(line.type)) return null;
-          
-          if (line.vertical) {
-            return (
-              <React.Fragment key={index}>
-                <div 
-                  className="absolute w-0.5 bg-opacity-60"
-                  style={{
-                    top: line.top,
-                    left: line.left,
-                    height: line.height,
-                    backgroundColor: `${line.color}400`,
-                    transform: 'translateX(-50%)'
-                  }}
-                />
-                <span 
-                  className="absolute text-xs font-medium px-2 py-0.5 rounded-full shadow-sm bg-white dark:bg-gray-800"
-                  style={{
-                    top: `calc(${line.top} + ${line.height} / 2)`,
-                    left: `calc(${line.left} + 5%)`,
-                    color: `${line.color}500`,
-                    transform: 'translateY(-50%)'
-                  }}
-                >
-                  {line.label}
-                </span>
-              </React.Fragment>
-            );
-          } else {
-            return (
-              <React.Fragment key={index}>
-                <div 
-                  className="absolute h-0.5 bg-opacity-60"
-                  style={{
-                    top: line.top,
-                    left: line.left,
-                    width: line.width,
-                    backgroundColor: `${line.color}400`,
-                    transform: line.rotate ? 'rotate(45deg)' : 'none'
-                  }}
-                />
-                <span 
-                  className="absolute text-xs font-medium px-2 py-0.5 rounded-full shadow-sm bg-white dark:bg-gray-800"
-                  style={{
-                    top: `calc(${line.top} - 5%)`,
-                    left: '50%',
-                    color: `${line.color}500`,
-                    transform: 'translateX(-50%)'
-                  }}
-                >
-                  {line.label}
-                </span>
-              </React.Fragment>
-            );
-          }
-        })}
-      </div>
-    );
-  };
+        {/* Neck/Collar */}
+        <path 
+          d="M135 50 Q150 35,165 50" 
+          fill="none" 
+          stroke="#333" 
+          strokeWidth="2"
+          className="dark:stroke-gray-400"
+        />
+        
+        {/* Sleeves */}
+        <path 
+          d="M100 50 L70 90" 
+          fill="none" 
+          stroke="#333" 
+          strokeWidth="2"
+          className="dark:stroke-gray-400"
+        />
+        <path 
+          d="M200 50 L230 90" 
+          fill="none" 
+          stroke="#333" 
+          strokeWidth="2"
+          className="dark:stroke-gray-400"
+        />
+
+        {/* ============ MEASUREMENT LINES ============ */}
+
+        {/* Shoulder Line */}
+        <line 
+          x1="100" y1="50" 
+          x2="200" y2="50" 
+          stroke="#ef4444" 
+          strokeWidth="2" 
+          strokeDasharray="5,5"
+        />
+        <text 
+          x="150" y="40" 
+          fontSize="12" 
+          fill="#ef4444" 
+          textAnchor="middle"
+          className="font-medium"
+        >
+          Shoulder
+        </text>
+
+        {/* Chest Line */}
+        <line 
+          x1="80" y1="100" 
+          x2="220" y2="100" 
+          stroke="#3b82f6" 
+          strokeWidth="2" 
+          strokeDasharray="5,5"
+        />
+        <text 
+          x="150" y="90" 
+          fontSize="12" 
+          fill="#3b82f6" 
+          textAnchor="middle"
+          className="font-medium"
+        >
+          Chest
+        </text>
+
+        {/* Waist Line */}
+        <line 
+          x1="85" y1="150" 
+          x2="215" y2="150" 
+          stroke="#8b5cf6" 
+          strokeWidth="2" 
+          strokeDasharray="5,5"
+        />
+        <text 
+          x="150" y="140" 
+          fontSize="12" 
+          fill="#8b5cf6" 
+          textAnchor="middle"
+          className="font-medium"
+        >
+          Waist
+        </text>
+
+        {/* Hips Line */}
+        <line 
+          x1="90" y1="200" 
+          x2="210" y2="200" 
+          stroke="#ec4899" 
+          strokeWidth="2" 
+          strokeDasharray="5,5"
+        />
+        <text 
+          x="150" y="190" 
+          fontSize="12" 
+          fill="#ec4899" 
+          textAnchor="middle"
+          className="font-medium"
+        >
+          Hips
+        </text>
+
+        {/* Length Line */}
+        <line 
+          x1="230" y1="50" 
+          x2="230" y2="220" 
+          stroke="#22c55e" 
+          strokeWidth="2" 
+          strokeDasharray="5,5"
+        />
+        <text 
+          x="245" y="135" 
+          fontSize="12" 
+          fill="#22c55e" 
+          transform="rotate(90, 245, 135)"
+          className="font-medium"
+        >
+          Length
+        </text>
+
+        {/* Sleeve Line */}
+        <line 
+          x1="220" y1="90" 
+          x2="250" y2="120" 
+          stroke="#f97316" 
+          strokeWidth="2" 
+          strokeDasharray="5,5"
+        />
+        <text 
+          x="260" y="100" 
+          fontSize="12" 
+          fill="#f97316" 
+          className="font-medium"
+        >
+          Sleeve
+        </text>
+      </svg>
+    </div>
+  );
+
+  // ============ MEASUREMENT TIPS ============
+  const measurementTips = [
+    { name: 'Collar', desc: 'Measure around the base of your neck', color: 'gray' },
+    { name: 'Chest', desc: 'Measure around the fullest part of your chest', color: 'blue' },
+    { name: 'Waist', desc: 'Measure around your natural waistline', color: 'purple' },
+    { name: 'Length', desc: 'From shoulder to hem', color: 'green' },
+    { name: 'Across Shoulder', desc: 'From one shoulder seam to the other', color: 'red' },
+    { name: 'Sleeve Length', desc: 'From shoulder seam to wrist', color: 'orange' }
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         
-        {/* Header */}
+        {/* ============ HEADER ============ */}
         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Ruler className="w-5 h-5 text-pink-500" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Size Chart - {clothingType}
-            </h2>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Size Chart - {clothingType || 'T-Shirt'}
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {productName || 'Product'} • Size {variant?.size || 'M'}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Unit Toggle */}
@@ -219,7 +215,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
                     : 'text-gray-600 dark:text-gray-400'
                 }`}
               >
-                Inches
+                IN
               </button>
               <button
                 onClick={() => setUnit('cm')}
@@ -241,153 +237,158 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
           </div>
         </div>
 
+        {/* ============ MAIN CONTENT ============ */}
         <div className="p-6">
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Left Column - Diagram */}
-            <div className="bg-gradient-to-br from-pink-50 to-blue-50 dark:from-pink-900/20 dark:to-blue-900/20 rounded-lg p-6">
-              <div className="aspect-square relative">
-                {renderDiagram()}
-              </div>
+          
+          {/* Title Section */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Size Chart
+            </h1>
+            <h2 className="text-lg text-gray-600 dark:text-gray-400 mt-1">
+              Size Chart | How to measure
+            </h2>
+          </div>
+
+          {/* ============ TWO COLUMN LAYOUT ============ */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Left Column - T-Shirt Diagram */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Measurement Guide
+              </h3>
+              <TShirtDiagram />
               
-              {/* Size Info */}
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Selected Size: <span className="text-lg font-bold text-pink-500">{variant.size}</span>
-                </p>
-                {sizeDetails.fitDescription && (
-                  <span className={`inline-block mt-2 text-xs px-3 py-1 rounded-full ${
-                    sizeDetails.fitDescription.includes('small') ? 'bg-orange-100 text-orange-700' :
-                    sizeDetails.fitDescription.includes('large') ? 'bg-blue-100 text-blue-700' :
-                    'bg-green-100 text-green-700'
-                  }`}>
-                    👕 {sizeDetails.fitDescription}
-                  </span>
-                )}
+              {/* Color Legend */}
+              <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span>Shoulder</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span>Chest</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                  <span>Waist</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
+                  <span>Hips</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span>Length</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                  <span>Sleeve</span>
+                </div>
               </div>
             </div>
 
-            {/* Right Column - Measurements Table */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Body Measurements
+            {/* Right Column - Size Chart Table */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Size Chart
               </h3>
-              
-              {hasMeasurements ? (
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg divide-y divide-gray-200 dark:divide-gray-700">
-                  {measurements.map((key) => {
-                    if (!sizeDetails[key]) return null;
-                    const displayValue = convertValue(
-                      sizeDetails[key], 
-                      sizeDetails.unit || 'inches', 
-                      unit
-                    );
-                    
-                    return (
-                      <div key={key} className="flex justify-between items-center p-4 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2">
-                          <span className="text-lg">{getMeasurementIcon(key)}</span>
-                          {measurementLabels[key] || key}
-                        </span>
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {displayValue} {unit}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
-                  <p className="text-gray-500 dark:text-gray-400">No measurements available</p>
-                </div>
-              )}
-
-              {/* Model Stats */}
-              {(sizeDetails.modelHeight || sizeDetails.modelWeight) && (
-                <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-                  <h4 className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2 uppercase tracking-wider">
-                    Model Stats
-                  </h4>
-                  <div className="space-y-2">
-                    {sizeDetails.modelHeight && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-blue-600">📏</span>
-                        <span className="text-gray-700 dark:text-gray-300">
-                          Height: {sizeDetails.modelHeight} cm
-                        </span>
-                      </div>
-                    )}
-                    {sizeDetails.modelWeight && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-blue-600">⚖️</span>
-                        <span className="text-gray-700 dark:text-gray-300">
-                          Weight: {sizeDetails.modelWeight} kg
-                        </span>
-                      </div>
-                    )}
-                    {sizeDetails.modelWearing && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-blue-600">👕</span>
-                        <span className="text-gray-700 dark:text-gray-300">
-                          {sizeDetails.modelWearing}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100 dark:bg-gray-800">
+                      {headers.map((header) => (
+                        <th 
+                          key={header.key}
+                          className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700"
+                        >
+                          {header.label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(sizeChartData).map(([size, measurements], index) => (
+                      <tr 
+                        key={size}
+                        className={`${
+                          index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800/50'
+                        } hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors ${
+                          variant?.size === size ? 'bg-pink-50 dark:bg-pink-900/20' : ''
+                        }`}
+                      >
+                        <td className="px-3 py-2 text-xs font-medium text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+                          {size}
+                          {variant?.size === size && (
+                            <span className="ml-1 text-pink-500">✓</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+                          {measurements.chest}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+                          {measurements.length}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+                          {measurements.shoulder}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+                          {measurements.sleeve}
+                        </td>
+                        <td className="px-3 py-2 text-xs text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700">
+                          {measurements.hips}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
-          {/* How to Measure */}
-          <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+          {/* Divider */}
+          <hr className="my-6 border-gray-200 dark:border-gray-700" />
+
+          {/* ============ HOW TO MEASURE SECTION ============ */}
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              How to measure
+            </h3>
+            
             <button
               onClick={() => setShowGuide(!showGuide)}
-              className="flex items-center justify-between w-full text-left"
+              className="flex items-center justify-between w-full text-left mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
             >
-              <div className="flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-pink-500" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  How to Measure
-                </span>
-              </div>
-              {showGuide ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <span className="text-base font-medium text-gray-900 dark:text-white">
+                Measurement Guide
+              </span>
+              {showGuide ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </button>
             
             {showGuide && (
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {measurements.map((key) => {
-                  const tips = {
-                    chest: 'Measure around the fullest part of your chest, keeping the tape parallel to the ground',
-                    waist: 'Measure around your natural waistline, just above your belly button',
-                    hips: 'Measure around the fullest part of your hips and buttocks',
-                    length: 'From the highest point of shoulder to the bottom hem',
-                    shoulder: 'From one shoulder seam to the other, across the back',
-                    sleeve: 'From shoulder seam to the end of sleeve, with arm slightly bent',
-                    inseam: 'From crotch seam to the bottom of the leg, along the inner seam'
-                  };
-                  
-                  return (
-                    <div key={key} className="flex gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <span className="text-lg">{getMeasurementIcon(key)}</span>
+              <div className="space-y-4">
+                {/* Measurement points list */}
+                <div className="grid grid-cols-2 gap-4">
+                  {measurementTips.map((tip, index) => (
+                    <div key={index} className="flex items-start gap-2">
+                      <div className={`w-2 h-2 mt-1.5 rounded-full bg-${tip.color}-500`}></div>
                       <div>
-                        <p className="text-xs font-medium text-gray-900 dark:text-white capitalize mb-1">
-                          {measurementLabels[key]}
-                        </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
-                          {tips[key] || `Measure your ${key}`}
+                        <span className="font-medium text-gray-900 dark:text-white text-sm">
+                          {tip.name}
+                        </span>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {tip.desc}
                         </p>
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Close Button */}
+        {/* ============ CLOSE BUTTON ============ */}
         <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4">
           <button
             onClick={onClose}
