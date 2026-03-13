@@ -57,23 +57,28 @@ function getColorCode(colorName) {
 
 const createProduct = async (req, res) => {
   try {
+    console.log("🚀 ============ CREATE PRODUCT STARTED ============");
+    
     const {
       name, description, shortDescription, category, clothingType, gender, fabric, brand,
-      colors, sizes, basePrice, colorCodes, stockMatrix, colorImageMap,
+      colors, sizes, basePrice, colorCodes, colorImageMap,
       ageGroup = "Adult", fabricComposition = "100% Cotton", fit = "Regular",
       pattern = "Solid", sleeveType = "Full Sleeve", neckType = "Round Neck",
       discount = 0, offerTitle, offerDescription, offerValidFrom, offerValidTill,
       freeShipping = false, season = "All Season", occasion = "Casual", features = [],
       packageContent = "1 Piece", countryOfOrigin = "India", careInstructions,
       productDimensions, warranty = "No Warranty", returnPolicy = "7 Days Return Available",
+      variants,  // ← YEH IMPORTANT HAI - Frontend se variants array aa raha hai
     } = req.body;
 
-    // ============ VALIDATION (Minimal) ============
+    console.log("📦 variants raw:", variants);
+
+    // ============ VALIDATION ============
     if (!name || !description || !category || !clothingType || !gender || !fabric || !brand) {
       return res.status(400).json({ success: false, message: "Required fields missing" });
     }
-    if (!colors || !sizes || !basePrice) {
-      return res.status(400).json({ success: false, message: "Colors, sizes and base price are required." });
+    if (!variants || variants.length === 0) {
+      return res.status(400).json({ success: false, message: "At least one variant is required." });
     }
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ success: false, message: "Please upload at least one image." });
@@ -82,28 +87,40 @@ const createProduct = async (req, res) => {
     // ============ 1-LINE PARSING HELPER ============
     const parse = (data, def) => !data ? def : (Array.isArray(data) ? data : (() => { try { return JSON.parse(data); } catch { return def; } })());
 
-    // ============ PARSE ALL DATA (5 lines) ============
+    // ============ PARSE ALL DATA ============
     const colorsArray = parse(colors, []);
     const sizesArray = parse(sizes, []);
     const featuresArray = parse(features, []);
     const colorCodesArray = parse(colorCodes, []);
-    const stockMatrixObj = parse(stockMatrix, {});
     const colorImageMapping = parse(colorImageMap, {});
     const seasonArray = parse(season, ['All Season']);
     const occasionArray = parse(occasion, ['Casual']);
     const careInstructionsArray = parse(careInstructions, ['Machine Wash']);
     
+    // ============ PARSE VARIANTS (YEH IMPORTANT HAI) ============
+    let variantsArray = [];
+    if (variants) {
+      if (typeof variants === 'string') {
+        try {
+          variantsArray = JSON.parse(variants);
+        } catch (e) {
+          console.error("❌ Failed to parse variants:", e);
+        }
+      } else if (Array.isArray(variants)) {
+        variantsArray = variants;
+      }
+    }
+    
+    console.log("✅ Parsed variants count:", variantsArray.length);
+    console.log("✅ First variant with sizeDetails:", variantsArray[0]);
+
     // Parse dimensions
     const parsedDimensions = productDimensions 
       ? (typeof productDimensions === 'string' ? JSON.parse(productDimensions) : productDimensions)
       : { length: 0, width: 0, height: 0, weight: 0.2 };
 
-    // Validate colors and sizes
-    if (colorsArray.length === 0 || sizesArray.length === 0) {
-      return res.status(400).json({ success: false, message: "At least one color and size required." });
-    }
-
-    // ============ UPLOAD IMAGES (Parallel) ============
+    // ============ UPLOAD IMAGES ============
+    console.log("☁️ Uploading images to Cloudinary...");
     const uploadedImages = await Promise.all(
       req.files.map(async (file, index) => {
         const result = await new Promise((resolve, reject) => {
@@ -122,7 +139,8 @@ const createProduct = async (req, res) => {
       })
     );
 
-    // ============ CREATE PRODUCT (Let schema methods do the heavy lifting) ============
+    // ============ CREATE PRODUCT ============
+    console.log("🏗️ Creating Product object...");
     const product = new Product({
       // Basic Info
       name, description,
@@ -130,7 +148,7 @@ const createProduct = async (req, res) => {
       category, clothingType, gender, ageGroup, fabric, fabricComposition,
       fit, pattern, sleeveType, neckType, brand,
       
-      // Arrays (already parsed)
+      // Arrays
       season: seasonArray,
       occasion: occasionArray,
       features: featuresArray,
@@ -139,23 +157,22 @@ const createProduct = async (req, res) => {
       // Dimensions
       productDimensions: parsedDimensions,
       
-      // Images (schema will handle imagesByColor via pre-save)
+      // Images (temporary)
       allImages: uploadedImages.map((img, idx) => ({
         ...img,
-        color: colorsArray[0], // Temporary - will be fixed below
+        color: colorsArray[0] || 'Default',
         colorCode: colorCodesArray[0] || '#808080',
       })),
       
-      // Variants (schema will handle SKU, sellingPrice, etc.)
-      variants: colorsArray.flatMap((color, cIdx) => 
-        sizesArray.map((size) => ({
-          color,
-          colorCode: colorCodesArray[cIdx] || '#808080',
-          size,
-          price: parseFloat(basePrice),
-          stock: stockMatrixObj[color]?.[size] || 0,
-        }))
-      ),
+      // ✅ USE VARIANTS ARRAY DIRECTLY FROM FRONTEND
+      variants: variantsArray.map(v => ({
+        color: v.color,
+        colorCode: v.colorCode,
+        size: v.size,
+        price: parseFloat(v.price || basePrice),
+        stock: v.stock || 0,
+        sizeDetails: v.sizeDetails || {},  // ← YEH SIZE CHART AA JAYEGA
+      })),
       
       // Offer & Discount
       discount: parseInt(discount) || 0,
@@ -172,6 +189,7 @@ const createProduct = async (req, res) => {
 
     // ============ FIX COLOR-IMAGE MAPPING ============
     if (Object.keys(colorImageMapping).length > 0) {
+      console.log("🖼️ Fixing color-image mapping...");
       const fixedImages = [];
       const colorToIndex = {};
       
@@ -179,7 +197,6 @@ const createProduct = async (req, res) => {
         colorToIndex[color] = indices;
       });
       
-      let globalIdx = 0;
       colorsArray.forEach(color => {
         const indices = colorToIndex[color] || [];
         indices.forEach(idx => {
@@ -196,17 +213,17 @@ const createProduct = async (req, res) => {
       product.allImages = fixedImages;
     }
 
-    // ============ SAVE (Schema methods handle the rest) ============
+    // ============ SAVE ============
+    console.log("💾 Saving product to database...");
     await product.save();
     
-    console.log("✅ Product saved:", {
-      id: product._id,
-      name: product.name,
-      variants: product.variants.length,
-      images: product.allImages.length
+    console.log("✅ Product saved. Checking sizeDetails:");
+    product.variants.forEach((v, i) => {
+      console.log(`Variant ${i+1}: ${v.color} - ${v.size}`);
+      console.log(`   sizeDetails:`, v.sizeDetails);
     });
 
-    // ============ RESPONSE (Using schema method) ============
+    // ============ RESPONSE ============
     res.status(201).json({
       success: true,
       message: "Product created successfully",

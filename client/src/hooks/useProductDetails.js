@@ -12,7 +12,7 @@ const useProductDetails = () => {
   const [size, setSize] = useState("");
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [imagebycolor, setImageByColor] = useState(null);
-
+ const [clothingType, setClothingType] = useState(null);
   const { productId } = useParams(); // ✅ Change from productName to productId
 
   useEffect(() => {
@@ -27,6 +27,7 @@ const useProductDetails = () => {
           const data = res.data.data;
           setProduct(data);
           setImageByColor(data.imagesByColor)
+          setClothingType(data.clothingType)
           if (data?.colors && data.colors.length > 0) {
             const firstColor = data.colors[0];
             setColor(firstColor);

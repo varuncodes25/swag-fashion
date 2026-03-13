@@ -46,7 +46,6 @@ const Product = () => {
     selectedVariant,
     getVariantImages,
   } = useProductDetails();
-
   const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
 
   // ✅ Handle mobile zoom
@@ -202,6 +201,7 @@ const Product = () => {
                   quantity={quantity}
                   onQuantityChange={setQuantity}
                   variant={selectedVariant}
+                  clothingType={product.clothingType}
                 />
               )}
 

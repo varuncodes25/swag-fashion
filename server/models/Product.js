@@ -2,13 +2,33 @@ const mongoose = require("mongoose");
 const Review = require("./Review");
 
 // Size Chart for Clothing
+// models/Product.js (find this part in your schema)
+
+// Size Chart for Clothing - ENHANCE IT
 const sizeChartSchema = new mongoose.Schema({
   chest: { type: Number },
   waist: { type: Number },
   hips: { type: Number },
   length: { type: Number },
   shoulder: { type: Number },
-  sleeve: { type: Number }
+  sleeve: { type: Number },
+  
+  // Add these fields for better UX
+  modelHeight: { type: Number }, // Model's height in cm
+  modelWeight: { type: Number }, // Model's weight in kg
+  modelWearing: { type: String }, // e.g., "Model is wearing size M"
+  fitDescription: { type: String }, // e.g., "True to size", "Runs small"
+  
+  // For kids/international sizing
+  age: { type: String }, // e.g., "2-3 Years"
+  height: { type: String }, // e.g., "90-100 cm"
+  
+  // Unit system
+  unit: { 
+    type: String, 
+    enum: ['inches', 'cm'], 
+    default: 'inches' 
+  }
 }, { _id: false });
 
 // Product Image Schema (Centralized)
