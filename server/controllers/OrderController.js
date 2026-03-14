@@ -378,7 +378,7 @@ const getAllOrders = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
     
-    // Fetch orders - NO PRODUCT POPULATION
+    // Fetch orders - WITH CATEGORY FIELDS
     const orders = await Order.find()
       .select({
         orderNumber: 1,
@@ -393,7 +393,10 @@ const getAllOrders = async (req, res) => {
           quantity: 1,
           price: 1,
           finalPrice: 1,
-          lineTotal: 1
+          lineTotal: 1,
+          // ✅ ADD THESE CATEGORY FIELDS
+          categoryId: 1,
+          categoryName: 1
         },
         subtotal: 1,
         shippingCharge: 1,
@@ -402,7 +405,7 @@ const getAllOrders = async (req, res) => {
         paymentStatus: 1,
         paymentMethod: 1,
         createdAt: 1,
-        shippingAddress: { city: 1, state: 1, pincode: 1 },
+        shippingAddress: { city: 1, state: 1, pincode: 1, name: 1, phone: 1 },
         shiprocket: { awb: 1, status: 1 }
       })
       .populate("userId", "name email phone")
@@ -413,7 +416,7 @@ const getAllOrders = async (req, res) => {
 
     const totalOrders = await Order.countDocuments();
 
-    // Simple formatting - sirf order snapshot data
+    // Simple formatting - WITH CATEGORY IN PREVIEW
     const formattedOrders = orders.map(order => ({
       id: order._id,
       orderNumber: order.orderNumber,
@@ -421,7 +424,8 @@ const getAllOrders = async (req, res) => {
         name: order.userId.name,
         phone: order.userId.phone
       } : {
-        name: order.shippingAddress?.name
+        name: order.shippingAddress?.name,
+        phone: order.shippingAddress?.phone
       },
       summary: {
         totalItems: order.items?.reduce((s, i) => s + i.quantity, 0) || 0,
@@ -435,11 +439,21 @@ const getAllOrders = async (req, res) => {
         name: i.name,
         image: i.image,
         quantity: i.quantity,
-        price: i.finalPrice
+        price: i.finalPrice,
+        // ✅ ADD CATEGORY IN PREVIEW
+        category: i.categoryName || "Uncategorized"
       })),
+      // ✅ ADD CATEGORY SUMMARY FOR ANALYTICS
+      categories: order.items?.reduce((acc, item) => {
+        const cat = item.categoryName || "Uncategorized";
+        acc[cat] = (acc[cat] || 0) + item.quantity;
+        return acc;
+      }, {}),
       shipping: {
         city: order.shippingAddress?.city,
-        awb: order.shiprocket?.awb
+        pincode: order.shippingAddress?.pincode,
+        awb: order.shiprocket?.awb,
+        shipStatus: order.shiprocket?.status
       }
     }));
 
@@ -735,53 +749,35 @@ const getMetrics = async (req, res) => {
             }
           ],
 
-          // 1️⃣1️⃣ CATEGORY WISE SALES (Based on selected year + half)
-          categorySales: [
-            {
-              $match: {
-                createdAt: {
-                  $gte: startDate,
-                  $lte: endDate
-                },
-                status: { $ne: "CANCELLED" }
-              }
-            },
-            {
-              $unwind: "$items"
-            },
-            {
-              $lookup: {
-                from: "products",
-                localField: "items.productId",
-                foreignField: "_id",
-                as: "product"
-              }
-            },
-            {
-              $unwind: { path: "$product", preserveNullAndEmptyArrays: true }
-            },
-            {
-              $lookup: {
-                from: "categories",
-                localField: "product.category",
-                foreignField: "_id",
-                as: "category"
-              }
-            },
-            {
-              $group: {
-                _id: {
-                  month: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-                  category: { $arrayElemAt: ["$category.name", 0] }
-                },
-                count: { $sum: "$items.quantity" },
-                revenue: { $sum: "$items.lineTotal" }
-              }
-            },
-            {
-              $sort: { "_id.month": 1 }
-            }
-          ],
+        categorySales: [
+  {
+    $match: {
+      createdAt: {
+        $gte: startDate,
+        $lte: endDate
+      },
+      status: { $ne: "CANCELLED" }
+    }
+  },
+  {
+    $unwind: "$items"
+  },
+  {
+    $group: {
+      _id: {
+        month: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+        categoryName: {
+          $ifNull: ["$items.categoryName", "Uncategorized"]
+        }
+      },
+      count: { $sum: "$items.quantity" },
+      revenue: { $sum: "$items.lineTotal" }
+    }
+  },
+  {
+    $sort: { "_id.month": 1 }
+  }
+],
 
           // 1️⃣2️⃣ TOP PRODUCTS
           topProducts: [
@@ -1162,30 +1158,40 @@ const createOrder = async (req, res) => {
     const totalAmount = subtotal + shippingCharge + taxAmount - couponDiscountAmount;
 
     // ============ 6. PREPARE ORDER ITEMS ============
-    const orderItems = orderData.items.map(item => {
-      const unitDiscount = (item.price - item.sellingPrice);
-      const discountPercent = item.price > 0 ? (unitDiscount / item.price) * 100 : 0;
-      
-      return {
-        productId: item.productId,
-        variantId: item.variantId,
-        name: item.name,
-        image: item.image || "",
-        price: item.price,
-        finalPrice: item.sellingPrice,
-        discountPercent: Math.round(discountPercent * 100) / 100,
-        discountAmount: unitDiscount,
-        quantity: item.quantity,
-        lineTotal: item.sellingPrice * item.quantity,
-        weight: item.weight || 0.5,
-        length: item.length || 25,
-        width: item.width || 20,
-        height: item.height || 5,
-        color: item.color || "",
-        size: item.size || "",
-        sku: item.sku || `SKU-${item.productId}`
-      };
-    });
+    // ============ 6. PREPARE ORDER ITEMS ============
+const orderItems = await Promise.all(orderData.items.map(async (item) => {
+  const unitDiscount = (item.price - item.sellingPrice);
+  const discountPercent = item.price > 0 ? (unitDiscount / item.price) * 100 : 0;
+  
+  // ✅ Product fetch with category
+  const product = await Product.findById(item.productId)
+    .populate('category')
+    .session(session);
+  
+  return {
+    productId: item.productId,
+    variantId: item.variantId,
+    name: item.name,
+    image: item.image || "",
+    price: item.price,
+    finalPrice: item.sellingPrice,
+    discountPercent: Math.round(discountPercent * 100) / 100,
+    discountAmount: unitDiscount,
+    quantity: item.quantity,
+    lineTotal: item.sellingPrice * item.quantity,
+    weight: item.weight || 0.5,
+    length: item.length || 25,
+    width: item.width || 20,
+    height: item.height || 5,
+    color: item.color || "",
+    size: item.size || "",
+    sku: item.sku || `SKU-${item.productId}`,
+    
+    // ✅ Category fields
+    categoryId: product?.category?._id || null,
+    categoryName: product?.category?.name || "Uncategorized"
+  };
+}));
 
     // ============ 7. DETERMINE PAYMENT STATUS ============
     const isPrepaidPaid = paymentMethod === "RAZORPAY" && razorpayPaymentId && razorpaySignature;

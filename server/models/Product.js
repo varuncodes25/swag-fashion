@@ -512,9 +512,8 @@ productSchema.index({ offerValidTill: 1 });
 productSchema.index({ colors: 1 });
 productSchema.index({ sizes: 1 });
 
-// ==================== PRE-SAVE MIDDLEWARE ====================
 // ==================== PRE-VALIDATE MIDDLEWARE ====================
-// ✅ पहले ये ADD करें (सबसे ऊपर)
+
 productSchema.pre('validate', function(next) {
 
   
@@ -913,7 +912,7 @@ productSchema.methods.getProductDetailData = function() {
     keyFeatures: this.keyFeatures,
     specifications: this.getFormattedSpecifications(),
     offerDetails: this.getOfferDetails(),
-    
+       category:this.category,
     // Variants WITHOUT duplicate images in each
     variants: this.variants.map(v => ({
       _id: v._id,
@@ -930,6 +929,7 @@ productSchema.methods.getProductDetailData = function() {
       isInStock: v.stock > 0,
       availableStock: Math.max(v.stock - (v.reservedStock || 0), 0),
       sizeDetails: v.sizeDetails
+   
     })),
     
     // Centralized images storage

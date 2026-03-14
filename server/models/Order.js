@@ -18,13 +18,13 @@ const orderItemSchema = new mongoose.Schema(
     name: { type: String, required: true },
     image: String,
 
-    price: Number,           // MRP/Original Price
+    price: Number, // MRP/Original Price
     discountPercent: Number,
     discountAmount: Number,
-    finalPrice: Number,      // Price after discount
+    finalPrice: Number, // Price after discount
 
     quantity: Number,
-    lineTotal: Number,       // finalPrice × quantity
+    lineTotal: Number, // finalPrice × quantity
 
     // Dimensions for shipping
     weight: { type: Number, required: true }, // kg
@@ -36,7 +36,7 @@ const orderItemSchema = new mongoose.Schema(
     size: String,
     sku: String,
   },
-  { _id: false }
+  { _id: false },
 );
 
 /* =========================
@@ -44,10 +44,10 @@ const orderItemSchema = new mongoose.Schema(
 ========================= */
 const orderSchema = new mongoose.Schema(
   {
-    orderNumber: { 
-      type: String, 
-      unique: true, 
-      required: false 
+    orderNumber: {
+      type: String,
+      unique: true,
+      required: false,
     },
 
     userId: {
@@ -110,20 +110,45 @@ const orderSchema = new mongoose.Schema(
       shipmentId: String,
       awb: String,
       channelId: String,
-      status: { 
+      status: {
         type: String,
-        enum: ["NEW", "PROCESSING", "PICKED_UP", "IN_TRANSIT", "DELIVERED", "RTO", "CANCELLED", "PENDING"],
-        default: "PENDING"
+        enum: [
+          "NEW",
+          "PROCESSING",
+          "PICKED_UP",
+          "IN_TRANSIT",
+          "DELIVERED",
+          "RTO",
+          "CANCELLED",
+          "PENDING",
+        ],
+        default: "PENDING",
       },
       labelUrl: String,
       manifestUrl: String,
       trackingUrl: String,
     },
-
+    categoryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+    },
+    categoryName: {
+      type: String,
+      default: "Uncategorized",
+    },
     /* 🧾 ORDER STATUS */
     status: {
       type: String,
-      enum: ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"],
+      enum: [
+        "PENDING",
+        "CONFIRMED",
+        "PROCESSING",
+        "SHIPPED",
+        "DELIVERED",
+        "CANCELLED",
+        "RETURNED",
+      ],
       default: "PENDING",
     },
 
@@ -137,7 +162,7 @@ const orderSchema = new mongoose.Schema(
     customerNotes: String,
     cancelReason: String,
     returnReason: String,
-    
+
     /* 🔄 TRACKING */
     statusHistory: [
       {
@@ -148,34 +173,34 @@ const orderSchema = new mongoose.Schema(
       },
     ],
 
-     isCancelled: {
+    isCancelled: {
       type: Boolean,
-      default: false
+      default: false,
     },
-    
+
     cancelReason: String,
     cancelledAt: Date,
-    
+
     cancelledBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      ref: "User",
     },
-    
+
     /* 💸 REFUND FIELDS */
     refund: {
       refundId: String,
       amount: Number,
       status: {
         type: String,
-        enum: ["INITIATED", "PROCESSING", "COMPLETED", "FAILED"]
+        enum: ["INITIATED", "PROCESSING", "COMPLETED", "FAILED"],
       },
       initiatedAt: Date,
       completedAt: Date,
       reason: String,
-      error: String
-    }
+      error: String,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* =========================
@@ -194,19 +219,19 @@ orderSchema.index({ "paymentGateway.orderId": 1 });
 ========================= */
 
 // Check if order can be cancelled
-orderSchema.methods.canCancel = function() {
-  const nonCancellable = ['SHIPPED', 'DELIVERED', 'CANCELLED', 'RETURNED'];
+orderSchema.methods.canCancel = function () {
+  const nonCancellable = ["SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"];
   return !nonCancellable.includes(this.status);
 };
 
 // Check if order can be returned
-orderSchema.methods.canReturn = function() {
-  if (this.status !== 'DELIVERED') return false;
-  
+orderSchema.methods.canReturn = function () {
+  if (this.status !== "DELIVERED") return false;
+
   const returnWindow = 7; // days
   const returnDeadline = new Date(this.deliveredAt);
   returnDeadline.setDate(returnDeadline.getDate() + returnWindow);
-  
+
   return new Date() <= returnDeadline;
 };
 // Schema mein yeh hook add karo (line 170 ke baad):
@@ -238,30 +263,30 @@ orderSchema.pre("save", async function (next) {
   next();
 });
 // Generate order summary for email
-orderSchema.methods.getSummary = function() {
+orderSchema.methods.getSummary = function () {
   return {
     orderNumber: this.orderNumber,
     date: this.createdAt,
     status: this.status,
     total: this.totalAmount,
     shippingAddress: this.shippingAddress,
-    items: this.items.map(item => ({
+    items: this.items.map((item) => ({
       name: item.name,
       color: item.color,
       size: item.size,
       quantity: item.quantity,
       price: item.finalPrice,
       total: item.lineTotal,
-      image: item.image
-    }))
+      image: item.image,
+    })),
   };
 };
 
 // Create Shiprocket payload
-orderSchema.methods.getShiprocketPayload = function() {
+orderSchema.methods.getShiprocketPayload = function () {
   return {
     order_id: this.orderNumber,
-    order_date: this.createdAt.toISOString().split('T')[0],
+    order_date: this.createdAt.toISOString().split("T")[0],
     channel_id: this.shiprocket.channelId || "YOUR_CHANNEL_ID",
     billing_customer_name: this.shippingAddress.name,
     billing_address: `${this.shippingAddress.addressLine1}, ${this.shippingAddress.city}`,
@@ -271,26 +296,26 @@ orderSchema.methods.getShiprocketPayload = function() {
     billing_country: this.shippingAddress.country || "India",
     billing_email: this.shippingAddress.email,
     billing_phone: this.shippingAddress.phone,
-    
-    order_items: this.items.map(item => ({
+
+    order_items: this.items.map((item) => ({
       name: item.name,
       sku: item.sku || `SKU-${item.productId}`,
       units: item.quantity,
       selling_price: item.finalPrice,
       discount: item.discountAmount || 0,
       tax: this.taxAmount / this.items.length || 0,
-      hsn: 6211
+      hsn: 6211,
     })),
-    
+
     payment_method: this.paymentMethod === "COD" ? "COD" : "Prepaid",
     shipping_charges: this.shippingCharge,
     total_discount: this.discount,
-    sub_total: this.subtotal
+    sub_total: this.subtotal,
   };
 };
 
 // Generate order number (static method)
-orderSchema.statics.generateOrderNumber = async function() {
+orderSchema.statics.generateOrderNumber = async function () {
   const date = new Date();
   const dateStr =
     date.getFullYear().toString() +
