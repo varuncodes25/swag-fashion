@@ -4,7 +4,9 @@ import {
   ChevronRight, 
   ArrowRight,
   Zap,
-  CheckCircle
+  CheckCircle,
+  Sparkles,
+  Percent
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -22,15 +24,15 @@ const bannerData = [
     image: banner1,
     title: "Luxe Collection",
     subtitle: "Premium Redefined",
-    description: "Experience unparalleled elegance with our exclusive designer pieces",
-    ctaText: "Explore Luxury",
+    description: "Experience unparalleled elegance",
+    ctaText: "Explore",
     ctaLink: "/collection/luxe",
     badge: "Exclusive",
     colors: {
       primary: "#B8860B",
       secondary: "#DAA520",
     },
-    features: ["Handcrafted Details", "Premium Materials", "Limited Edition"],
+    features: ["Handcrafted", "Premium", "Limited"],
     discount: "60%",
   },  
   {
@@ -39,38 +41,38 @@ const bannerData = [
     title: "Summer Vibes",
     subtitle: "Up to 60% OFF",
     description: "Fresh styles for sunny days",
-    ctaText: "Shop Summer",
+    ctaText: "Shop Now",
     ctaLink: "/sale/summer",
     badge: "Hot Deal",
     colors: {
       primary: "#FF6B6B",
       secondary: "#4ECDC4",
     },
-    features: ["Fast Delivery", "Easy Returns", "Best Price Guarantee"],
+    features: ["Fast Delivery", "Easy Returns", "Best Price"],
     discount: "60%",
   },
   {
     id: 3,
     image: banner3,
-    title: "Tech Revolution",
-    subtitle: "Next-Gen Innovation",
-    description: "Cutting-edge technology for the modern lifestyle",
-    ctaText: "Discover Tech",
+    title: "Tech",
+    subtitle: "Next-Gen",
+    description: "Cutting-edge technology",
+    ctaText: "Discover",
     ctaLink: "/category/electronics",
     badge: "New",
     colors: {
       primary: "#2563EB",
       secondary: "#7C3AED",
     },
-    features: ["Latest Technology", "2-Year Warranty", "24/7 Support"],
+    features: ["Latest Tech", "2-Year Warranty", "24/7 Support"],
     discount: "40%",
   },
   {
     id: 4,
     image: banner4,
-    title: "Home Sanctuary",
+    title: "Home",
     subtitle: "Comfort & Style",
-    description: "Transform your space with our premium home collection",
+    description: "Transform your space",
     ctaText: "Shop Home",
     ctaLink: "/category/home",
     badge: "Bestseller",
@@ -78,15 +80,15 @@ const bannerData = [
       primary: "#059669",
       secondary: "#10B981",
     },
-    features: ["Eco-Friendly", "Premium Quality", "Modern Designs"],
+    features: ["Eco-Friendly", "Premium", "Modern"],
     discount: "50%",
   },
   {
     id: 5,
     image: banner5,
-    title: "Fitness Elite",
-    subtitle: "Train Like a Champion",
-    description: "Professional equipment for your fitness transformation",
+    title: "Fitness",
+    subtitle: "Train Like Pro",
+    description: "Professional equipment",
     ctaText: "Get Fit",
     ctaLink: "/category/fitness",
     badge: "Trending",
@@ -94,7 +96,7 @@ const bannerData = [
       primary: "#DC2626",
       secondary: "#EA580C",
     },
-    features: ["Premium Build", "Ergonomic Design", "Best in Class"],
+    features: ["Premium Build", "Ergonomic", "Best in Class"],
     discount: "45%",
   }
 ];
@@ -108,21 +110,20 @@ const Banner = () => {
 
   const currentBanner = bannerData[activeIndex];
 
-  // Enhanced auto slide with smooth transitions
   const startAutoSlide = () => {
     stopAutoSlide();
     
     timerRef.current = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % bannerData.length);
       setProgress(0);
-    }, 5500);
+    }, 5000);
 
     progressRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) return 0;
         return prev + 1;
       });
-    }, 55);
+    }, 50);
   };
 
   const stopAutoSlide = () => {
@@ -163,150 +164,155 @@ const Banner = () => {
   }, []);
 
   return (
-    <div className="w-full">
-      {/* Main Hero Banner - Full Width */}
-      <div className="w-full px-0">
+    <div className="w-full max-w-[1400px] mx-auto px-2 sm:px-4 lg:px-6 py-2 sm:py-4">
+      <div className="w-full rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-lg sm:shadow-2xl">
         <div 
-          className="relative overflow-hidden shadow-2xl bg-transparent"
+          className="relative overflow-hidden"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Banner Content */}
-          <div className="relative h-[500px] lg:h-[600px] flex flex-col lg:flex-row bg-transparent">
+          {/* Full Width Image with Overlay */}
+          <div className="relative h-[180px] xs:h-[200px] sm:h-[280px] md:h-[350px] lg:h-[450px] xl:h-[500px]">
+            {/* Background Image */}
+            <img
+              src={currentBanner.image}
+              alt={currentBanner.title}
+              className="w-full h-full object-cover transition-transform duration-1000"
+              style={{
+                transform: isHovered ? 'scale(1.05)' : 'scale(1)'
+              }}
+              draggable={false}
+              loading="eager"
+            />
             
-            {/* Left Content - Text & CTA (20% width) */}
-            <div className="lg:w-1/5 p-6 lg:p-8 xl:p-10 flex flex-col justify-center text-gray-800 z-10 bg-white/80 backdrop-blur-sm lg:bg-transparent lg:backdrop-blur-0">
-              
-              {/* Flash Badge */}
-              <div className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/20 text-amber-900 w-fit mb-4">
-                <Zap className="w-3 h-3" />
-                <span className="text-xs font-bold">
-                  {currentBanner.badge}
-                </span>
-              </div>
-
-              {/* Main Title */}
-              <h1 className="text-2xl lg:text-3xl xl:text-4xl font-black mb-3 leading-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                {currentBanner.title}
-              </h1>
-
-              {/* Subtitle */}
-              <h2 className="text-lg lg:text-xl xl:text-2xl font-semibold mb-4 text-gray-800">
-                {currentBanner.subtitle}
-              </h2>
-
-              {/* Description */}
-              <p className="text-sm lg:text-base xl:text-lg mb-6 text-gray-700 leading-relaxed">
-                {currentBanner.description}
-              </p>
-
-              {/* Premium Features */}
-              <div className="mb-8 space-y-1.5">
-                {currentBanner.features.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span className="text-xs lg:text-sm text-gray-700">{feature}</span>
+            {/* Gradient Overlay - Different for mobile/desktop */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent lg:from-black/80 lg:via-black/50" />
+            
+            {/* Content Overlay */}
+            <div className="absolute inset-0 flex items-center">
+              <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+                <div className="max-w-[65%] sm:max-w-[60%] md:max-w-[55%] lg:max-w-lg xl:max-w-xl">
+                  
+                  {/* Badge - Mobile Friendly */}
+                  <div className="inline-flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full bg-amber-500/30 backdrop-blur-sm border border-amber-400/30 mb-1.5 sm:mb-3 animate-fadeLeft">
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300" />
+                    <span className="text-[10px] sm:text-xs font-bold text-amber-300 uppercase tracking-wider">
+                      {currentBanner.badge}
+                    </span>
                   </div>
-                ))}
-              </div>
 
-              {/* CTA Button and Discount Badge - Side by Side */}
-              <div className="flex flex-col lg:flex-row items-center gap-4 mb-8">
-                {/* CTA Button */}
-                <Link
-                  to={currentBanner.ctaLink}
-                  className="group relative px-6 py-3 rounded-full font-bold text-center overflow-hidden w-full lg:w-auto"
-                  style={{
-                    backgroundColor: currentBanner.colors.primary,
-                    color: 'white'
-                  }}
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-2 text-sm lg:text-base">
-                    {currentBanner.ctaText}
-                    <ArrowRight className="w-4 h-4 lg:w-5 lg:h-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                  <div className="absolute inset-0 bg-white/20 group-hover:bg-white/30 transition-colors" />
-                </Link>
+                  {/* Title - Smaller on mobile */}
+                  <h1 className="text-base xs:text-lg sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-black mb-0.5 sm:mb-2 text-white leading-tight animate-fadeLeft" style={{animationDelay: '0.1s'}}>
+                    {currentBanner.title}
+                  </h1>
 
-                {/* Discount Badge - Side by Side */}
-                <div className="relative w-full lg:w-auto">
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-300 rounded-lg blur-md opacity-60" />
-                  <div className="relative bg-gradient-to-br from-amber-500 to-yellow-400 rounded-lg p-3 shadow-lg">
-                    <div className="text-center">
-                      <div className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                        Limited Offer
+                  {/* Subtitle - Hidden on very small screens */}
+                  <h2 className="hidden xs:block text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl font-semibold mb-1 sm:mb-2 text-amber-400 animate-fadeLeft" style={{animationDelay: '0.2s'}}>
+                    {currentBanner.subtitle}
+                  </h2>
+
+                  {/* Description - Hidden on mobile, shown on tablet+ */}
+                  <p className="hidden md:block text-xs lg:text-sm xl:text-base text-gray-200 mb-2 lg:mb-3 leading-relaxed max-w-md animate-fadeLeft" style={{animationDelay: '0.3s'}}>
+                    {currentBanner.description}
+                  </p>
+
+                  {/* Features - Hidden on mobile/tablet, shown on desktop */}
+                  <div className="hidden lg:flex gap-3 mb-3 xl:mb-4 animate-fadeLeft" style={{animationDelay: '0.4s'}}>
+                    {currentBanner.features.slice(0, 2).map((feature, index) => (
+                      <div key={index} className="flex items-center gap-1">
+                        <CheckCircle className="w-3 h-3 text-green-400" />
+                        <span className="text-xs text-gray-300">{feature}</span>
                       </div>
-                      <div className="text-2xl font-black text-white mt-1 drop-shadow-lg">
-                        {currentBanner.discount}
-                      </div>
-                      <div className="text-xs font-bold text-amber-900 mt-0.5">
-                        OFF
-                      </div>
-                    </div>
+                    ))}
+                  </div>
+
+                  {/* CTA Button - Compact on mobile */}
+                  <div className="flex items-center gap-2 sm:gap-3 animate-fadeLeft" style={{animationDelay: '0.5s'}}>
+                    <Link
+                      to={currentBanner.ctaLink}
+                      className="group relative px-3 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 rounded-full font-bold text-center overflow-hidden text-xs sm:text-sm lg:text-base"
+                      style={{
+                        backgroundColor: currentBanner.colors.primary,
+                        color: 'white'
+                      }}
+                    >
+                      <span className="relative z-10 flex items-center gap-1">
+                        {currentBanner.ctaText}
+                        <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                      <div className="absolute inset-0 bg-white/20 group-hover:bg-white/30 transition-colors" />
+                    </Link>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Content - Image Only (80% width) */}
-            <div className="lg:w-4/5 relative">
-              <div className="relative h-full w-full overflow-hidden">
-                <img
-                  src={currentBanner.image}
-                  alt={currentBanner.title}
-                  className="w-full h-full object-cover transition-transform duration-700"
-                  style={{
-                    transform: isHovered ? 'scale(1.05)' : 'scale(1)'
-                  }}
-                  draggable={false}
-                  loading="eager"
-                />
+            {/* Mobile Discount Badge - Compact */}
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:hidden">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-300 rounded-md blur-sm" />
+                <div className="relative bg-gradient-to-br from-amber-500 to-yellow-400 rounded-md px-2 py-1 sm:px-2.5 sm:py-1.5 shadow-lg">
+                  <div className="text-center">
+                    <div className="text-[8px] xs:text-[10px] font-bold text-amber-900">OFF</div>
+                    <div className="text-xs xs:text-sm sm:text-base font-black text-white">{currentBanner.discount}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Discount Badge */}
+            <div className="absolute top-4 right-4 hidden lg:block">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-400 to-yellow-300 rounded-lg blur-md" />
+                <div className="relative bg-gradient-to-br from-amber-500 to-yellow-400 rounded-lg p-3 shadow-lg">
+                  <div className="text-center">
+                    <div className="text-xs font-bold text-amber-900 uppercase">OFF</div>
+                    <div className="text-2xl font-black text-white mt-1">{currentBanner.discount}</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Enhanced Progress Bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
+          {/* Progress Bar - Thinner on mobile */}
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 sm:h-1 bg-white/20">
             <div
               className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 transition-all duration-100 ease-linear"
               style={{ width: `${progress}%` }}
             />
           </div>
 
-          {/* Combined Navigation Controls - All in one line */}
-          <div className="absolute bottom-4 lg:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
-            {/* Left Arrow */}
+          {/* Navigation Controls - Smaller on mobile */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 sm:gap-2 lg:gap-4 z-20">
             <button
               onClick={goToPrev}
-              className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shadow-xl hover:bg-black/50 transition-all z-20 group"
+              className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-black/60 transition-all hover:scale-110"
               aria-label="Previous slide"
             >
-              <ChevronLeft className="w-5 h-5 lg:w-6 lg:h-6 text-white group-hover:-translate-x-0.5 transition-transform" />
+              <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white" />
             </button>
 
-            {/* Slide Indicators */}
-            <div className="flex gap-2">
+            <div className="flex gap-1 sm:gap-1.5">
               {bannerData.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => goToSlide(index)}
                   className={`transition-all duration-300 ${
                     index === activeIndex
-                      ? 'w-8 bg-gradient-to-r from-amber-400 to-yellow-300'
-                      : 'w-2 bg-white/60 hover:bg-white/80 hover:w-3'
-                  } h-2 rounded-full`}
+                      ? 'w-4 sm:w-5 lg:w-6 h-1 sm:h-1.5 lg:h-2 bg-gradient-to-r from-amber-400 to-yellow-300'
+                      : 'w-1 h-1 sm:w-1.5 sm:h-1.5 lg:w-2 lg:h-2 bg-white/50 hover:bg-white/80'
+                  } rounded-full`}
                   aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
             </div>
 
-            {/* Right Arrow */}
             <button
               onClick={goToNext}
-              className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shadow-xl hover:bg-black/50 transition-all z-20 group"
+              className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shadow-lg hover:bg-black/60 transition-all hover:scale-110"
               aria-label="Next slide"
             >
-              <ChevronRight className="w-5 h-5 lg:w-6 lg:h-6 text-white group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 text-white" />
             </button>
           </div>
         </div>
