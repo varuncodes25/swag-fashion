@@ -13,7 +13,8 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   console.log("🌐 VITE_API_URL:", import.meta.env.VITE_API_URL);
 
   // ✅ Method 1: Web Redirect Flow
-  const handleRedirectLogin = async () => {
+  const handleRedirectLogin = async (e) => {
+    e?.preventDefault(); // Form submit hone se rokega
     console.log("🔄 Redirect login started");
     console.log("📡 Calling backend URL:", `${import.meta.env.VITE_API_URL}/auth/google/url`);
     
@@ -36,8 +37,9 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
     }
   };
 
-  // ✅ Method 2: Token Flow (Google One Tap) - FIXED
-  const handleTokenLogin = () => {
+  // ✅ Method 2: Token Flow (Google One Tap)
+  const handleTokenLogin = (e) => {
+    e?.preventDefault(); // Form submit hone se rokega
     console.log("🔄 Token login started");
     console.log("🔑 Using Client ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
     
@@ -192,19 +194,26 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
     }
   };
 
+  // ✅ FIXED: Main click handler with preventDefault
+  const handleClick = (e) => {
+    e.preventDefault();  // 👈 Form submit hone se rokega
+    e.stopPropagation(); // 👈 Event bubbling rokega
+    console.log("👆 Google button clicked at:", new Date().toISOString());
+    console.log("👆 Button type:", type);
+    
+    if (type === "redirect") {
+      console.log("👆 Calling handleRedirectLogin");
+      handleRedirectLogin(e);
+    } else {
+      console.log("👆 Calling handleTokenLogin");
+      handleTokenLogin(e);
+    }
+  };
+
   return (
     <button
-      onClick={() => {
-        console.log("👆 Google button clicked at:", new Date().toISOString());
-        console.log("👆 Button type:", type);
-        if (type === "redirect") {
-          console.log("👆 Calling handleRedirectLogin");
-          handleRedirectLogin();
-        } else {
-          console.log("👆 Calling handleTokenLogin");
-          handleTokenLogin();
-        }
-      }}
+      type="button"  // 👈 YEH SABSE IMPORTANT HAI!
+      onClick={handleClick}
       className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors"
     >
       <svg className="w-5 h-5" viewBox="0 0 24 24">

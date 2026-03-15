@@ -13,10 +13,10 @@ import {
   Loader2, 
   ArrowRight,
   Shield,
-  LogIn,
   CheckCircle
 } from "lucide-react";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
+import axios from "axios"; // 👈 Yeh import add karo
 
 const Login = () => {
   const { toast } = useToast();
@@ -84,6 +84,7 @@ const Login = () => {
     }
   }, []);
 
+  // ✅ FORM VALIDATION FUNCTION
   const validateForm = () => {
     const newErrors = {};
     
@@ -95,10 +96,10 @@ const Login = () => {
       newErrors.email = "Please enter a valid email";
     }
     
-    // ✅ FIXED: Password validation - 8 characters (backend match)
+    // Password validation - 8 characters
     if (!formData.password.trim()) {
       newErrors.password = "Password is required";
-    } else if (formData.password.trim().length < 8) {  // 6 → 8
+    } else if (formData.password.trim().length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
     
@@ -106,6 +107,7 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ✅ HANDLE SUBMIT FUNCTION (YAHI MISSING THA)
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -121,6 +123,7 @@ const Login = () => {
     }
   };
 
+  // ✅ HANDLE INPUT CHANGE FUNCTION
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -135,6 +138,51 @@ const Login = () => {
         [name]: ""
       }));
     }
+  };
+
+  // ✅ PASSWORD SETUP MODAL COMPONENT
+  const PasswordSetupModal = ({ email, onClose }) => {
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSetPassword = async () => {
+      setLoading(true);
+      try {
+        await axios.post('/api/set-password', { email, password });
+        toast.success("Password set! Please login again.");
+        onClose();
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to set password");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md">
+          <h3 className="text-lg font-bold mb-2">Set Password</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Your account was created with Google. Set a password to enable email login.
+          </p>
+          <Input
+            type="password"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mb-4"
+          />
+          <div className="flex gap-2">
+            <Button onClick={handleSetPassword} disabled={loading}>
+              {loading ? "Setting..." : "Set Password"}
+            </Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -326,30 +374,36 @@ const Login = () => {
                 </>
               )}
             </Button>
-
-            {/* Google Login Button */}
-          <GoogleLoginButton type="token" />  
-
-            {/* Signup Link */}
-            <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300">
-              <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">
-                Don't have an account?{" "}
-                <Link
-                  to="/signup"
-                  className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 
-                           transition-colors duration-300 inline-flex items-center gap-1 group"
-                >
-                  Create Account
-                  <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-300" />
-                </Link>
-              </p>
-            </div>
           </form>
 
-          {/* Security Note */}
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors duration-300">
-            <Shield className="h-3 w-3" />
-            <span>Secure & encrypted login</span>
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white/90 dark:bg-gray-900/90 text-gray-500 dark:text-gray-400">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          {/* Google Login Button */}
+          <GoogleLoginButton type="token" />
+
+          {/* Signup Link */}
+          <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300 mt-6">
+            <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">
+              Don't have an account?{" "}
+              <Link
+                to="/signup"
+                className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 
+                         transition-colors duration-300 inline-flex items-center gap-1 group"
+              >
+                Create Account
+                <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform duration-300" />
+              </Link>
+            </p>
           </div>
         </div>
 
@@ -376,48 +430,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
-const PasswordSetupModal = ({ email, onClose }) => {
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const handleSetPassword = async () => {
-    setLoading(true);
-    try {
-      await axios.post('/api/set-password', { email, password });
-      toast.success("Password set! Please login again.");
-      onClose();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to set password");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md">
-        <h3 className="text-lg font-bold mb-2">Set Password</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Your account was created with Google. Set a password to enable email login.
-        </p>
-        <Input
-          type="password"
-          placeholder="Enter password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="mb-4"
-        />
-        <div className="flex gap-2">
-          <Button onClick={handleSetPassword} disabled={loading}>
-            {loading ? "Setting..." : "Set Password"}
-          </Button>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-};

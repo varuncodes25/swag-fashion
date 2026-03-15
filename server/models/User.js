@@ -32,27 +32,34 @@ const userSchema = mongoose.Schema(
 
     password: {
       type: String,
-      required: [true, "Password is required"],
+      required: function() {
+        return this.provider === 'local';
+      },
       minlength: [8, "Password must be at least 8 characters"],
-      select: false, // ✅ Don't return password by default
+      select: false,
     },
 
+    // ✅ FIXED: Phone field - WITHOUT unique and sparse in schema
     phone: {
-  type: String,
-  required: false,
-  unique: true,
-  sparse: true,
-  // ✅ Conditional validation - Google users ke liye pass
-  validate: {
-    validator: function(v) {
-      // Allow empty/null for Google users
-      if (v == null || v === '') return true;
-      // Validate only if value exists
-      return /^[6-9]\d{9}$/.test(v);
+      type: String,
+      required: false,
+      // ❌ unique: true,  // HATA DIYA
+      // ❌ sparse: true,  // HATA DIYA
+      default: null,  // null use karo, undefined nahi
+      validate: {
+        validator: function(v) {
+          // Agar value nahi hai to validation pass
+          if (!v || v === null) return true;
+          return /^[6-9]\d{9}$/.test(v);
+        },
+        message: "Please enter a valid 10-digit Indian mobile number"
+      },
+      set: function(v) {
+        // Empty string ya null ko null mein convert karo
+        if (v === '' || v === null || v === undefined) return null;
+        return v;
+      }
     },
-    message: "Please enter a valid 10-digit Indian mobile number"
-  }
-},
 
     /* ========== ROLE & STATUS ========== */
     role: {
@@ -79,7 +86,7 @@ const userSchema = mongoose.Schema(
     refreshToken: {
       type: String,
       default: null,
-      select: false, // ✅ Don't return by default
+      select: false,
     },
 
     loginAttempts: {
@@ -228,8 +235,7 @@ const userSchema = mongoose.Schema(
 
     avatar: {
       type: String,
-      default:
-        "https://res.cloudinary.com/demo/image/upload/v1/default-avatar.png",
+      default: "https://res.cloudinary.com/demo/image/upload/v1/default-avatar.png",
     },
 
     provider: {
@@ -266,13 +272,25 @@ const userSchema = mongoose.Schema(
 );
 
 /* =====================================================
-   INDEXES - Performance Optimization
+   INDEXES - Performance Optimization (FIXED)
 ===================================================== */
 
 userSchema.index({ email: 1 });
-userSchema.index({ phone: 1 });
-userSchema.index({ googleId: 1 });
-userSchema.index({ facebookId: 1 });
+
+// ✅ FIXED: Phone index with partial filter (SIRF YEH EK INDEX)
+userSchema.index(
+  { phone: 1 }, 
+  { 
+    unique: true,
+    sparse: true,
+    partialFilterExpression: {
+      phone: { $ne: null }  // Sirf non-null values unique hongi
+    }
+  }
+);
+
+userSchema.index({ googleId: 1 }, { sparse: true });
+userSchema.index({ facebookId: 1 }, { sparse: true });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ "deviceInfo.deviceId": 1 });
 
@@ -280,22 +298,18 @@ userSchema.index({ "deviceInfo.deviceId": 1 });
    VIRTUAL PROPERTIES
 ===================================================== */
 
-// ✅ Check if account is locked
 userSchema.virtual("isLocked").get(function () {
   return !!(this.lockUntil && this.lockUntil > Date.now());
 });
 
-// ✅ Check if online (last 5 minutes)
 userSchema.virtual("isOnline").get(function () {
   return this.lastLogin && Date.now() - this.lastLogin < 5 * 60 * 1000;
 });
 
-// ✅ Full name shortcut
 userSchema.virtual("fullName").get(function () {
   return this.name;
 });
 
-// ✅ Account age in days
 userSchema.virtual("accountAgeDays").get(function () {
   return Math.floor((Date.now() - this.createdAt) / (1000 * 60 * 60 * 24));
 });
@@ -311,16 +325,28 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
 
 // ✅ 2. Generate access token
 userSchema.methods.generateAccessToken = function () {
-  return jwt.sign({ id: this._id, role: this.role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_ACCESS_EXPIRY || "15m",
-  });
+  return jwt.sign(
+    { 
+      id: this._id, 
+      role: this.role,
+      provider: this.provider 
+    }, 
+    process.env.JWT_SECRET, 
+    {
+      expiresIn: process.env.JWT_ACCESS_EXPIRY || "7d",
+    }
+  );
 };
 
 // ✅ 3. Generate refresh token
 userSchema.methods.generateRefreshToken = function () {
-  return jwt.sign({ id: this._id }, process.env.JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRY || "7d",
-  });
+  return jwt.sign(
+    { id: this._id }, 
+    process.env.JWT_REFRESH_SECRET, 
+    {
+      expiresIn: process.env.JWT_REFRESH_EXPIRY || "30d",
+    }
+  );
 };
 
 // ✅ 4. Generate email verification token
@@ -330,7 +356,7 @@ userSchema.methods.generateEmailVerificationToken = function () {
     .createHash("sha256")
     .update(token)
     .digest("hex");
-  this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  this.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
   return token;
 };
 
@@ -341,7 +367,7 @@ userSchema.methods.generatePasswordResetToken = function () {
     .createHash("sha256")
     .update(token)
     .digest("hex");
-  this.passwordResetExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+  this.passwordResetExpires = Date.now() + 15 * 60 * 1000;
   return token;
 };
 
@@ -349,7 +375,7 @@ userSchema.methods.generatePasswordResetToken = function () {
 userSchema.methods.generateOTP = function () {
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   this.otp = otp;
-  this.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+  this.otpExpiry = Date.now() + 10 * 60 * 1000;
   return otp;
 };
 
@@ -363,7 +389,7 @@ userSchema.methods.incrementLoginAttempts = function () {
   this.loginAttempts += 1;
 
   if (this.loginAttempts >= 5) {
-    this.lockUntil = Date.now() + 30 * 60 * 1000; // Lock for 30 minutes
+    this.lockUntil = Date.now() + 30 * 60 * 1000;
   }
 
   return this.save();
@@ -455,7 +481,7 @@ userSchema.statics.getActiveUsersCount = function () {
   return this.countDocuments({
     isActive: true,
     isDeleted: false,
-    lastLogin: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, // Last 30 days
+    lastLogin: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
   });
 };
 
@@ -468,21 +494,23 @@ userSchema.statics.bulkUpdateStatus = function (userIds, isActive) {
    PRE MIDDLEWARE
 ===================================================== */
 
-// ✅ Hash password before save
+// ✅ Hash password only for local users
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    this.passwordChangedAt = Date.now();
+  if (this.provider === 'local' && this.isModified("password")) {
+    try {
+      const salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, salt);
+      this.passwordChangedAt = Date.now();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  } else {
     next();
-  } catch (error) {
-    next(error);
   }
 });
 
-// ✅ Remove sensitive data before sending
+// ✅ Remove deleted users from queries
 userSchema.pre(/^find/, function (next) {
   this.find({ isDeleted: { $ne: true } });
   next();
@@ -492,12 +520,9 @@ userSchema.pre(/^find/, function (next) {
    POST MIDDLEWARE
 ===================================================== */
 
-// ✅ Log after user creation
-// ✅ Log after user creation - ONLY for new users
 userSchema.post("save", function (doc) {
   if (doc.isNew) {
-    // ✅ This will only run for new documents
-    console.log(`📝 New user created: ${doc.email} at ${doc.createdAt}`);
+    console.log(`📝 New ${doc.provider} user created: ${doc.email}`);
   }
 });
 

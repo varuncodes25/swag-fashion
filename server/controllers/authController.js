@@ -21,40 +21,58 @@ const signup = asyncHandler(async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
 
-    // Check if user exists
+    // Check if user exists by email
     const existingUser = await userRepository.findByEmail(email);
     if (existingUser) {
       return next(new DuplicateError("Email"));
     }
 
-    // Create new user
-    const user = await userRepository.create({ name, email, phone, password });
+    // ✅ FIX 1: Check if phone number already exists (if provided)
+    if (phone) {
+      const existingPhone = await userRepository.findByPhone(phone);
+      if (existingPhone) {
+        return next(new DuplicateError("Phone number"));
+      }
+    }
+
+    // Create new user with phone (null if not provided)
+    const user = await userRepository.create({ 
+      name, 
+      email, 
+      phone: phone || null,  // ✅ FIX 2: null set karo agar phone nahi diya
+      password 
+    });
 
     // Generate email verification token
     const verificationToken = user.generateEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 
-    // Send verification email
-    const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-    await sendMail(
-      email,
-      "Verify Your Email - Swag Fashion",
-      `<h2>Welcome to Swag Fashion! 🎉</h2>
-       <p>Hi ${name},</p>
-       <p>Please verify your email address:</p>
-       <a href="${verificationLink}">Verify Email</a>`
-    );
+    // Send verification email (uncomment when email service ready)
+    // const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+    // await sendMail(
+    //   email,
+    //   "Verify Your Email - Swag Fashion",
+    //   `<h2>Welcome to Swag Fashion! 🎉</h2>
+    //    <p>Hi ${name},</p>
+    //    <p>Please verify your email address:</p>
+    //    <a href="${verificationLink}">Verify Email</a>`
+    // );
 
-    // Send welcome email
-    const userHtml = welcomeEmailTemplate(
-      name,
-      process.env.FRONTEND_URL,
-      process.env.SUPPORT_EMAIL
-    );
-    await sendMail(email, "🎉 Welcome to Swag Fashion!", userHtml);
+    // Send welcome email (uncomment when email service ready)
+    // const userHtml = welcomeEmailTemplate(
+    //   name,
+    //   process.env.FRONTEND_URL,
+    //   process.env.SUPPORT_EMAIL
+    // );
+    // await sendMail(email, "🎉 Welcome to Swag Fashion!", userHtml);
 
     // ✅ Success response with encryption
-    const response = new ApiResponse(201, { userId: user._id }, "Registration successful! Please verify your email.");
+    const response = new ApiResponse(
+      201, 
+      { userId: user._id }, 
+      "Registration successful! Please verify your email."
+    );
+    
     return res.status(201).json(await encryptResponse(response));
 
   } catch (error) {
