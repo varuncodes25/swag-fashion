@@ -97,37 +97,57 @@ const wishlistState = useSelector((state) => state.wishlist);
 
       {/* Quick Actions */}
       <div className="flex items-center gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-800">
-        <button
-          onClick={handleWishlistToggle}
-          disabled={isToggling}
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-all ${
-            isWishlisted
-              ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
-              : "bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
-          } ${isToggling ? "opacity-70 cursor-not-allowed" : ""}`}
-        >
-          {isToggling ? (
-            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-          ) : (
-            <Heart 
-              size={20} 
-              className={isWishlisted ? "text-red-600 dark:text-red-400" : ""}
-              fill={isWishlisted ? "currentColor" : "none"} 
-            />
-          )}
-          <span className="font-medium">
-            {isToggling ? "Updating..." : (isWishlisted ? "Wishlisted" : "Add to Wishlist")}
-          </span>
-        </button>
+  
+  {/* Wishlist Button - Mobile pe sirf icon, desktop pe icon+text */}
+  <button
+    onClick={handleWishlistToggle}
+    disabled={isToggling}
+    className={`flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-xl transition-all duration-300 transform active:scale-95 ${
+      isWishlisted
+        ? "bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/30 dark:to-pink-900/30 text-red-600 dark:text-red-400 border-2 border-red-200 dark:border-red-800 shadow-md"
+        : "bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-gray-700 dark:text-gray-300 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 border-2 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md"
+    } ${isToggling ? "opacity-70 cursor-not-allowed" : ""}`}
+  >
+    {isToggling ? (
+      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+    ) : (
+      <>
+        <Heart 
+          size={22} 
+          className={`transition-all duration-300 ${
+            isWishlisted 
+              ? "text-red-600 dark:text-red-400 scale-110" 
+              : "text-gray-600 dark:text-gray-400"
+          }`}
+          fill={isWishlisted ? "currentColor" : "none"} 
+        />
+        {/* Desktop Text - Hidden on mobile */}
+        <span className="hidden sm:inline font-medium">
+          {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
+        </span>
+        {/* Mobile Text - Very short */}
+        <span className="sm:hidden text-xs font-medium">
+          {isWishlisted ? "Saved" : "Save"}
+        </span>
+      </>
+    )}
+  </button>
 
-        <button
-          onClick={handleShare}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-all"
-        >
-          <Share2 size={20} />
-          <span className="font-medium">Share</span>
-        </button>
-      </div>
+  {/* Share Button - Mobile pe sirf icon, desktop pe icon+text */}
+  <button
+    onClick={handleShare}
+    className="flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-800/40 dark:hover:to-indigo-800/40 border-2 border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 group"
+  >
+    <Share2 
+      size={22} 
+      className="group-hover:rotate-12 transition-transform duration-300 text-blue-600 dark:text-blue-400" 
+    />
+    {/* Desktop Text - Hidden on mobile */}
+    <span className="hidden sm:inline font-medium">Share</span>
+    {/* Mobile Text - Very short */}
+    <span className="sm:hidden text-xs font-medium">Share</span>
+  </button>
+</div>
     </div>
   );
 };

@@ -158,7 +158,6 @@ async function calculateShippingCharge({ deliveryPincode, totalWeight }) {
   });
 
   const data = res.data?.data;
- console.log(data,"gggggg")
   if (!data || !data.available_courier_companies?.length) {
     throw new Error("Shipping not available for this pincode");
   }
