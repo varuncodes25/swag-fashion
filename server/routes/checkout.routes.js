@@ -3,6 +3,8 @@ const router = express.Router();
 
 const verifyToken = require("../middlewares/verifyToken");
 const { checkoutInit } = require("../controllers/checkoutController");
+const { checkDeliveryDate } = require("../controllers/shiprocketController");
+const decryptRequest = require("../utils/decryptResponse");
 
 
 /**
@@ -17,5 +19,5 @@ const { checkoutInit } = require("../controllers/checkoutController");
  *   GET /api/checkout/init?productId=PRODUCT_ID&qty=2
  */
 router.get("/checkout/init", verifyToken, checkoutInit);
-
+router.post("/delivery-estimate", verifyToken,decryptRequest, checkDeliveryDate);
 module.exports = router;

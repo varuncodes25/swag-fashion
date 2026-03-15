@@ -1,6 +1,7 @@
 const axios = require("axios");
 const Order = require("../models/Order");
 const getShiprocketToken = require("../utils/shiprocket");
+const { calculateShippingCharge } = require("../service/shiprocketService");
 
 const createShipment = async (orderId) => {
   const order = await Order.findById(orderId);
@@ -98,4 +99,68 @@ const createShipment = async (orderId) => {
   }
 };
 
-module.exports = { createShipment };
+const checkDeliveryDate = async (req, res) => {
+  try {
+    const { pincode } = req.body;
+
+    // ============ SIMPLE VALIDATION ============
+    if (!pincode) {
+      return res.status(400).json({
+        success: false,
+        message: "Pincode is required"
+      });
+    }
+
+    if (pincode.length !== 6 || !/^\d+$/.test(pincode)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 6-digit pincode"
+      });
+    }
+
+    // ============ DEFAULT WEIGHT = 0.5kg ============
+    const totalWeight = 0.5;
+
+    // ============ CALL SHIPROCKET ============
+    let shippingInfo;
+    try {
+      shippingInfo = await calculateShippingCharge({
+        deliveryPincode: pincode,
+        totalWeight: totalWeight
+      });
+    } catch (error) {
+      // Agar delivery available nahi hai
+      return res.json({
+        success: true,
+        available: false,
+        message: "Delivery not available at this pincode",
+        pincode: pincode
+      });
+    }
+
+    // ============ SIMPLE DATE FORMAT ============
+    const deliveryDate = new Date(shippingInfo.estimatedDelivery);
+    const options = { day: 'numeric', month: 'short' };
+    const formattedDate = deliveryDate.toLocaleDateString('en-IN', options);
+
+    // ============ FINAL RESPONSE ============
+    res.json({
+      success: true,
+      available: true,
+      pincode: pincode,
+      estimatedDate: formattedDate,        // "20 Mar"
+      deliveryDays: shippingInfo.deliveryDays, // 3
+      message: `Delivery by ${formattedDate}`
+    });
+
+  } catch (error) {
+    console.error("❌ Delivery check error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong"
+    });
+  }
+};
+
+
+module.exports = { createShipment,checkDeliveryDate };

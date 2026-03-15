@@ -15,6 +15,7 @@ import MobileStickyCTA from "@/components/Product/MobileStickyCTA";
 import ReviewsComponent from "@/components/custom/ReviewsComponent";
 import SimilarProducts from "@/components/Product/SimilarProducts";
 import { useState } from "react";
+import DeliveryChecker from "@/components/Product/DeliveryChecker";
 
 const Product = () => {
   const { productId } = useParams();
@@ -204,7 +205,7 @@ const Product = () => {
                   clothingType={product.clothingType}
                 />
               )}
-
+<DeliveryChecker/>
               {/* Services */}
               {/* <ProductServices
                 freeDelivery={product.freeShipping}
