@@ -26,7 +26,6 @@ const DeliveryChecker = () => {
       
       if (response.data.success) {
         if (response.data.available) {
-          // ✅ Delivery available - Store all info
           setDeliveryInfo({
             pincode: response.data.pincode,
             estimatedDate: response.data.estimatedDate,
@@ -34,7 +33,6 @@ const DeliveryChecker = () => {
             message: response.data.message
           });
         } else {
-          // Delivery not available
           setError("We don't deliver to this pincode yet");
           setDeliveryInfo(null);
         }
@@ -66,8 +64,8 @@ const DeliveryChecker = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-      {/* Header with Deliver To - EXACTLY LIKE IMAGE */}
+    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
+      {/* Header with Deliver To */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -79,7 +77,7 @@ const DeliveryChecker = () => {
               <span className="text-sm text-gray-900 dark:text-white font-semibold">
                 {deliveryInfo.pincode}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400 mx-1">•</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 mx-1">•</span>
               <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                 Free
               </span>
@@ -93,32 +91,32 @@ const DeliveryChecker = () => {
         {(pincode || deliveryInfo) && (
           <button 
             onClick={handleChangeClick}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium transition-colors"
           >
             Change
           </button>
         )}
       </div>
 
-      {/* Show delivery info if available - EXACTLY LIKE IMAGE */}
+      {/* Delivery Info Section - When available */}
       {deliveryInfo ? (
-        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-2">
-          <Truck className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+          <Truck className="w-4 h-4 flex-shrink-0" />
           <span className="text-sm">
-             delivery in {deliveryInfo.deliveryDays}–{parseInt(deliveryInfo.deliveryDays) + 1} days
+            Free delivery in {deliveryInfo.deliveryDays}–{parseInt(deliveryInfo.deliveryDays) + 1} days
           </span>
-          <CheckCircle className="w-4 h-4 ml-auto text-green-500" />
+          <CheckCircle className="w-5 h-5 ml-auto text-green-500 dark:text-green-400 flex-shrink-0" />
         </div>
       ) : (
         <>
-          {/* Instruction Text - Show only when no delivery info */}
+          {/* Instruction Text */}
           {!error && (
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
               Enter your pincode to check delivery date.
             </p>
           )}
 
-          {/* Input and Check Button - Show only when no delivery info */}
+          {/* Input and Check Button */}
           <div className="flex gap-2 mb-3">
             <div className="flex-1 relative">
               <input
@@ -126,20 +124,20 @@ const DeliveryChecker = () => {
                 value={pincode}
                 onChange={handleChange}
                 placeholder="Enter pincode"
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
                 maxLength="6"
                 disabled={loading}
               />
               {loading && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-blue-500 dark:text-blue-400 animate-spin" />
                 </div>
               )}
             </div>
             <button
               onClick={handleCheck}
               disabled={pincode.length !== 6 || loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-md transition-colors min-w-[70px]"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-blue-300 dark:disabled:bg-blue-800 text-white text-sm font-medium rounded-md transition-colors min-w-[70px] disabled:cursor-not-allowed"
             >
               {loading ? "..." : "Check"}
             </button>
@@ -149,7 +147,7 @@ const DeliveryChecker = () => {
 
       {/* Error Message */}
       {error && (
-        <p className="text-xs text-red-500 dark:text-red-400">
+        <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
           {error}
         </p>
       )}
