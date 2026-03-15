@@ -27,7 +27,6 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await apiClient.post("/login", credentials);
-      console.log("🔑 Login response:", response.data);
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -502,14 +501,12 @@ const authSlice = createSlice({
   reducers: {
     // Manual login setter
     setUserLogin: (state, action) => {
-      console.log("📦 User login payload:", action.payload);
 
       // ✅ Handle both { data: {...} } and direct {...}
       const payload = action.payload.data || action.payload;
       const userData = payload.user || {};
 
-      console.log("📦 Extracted user data:", userData);
-      console.log("📦 Extracted token:", payload.token);
+     
 
       // ✅ Set state correctly
       state.role = userData.role || "";
@@ -527,24 +524,18 @@ const authSlice = createSlice({
           localStorage.setItem("refreshToken", state.refreshToken);
         }
 
-        console.log("✅ User login successful:", {
-          role: state.role,
-          user: state.user?.email || state.user?.name,
-          token: state.token ? "Present" : "Missing",
-        });
+     
       } catch (error) {
         console.error("❌ Error saving to localStorage:", error);
       }
     },
     setAdminLogin: (state, action) => {
-      console.log("📦 User login payload:", action.payload);
-
+     
       // ✅ Handle both { data: {...} } and direct {...}
       const payload = action.payload.data || action.payload;
       const userData = payload.user || {};
 
-      console.log("📦 Extracted user data:", userData);
-      console.log("📦 Extracted token:", payload.token);
+      
 
       // ✅ Set state correctly
       state.role = userData.role || "";
@@ -562,11 +553,7 @@ const authSlice = createSlice({
           localStorage.setItem("refreshToken", state.refreshToken);
         }
 
-        console.log("✅ User login successful:", {
-          role: state.role,
-          user: state.user?.email || state.user?.name,
-          token: state.token ? "Present" : "Missing",
-        });
+       
       } catch (error) {
         console.error("❌ Error saving to localStorage:", error);
       }
@@ -738,7 +725,7 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loginLoading = false;
-        console.log(action.payload, "gggg");
+      
         state.loginError = action.payload?.message || "Login failed";
         state.fieldErrors = action.payload?.errors || {};
         state.loading = false;

@@ -264,7 +264,7 @@ const replyReview = async (req, res) => {
 const getReviews = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id, "abhi");
+   
 
     const reviews = await Review.find({ productId: id })
       .populate("userId", "name")

@@ -28,7 +28,7 @@ import { fetchProductById } from "@/redux/slices/admin/productSlice";
 
 const AdminProductDetails = () => {
   const { productId } = useParams();
-  console.log(productId, "productId");
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [selectedImage, setSelectedImage] = useState(null);

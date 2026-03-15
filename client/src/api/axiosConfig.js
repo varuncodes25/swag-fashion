@@ -37,12 +37,9 @@ const getDeviceId = () => {
 // ============ REQUEST INTERCEPTOR ============
 apiClient.interceptors.request.use(
   async (config) => {
-    console.log("🚀 REQUEST:", config.method.toUpperCase(), config.url);
-    console.log("📤 REQUEST DATA:", config.data);
-    
+   
     // ✅ Add auth token
     const token = localStorage.getItem("token");
-    console.log("🔑 Token from localStorage:", token ? "Present" : "Not present");
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -55,13 +52,12 @@ apiClient.interceptors.request.use(
 
     // ✅ Encrypt request data
     const shouldEncrypt = import.meta.env.VITE_ENCRYPT_REQUEST === "true";
-    console.log("🔐 Encryption enabled:", shouldEncrypt);
-    
+  
     if (shouldEncrypt && config.data && config.method !== "get") {
       try {
-        console.log("🔒 Encrypting data:", config.data);
+       
         const encryptedData = await CareerEncrypt(config.data);
-        console.log("🔒 Encrypted result:", encryptedData);
+       
         config.data = { encryptedData };
         config.headers["X-Encrypted"] = "true";
       } catch (error) {
@@ -81,8 +77,7 @@ apiClient.interceptors.request.use(
 // ============ RESPONSE INTERCEPTOR - FIXED ============
 apiClient.interceptors.response.use(
   async (response) => {
-    console.log("✅ RESPONSE:", response.status, response.config.url);
-    console.log("📥 RAW RESPONSE DATA:", response.data);
+    
     
     // ✅ DECRYPTION ENABLE KARO
     const shouldEncrypt = true;  // 👈 TRUE KARO
@@ -91,9 +86,9 @@ apiClient.interceptors.response.use(
       // Case 1: Direct encrypted data
       if (typeof response.data === "string") {
         try {
-          console.log("🔓 Decrypting string response...");
+         
           const decryptedData = await CareerDecrypt(response.data);
-          console.log("🔓 Decrypted data:", decryptedData);
+         
           response.data = decryptedData;
         } catch (error) {
           console.error("❌ Decryption failed:", error);
@@ -102,9 +97,9 @@ apiClient.interceptors.response.use(
       // Case 2: { data: "encrypted-string" }
       else if (response.data.data && typeof response.data.data === "string") {
         try {
-          console.log("🔓 Decrypting data field...");
+         
           const decryptedData = await CareerDecrypt(response.data.data);
-          console.log("🔓 Decrypted data:", decryptedData);
+          
           response.data = decryptedData;  // Replace entire response
         } catch (error) {
           console.error("❌ Decryption failed:", error);
@@ -113,9 +108,9 @@ apiClient.interceptors.response.use(
       // Case 3: { encryptedData: "encrypted-string" }
       else if (response.data.encryptedData) {
         try {
-          console.log("🔓 Decrypting encryptedData...");
+         
           const decryptedData = await CareerDecrypt(response.data.encryptedData);
-          console.log("🔓 Decrypted data:", decryptedData);
+   
           response.data = decryptedData;
         } catch (error) {
           console.error("❌ Decryption failed:", error);

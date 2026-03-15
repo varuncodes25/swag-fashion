@@ -57,11 +57,7 @@ useEffect(() => {
   const variantId = params.get("variantId"); // ✅ ADD THIS
   const quantity = params.get("quantity") || 1;
   
-  console.log("📥 Checkout params:", {
-    productId,
-    variantId, // ✅ Check if variantId is coming
-    quantity
-  });
+  
   
   dispatch(setProductId(productId));
   dispatch(setVariantId(variantId));

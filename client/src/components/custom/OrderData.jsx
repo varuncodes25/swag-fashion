@@ -96,7 +96,7 @@ const OrderData = ({
 
   // ✅ CANCEL SUCCESS HANDLER
   const handleCancelSuccess = (data) => {
-    console.log("Order cancelled successfully:", data);
+   
     // Parent component ko batao (OrderDetails.jsx)
     if (onCancel) {
       onCancel(data);

@@ -39,7 +39,7 @@ const OrderActions = ({
 
   // ✅ CALLBACK FUNCTION - Modal success pe call hoga
   const handleCancelSuccess = () => {
-    console.log("✅ Cancel success, clearing status...");
+  
     dispatch(clearCancelStatus());  // 🔥 YAHAN DISPATCH KARO!
   };
 

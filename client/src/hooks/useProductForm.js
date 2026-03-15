@@ -618,7 +618,7 @@ export const useProductForm = (initialData = null) => {
   // ============ CORRECTED: Prepare form data for submission ============
   const prepareFormData = () => {
     try {
-      console.log("🚀 Preparing form data...");
+    
       
       // Validate required fields first
       if (!formData.name || !formData.description || !formData.category) {
@@ -650,7 +650,7 @@ export const useProductForm = (initialData = null) => {
         } 
         else if (key === 'productDimensions') {
           if (value && typeof value === 'object') {
-            console.log("📦 Adding productDimensions:", value);
+           
             formDataObj.append(key, JSON.stringify(value));
           } else {
             formDataObj.append(key, value || '{}');

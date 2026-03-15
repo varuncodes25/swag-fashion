@@ -29,27 +29,27 @@ export const useReviewOperations = (productId) => {
   
   // Actions
   const fetchReviewsAction = async () => {
-    console.log("🚀 Redux: Fetching reviews for", productId);
+   
     return dispatch(fetchReviews(productId)).unwrap();
   };
   
   const createReviewAction = async (reviewData) => {
-    console.log("🎯 Redux: Creating review", reviewData);
+    
     return dispatch(createReview(reviewData)).unwrap();
   };
   
   const updateReviewAction = async (reviewId, updateData) => {
-    console.log("✏️ Redux: Updating review", reviewId);
+  
     return dispatch(updateReview({ reviewId, updateData })).unwrap();
   };
   
   const deleteReviewAction = async (reviewId) => {
-    console.log("🗑️ Redux: Deleting review", reviewId);
+ 
     return dispatch(deleteReview(reviewId)).unwrap();
   };
   
   const addReplyAction = async (reviewId, replyData) => {
-    console.log("💬 Redux: Adding reply to", reviewId);
+   
     return dispatch(addReply({ reviewId, replyData })).unwrap();
   };
   

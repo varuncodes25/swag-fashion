@@ -41,11 +41,11 @@ export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialP
         ? `${import.meta.env.VITE_API_URL}/products/category/${slug}/${subSlug}?${queryParams}`
         : `${import.meta.env.VITE_API_URL}/products/category/${slug}?${queryParams}`;
 
-      console.log('Fetching products:', url);
+     
 
       const response = await axios.get(url);
       const { data } = response.data;
-     console.log(data,"hhhrttfuf")
+     
       // Update products
       if (shouldAppend) {
         setProducts(prev => [...prev, ...data.products]);
@@ -82,7 +82,7 @@ export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialP
 
   // Load products when filters or slug changes
   useEffect(() => {
-    console.log('Filters changed, fetching products...');
+   
     setProducts([]);
     fetchProducts(1, false);
   }, [slug, subSlug, filters, fetchProducts]);

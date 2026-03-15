@@ -8,22 +8,18 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   const dispatch = useDispatch();
   const { toast } = useToast();
 
-  console.log("🔧 GoogleLoginButton rendered with type:", type);
-  console.log("🔑 VITE_GOOGLE_CLIENT_ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
-  console.log("🌐 VITE_API_URL:", import.meta.env.VITE_API_URL);
+  
 
   // ✅ Method 1: Web Redirect Flow
   const handleRedirectLogin = async (e) => {
     e?.preventDefault(); // Form submit hone se rokega
-    console.log("🔄 Redirect login started");
-    console.log("📡 Calling backend URL:", `${import.meta.env.VITE_API_URL}/auth/google/url`);
+   
     
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/auth/google/url`,
       );
-      console.log("✅ Redirect URL received:", res.data.url);
-      console.log("🚀 Redirecting to Google...");
+      
       window.location.href = res.data.url;
     } catch (error) {
       console.error("❌ Google redirect login failed:", error);
@@ -40,17 +36,16 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   // ✅ Method 2: Token Flow (Google One Tap)
   const handleTokenLogin = (e) => {
     e?.preventDefault(); // Form submit hone se rokega
-    console.log("🔄 Token login started");
-    console.log("🔑 Using Client ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
+  
     
     // Check if script already exists
     const existingScript = document.querySelector('script[src*="gsi/client"]');
-    console.log("📦 Existing Google script:", existingScript);
+
     
     if (existingScript) {
-      console.log("✅ Google script already loaded");
+     
       if (window.google) {
-        console.log("✅ window.google object exists");
+      
         initializeGoogleSignIn();
       } else {
         console.error("❌ window.google not found even though script exists");
@@ -58,16 +53,14 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
       return;
     }
 
-    console.log("📦 Creating new Google script element");
+
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
     
     script.onload = () => {
-      console.log("✅✅✅ Google script loaded SUCCESSFULLY");
-      console.log("🔍 window.google exists after load:", !!window.google);
-      console.log("🔍 window.google.accounts:", window.google?.accounts);
+     
       initializeGoogleSignIn();
     };
     
@@ -79,7 +72,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
         description: "Failed to load Google Sign-In. Please try redirect login.",
         variant: "destructive",
       });
-      console.log("🔄 Falling back to redirect login");
+   
       handleRedirectLogin();
     };
     
@@ -107,7 +100,6 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
     }
 
     try {
-      console.log("🔧 Initializing Google Sign-In with client ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
       
       window.google.accounts.id.initialize({
         client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
@@ -116,13 +108,10 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
         cancel_on_tap_outside: true,
       });
 
-      console.log("✅✅✅ Google Sign-In initialized successfully");
       
       // Show the One Tap prompt
-      console.log("🔧 Calling window.google.accounts.id.prompt()");
       window.google.accounts.id.prompt((notification) => {
-        console.log("📢📢📢 Google prompt notification received:", notification);
-        console.log("📢 Notification type:", notification.getNotDisplayedReason?.());
+       
         console.log("📢 Notification details:", {
           isNotDisplayed: notification.isNotDisplayed(),
           isSkippedMoment: notification.isSkippedMoment(),
@@ -131,8 +120,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
         });
         
         if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.warn("⚠️⚠️⚠️ Google prompt not displayed, reason:", notification.getNotDisplayedReason?.());
-          console.log("🔄 Falling back to redirect login");
+          
           handleRedirectLogin();
         }
       });
@@ -146,37 +134,28 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   };
 
   const handleGoogleResponse = async (response) => {
-    console.log("✅✅✅ Google response received at:", new Date().toISOString());
-    console.log("📦 Google response object:", response);
-    console.log("📦 Response credential exists:", !!response.credential);
-    console.log("📦 Response credential length:", response.credential?.length);
+    
     
     try {
-      console.log("📡 Sending token to backend:", `${import.meta.env.VITE_API_URL}/auth/google/token`);
-      console.log("📤 Request payload:", { token: response.credential?.substring(0, 20) + "..." });
       
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/google/token`,
         { token: response.credential },
       );
 
-      console.log("✅✅✅ Backend response received:", res);
-      console.log("📦 Backend response data:", res.data);
-      console.log("📦 User data:", res.data.user);
-      console.log("📦 Token:", res.data.token?.substring(0, 20) + "...");
-
+      
       // ✅ FIXED: Directly pass res.data (no extra wrapping)
-      console.log("🔧 Dispatching to Redux with setUserLogin");
+      
       dispatch(setUserLogin(res.data));
 
-      console.log("✅ Redux dispatch successful");
+    
       
       toast({
         title: "Login Successful",
         description: `Welcome ${res.data.user?.name || "User"}!`,
       });
 
-      console.log("🚀 Redirecting to home page");
+ 
       window.location.href = "/";
       
     } catch (error) {
@@ -198,9 +177,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   const handleClick = (e) => {
     e.preventDefault();  // 👈 Form submit hone se rokega
     e.stopPropagation(); // 👈 Event bubbling rokega
-    console.log("👆 Google button clicked at:", new Date().toISOString());
-    console.log("👆 Button type:", type);
-    
+      
     if (type === "redirect") {
       console.log("👆 Calling handleRedirectLogin");
       handleRedirectLogin(e);

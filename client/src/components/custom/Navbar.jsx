@@ -34,9 +34,7 @@ const Navbar = () => {
   // ✅ FIXED: Use cartCount directly from state (your slice has cartCount)
   const displayCartCount = cartCount || totalItems || totalQuantity || items.length || 0;
   
-  console.log("Cart State:", { cartCount, totalItems, totalQuantity, itemsLength: items.length });
-  console.log("Display Cart Count:", displayCartCount);
-
+  
   const isCheckoutPage = location.pathname === "/checkout";
 
   

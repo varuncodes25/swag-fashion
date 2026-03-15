@@ -43,19 +43,19 @@ const ProductPageReviews = ({ productId, productSlug }) => {
   
   // ✅ DIRECT FETCH
   useEffect(() => {
-    console.log("🚀 Direct Redux: Fetching reviews for", productId);
+   
     dispatch(fetchReviews(productId));
   }, [productId, dispatch]);
 
   // ✅ Debug log when reviews change
   useEffect(() => {
-    console.log("📊 Direct Redux: Reviews updated", reviews.length);
+   
   }, [reviews]);
 
   const handleDeleteReview = async (reviewId) => {
     if (!confirm("Are you sure you want to delete this review?")) return;
     
-    console.log("🗑️ Direct Redux: Deleting review", reviewId);
+   
     try {
       await dispatch(deleteReview(reviewId)).unwrap();
       
@@ -79,7 +79,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
   const handleEditReview = async (reviewId) => {
     if (!confirm("Are you sure you want to save changes?")) return;
 
-    console.log("✏️ Direct Redux: Updating review", reviewId);
+   
     try {
       await dispatch(updateReview({ 
         reviewId, 
@@ -123,7 +123,6 @@ const ProductPageReviews = ({ productId, productSlug }) => {
       return;
     }
 
-    console.log("💬 Direct Redux: Adding reply to", reviewId);
     try {
       await dispatch(addReply({ 
         reviewId, 
@@ -171,8 +170,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
 
  
 
-  // Debug info
-  console.log("🎯 Rendering with reviews:", reviews.length);
+ 
 
   const displayedReviews = reviews.slice(0, 2);
 

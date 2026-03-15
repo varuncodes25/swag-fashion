@@ -12,7 +12,7 @@ function randomString(length) {
 // ✅ NAMED EXPORTS - ES6 syntax
 export const CareerDecrypt = async (cipherData) => {
   if (!cipherData) {
-    console.log('cipherData', cipherData);
+  
     throw new Error('something went wrong !!');
   }
 

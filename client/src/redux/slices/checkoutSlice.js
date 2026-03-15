@@ -46,11 +46,7 @@ export const initCheckout = createAsyncThunk(
         params.append("addressId", addressId);
       }
 
-      console.log("🔄 initCheckout API Call:", {
-        url: `/checkout/init?${params.toString()}`,
-        params: Object.fromEntries(params.entries()),
-        hasVariantId: !!variantId,
-      });
+  
 
       // ✅ USE APICLIENT
       const res = await apiClient.get(`/checkout/init?${params.toString()}`);
@@ -225,13 +221,7 @@ export const createRazorpayOrder = createAsyncThunk(
         summary,
       } = state.checkout;
 
-      console.log("🔄 createRazorpayOrder thunk:", {
-        addressId,
-        productId,
-        variantId,
-        qty,
-        totalAmount: summary?.total,
-      });
+
 
       if (!addressId) {
         throw new Error("Address is required");
@@ -249,11 +239,7 @@ export const createRazorpayOrder = createAsyncThunk(
         quantity: qty || 1,
       });
 
-      console.log("✅ Razorpay order created:", {
-        razorpayOrderId: res.data.razorpayOrderId,
-        amount: res.data.amount,
-        success: res.data.success,
-      });
+  
 
       if (!res.data.success) {
         throw new Error(res.data.message);
@@ -282,13 +268,6 @@ export const verifyRazorpayPayment = createAsyncThunk(
         qty,
       } = state.checkout;
 
-      console.log("🔍 verifyRazorpayPayment called:", {
-        razorpayOrderId: paymentData.razorpay_order_id,
-        productId,
-        variantId,
-        qty,
-        addressId,
-      });
 
       // ✅ USE APICLIENT
       const res = await apiClient.post("/verify-payment", {
@@ -299,7 +278,7 @@ export const verifyRazorpayPayment = createAsyncThunk(
         quantity: qty || 1,
       });
 
-      console.log("✅ Payment verified:", res.data);
+     
 
       if (!res.data.success) {
         throw new Error(res.data.message);

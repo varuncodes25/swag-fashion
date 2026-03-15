@@ -226,20 +226,20 @@ const cartSlice = createSlice({
     
     // ✅ OPEN CART - ADD THIS REDUCER
     openCart: (state) => {
-      console.log("🔓 Opening cart...");
+     
       state.isCartOpen = true;
     },
     
     // ✅ CLOSE CART - ADD THIS REDUCER
     closeCart: (state) => {
-      console.log("🔒 Closing cart...");
+     
       state.isCartOpen = false;
     },
     
     // ✅ TOGGLE CART - ADD THIS REDUCER
     toggleCart: (state) => {
       state.isCartOpen = !state.isCartOpen;
-      console.log("🔄 Toggling cart to:", state.isCartOpen);
+     
     },
     
     // 🟢 OPTIMISTIC ADD TO CART - INSTANT UI UPDATE

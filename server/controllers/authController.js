@@ -119,7 +119,7 @@ const login = asyncHandler(async (req, res, next) => {
 
     // Get user with password field
     const user = await userRepository.findByEmail(email, true);
-    console.log("user",user)
+
     if (!user) {
       return next(new UnauthorizedError("Invalid email or password"));
     }

@@ -78,7 +78,7 @@ const useProductDetails = () => {
 
   // ============ FIX: Get images by color from allImages ============
   const getImagesByColor = (colorName) => {
-    console.log("gjhbjhb")
+  
     if (!product || !colorName) return [];
 
     // Option 1: Use imagesByColor if available (from API)
@@ -92,7 +92,7 @@ const useProductDetails = () => {
         img.color === colorName
       );
 
-      console.log(filteredImages, "filteredImages")
+     
       // If no images found for this color, return first image
       if (filteredImages.length === 0 && product.allImages.length > 0) {
         return [product.allImages[0]];

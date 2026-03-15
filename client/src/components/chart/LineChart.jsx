@@ -20,7 +20,7 @@ import {
 
 export default function LineSalesChart({ data }) {
   // ============ DEBUGGING ============
-  console.log("📊 LineSalesChart received data:", data);
+ 
   
   // ============ SAFE DATA ACCESS ============
   // Handle different data structures
@@ -28,17 +28,17 @@ export default function LineSalesChart({ data }) {
   
   // Case 1: Direct array
   if (Array.isArray(data)) {
-    console.log("✅ Received direct array");
+
     monthlyData = data;
   }
   // Case 2: Object with charts.monthlyRevenue
   else if (data?.charts?.monthlyRevenue) {
-    console.log("✅ Received object with charts.monthlyRevenue");
+   
     monthlyData = data.charts.monthlyRevenue;
   }
   // Case 3: No valid data
   else {
-    console.log("❌ No valid data format found");
+  
     return (
       <Card className="flex-1 rounded-2xl bg-muted/40 backdrop-blur w-full overflow-hidden">
         <CardHeader className="pb-4">
@@ -56,7 +56,7 @@ export default function LineSalesChart({ data }) {
 
   // Check if monthlyData is empty
   if (!monthlyData || monthlyData.length === 0) {
-    console.log("❌ monthlyData array is empty");
+
     return (
       <Card className="flex-1 rounded-2xl bg-muted/40 backdrop-blur w-full overflow-hidden">
         <CardHeader className="pb-4">
@@ -73,7 +73,7 @@ export default function LineSalesChart({ data }) {
   }
 
   // ============ TRANSFORM DATA ============
-  console.log("✅ monthlyData:", monthlyData);
+
   
   const chartData = monthlyData.map((item, index) => {
     // Extract month from "Feb 2026" format
@@ -106,7 +106,7 @@ export default function LineSalesChart({ data }) {
     };
   });
 
-  console.log("✅ Transformed chartData:", chartData);
+  
 
   // ============ CALCULATE TOTALS ============
   const totalRevenue = chartData.reduce((sum, item) => sum + item.revenue, 0);

@@ -98,15 +98,14 @@ const Signup = () => {
   // ✅ Show validation errors toast
  useEffect(() => {
   if (fieldErrors && fieldErrors.length > 0) {
-    console.log("🔥 fieldErrors:", fieldErrors);
+   
     
     // ✅ Array of objects se messages nikaalo
     const errorMessages = fieldErrors
       .map(err => err.message)  // Sirf message nikaalo
       .join(". ");              // String me convert karo
     
-    console.log("✅ errorMessages:", errorMessages);
-    
+   
     toast({
       title: "Registration Failed",
       description: errorMessages,

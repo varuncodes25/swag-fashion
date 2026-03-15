@@ -35,7 +35,7 @@ const CATEGORY_COLORS = {
 };
 
 export default function CategoryPieChart({ data }) {
-  console.log("📊 Pie chart received data:", data);
+
   
   // ============ SAFE DATA ACCESS ============
   let categoryData = null;

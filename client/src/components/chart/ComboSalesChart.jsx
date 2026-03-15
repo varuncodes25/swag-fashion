@@ -24,19 +24,19 @@ const monthMap = {
 };
 
 export default function RevenueDashboard({ data }) {
-  console.log("📊 RevenueDashboard received data:", data);
+ 
   
   // ============ SAFE DATA ACCESS ============
   let monthlyData = [];
   
   // Case 1: monthlySalesTrend format
   if (data?.monthlySalesTrend?.length > 0) {
-    console.log("✅ Using monthlySalesTrend format");
+
     monthlyData = data.monthlySalesTrend;
   }
   // Case 2: charts.monthlyRevenue format (tumhara actual data)
   else if (data?.charts?.monthlyRevenue?.length > 0) {
-    console.log("✅ Using charts.monthlyRevenue format");
+   
     monthlyData = data.charts.monthlyRevenue.map(item => {
       // Parse month from "Feb 2026" format
       const [monthName, year] = item.month.split(' ');
@@ -51,11 +51,9 @@ export default function RevenueDashboard({ data }) {
         orders: item.orders
       };
     });
-    console.log("✅ Converted monthlyData:", monthlyData);
   }
   // Case 3: No valid data
   else {
-    console.log("❌ No valid monthly data found");
     return (
       <Card className="rounded-2xl bg-muted/40 backdrop-blur">
         <CardHeader>
@@ -109,7 +107,7 @@ export default function RevenueDashboard({ data }) {
     };
   });
 
-  console.log("✅ Transformed chartData:", chartData);
+ 
 
   // ============ KPI CALCULATIONS ============
   const totalRevenue = chartData.reduce((s, d) => s + d.revenue, 0);

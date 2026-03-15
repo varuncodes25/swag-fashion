@@ -22,7 +22,7 @@ const DeliveryChecker = () => {
     try {
       const response = await apiClient.post("/delivery-estimate", { pincode });
       
-      console.log("API Response:", response.data);
+     
       
       if (response.data.success) {
         if (response.data.available) {

@@ -1,5 +1,4 @@
 const Pagination = ({ page, totalPages, onPageChange }) => {
-    console.log(page, totalPages, onPageChange)
   if (totalPages <= 1) return null;
  
   return (
@@ -18,14 +17,13 @@ const Pagination = ({ page, totalPages, onPageChange }) => {
   const pageNo = i + 1;
 
   // 🔍 DEBUG: render ho raha hai ya nahi
-  console.log("Rendering page button:", pageNo, "Current page:", page);
 
   return (
     <button
       key={pageNo}
       onClick={() => {
         // 🔥 DEBUG: click ho raha hai ya nahi
-        console.log("Clicked page:", pageNo);
+      
         onPageChange(pageNo);
       }}
       className={`px-3 py-1 border rounded

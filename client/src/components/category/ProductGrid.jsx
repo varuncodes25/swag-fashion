@@ -2,7 +2,7 @@
 import ProductCard from "../../components/custom/ProductCard"; // Adjust path as needed
 
 export default function ProductGrid({ loading, products }) {
-  console.log("Products data:", products);
+
 
   if (loading && products.length === 0) {
     return (

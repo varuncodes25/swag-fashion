@@ -6,7 +6,7 @@ const Product = require("../models/Product");
 exports.getCart = async (req, res) => {
   try {
     const userId = req.id; // Changed from req.user._id to req.id
-    console.log("User ID in getCart:", userId);
+ 
     
     const cart = await Cart.findOne({ userId });
     
