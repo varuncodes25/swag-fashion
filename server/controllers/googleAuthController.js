@@ -10,14 +10,53 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const googleOneTapLogin = async (req, res) => {
   try {
     const { token } = req.body;
+    
+    console.log("📡 Received Google One Tap token");
+    console.log("🔑 Token length:", token?.length);
 
-    // Verify Google token
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
+    if (!token) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "No token provided" 
+      });
+    }
+
+    // Verify Google token with more detailed error handling
+    let ticket;
+    try {
+      ticket = await client.verifyIdToken({
+        idToken: token,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+    } catch (verifyError) {
+      console.error("❌ Google token verification failed:", verifyError);
+      console.error("❌ Error name:", verifyError.name);
+      console.error("❌ Error message:", verifyError.message);
+      
+      // Check if it's an expiration error
+      if (verifyError.message.includes("expired")) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Google token has expired. Please login again." 
+        });
+      }
+      
+      return res.status(401).json({ 
+        success: false, 
+        message: "Invalid Google token: " + verifyError.message 
+      });
+    }
 
     const payload = ticket.getPayload();
+    console.log("✅ Token verified successfully");
+    console.log("📦 Payload:", {
+      email: payload.email,
+      name: payload.name,
+      googleId: payload.sub,
+      email_verified: payload.email_verified,
+      exp: new Date(payload.exp * 1000).toISOString()
+    });
+
     const { sub: googleId, email, name, picture, email_verified } = payload;
 
     // Find or create user
@@ -26,10 +65,9 @@ const googleOneTapLogin = async (req, res) => {
     });
 
     if (!user) {
-      // Create new user
-      // const randomPassword = Math.random().toString(36) + Date.now().toString();
-      // const hashedPassword = await bcrypt.hash(randomPassword, 10);
-
+      console.log("🆕 Creating new user:", email);
+      
+      // Create new user without password
       user = new User({
         name,
         email,
@@ -37,10 +75,12 @@ const googleOneTapLogin = async (req, res) => {
         provider: "google",
         isEmailVerified: email_verified || true,
         avatar: picture,
-        // password: hashedPassword
       });
       await user.save();
+      console.log("✅ New user created:", user._id);
     } else {
+      console.log("📝 Updating existing user:", user._id);
+      
       // Update existing user
       if (user.phone && !/^[6-9]\d{9}$/.test(user.phone)) {
         user.phone = null;
@@ -49,25 +89,32 @@ const googleOneTapLogin = async (req, res) => {
         user.googleId = googleId;
         user.provider = "google";
       }
+      if (!user.avatar && picture) {
+        user.avatar = picture;
+      }
       await user.save();
     }
 
+    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    // ✅ FIXED: Use the model method!
-    const accessToken = user.generateAccessToken();  // 👈 YEH USE KARO
-    const refreshToken = user.generateRefreshToken(); // 👈 YEH BHI
+    // Generate tokens
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
 
     // Store refresh token
     user.refreshToken = refreshToken;
     await user.save();
 
+    console.log("✅ Login successful for:", email);
+    console.log("🔑 Access token generated");
+
     // Send response
     res.json({
       success: true,
-      token: accessToken,        // 👈 Access token
-      refreshToken: refreshToken, // 👈 Refresh token
+      token: accessToken,
+      refreshToken: refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -81,25 +128,25 @@ const googleOneTapLogin = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Google One Tap Error:", error);
+    console.error("❌ Error stack:", error.stack);
+    
+    // Send more specific error message
     res.status(401).json({ 
       success: false, 
-      message: "Google login failed. Please try again." 
+      message: error.message || "Google login failed. Please try again." 
     });
   }
 };
 
 // ✅ 2. GET GOOGLE AUTH URL (for redirect flow)
-// authController.js - getGoogleAuthUrl
-// authController.js - getGoogleAuthUrl
 const getGoogleAuthUrl = async (req, res) => {
   try {
     console.log("📡 Backend generating Google URL");
     
-    // ✅ FIXED: Properly encode all parameters
     const params = new URLSearchParams({
       client_id: process.env.GOOGLE_CLIENT_ID,
       redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-      response_type: 'code',  // ✅ Yahi missing tha
+      response_type: 'code',
       scope: 'profile email',
       access_type: 'offline',
       prompt: 'consent'
@@ -128,9 +175,34 @@ const googleCallback = async (req, res) => {
   try {
     const { code } = req.query;
     
+    if (!code) {
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=no_code`);
+    }
+
+    console.log("📡 Received Google callback with code");
+    
     // Exchange code for tokens
-    // You'll need to implement this part
-    // For now, redirect to frontend
+    const { tokens } = await client.getToken({
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+    });
+
+    console.log("✅ Tokens received from Google");
+
+    // Verify the ID token
+    const ticket = await client.verifyIdToken({
+      idToken: tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    
+    // Here you would create/find user and generate your own JWT
+    // Similar to googleOneTapLogin but with tokens from redirect flow
+    
+    // For now, redirect to frontend with success
     res.redirect(`${process.env.FRONTEND_URL}/login?success=true`);
     
   } catch (error) {
