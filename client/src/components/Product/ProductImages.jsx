@@ -85,7 +85,7 @@ const wishlistState = useSelector((state) => state.wishlist);
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+    <div className="bg-background dark:bg-background rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 dark:border-gray-800">
       {/* Product Gallery */}
       <ProductGallery
         images={images}

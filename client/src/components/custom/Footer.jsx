@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
-    <footer className="bg-slate-100 dark:bg-gray-900 text-gray-700 dark:text-neutral-50 py-10 p-1 font-bold  ">
+    <footer className="bg-background dark:bg-background text-gray-700 dark:text-neutral-50 py-10 p-1 font-bold mb-20 lg:mb-0  ">
       <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10">
         {/* Company Info */}
         <div>

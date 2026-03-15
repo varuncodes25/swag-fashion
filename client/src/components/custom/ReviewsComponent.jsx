@@ -110,7 +110,7 @@ const ReviewsComponent = ({ productId }) => {
 
   return (
     <div className="my-10 sm:my-16 max-w-6xl mx-auto sm:px-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div className="bg-white dark:bg-background rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         
         {/* Header Section */}
         <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">

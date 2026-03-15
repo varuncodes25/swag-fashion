@@ -203,7 +203,7 @@ const ProductTabs = ({ product }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-200">
+    <div className="bg-background dark:bg-background rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-200">
       {/* ===== ACCORDION ===== */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
         
