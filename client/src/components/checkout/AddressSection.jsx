@@ -209,7 +209,7 @@ const AddressSection = () => {
         </div>
       </div>
       <div className="min-w-0">
-        <h3 className="font-bold text-gray-900 dark:text-gray-100 truncate text-base md:text-lg font-sans tracking-tight">
+        <h3 className="font-bold text-gray-900 dark:text-gray-100 truncate text-base md:text-lg  tracking-tight">
           {addr.name}
         </h3>
         <span className="inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30">
@@ -248,7 +248,7 @@ const AddressSection = () => {
 
   {/* Main Address (Always visible) */}
   <div className="space-y-1.5 md:space-y-2">
-    <p className="text-gray-800 dark:text-gray-100 font-semibold text-sm md:text-base font-sans line-clamp-1 tracking-wide">
+    <p className="text-gray-800 dark:text-gray-100 font-semibold text-sm md:text-base  line-clamp-1 tracking-wide">
       {addr.address_line1}
     </p>
     <p className="text-gray-700 dark:text-gray-300 text-xs md:text-sm font-medium tracking-wide">
