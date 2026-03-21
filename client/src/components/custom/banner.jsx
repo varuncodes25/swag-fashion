@@ -1,20 +1,32 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Images
+// Desktop Images
 import banner1 from "../../assets/banner.png";
 import banner2 from "../../assets/banner2.png";
-import banner3 from "../../assets/banner3.png";
-import banner4 from "../../assets/banner4.png";
-import banner5 from "../../assets/banner5.png";
+import banner3 from "../../assets/banner5.png";
 
-// Data
+// Mobile Images
+import mobile1 from "../../assets/mobile1.png";
+import mobile2 from "../../assets/mobile2.png";
+
+// Data (with fallback)
 const bannerData = [
-  { id: 1, image: banner1 },
-  { id: 2, image: banner2 },
-  { id: 3, image: banner3 },
-  { id: 4, image: banner4 },
-  { id: 5, image: banner5 },
+  {
+    id: 1,
+    desktop: banner1,
+    mobile: mobile1,
+  },
+  {
+    id: 2,
+    desktop: banner2,
+    mobile: mobile2,
+  },
+  {
+    id: 3,
+    desktop: banner3,
+    mobile: banner3, // fallback
+  },
 ];
 
 const Banner = () => {
@@ -26,6 +38,17 @@ const Banner = () => {
 
   const currentBanner = bannerData[activeIndex];
 
+  const stopAutoSlide = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (progressRef.current) {
+      clearInterval(progressRef.current);
+      progressRef.current = null;
+    }
+  };
+
   const startAutoSlide = () => {
     stopAutoSlide();
 
@@ -35,18 +58,14 @@ const Banner = () => {
     }, 4000);
 
     progressRef.current = setInterval(() => {
-      setProgress((prev) => (prev >= 100 ? 0 : prev + 1));
+      setProgress((prev) => (prev >= 100 ? 100 : prev + 1));
     }, 40);
-  };
-
-  const stopAutoSlide = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (progressRef.current) clearInterval(progressRef.current);
   };
 
   const goToNext = () => {
     stopAutoSlide();
     setActiveIndex((prev) => (prev + 1) % bannerData.length);
+    setProgress(0);
     setTimeout(startAutoSlide, 2000);
   };
 
@@ -55,12 +74,14 @@ const Banner = () => {
     setActiveIndex((prev) =>
       prev === 0 ? bannerData.length - 1 : prev - 1
     );
+    setProgress(0);
     setTimeout(startAutoSlide, 2000);
   };
 
   const goToSlide = (index) => {
     stopAutoSlide();
     setActiveIndex(index);
+    setProgress(0);
     setTimeout(startAutoSlide, 2000);
   };
 
@@ -70,27 +91,38 @@ const Banner = () => {
   }, []);
 
   return (
-    <div className="w-full px-2 sm:px-4"> {/* spacing for premium look */}
-      
-      {/* ✅ Rounded Container */}
+    <div className="w-full px-2 sm:px-4">
       <div className="w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-lg">
 
         <div className="relative">
 
           {/* Banner */}
           <div
-            className="relative bg-black 
-            aspect-[16/9] 
-            sm:aspect-[16/7] 
-            md:aspect-[16/6] 
-            lg:aspect-auto lg:h-[550px]"
+            className="
+              relative bg-black
+              aspect-[16/9]
+              sm:aspect-[16/7]
+              md:aspect-[16/6]
+              lg:aspect-auto lg:h-[550px]
+            "
           >
+
+            {/* Mobile */}
             <img
-              src={currentBanner.image}
+              src={currentBanner.mobile}
               alt="banner"
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover block sm:hidden"
               draggable={false}
             />
+
+            {/* Desktop */}
+            <img
+              src={currentBanner.desktop}
+              alt="banner"
+              className="w-full h-full object-cover hidden sm:block"
+              draggable={false}
+            />
+
           </div>
 
           {/* Progress Bar */}
@@ -115,9 +147,9 @@ const Banner = () => {
                 <button
                   key={index}
                   onClick={() => goToSlide(index)}
-                  className={`transition-all duration-200 rounded-full ${
+                  className={`transition-all duration-300 rounded-full ${
                     index === activeIndex
-                      ? "w-2 h-1 bg-white"
+                      ? "w-3 h-1 bg-white"
                       : "w-1 h-1 bg-white/50"
                   }`}
                 />
@@ -130,6 +162,7 @@ const Banner = () => {
             </button>
 
           </div>
+
         </div>
       </div>
     </div>
