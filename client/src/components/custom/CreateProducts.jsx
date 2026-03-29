@@ -35,7 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
 import SizeChartForm from "../Admin/SizeChartForm";
-import { Ruler } from 'lucide-react';
+import { Ruler } from "lucide-react";
 
 const CreateProduct = () => {
   const { productId } = useParams();
@@ -143,7 +143,7 @@ const CreateProduct = () => {
     if (productId) {
       getProduct(productId);
     } else {
-      clearProduct();
+      resetForm();  
     }
   }, [productId]);
 
@@ -541,270 +541,307 @@ const CreateProduct = () => {
           </TabsContent>
 
           {/* Variants & Images Tab */}
-         <TabsContent value="variants" className="space-y-6">
-  <CardContent className="space-y-8">
-    {/* Sizes Section */}
-    <div className="space-y-4">
-      <Label className="text-lg font-semibold text-foreground">Sizes *</Label>
-      <div className="flex items-center space-x-2">
-        <Select value={selectedSize} onValueChange={setSelectedSize}>
-          <SelectTrigger className="w-[120px] bg-background border-input">
-            <SelectValue placeholder="Select size" />
-          </SelectTrigger>
-          <SelectContent className="bg-popover border-border">
-            {SIZE_OPTIONS.map((size) => (
-              <SelectItem key={size} value={size} className="text-foreground hover:bg-accent">
-                {size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button type="button" variant="outline" onClick={addSize} className="border-input hover:bg-accent">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Size
-        </Button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {sizes.map((size) => (
-          <div
-            key={size}
-            className="flex items-center bg-muted rounded-full px-3 py-2 border border-border"
-          >
-            <span className="text-sm font-medium mr-2 text-foreground">{size}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-5 w-5 p-0 rounded-full hover:bg-destructive/20 text-foreground"
-              onClick={() => removeSize(size)}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    <Separator className="bg-border" />
-
-    {/* Colors Section */}
-    <div className="space-y-4">
-      <Label className="text-lg font-semibold text-foreground">Colors *</Label>
-      <div className="flex gap-2">
-        <select
-          value={currentColor}
-          onChange={(e) => setCurrentColor(e.target.value)}
-          className="border border-input rounded-md px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-        >
-          <option value="" className="bg-background text-foreground">Select color</option>
-          {COLOR_OPTIONS.map((color) => (
-            <option key={color.code} value={color.code} className="bg-background text-foreground">
-              {color.name}
-            </option>
-          ))}
-        </select>
-        <Button type="button" onClick={addColor} className="bg-primary text-primary-foreground hover:bg-primary/90">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Color
-        </Button>
-      </div>
-
-      {/* Color List with Images and Size Charts */}
-      {colors.map((colorName) => {
-        const colorObj = COLOR_OPTIONS.find(
-          (c) => c.name === colorName,
-        );
-        const colorCode = colorObj?.code || "#000000";
-        const imageCount = variantImages[colorName]?.length || 0;
-
-        return (
-          <div
-            key={colorName}
-            className="border border-border rounded-lg p-4 space-y-3 bg-card"
-          >
-            {/* Color Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div
-                  className="w-8 h-8 rounded-full border-2 border-border shadow-sm"
-                  style={{ backgroundColor: colorCode }}
-                  title={colorName}
-                />
-                <div>
-                  <span className="font-medium text-foreground">{colorName}</span>
-                  <div className="text-sm text-muted-foreground">
-                    {imageCount} / {MAX_IMAGES_PER_COLOR} images
-                    {getTotalStockForColor && (
-                      <span className="ml-2">
-                        • Total Stock: {getTotalStockForColor(colorName)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Stock Matrix */}
-              <div className="flex items-center space-x-2">
-                <div className="flex flex-col space-y-1">
-                  <Label className="text-sm whitespace-nowrap text-muted-foreground">
-                    Stock by Size:
-                  </Label>
-                  <div className="flex space-x-2">
-                    {sizes.map((size) => (
-                      <div key={size} className="text-center">
-                        <div className="text-xs text-muted-foreground">
+          <TabsContent value="variants" className="space-y-6">
+            <CardContent className="space-y-8">
+              {/* Sizes Section */}
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold text-foreground">
+                  Sizes *
+                </Label>
+                <div className="flex items-center space-x-2">
+                  <Select value={selectedSize} onValueChange={setSelectedSize}>
+                    <SelectTrigger className="w-[120px] bg-background border-input">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      {SIZE_OPTIONS.map((size) => (
+                        <SelectItem
+                          key={size}
+                          value={size}
+                          className="text-foreground hover:bg-accent"
+                        >
                           {size}
-                        </div>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          value={stockMatrix[colorName]?.[size] || ""}
-                          onChange={(e) =>
-                            updateStock(
-                              colorName,
-                              size,
-                              e.target.value,
-                            )
-                          }
-                          className="w-12 h-8 text-sm bg-background border-input text-foreground placeholder:text-muted-foreground"
-                        />
-                      </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addSize}
+                    className="border-input hover:bg-accent"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Size
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {sizes.map((size) => (
+                    <div
+                      key={size}
+                      className="flex items-center bg-muted rounded-full px-3 py-2 border border-border"
+                    >
+                      <span className="text-sm font-medium mr-2 text-foreground">
+                        {size}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0 rounded-full hover:bg-destructive/20 text-foreground"
+                        onClick={() => removeSize(size)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator className="bg-border" />
+
+              {/* Colors Section */}
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold text-foreground">
+                  Colors *
+                </Label>
+                <div className="flex gap-2">
+                  <select
+                    value={currentColor}
+                    onChange={(e) => setCurrentColor(e.target.value)}
+                    className="border border-input rounded-md px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
+                  >
+                    <option value="" className="bg-background text-foreground">
+                      Select color
+                    </option>
+                    {COLOR_OPTIONS.map((color) => (
+                      <option
+                        key={color.code}
+                        value={color.code}
+                        className="bg-background text-foreground"
+                      >
+                        {color.name}
+                      </option>
                     ))}
-                  </div>
+                  </select>
+                  <Button
+                    type="button"
+                    onClick={addColor}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Color
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => removeColor(colorName)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
 
-            {/* Images Grid */}
-            <div className="grid grid-cols-4 gap-3">
-              {variantImages[colorName]?.map((imgObj, index) => (
-                <div
-                  key={index}
-                  className="relative aspect-square rounded-lg overflow-hidden border-2 group"
-                  style={{
-                    borderColor: imgObj.isMain
-                      ? "hsl(var(--primary))"
-                      : "hsl(var(--border))",
-                  }}
-                >
-                  <img
-                    src={imgObj.preview}
-                    alt={`${colorName} - ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
-                    <div className="flex space-x-2">
+                {/* Color List with Images and Size Charts */}
+                {colors.map((colorName) => {
+                  const colorObj = COLOR_OPTIONS.find(
+                    (c) => c.name === colorName,
+                  );
+                  const colorCode = colorObj?.code || "#000000";
+                  const imageCount = variantImages[colorName]?.length || 0;
+
+                  return (
+                    <div
+                      key={colorName}
+                      className="border border-border rounded-lg p-4 space-y-3 bg-card"
+                    >
+                      {/* Color Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div
+                            className="w-8 h-8 rounded-full border-2 border-border shadow-sm"
+                            style={{ backgroundColor: colorCode }}
+                            title={colorName}
+                          />
+                          <div>
+                            <span className="font-medium text-foreground">
+                              {colorName}
+                            </span>
+                            <div className="text-sm text-muted-foreground">
+                              {imageCount} / {MAX_IMAGES_PER_COLOR} images
+                              {getTotalStockForColor && (
+                                <span className="ml-2">
+                                  • Total Stock:{" "}
+                                  {getTotalStockForColor(colorName)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Stock Matrix */}
+                        <div className="flex items-center space-x-2">
+                          <div className="flex flex-col space-y-1">
+                            <Label className="text-sm whitespace-nowrap text-muted-foreground">
+                              Stock by Size:
+                            </Label>
+                            <div className="flex space-x-2">
+                              {sizes.map((size) => (
+                                <div key={size} className="text-center">
+                                  <div className="text-xs text-muted-foreground">
+                                    {size}
+                                  </div>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    placeholder="0"
+                                    value={stockMatrix[colorName]?.[size] || ""}
+                                    onChange={(e) =>
+                                      updateStock(
+                                        colorName,
+                                        size,
+                                        e.target.value,
+                                      )
+                                    }
+                                    className="w-12 h-8 text-sm bg-background border-input text-foreground placeholder:text-muted-foreground"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => removeColor(colorName)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Images Grid */}
+                      <div className="grid grid-cols-4 gap-3">
+                        {variantImages[colorName]?.map((imgObj, index) => (
+                          <div
+                            key={index}
+                            className="relative aspect-square rounded-lg overflow-hidden border-2 group"
+                            style={{
+                              borderColor: imgObj.isMain
+                                ? "hsl(var(--primary))"
+                                : "hsl(var(--border))",
+                            }}
+                          >
+                            <img
+                              src={imgObj.preview}
+                              alt={`${colorName} - ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                              <div className="flex space-x-2">
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => setMainImage(colorName, index)}
+                                  className={`h-8 w-8 p-0 ${imgObj.isMain ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-primary/80"}`}
+                                >
+                                  <Star
+                                    className={`h-4 w-4 ${imgObj.isMain ? "fill-current" : ""}`}
+                                  />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => removeImage(colorName, index)}
+                                  className="h-8 w-8 p-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            {imgObj.isMain && (
+                              <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full shadow-lg">
+                                Main
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Upload Button */}
                       <Button
                         type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setMainImage(colorName, index)}
-                        className={`h-8 w-8 p-0 ${imgObj.isMain ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-primary/80"}`}
+                        variant="outline"
+                        disabled={imageCount >= MAX_IMAGES_PER_COLOR}
+                        onClick={() =>
+                          fileInputRefs.current[colorName]?.click()
+                        }
+                        className="w-full border-input hover:bg-accent text-foreground"
                       >
-                        <Star
-                          className={`h-4 w-4 ${imgObj.isMain ? "fill-current" : ""}`}
-                        />
+                        <Upload className="h-4 w-4 mr-2" />
+                        {imageCount >= MAX_IMAGES_PER_COLOR
+                          ? "Maximum Images Reached"
+                          : "Upload Images"}
                       </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeImage(colorName, index)}
-                        className="h-8 w-8 p-0 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="hidden"
+                        ref={(el) => (fileInputRefs.current[colorName] = el)}
+                        onChange={handleImageUpload(colorName)}
+                      />
+
+                      {/* ============ SIZE CHART SECTION ============ */}
+                      <div className="mt-4 pt-4 border-t border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-sm flex items-center gap-2 text-foreground">
+                            <Ruler className="h-4 w-4 text-muted-foreground" />
+                            Size Measurements for {colorName}
+                          </h4>
+                          <Badge
+                            variant="outline"
+                            className="text-xs border-border text-muted-foreground"
+                          >
+                            {
+                              sizes.filter(
+                                (size) =>
+                                  sizeCharts[colorName]?.[size] &&
+                                  Object.keys(sizeCharts[colorName][size])
+                                    .length > 2,
+                              ).length
+                            }{" "}
+                            / {sizes.length} sizes configured
+                          </Badge>
+                        </div>
+
+                        {/* Size Chart Forms for each size */}
+                        <div className="space-y-2">
+                          {sizes.map((size) => (
+                            <SizeChartForm
+                              key={`${colorName}-${size}`}
+                              color={colorName}
+                              size={size}
+                              sizeData={sizeCharts[colorName]?.[size]}
+                              onUpdate={updateSizeChart}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Message if no sizes added */}
+                        {sizes.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4 border border-border rounded bg-muted/50">
+                            Please add sizes first to configure size charts
+                          </p>
+                        )}
+                      </div>
+                      {/* ============ END SIZE CHART SECTION ============ */}
                     </div>
-                  </div>
-                  {imgObj.isMain && (
-                    <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full shadow-lg">
-                      Main
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Upload Button */}
-            <Button
-              type="button"
-              variant="outline"
-              disabled={imageCount >= MAX_IMAGES_PER_COLOR}
-              onClick={() =>
-                fileInputRefs.current[colorName]?.click()
-              }
-              className="w-full border-input hover:bg-accent text-foreground"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              {imageCount >= MAX_IMAGES_PER_COLOR
-                ? "Maximum Images Reached"
-                : "Upload Images"}
-            </Button>
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              className="hidden"
-              ref={(el) => (fileInputRefs.current[colorName] = el)}
-              onChange={handleImageUpload(colorName)}
-            />
-
-            {/* ============ SIZE CHART SECTION ============ */}
-            <div className="mt-4 pt-4 border-t border-border">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-sm flex items-center gap-2 text-foreground">
-                  <Ruler className="h-4 w-4 text-muted-foreground" />
-                  Size Measurements for {colorName}
-                </h4>
-                <Badge variant="outline" className="text-xs border-border text-muted-foreground">
-                  {sizes.filter(size => 
-                    sizeCharts[colorName]?.[size] && 
-                    Object.keys(sizeCharts[colorName][size]).length > 2
-                  ).length} / {sizes.length} sizes configured
-                </Badge>
+                  );
+                })}
               </div>
-
-              {/* Size Chart Forms for each size */}
-              <div className="space-y-2">
-                {sizes.map((size) => (
-                  <SizeChartForm
-                    key={`${colorName}-${size}`}
-                    color={colorName}
-                    size={size}
-                    sizeData={sizeCharts[colorName]?.[size]}
-                    onUpdate={updateSizeChart}
-                  />
-                ))}
-              </div>
-
-              {/* Message if no sizes added */}
-              {sizes.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4 border border-border rounded bg-muted/50">
-                  Please add sizes first to configure size charts
-                </p>
-              )}
-            </div>
-            {/* ============ END SIZE CHART SECTION ============ */}
-          </div>
-        );
-      })}
-    </div>
-  </CardContent>
-</TabsContent>
+            </CardContent>
+          </TabsContent>
 
           {/* Specifications Tab */}
           <TabsContent value="specifications" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* LEFT COLUMN */}
               <CardContent className="space-y-6">
                 {/* Sleeve Type */}
                 <div className="space-y-2">
@@ -965,6 +1002,7 @@ const CreateProduct = () => {
                 </div>
               </CardContent>
 
+              {/* RIGHT COLUMN */}
               <CardContent className="space-y-6">
                 {/* Custom Specifications */}
                 <div className="space-y-4">
@@ -994,36 +1032,93 @@ const CreateProduct = () => {
                     </Button>
                   </div>
 
-                  {/* Specifications List */}
+                  {/* ✅ FIXED: Specifications List with proper object/array handling */}
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">
                       Added Specifications:
                     </Label>
-                    {Array.from(formData.specifications).length === 0 ? (
+                    {formData.specifications.size === 0 ? (
                       <p className="text-sm text-gray-500">
                         No specifications added yet
                       </p>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-2 max-h-[400px] overflow-y-auto">
                         {Array.from(formData.specifications).map(
                           ([key, value]) => (
                             <div
                               key={key}
-                              className="flex items-center justify-between p-2 border rounded"
+                              className="flex items-start justify-between p-3 border rounded-lg bg-gray-50"
                             >
                               <div className="flex-1">
-                                <span className="font-medium">{key}:</span>
-                                <span className="ml-2 text-gray-600">
-                                  {value}
+                                <span className="font-medium text-sm block mb-1">
+                                  {key}:
                                 </span>
+                                <div className="ml-2 text-gray-700">
+                                  {typeof value === "object" &&
+                                  value !== null ? (
+                                    // Handle objects and arrays
+                                    Array.isArray(value) ? (
+                                      // Handle arrays
+                                      <div className="flex flex-wrap gap-1">
+                                        {value.map((item, idx) => (
+                                          <Badge
+                                            key={idx}
+                                            variant="secondary"
+                                            className="text-xs"
+                                          >
+                                            {String(item)}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      // Handle objects
+                                      <div className="space-y-1 pl-2 border-l-2 border-gray-200">
+                                        {Object.entries(value).map(
+                                          ([subKey, subValue]) => (
+                                            <div
+                                              key={subKey}
+                                              className="text-sm"
+                                            >
+                                              <span className="font-medium text-gray-600">
+                                                {subKey}:
+                                              </span>{" "}
+                                              {Array.isArray(subValue) ? (
+                                                <span>
+                                                  {subValue.join(", ")}
+                                                </span>
+                                              ) : typeof subValue ===
+                                                "object" ? (
+                                                <pre className="text-xs bg-gray-100 p-1 rounded mt-1">
+                                                  {JSON.stringify(
+                                                    subValue,
+                                                    null,
+                                                    2,
+                                                  )}
+                                                </pre>
+                                              ) : (
+                                                <span>{String(subValue)}</span>
+                                              )}
+                                            </div>
+                                          ),
+                                        )}
+                                      </div>
+                                    )
+                                  ) : (
+                                    // Handle strings and numbers
+                                    <span className="text-sm">
+                                      {String(value)}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => removeSpecification(key)}
+                                className="ml-2 flex-shrink-0"
                               >
-                                <X className="h-4 w-4" />
+                                <X className="h-4 w-4 text-red-500" />
                               </Button>
                             </div>
                           ),

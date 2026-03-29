@@ -157,6 +157,14 @@ export default function App() {
       ),
     },
     {
+  path: "/admin/dashboard/edit-product/:productId",
+  element: (
+    <ProtectedRoute requireAdmin={true}>
+      <AdminLayout children={<CreateProducts />} />
+    </ProtectedRoute>
+  ),
+},
+    {
       path: "/admin/dashboard/all-products",
       element: (
         <ProtectedRoute requireAdmin={true}>

@@ -175,8 +175,8 @@ const AllProducts = () => {
 
   // Handle edit product
   const handleEditProduct = (productId) => {
-    navigate(`/admin/products/edit/${productId}`);
-  };
+  navigate(`/admin/dashboard/edit-product/${productId}`);  // Change yahan
+};
 
   // Handle delete click
   const handleDeleteClick = (product) => {

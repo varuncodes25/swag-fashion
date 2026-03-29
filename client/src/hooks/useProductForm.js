@@ -137,8 +137,7 @@ export const useProductForm = (initialData = null) => {
   const [isLoading, setIsLoading] = useState(false);
   const [tempSpecKey, setTempSpecKey] = useState('');
   const [tempSpecValue, setTempSpecValue] = useState('');
-  // ============ ADDED: SIZE CHART STATE ============
-  const [sizeCharts, setSizeCharts] = useState({}); // { colorName: { size: measurements } }
+  const [sizeCharts, setSizeCharts] = useState({});
   
   const fileInputRefs = useRef({});
   const { toast } = useToast();
@@ -146,6 +145,13 @@ export const useProductForm = (initialData = null) => {
   // Initialize form with product data if editing
   const initializeForm = useCallback((product) => {
     if (!product) return;
+    
+    // ✅ FIX 1: Base price properly calculate karo
+    let basePrice = product.basePrice || '';
+    if (!basePrice && product.variants && product.variants.length > 0) {
+      const uniquePrices = [...new Set(product.variants.map(v => v.price))];
+      basePrice = uniquePrices[0] || '';
+    }
     
     setFormData({
       name: product.name || '',
@@ -155,7 +161,7 @@ export const useProductForm = (initialData = null) => {
       gender: product.gender || 'Men',
       fabric: product.fabric || 'Cotton',
       brand: product.brand || '',
-      basePrice: product.variants?.[0]?.price || '',
+      basePrice: basePrice, // ✅ Fixed
       category: product.category?._id || product.category || '',
       ageGroup: product.ageGroup || 'Adult',
       fabricComposition: product.fabricComposition || '100% Cotton',
@@ -183,10 +189,10 @@ export const useProductForm = (initialData = null) => {
       warranty: product.warranty || 'No Warranty',
       returnPolicy: product.returnPolicy || '7 Days Return Available',
       returnWindow: product.returnWindow || 7,
-      productDimensions: product.productDimensions 
+      productDimensions: product.productDimensions || { length: 0, width: 0, height: 0, weight: 0.2 }
     });
 
-    // ============ ADDED: Initialize size charts from variants ============
+    // Initialize size charts from variants
     const charts = {};
     if (product.variants) {
       product.variants.forEach(variant => {
@@ -207,7 +213,7 @@ export const useProductForm = (initialData = null) => {
     setColors(productColors);
     setSizes(productSizes);
 
-    // Create stock matrix from variants (color x size matrix)
+    // Create stock matrix from variants
     const matrix = {};
     product.variants?.forEach(variant => {
       if (!matrix[variant.color]) {
@@ -231,7 +237,7 @@ export const useProductForm = (initialData = null) => {
     }
     setColorImageMap(imageMap);
 
-    // Set variant images (for preview only - from imagesByColor)
+    // Set variant images for preview
     const images = {};
     if (product.imagesByColor) {
       Object.keys(product.imagesByColor).forEach(color => {
@@ -240,10 +246,10 @@ export const useProductForm = (initialData = null) => {
           preview: img.url,
           id: img.id,
           isMain: img.isMain || false,
+          isExisting: true
         }));
       });
     } else if (product.allImages) {
-      // Fallback to allImages if imagesByColor doesn't exist
       const imagesByColor = {};
       product.allImages.forEach(img => {
         if (img.color) {
@@ -260,6 +266,7 @@ export const useProductForm = (initialData = null) => {
           preview: img.url,
           id: img.id,
           isMain: img.isMain || false,
+          isExisting: true
         }));
       });
     }
@@ -356,7 +363,6 @@ export const useProductForm = (initialData = null) => {
     if (selectedSize && !sizes.includes(selectedSize)) {
       setSizes(prev => [...prev, selectedSize]);
       
-      // Update stock matrix for all colors with new size
       setStockMatrix(prev => {
         const updated = { ...prev };
         colors.forEach(color => {
@@ -375,7 +381,6 @@ export const useProductForm = (initialData = null) => {
   const removeSize = (sizeToRemove) => {
     setSizes(prev => prev.filter(s => s !== sizeToRemove));
     
-    // Remove size from stock matrix
     setStockMatrix(prev => {
       const updated = { ...prev };
       Object.keys(updated).forEach(color => {
@@ -386,7 +391,6 @@ export const useProductForm = (initialData = null) => {
       return updated;
     });
     
-    // ============ ADDED: Remove size charts for this size ============
     setSizeCharts(prev => {
       const updated = { ...prev };
       Object.keys(updated).forEach(color => {
@@ -405,7 +409,6 @@ export const useProductForm = (initialData = null) => {
     if (colorObj && !colors.includes(colorObj.name)) {
       setColors(prev => [...prev, colorObj.name]);
       
-      // Initialize stock matrix for new color
       setStockMatrix(prev => {
         const updated = { ...prev };
         if (!updated[colorObj.name]) {
@@ -424,28 +427,24 @@ export const useProductForm = (initialData = null) => {
   const removeColor = (colorName) => {
     setColors(prev => prev.filter(c => c !== colorName));
     
-    // Remove from stock matrix
     setStockMatrix(prev => {
       const updated = { ...prev };
       delete updated[colorName];
       return updated;
     });
     
-    // Remove from variant images
     setVariantImages(prev => {
       const updated = { ...prev };
       delete updated[colorName];
       return updated;
     });
     
-    // Remove from color image map
     setColorImageMap(prev => {
       const updated = { ...prev };
       delete updated[colorName];
       return updated;
     });
     
-    // ============ ADDED: Remove size charts for this color ============
     setSizeCharts(prev => {
       const updated = { ...prev };
       delete updated[colorName];
@@ -453,7 +452,7 @@ export const useProductForm = (initialData = null) => {
     });
   };
 
-  // Stock handlers for matrix
+  // Stock handlers
   const updateStock = (colorName, sizeName, stock) => {
     setStockMatrix(prev => ({
       ...prev,
@@ -462,15 +461,13 @@ export const useProductForm = (initialData = null) => {
         [sizeName]: parseInt(stock) || 0
       }
     }));
-    // ❌ REMOVED: Size chart delete nahi karna yahan se
   };
 
-  // ============ CORRECTED: Image Handlers ============
+  // Image Handlers
   const handleImageUpload = (colorName) => (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
 
-    // Get current images for this color
     const existingImages = variantImages[colorName] || [];
     const currentCount = existingImages.length;
 
@@ -487,38 +484,14 @@ export const useProductForm = (initialData = null) => {
     const newFiles = allowedFiles.map((file, index) => ({
       file,
       preview: URL.createObjectURL(file),
-      isMain: existingImages.length === 0 && index === 0, // Only first image of batch if no images exist
+      isMain: existingImages.length === 0 && index === 0,
+      isExisting: false
     }));
 
-    // Update variant images
     setVariantImages((prev) => ({
       ...prev,
       [colorName]: [...existingImages, ...newFiles],
     }));
-
-    // Calculate total images before this upload to get correct indices
-    let totalImagesBefore = 0;
-    colors.forEach(color => {
-      if (color !== colorName) {
-        totalImagesBefore += (variantImages[color] || []).length;
-      }
-    });
-    
-    // Calculate new indices for this color
-    const existingCountForThisColor = existingImages.length;
-    const newIndices = [];
-    for (let i = 0; i < allowedFiles.length; i++) {
-      newIndices.push(totalImagesBefore + existingCountForThisColor + i);
-    }
-
-    // Update colorImageMap
-    setColorImageMap(prev => {
-      const existingIndices = prev[colorName] || [];
-      return {
-        ...prev,
-        [colorName]: [...existingIndices, ...newIndices]
-      };
-    });
 
     e.target.value = "";
   };
@@ -528,7 +501,6 @@ export const useProductForm = (initialData = null) => {
       const existingImages = prev[colorName] || [];
       const updatedImages = existingImages.filter((_, i) => i !== index);
       
-      // If we removed the main image, make the first image main
       if (updatedImages.length > 0 && existingImages[index]?.isMain) {
         updatedImages[0].isMain = true;
       }
@@ -537,28 +509,6 @@ export const useProductForm = (initialData = null) => {
         ...prev,
         [colorName]: updatedImages,
       };
-    });
-
-    // Recalculate all indices in colorImageMap
-    setColorImageMap(prev => {
-      const newMap = {};
-      let globalIndex = 0;
-      
-      colors.forEach(color => {
-        const images = color === colorName 
-          ? variantImages[colorName]?.filter((_, i) => i !== index) || []
-          : variantImages[color] || [];
-        
-        if (images.length > 0) {
-          const indices = [];
-          for (let i = 0; i < images.length; i++) {
-            indices.push(globalIndex++);
-          }
-          newMap[color] = indices;
-        }
-      });
-      
-      return newMap;
     });
   };
 
@@ -576,7 +526,7 @@ export const useProductForm = (initialData = null) => {
     });
   };
 
-  // ============ ADDED: Size Chart Functions ============
+  // Size Chart Functions
   const updateSizeChart = (colorName, size, field, value) => {
     setSizeCharts(prev => {
       const colorCharts = prev[colorName] || {};
@@ -607,7 +557,7 @@ export const useProductForm = (initialData = null) => {
     setSizeCharts({});
   };
 
-  // ============ Helper function for selling price ============
+  // Helper function for selling price
   const calculateSellingPrice = (price, discount) => {
     if (discount > 0) {
       return Math.round(price * (100 - discount) / 100);
@@ -615,17 +565,19 @@ export const useProductForm = (initialData = null) => {
     return price;
   };
 
-  // ============ CORRECTED: Prepare form data for submission ============
+  // Prepare form data for submission
   const prepareFormData = () => {
     try {
-    
-      
-      // Validate required fields first
       if (!formData.name || !formData.description || !formData.category) {
         throw new Error("Name, description, and category are required");
       }
 
       const formDataObj = new FormData();
+      
+      // ✅ FIX 2: Edit mode ke liye productId add karo
+      if (initialData?._id) {
+        formDataObj.append('productId', initialData._id);
+      }
       
       // Add basic fields
       Object.keys(formData).forEach(key => {
@@ -639,7 +591,6 @@ export const useProductForm = (initialData = null) => {
             key === 'keyFeatures' || key === 'careInstructions') {
           if (Array.isArray(value) && value.length > 0) {
             formDataObj.append(key, JSON.stringify(value));
-            console.log(`📤 ${key}:`, JSON.stringify(value));
           }
         } 
         else if (key === 'specifications') {
@@ -650,7 +601,6 @@ export const useProductForm = (initialData = null) => {
         } 
         else if (key === 'productDimensions') {
           if (value && typeof value === 'object') {
-           
             formDataObj.append(key, JSON.stringify(value));
           } else {
             formDataObj.append(key, value || '{}');
@@ -683,7 +633,6 @@ export const useProductForm = (initialData = null) => {
         }
       });
 
-      // Validate colors and sizes
       if (colors.length === 0) {
         throw new Error("Please add at least one color");
       }
@@ -691,13 +640,12 @@ export const useProductForm = (initialData = null) => {
         throw new Error("Please add at least one size");
       }
 
-      // ============ ADDED: Create variants with size charts ============
+      // Create variants with size charts
       const variants = [];
       
       colors.forEach(colorName => {
         sizes.forEach(sizeName => {
           const stock = stockMatrix[colorName]?.[sizeName] || 0;
-          // Sirf wahi variants bhejo jinka stock ho ya size chart ho
           if (stock > 0 || (sizeCharts[colorName]?.[sizeName] && Object.keys(sizeCharts[colorName][sizeName]).length > 0)) {
             variants.push({
               color: colorName,
@@ -706,62 +654,48 @@ export const useProductForm = (initialData = null) => {
               stock: parseInt(stock) || 0,
               price: parseFloat(formData.basePrice) || 0,
               sellingPrice: calculateSellingPrice(parseFloat(formData.basePrice) || 0, parseFloat(formData.discount) || 0),
-              // ✅ SIZE CHART ADD HO RAHA HAI
               sizeDetails: sizeCharts[colorName]?.[sizeName] || {}
             });
           }
         });
       });
 
-      // Add variants to formData
       formDataObj.append('variants', JSON.stringify(variants));
-      
-      // Add colors and sizes
       formDataObj.append('colors', JSON.stringify(colors));
       formDataObj.append('sizes', JSON.stringify(sizes));
-      
-      // Add stock matrix
       formDataObj.append('stockMatrix', JSON.stringify(stockMatrix));
       
-      // Add color codes
       const colorCodesArray = colors.map(color => {
         const colorObj = COLOR_OPTIONS.find(c => c.name === color);
         return colorObj?.code || '#000000';
       });
       formDataObj.append('colorCodes', JSON.stringify(colorCodesArray));
 
-      // Prepare images and colorImageMap
-      console.log("🖼️ Preparing images data...");
+      // ✅ FIX 3: Handle images properly (new + existing)
+      const allImageFiles = [];
+      const existingImageIds = [];
+      const finalColorImageMap = {};
+      let globalIndex = 0;
       
-      // First, validate all colors have images
       colors.forEach(colorName => {
         const images = variantImages[colorName] || [];
         if (images.length === 0) {
           throw new Error(`Please upload at least one image for color: ${colorName}`);
         }
-      });
-
-      // Recalculate colorImageMap to ensure correct indices
-      const finalColorImageMap = {};
-      const allImageFiles = [];
-      let globalIndex = 0;
-      
-      // Process colors in order
-      colors.forEach(colorName => {
-        const images = variantImages[colorName] || [];
+        
         const indices = [];
         
-        images.forEach((imgObj, localIndex) => {
+        images.forEach((imgObj) => {
           if (imgObj && imgObj.file) {
-            // Add file to array
+            // New image
             allImageFiles.push(imgObj.file);
-            // Add index to map
             indices.push(globalIndex);
             globalIndex++;
-            
-            console.log(`📸 ${colorName} - Image ${localIndex} -> Global Index: ${indices[indices.length-1]}`);
-          } else {
-            console.warn(`⚠️ ${colorName} - Image ${localIndex} has no file object`);
+          } else if (imgObj && imgObj.id) {
+            // Existing image
+            existingImageIds.push(imgObj.id);
+            indices.push(globalIndex);
+            globalIndex++;
           }
         });
         
@@ -770,31 +704,23 @@ export const useProductForm = (initialData = null) => {
         }
       });
 
-      if (allImageFiles.length === 0) {
-        throw new Error("No valid images uploaded. Please upload images for all colors.");
+      // Add existing image IDs
+      if (existingImageIds.length > 0) {
+        formDataObj.append('existingImages', JSON.stringify(existingImageIds));
       }
       
-      // Add all images to FormData in correct order
+      // Add new images
       allImageFiles.forEach((file, index) => {
         formDataObj.append('images', file);
-        console.log(`📤 Uploading image ${index}: ${file.name}`);
       });
       
       // Add colorImageMap
-      console.log("🔗 Final colorImageMap:", JSON.stringify(finalColorImageMap, null, 2));
       formDataObj.append('colorImageMap', JSON.stringify(finalColorImageMap));
-
-      console.log("✅ FormData prepared successfully:");
-      console.log("- Name:", formData.name);
-      console.log("- Base Price:", formData.basePrice);
-      console.log("- Colors:", colors);
-      console.log("- Sizes:", sizes);
-      console.log("- Variants with size charts:", variants.length);
 
       return formDataObj;
       
     } catch (error) {
-      console.error("❌ Error in prepareFormData:", error);
+      console.error("Error in prepareFormData:", error);
       throw error;
     }
   };
@@ -837,13 +763,13 @@ export const useProductForm = (initialData = null) => {
       warranty: 'No Warranty',
       returnPolicy: '7 Days Return Available',
       returnWindow: 7,
+      productDimensions: { length: 0, width: 0, height: 0, weight: 0.2 }
     });
     setColors([]);
     setSizes([]);
     setStockMatrix({});
     setVariantImages({});
     setColorImageMap({});
-    // ============ ADDED: Reset size charts ============
     setSizeCharts({});
     setSelectedSize('M');
     setCurrentColor('');
@@ -854,137 +780,59 @@ export const useProductForm = (initialData = null) => {
   // Validation
   const validateForm = () => {
     try {
-      // Check required fields
       if (!formData.name?.trim()) {
-        toast({
-          title: "Error",
-          description: "Product name is required",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Product name is required", variant: "destructive" });
         return false;
       }
 
       if (!formData.description?.trim()) {
-        toast({
-          title: "Error",
-          description: "Product description is required",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Product description is required", variant: "destructive" });
         return false;
       }
 
-      // Validate basePrice
       const price = parseFloat(formData.basePrice);
       if (isNaN(price) || price <= 0) {
-        toast({
-          title: "Error",
-          description: "Please enter a valid price greater than 0",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Please enter a valid price greater than 0", variant: "destructive" });
         return false;
       }
 
       if (!formData.category) {
-        toast({
-          title: "Error",
-          description: "Please select a category",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Please select a category", variant: "destructive" });
         return false;
       }
 
-      // Validate colors and sizes
       if (colors.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please add at least one color",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Please add at least one color", variant: "destructive" });
         return false;
       }
 
       if (sizes.length === 0) {
-        toast({
-          title: "Error",
-          description: "Please add at least one size",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Please add at least one size", variant: "destructive" });
         return false;
       }
 
-      // Validate stock for all color-size combinations
       for (const colorName of colors) {
         for (const sizeName of sizes) {
           const stock = stockMatrix[colorName]?.[sizeName];
           if (stock === undefined || stock === null || isNaN(stock)) {
-            toast({
-              title: "Error",
-              description: `Please enter stock for ${colorName} - ${sizeName}`,
-              variant: "destructive",
-            });
+            toast({ title: "Error", description: `Please enter stock for ${colorName} - ${sizeName}`, variant: "destructive" });
             return false;
           }
         }
       }
 
-      // Validate images for each color
       for (const colorName of colors) {
         const images = variantImages[colorName];
         if (!images || images.length === 0) {
-          toast({
-            title: "Error",
-            description: `Please upload at least one image for color: ${colorName}`,
-            variant: "destructive",
-          });
-          return false;
-        }
-        
-        // Check if at least one image has a file
-        const hasValidImage = images.some(img => img && (img.file || img.preview));
-        if (!hasValidImage) {
-          toast({
-            title: "Error",
-            description: `Please upload valid images for color: ${colorName}`,
-            variant: "destructive",
-          });
+          toast({ title: "Error", description: `Please upload at least one image for color: ${colorName}`, variant: "destructive" });
           return false;
         }
       }
 
-      // Validate date range if provided
-      if (formData.offerValidFrom && formData.offerValidTill) {
-        const fromDate = new Date(formData.offerValidFrom);
-        const tillDate = new Date(formData.offerValidTill);
-        
-        if (isNaN(fromDate.getTime()) || isNaN(tillDate.getTime())) {
-          toast({
-            title: "Error",
-            description: "Invalid date format for offer",
-            variant: "destructive",
-          });
-          return false;
-        }
-        
-        if (fromDate > tillDate) {
-          toast({
-            title: "Error",
-            description: "Offer start date cannot be after end date",
-            variant: "destructive",
-          });
-          return false;
-        }
-      }
-
-      console.log("✅ Form validation passed");
       return true;
-      
     } catch (error) {
-      console.error("❌ Validation error:", error);
-      toast({
-        title: "Error",
-        description: "An error occurred during validation",
-        variant: "destructive",
-      });
+      console.error("Validation error:", error);
+      toast({ title: "Error", description: "An error occurred during validation", variant: "destructive" });
       return false;
     }
   };
@@ -1013,7 +861,6 @@ export const useProductForm = (initialData = null) => {
     setTempSpecKey,
     setTempSpecValue,
     
-    // Constants
     SIZE_OPTIONS,
     COLOR_OPTIONS,
     CLOTHING_TYPES,
@@ -1028,7 +875,6 @@ export const useProductForm = (initialData = null) => {
     OCCASIONS,
     MAX_IMAGES_PER_COLOR,
 
-    // Handlers
     addSize,
     removeSize,
     setSelectedSize,
@@ -1054,7 +900,6 @@ export const useProductForm = (initialData = null) => {
     toggleOccasion,
     getTotalStockForColor,
     
-    // ============ ADDED: Size Chart exports ============
     sizeCharts,
     updateSizeChart,
     getSizeChartForColor,
