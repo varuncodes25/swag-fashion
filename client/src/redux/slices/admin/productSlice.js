@@ -67,7 +67,7 @@ export const updateProduct = createAsyncThunk(
     try {
       // Using your route: /update-product/:id
       const response = await axios.put(
-        `${API_URL}/product/update-product/${id}`,
+        `${API_URL}/update-product/${id}`,
         data,
         getAuthHeaders()
       );

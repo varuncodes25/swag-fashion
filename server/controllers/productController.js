@@ -537,78 +537,201 @@ const getProductsforadmin = async (req, res) => {
 };
 // ==================== UPDATE PRODUCT ====================
 const updateProduct = async (req, res) => {
-  if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
-    return res.status(401).json({
-      success: false,
-      message: "Access denied",
-    });
-  }
-
   try {
     const { id } = req.params;
     const data = { ...req.body };
-
-    // Handle arrays
-    if (data.sizes && typeof data.sizes === "string") {
-      try {
-        data.sizes = JSON.parse(data.sizes);
-      } catch {
-        // keep as is if parsing fails
+    
+    console.log("🔄 Updating product:", id);
+    console.log("📦 Received data keys:", Object.keys(data));
+    
+    // ============ HELPER FUNCTION FOR PARSING ============
+    const parse = (item) => {
+      if (!item) return null;
+      if (typeof item === 'string') {
+        try { return JSON.parse(item); } 
+        catch { return item; }
       }
-    }
-
-    if (data.colors && typeof data.colors === "string") {
-      try {
-        data.colors = JSON.parse(data.colors);
-      } catch {
-        // keep as is if parsing fails
+      return item;
+    };
+    
+    // ============ PARSE ALL FIELDS ============
+    const fieldsToParse = [
+      'variants', 'colors', 'sizes', 'colorCodes', 'colorImageMap',
+      'specifications', 'features', 'season', 'occasion', 'careInstructions',
+      'keyFeatures', 'stockMatrix', 'productDimensions'
+    ];
+    
+    fieldsToParse.forEach(field => {
+      if (data[field] !== undefined) {
+        data[field] = parse(data[field]);
       }
-    }
-
-    if (data.discount) data.discount = Number(data.discount);
-
-    if (data.offerValidFrom)
-      data.offerValidFrom = new Date(data.offerValidFrom);
-    if (data.offerValidTill)
-      data.offerValidTill = new Date(data.offerValidTill);
-
-    // Handle variant updates if provided
-    if (data.variants && typeof data.variants === "string") {
-      try {
-        data.variants = JSON.parse(data.variants);
-      } catch {
-        // keep as is if parsing fails
-      }
-    }
-
-    // Handle images upload if any
-    if (req.files && req.files.length > 0) {
-      // If you need to update variant images, you'll need to handle this
-      // For now, we'll skip image update in this simplified version
-    }
-
-    const product = await Product.findByIdAndUpdate(id, data, {
-      new: true,
-      runValidators: true,
     });
-
+    
+    // ============ CONVERT TYPES ============
+    if (data.basePrice) data.basePrice = Number(data.basePrice);
+    if (data.discount) data.discount = Number(data.discount);
+    if (data.returnWindow) data.returnWindow = Number(data.returnWindow);
+    if (data.handlingTime) data.handlingTime = Number(data.handlingTime);
+    if (data.estimatedDelivery) data.estimatedDelivery = Number(data.estimatedDelivery);
+    
+    // Boolean fields
+    const booleanFields = ['freeShipping', 'isFeatured', 'isNewArrival', 'isBestSeller'];
+    booleanFields.forEach(field => {
+      if (data[field] !== undefined) {
+        data[field] = data[field] === 'true' || data[field] === true;
+      }
+    });
+    
+    // Date fields
+    if (data.offerValidFrom) data.offerValidFrom = new Date(data.offerValidFrom);
+    if (data.offerValidTill) data.offerValidTill = new Date(data.offerValidTill);
+    
+    // ============ GET EXISTING PRODUCT ============
+    const product = await Product.findById(id);
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
+      return res.status(404).json({ 
+        success: false, 
+        message: "Product not found" 
       });
     }
-
+    
+    // ============ HANDLE IMAGES ============
+    let allImages = [...(product.allImages || [])];
+    let existingImageIds = [];
+    
+    // Parse existing images from request
+    if (data.existingImages) {
+      try {
+        existingImageIds = Array.isArray(data.existingImages) 
+          ? data.existingImages 
+          : JSON.parse(data.existingImages);
+      } catch (e) {
+        console.error("Failed to parse existingImages:", e);
+      }
+    }
+    
+    // Filter to keep only existing images
+    if (existingImageIds.length > 0) {
+      allImages = allImages.filter(img => existingImageIds.includes(img.id));
+    } else if (data.existingImages === null || data.existingImages === '[]') {
+      // No existing images - clear all
+      allImages = [];
+    }
+    
+    // Upload new images
+    if (req.files && req.files.length > 0) {
+      console.log(`📸 Uploading ${req.files.length} new images...`);
+      
+      const cloudinary = require('cloudinary').v2;
+      const newImages = await Promise.all(
+        req.files.map(async (file, index) => {
+          const result = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+              { 
+                folder: "clothing/products", 
+                transformation: [{ width: 800, height: 800, crop: "limit" }] 
+              },
+              (error, result) => error ? reject(error) : resolve(result)
+            );
+            stream.end(file.buffer);
+          });
+          
+          return {
+            url: result.secure_url,
+            id: result.public_id,
+            isMain: false,
+            sortOrder: allImages.length + index,
+          };
+        })
+      );
+      
+      allImages = [...allImages, ...newImages];
+    }
+    
+    // Apply color-image mapping
+    if (data.colorImageMap && Object.keys(data.colorImageMap).length > 0) {
+      console.log("🎨 Applying color-image mapping...");
+      const colorImageMap = data.colorImageMap;
+      const colorsArray = data.colors || product.colors;
+      const colorCodesArray = data.colorCodes || [];
+      
+      const fixedImages = [];
+      let mainImageSet = false;
+      
+      Object.entries(colorImageMap).forEach(([color, indices]) => {
+        const colorIndex = colorsArray.indexOf(color);
+        const colorCode = colorCodesArray[colorIndex] || '#808080';
+        
+        if (Array.isArray(indices)) {
+          indices.forEach(idx => {
+            if (idx < allImages.length) {
+              const img = { ...allImages[idx], color, colorCode };
+              if (!mainImageSet && idx === 0) {
+                img.isMain = true;
+                mainImageSet = true;
+              }
+              fixedImages.push(img);
+            }
+          });
+        }
+      });
+      
+      if (fixedImages.length > 0) {
+        allImages = fixedImages;
+      }
+    }
+    
+    // Ensure at least one main image
+    if (allImages.length > 0 && !allImages.some(img => img.isMain)) {
+      allImages[0].isMain = true;
+    }
+    
+    data.allImages = allImages;
+    
+    // ============ REMOVE FIELDS THAT SHOULDN'T BE UPDATED DIRECTLY ============
+    delete data._id;
+    delete data.__v;
+    delete data.createdAt;
+    delete data.slug; // Let pre-save regenerate if needed
+    delete data.createdBy;
+    
+    // ============ MERGE DATA INTO EXISTING PRODUCT ============
+    Object.assign(product, data);
+    
+    // ============ SAVE PRODUCT (TRIGGERS MIDDLEWARE) ============
+    console.log("💾 Saving product with middleware...");
+    await product.save();
+    
+    console.log("✅ Product updated successfully");
+    console.log(`📊 Total variants: ${product.variants.length}`);
+    console.log(`📸 Total images: ${product.allImages.length}`);
+    
+    // ============ RESPONSE ============
     return res.status(200).json({
       success: true,
       message: "Product updated successfully",
       data: product.getProductDetailData(),
     });
+    
   } catch (error) {
-    console.error("Update product error:", error);
+    console.error("❌ Update product error:", error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errors = {};
+      Object.keys(error.errors).forEach(key => {
+        errors[key] = error.errors[key].message;
+      });
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: errors
+      });
+    }
+    
     return res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Failed to update product",
     });
   }
 };

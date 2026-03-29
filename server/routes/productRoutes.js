@@ -27,7 +27,7 @@ router.post(
   createProduct
 );
 
-router.put("/update-product/:id", verifyToken, updateProduct);
+router.put("/update-product/:id", verifyToken,upload.array("images", 15), updateProduct);
 router.delete("/delete-product/:id", verifyToken, deleteProduct);
 
 // ============ GET PRODUCT ROUTES ============
