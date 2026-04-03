@@ -1,4 +1,5 @@
 const { CareerEncrypt } = require("./crypto");
+const ApiResponse = require("./handlar/ApiResponse");
 
 /**
  * Encrypt API response if enabled

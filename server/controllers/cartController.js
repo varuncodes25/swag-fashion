@@ -109,7 +109,6 @@ exports.addToCart = async (req, res) => {
   try {
     const userId = req.id; // Changed from req.id to req.id (same)
     const { productId, variantId, quantity = 1 } = req.body;
-    console.log("Add to cart - User ID:", userId, "Body:", req.body);
     
     if (!productId || !variantId) {
       return res.status(400).json({

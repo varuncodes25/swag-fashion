@@ -561,6 +561,7 @@ const authSlice = createSlice({
 
     // Manual logout
     setUserLogout: (state) => {
+      console.log(state,"state")
       state.role = "";
       state.user = null;
       state.token = "";

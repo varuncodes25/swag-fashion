@@ -1,16 +1,26 @@
 const User = require("../models/User");
-const crypto = require('crypto');
+const crypto = require("crypto");
 
 const userRepository = {
   // Find by email
   findByEmail: async (email, includePassword = false) => {
     let query = User.findOne({ email });
     if (includePassword) {
-      query = query.select("+password +loginAttempts +lockUntil +refreshToken +otp +otpExpiry");
+      query = query.select(
+        "+password +loginAttempts +lockUntil +refreshToken +otp +otpExpiry",
+      );
     }
     return await query;
   },
-
+  findByPhone: async (phone, includePassword = false) => {
+    let query = User.findOne({ phone });
+    if (includePassword) {
+      query = query.select(
+        "+password +loginAttempts +lockUntil +refreshToken +otp +otpExpiry",
+      );
+    }
+    return await query;
+  },
   // Find by ID
   findById: async (id, includeSensitive = false) => {
     let query = User.findById(id);
@@ -28,14 +38,17 @@ const userRepository = {
 
   // Update user
   update: async (id, updateData) => {
-    return await User.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+    return await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
   },
 
   // Find by verification token
   findByVerificationToken: async (hashedToken) => {
     return await User.findOne({
       emailVerificationToken: hashedToken,
-      emailVerificationExpires: { $gt: Date.now() }
+      emailVerificationExpires: { $gt: Date.now() },
     });
   },
 
@@ -48,7 +61,7 @@ const userRepository = {
   findByResetToken: async (hashedToken) => {
     return await User.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() }
+      passwordResetExpires: { $gt: Date.now() },
     });
   },
 
@@ -64,7 +77,7 @@ const userRepository = {
   toggleWishlist: async (userId, productId) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     await user.toggleWishlist(productId);
     return user;
   },
@@ -73,7 +86,7 @@ const userRepository = {
   addDeviceInfo: async (userId, deviceData, refreshToken) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     await user.addDeviceInfo(deviceData, refreshToken);
     return user;
   },
@@ -82,7 +95,7 @@ const userRepository = {
   removeDevice: async (userId, deviceId) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     await user.removeDevice(deviceId);
     return user;
   },
@@ -91,25 +104,29 @@ const userRepository = {
   updateLastLogin: async (userId, ip) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     await user.updateLastLogin(ip);
     return user;
   },
 
   // Increment login attempts
   incrementLoginAttempts: async (userId) => {
-    const user = await User.findById(userId).select("+loginAttempts +lockUntil");
+    const user = await User.findById(userId).select(
+      "+loginAttempts +lockUntil",
+    );
     if (!user) return null;
-    
+
     await user.incrementLoginAttempts();
     return user;
   },
 
   // Reset login attempts
   resetLoginAttempts: async (userId) => {
-    const user = await User.findById(userId).select("+loginAttempts +lockUntil");
+    const user = await User.findById(userId).select(
+      "+loginAttempts +lockUntil",
+    );
     if (!user) return null;
-    
+
     await user.resetLoginAttempts();
     return user;
   },
@@ -118,7 +135,7 @@ const userRepository = {
   generateVerificationToken: async (userId) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     const token = user.generateEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
     return token;
@@ -128,7 +145,7 @@ const userRepository = {
   generateResetToken: async (userId) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     const token = user.generatePasswordResetToken();
     await user.save({ validateBeforeSave: false });
     return token;
@@ -138,7 +155,7 @@ const userRepository = {
   verifyEmail: async (userId) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     user.verifyEmail();
     await user.save({ validateBeforeSave: false });
     return user;
@@ -148,7 +165,7 @@ const userRepository = {
   generateOTP: async (userId) => {
     const user = await User.findById(userId).select("+otp +otpExpiry");
     if (!user) return null;
-    
+
     const otp = user.generateOTP();
     await user.save({ validateBeforeSave: false });
     return otp;
@@ -158,7 +175,7 @@ const userRepository = {
   verifyOTP: async (userId, otp) => {
     const user = await User.findById(userId).select("+otp +otpExpiry");
     if (!user) return false;
-    
+
     const isValid = user.verifyOTP(otp);
     if (isValid) {
       user.otp = null;
@@ -172,7 +189,7 @@ const userRepository = {
   changePassword: async (userId, newPassword) => {
     const user = await User.findById(userId).select("+password");
     if (!user) return null;
-    
+
     user.password = newPassword;
     user.passwordChangedAt = Date.now();
     user.refreshToken = null;
@@ -184,13 +201,13 @@ const userRepository = {
   updateProfile: async (userId, updateData) => {
     const user = await User.findById(userId);
     if (!user) return null;
-    
+
     const { name, phone, avatar, preferences } = updateData;
     if (name) user.name = name;
     if (phone) user.phone = phone;
     if (avatar) user.avatar = avatar;
     if (preferences) user.preferences = { ...user.preferences, ...preferences };
-    
+
     await user.save();
     return user;
   },
@@ -199,7 +216,7 @@ const userRepository = {
   getSessions: async (userId) => {
     const user = await User.findById(userId).select("deviceInfo");
     return user?.deviceInfo || [];
-  }
+  },
 };
 
 module.exports = userRepository;

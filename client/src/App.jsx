@@ -15,7 +15,7 @@ import AllProducts from "./components/custom/AllProducts";
 import Analytics from "./components/custom/Analytics";
 import Orders from "./components/custom/Orders";
 import Settings from "./components/custom/Settings";
-import { Provider } from "react-redux";
+import { Provider, useDispatch } from "react-redux";
 import { store } from "./redux/store";
 import MyOrders from "./pages/MyOrders";
 import { Toaster } from "./components/ui/toaster";
@@ -30,8 +30,25 @@ import CategoryPage from "./pages/CategoryPage";
 import OrderDetails from "./components/order/OrderDetails";
 import WishlistPage from "./pages/Wishlist";
 import AdminProductDetails from "./components/Admin/AdminProductDetails";
+import { useEffect } from "react";
+import { setUserLogout } from "./redux/slices/authSlice";
 
 export default function App() {
+  const dispatch=useDispatch()
+  useEffect(() => {
+    // ✅ Event listener lagao
+    const handleLogout = () => {
+      dispatch(setUserLogout());
+    };
+
+    window.addEventListener("auth:logout", handleLogout);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("auth:logout", handleLogout);
+    };
+  }, [dispatch]);
+
   const router = createBrowserRouter([
     // ============ PUBLIC ROUTES ============
     {
@@ -144,7 +161,7 @@ export default function App() {
       path: "/admin/login",
       element: (
         // <ProtectedRoute requireAdmin={false}>
-          <RootLayout children={<AdminLogin />} />
+        <RootLayout children={<AdminLogin />} />
         // </ProtectedRoute>
       ),
     },
@@ -157,13 +174,13 @@ export default function App() {
       ),
     },
     {
-  path: "/admin/dashboard/edit-product/:productId",
-  element: (
-    <ProtectedRoute requireAdmin={true}>
-      <AdminLayout children={<CreateProducts />} />
-    </ProtectedRoute>
-  ),
-},
+      path: "/admin/dashboard/edit-product/:productId",
+      element: (
+        <ProtectedRoute requireAdmin={true}>
+          <AdminLayout children={<CreateProducts />} />
+        </ProtectedRoute>
+      ),
+    },
     {
       path: "/admin/dashboard/all-products",
       element: (

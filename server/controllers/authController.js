@@ -253,42 +253,63 @@ const setPasswordForGoogleUser = asyncHandler(async (req, res, next) => {
   }
 });
 // ============ REFRESH TOKEN ============
-const refreshToken = asyncHandler(async (req, res, next) => {
+const refreshToken = asyncHandler(async (req, res) => {
+  console.log("🔄 Refresh token function called");
+  
   try {
-    const { refreshToken: token } = req.body;
-
-    if (!token) {
-      return next(new ValidationError({
-        refreshToken: "Refresh token required"
-      }));
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      const response = new ApiResponse(400, null, "Refresh token required");
+      return res.status(400).json(await encryptResponse(response));
     }
 
-    // Verify refresh token
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    
-    // Find user by refresh token
-    const user = await userRepository.findByRefreshToken(token);
+    // Verify JWT
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    } catch (err) {
+      const message = err.name === "TokenExpiredError" 
+        ? "Refresh token expired" 
+        : "Invalid refresh token";
+      const response = new ApiResponse(401, null, message);
+      return res.status(401).json(await encryptResponse(response));
+    }
 
+    // Get user with refresh token
+    const user = await User.findById(decoded.id).select('+refreshToken');
+    
     if (!user) {
-      return next(new UnauthorizedError("Invalid refresh token"));
+      const response = new ApiResponse(401, null, "User not found");
+      return res.status(401).json(await encryptResponse(response));
+    }
+    
+    // Check refresh token match (for DB option)
+    if (user.refreshToken && user.refreshToken !== refreshToken) {
+      const response = new ApiResponse(401, null, "Invalid session");
+      return res.status(401).json(await encryptResponse(response));
     }
 
     // Generate new tokens
     const newAccessToken = user.generateAccessToken();
     const newRefreshToken = user.generateRefreshToken();
 
-    // Update refresh token in DB
+    // Update refresh token in DB (for DB option)
     user.refreshToken = newRefreshToken;
     await user.save();
 
-    // ✅ Success response with encryption
-    const response = new ApiResponse(200, { token: newAccessToken, refreshToken: newRefreshToken }, "Token refreshed successfully");
-    return res.json(await encryptResponse(response));
+    // ✅ EXACT SAME FORMAT AS LOGIN
+    const response = new ApiResponse(200, { 
+      token: newAccessToken, 
+      refreshToken: newRefreshToken
+    }, "Token refreshed successfully");
+    
+    return res.status(200).json(await encryptResponse(response));
+
   } catch (error) {
-    if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-      return next(new UnauthorizedError("Invalid or expired refresh token"));
-    }
-    next(error);
+    console.error("Refresh token error:", error);
+    const response = new ApiResponse(500, null, "Internal server error");
+    return res.status(500).json(await encryptResponse(response));
   }
 });
 
@@ -599,6 +620,7 @@ const verifyOTP = asyncHandler(async (req, res, next) => {
     next(error);
   }
 });
+// ============ REFRESH TOKEN - FIXED ============
 
 module.exports = {
   signup,
