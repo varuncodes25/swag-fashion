@@ -135,30 +135,16 @@ const ProductCard = ({
               } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             />
 
-            {/* Top Left Badges */}
-            {/* <div className="absolute top-2 left-2 flex flex-col gap-1">
-              {isNewArrival && (
-                <span className="px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full shadow-lg flex items-center gap-1">
-                  <Clock size={12} />
-                  New
-                </span>
-              )}
-              {isBestSeller && (
-                <span className="px-2 py-1 bg-amber-500 text-white text-xs font-medium rounded-full shadow-lg flex items-center gap-1">
-                  <TrendingUp size={12} />
-                  Best Seller
-                </span>
-              )}
-            </div> */}
+            
 
             {/* Top Right - Discount Badge */}
-            {hasRealDiscount && (
-              <div className="absolute top-2 right-2">
-                <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
-                  {discountPercentage}% OFF
-                </span>
-              </div>
-            )}
+{hasRealDiscount && (
+  <div className="absolute bottom-2 right-2">
+    <span className="px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg">
+      {discountPercentage}% OFF
+    </span>
+  </div>
+)}
 
             {/* Top Right - Wishlist Button (below discount) */}
             <button
@@ -250,12 +236,7 @@ const ProductCard = ({
               </div>
             )}
 
-            {/* Stock Status */}
-            {totalStock === 0 && (
-              <p className="text-xs text-red-500 dark:text-red-400 mt-2">
-                Out of Stock
-              </p>
-            )}
+      
           </div>
         </div>
       </Link>
