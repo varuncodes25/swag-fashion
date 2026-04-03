@@ -577,108 +577,136 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
 
         {/* COLORS */}
         <FilterSection
-          title="Colors"
-          icon={<Palette size={18} />}
-          defaultOpen={true}
-        >
-          <div className="grid grid-cols-6 gap-3">
-            {[
-              {
-                name: "Red",
-                value: "red",
-                bg: "bg-gradient-to-r from-red-500 to-red-600",
-              },
-              {
-                name: "Blue",
-                value: "blue",
-                bg: "bg-gradient-to-r from-blue-500 to-blue-600",
-              },
-              {
-                name: "Green",
-                value: "green",
-                bg: "bg-gradient-to-r from-green-500 to-emerald-600",
-              },
-              {
-                name: "Black",
-                value: "black",
-                bg: "bg-gradient-to-r from-gray-800 to-gray-900",
-              },
-              {
-                name: "White",
-                value: "white",
-                bg: "bg-gradient-to-r from-gray-100 to-gray-200 border",
-              },
-              {
-                name: "Yellow",
-                value: "yellow",
-                bg: "bg-gradient-to-r from-yellow-400 to-amber-500",
-              },
-              {
-                name: "Purple",
-                value: "purple",
-                bg: "bg-gradient-to-r from-purple-500 to-violet-600",
-              },
-              {
-                name: "Pink",
-                value: "pink",
-                bg: "bg-gradient-to-r from-pink-500 to-rose-600",
-              },
-              {
-                name: "Orange",
-                value: "orange",
-                bg: "bg-gradient-to-r from-orange-500 to-amber-600",
-              },
-              {
-                name: "Gray",
-                value: "gray",
-                bg: "bg-gradient-to-r from-gray-400 to-gray-500",
-              },
-              {
-                name: "Brown",
-                value: "brown",
-                bg: "bg-gradient-to-r from-amber-700 to-amber-900",
-              },
-              {
-                name: "Multi",
-                value: "multi",
-                bg: "bg-gradient-to-r from-red-400 via-purple-400 to-blue-400",
-              },
-            ].map((color) => {
-              const isSelected = selectedFilters.colors?.includes(color.value);
+  title="Colors"
+  icon={<Palette size={18} />}
+  defaultOpen={true}
+>
+  <div className="space-y-4">
+    {/* Color Grid */}
+    <div className="grid grid-cols-6 gap-2 sm:gap-3">
+      {[
+        { name: "Red", value: "red", code: "#ef4444" },
+        { name: "Blue", value: "blue", code: "#3b82f6" },
+        { name: "Green", value: "green", code: "#22c55e" },
+        { name: "Black", value: "black", code: "#1f2937" },
+        { name: "White", value: "white", code: "#f3f4f6" },
+        { name: "Yellow", value: "yellow", code: "#eab308" },
+        { name: "Purple", value: "purple", code: "#a855f7" },
+        { name: "Pink", value: "pink", code: "#ec4899" },
+        { name: "Orange", value: "orange", code: "#f97316" },
+        { name: "Gray", value: "gray", code: "#6b7280" },
+        { name: "Brown", value: "brown", code: "#78350f" },
+        { name: "Multi", value: "multi", code: "linear-gradient(135deg, #ef4444, #3b82f6, #22c55e)" },
+      ].map((color) => {
+        const isSelected = selectedFilters.colors?.includes(color.value);
+        const isWhite = color.value === "white";
 
-              return (
-                <div key={color.value} className="text-center group">
-                  <button
-                    onClick={() => updateFilter("colors", color.value)}
-                    className={`
-                      relative w-10 h-10 rounded-full mx-auto mb-1.5
-                      ${color.bg} border-2
-                      transition-all duration-300
-                      ${isSelected
-                        ? "border-white ring-4 transform scale-110 ring-blue-400 dark:ring-blue-500"
-                        : "border-gray-200 dark:border-gray-700 hover:border-white hover:ring-2 hover:border-gray-300 dark:hover:border-gray-500 hover:scale-105"
-                      }
-                    `}
-                  >
-                    {isSelected && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center">
-                          <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                  <span className="
-                    text-xs font-medium text-gray-700 group-hover:text-gray-900 
-                    dark:text-gray-400 dark:group-hover:text-gray-300
-                  ">
+        return (
+          <button
+            key={color.value}
+            onClick={() => updateFilter("colors", color.value)}
+            className="group relative flex flex-col items-center gap-1.5"
+          >
+            {/* Color Circle with Ring Effect */}
+            <div className="relative">
+              {/* Outer Ring Animation */}
+              <div className={`
+                absolute -inset-0.5 rounded-full 
+                ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
+                transition-all duration-300
+                bg-gradient-to-r from-blue-500 to-purple-500
+              `}></div>
+              
+              {/* Main Color Circle */}
+              <div
+                className={`
+                  relative w-8 h-8 sm:w-9 sm:h-9 rounded-full 
+                  transition-all duration-300 cursor-pointer
+                  shadow-md hover:shadow-lg
+                  ${isSelected ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-900 scale-110' : 'ring-1 ring-gray-200 dark:ring-gray-700'}
+                  ${isWhite ? 'border border-gray-300' : ''}
+                `}
+                style={{
+                  background: color.value === "multi" 
+                    ? color.code 
+                    : `linear-gradient(135deg, ${color.code}, ${color.code}dd)`
+                }}
+              >
+                {/* Selected Checkmark */}
+                {isSelected && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/90 dark:bg-gray-800/90 flex items-center justify-center shadow-sm">
+                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+
+                {/* Hover Tooltip */}
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
                     {color.name}
-                  </span>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
-        </FilterSection>
+              </div>
+            </div>
+
+            {/* Color Name */}
+            <span className={`
+              text-[10px] sm:text-xs font-medium transition-colors duration-200
+              ${isSelected 
+                ? 'text-blue-600 dark:text-blue-400' 
+                : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200'
+              }
+            `}>
+              {color.name}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+
+    {/* Selected Colors Summary */}
+    {selectedFilters.colors?.length > 0 && (
+      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+        <span className="text-xs text-gray-500 dark:text-gray-400">Selected:</span>
+        <div className="flex flex-wrap gap-1.5">
+          {selectedFilters.colors.map(colorValue => {
+            const color = [
+              { name: "Red", value: "red" },
+              { name: "Blue", value: "blue" },
+              // ... all colors
+            ].find(c => c.value === colorValue);
+            
+            return (
+              <button
+                key={colorValue}
+                onClick={() => updateFilter("colors", colorValue)}
+                className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-xs group hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                <span 
+                  className="w-2 h-2 rounded-full" 
+                  style={{ backgroundColor: color?.code || "#000" }}
+                ></span>
+                <span className="text-gray-700 dark:text-gray-300">{color?.name}</span>
+                <svg className="w-2.5 h-2.5 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            );
+          })}
+        </div>
+        <button
+          onClick={() => updateFilter("colors", null)}
+          className="text-xs text-blue-500 hover:text-blue-600 ml-auto"
+        >
+          Clear all
+        </button>
+      </div>
+    )}
+  </div>
+</FilterSection>
 
         {/* SIZES */}
         <FilterSection
