@@ -1,13 +1,29 @@
 const yup = require('yup');
 
-// Size Chart Validation
+// Size Chart Validation (tops, bottoms, footwear, innerwear)
 const sizeChartSchema = yup.object({
   chest: yup.number().positive().optional(),
   waist: yup.number().positive().optional(),
   hips: yup.number().positive().optional(),
   length: yup.number().positive().optional(),
   shoulder: yup.number().positive().optional(),
-  sleeve: yup.number().positive().optional()
+  sleeve: yup.number().positive().optional(),
+  inseam: yup.number().positive().optional(),
+  rise: yup.string().optional(),
+  thigh: yup.number().positive().optional(),
+  legOpening: yup.number().positive().optional(),
+  bottomWidth: yup.number().positive().optional(),
+  footLength: yup.number().positive().optional(),
+  headCircumference: yup.number().positive().optional(),
+  band: yup.number().positive().optional(),
+  cup: yup.string().optional(),
+  modelHeight: yup.number().optional(),
+  modelWeight: yup.number().optional(),
+  modelWearing: yup.string().optional(),
+  fitDescription: yup.string().optional(),
+  age: yup.string().optional(),
+  height: yup.string().optional(),
+  unit: yup.string().oneOf(["inches", "cm"]).optional()
 });
 
 // Product Image Validation
@@ -27,15 +43,28 @@ const variantSchema = yup.object({
   size: yup
     .string()
     .required('Size is required')
-    .oneOf(
-      ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'Free Size'],
-      'Invalid size. Valid sizes: XS, S, M, L, XL, XXL, XXXL, Free Size'
-    )
-    .uppercase()
-    .trim(),
-  
+    .trim()
+    .min(1, 'Size is required'),
+
+  sizeSystem: yup
+    .string()
+    .oneOf([
+      "Alpha",
+      "Numeric",
+      "UK",
+      "US",
+      "EU",
+      "IN",
+      "Kids",
+      "One Size",
+      "Custom"
+    ])
+    .optional(),
+
   sizeDetails: sizeChartSchema.optional(),
-  
+
+  sellingPrice: yup.number().min(0).optional(),
+
   stock: yup
     .number()
     .required('Stock is required')
@@ -98,19 +127,49 @@ const createProductSchema = yup.object({
     .string()
     .required('Clothing type is required')
     .oneOf([
-      "T-Shirt", "Shirt", "Jeans", "Trousers", "Shorts",
-      "Jacket", "Sweater", "Hoodie", "Sweatshirt",
-      "Dress", "Skirt", "Top", "Kurta", "Sherwani",
-      "Saree", "Lehenga", "Blouse", "Track Suit",
-      "Innerwear", "Socks", "Cap", "Scarf", "Other"
+      "T-Shirt", "Polo Shirt", "Shirt", "Formal Shirt", "Casual Shirt",
+      "Tank Top", "Crop Top", "Blouse", "Tunic", "Top", "Camisole",
+      "Sweater", "Cardigan", "Pullover", "Hoodie", "Sweatshirt",
+      "Jacket", "Blazer", "Coat", "Raincoat", "Windcheater", "Bomber Jacket",
+      "Denim Jacket", "Shrug", "Waistcoat", "Gilet", "Vest",
+      "Dress", "Gown", "Jumpsuit", "Romper", "Co-ord Set", "Suit Set",
+      "Kurta", "Sherwani", "Nehru Jacket", "Anarkali", "Salwar Suit",
+      "Saree", "Lehenga", "Dupatta", "Dhoti", "Lungi",
+      "Jeans", "Trousers", "Chinos", "Cargo Pants", "Joggers", "Track Pants",
+      "Leggings", "Palazzo", "Skirt", "Shorts",
+      "Sneakers", "Sports Shoes", "Formal Shoes", "Loafers", "Boots",
+      "Sandals", "Slippers", "Heels", "Flats", "Flip Flops",
+      "Track Suit", "Sports Wear", "Swimwear", "Bikini", "Swim Trunks",
+      "Nightwear", "Pyjama", "Night Suit", "Robe", "Loungewear",
+      "Innerwear", "Bra", "Sports Bra", "Briefs", "Boxers", "Thermals",
+      "Socks", "Stockings", "Tights",
+      "Cap", "Hat", "Beanie", "Scarf", "Stole", "Shawl", "Gloves", "Mittens",
+      "Tie", "Bow Tie", "Belt", "Suspenders",
+      "Other"
     ], 'Invalid clothing type'),
+
+  productFamily: yup
+    .string()
+    .oneOf([
+      "Upper Body",
+      "Lower Body",
+      "Full Body",
+      "Ethnic",
+      "Footwear",
+      "Innerwear",
+      "Activewear",
+      "Loungewear & Nightwear",
+      "Accessories",
+      "Other"
+    ])
+    .optional(),
   
   // ============== AGE GROUP ==============
   ageGroup: yup
     .string()
     .required('Age group is required')
     .oneOf([
-      "0-2 Years", "2-4 Years", "4-6 Years", "6-8 Years", "8-10 Years", 
+      "Newborn", "0-2 Years", "2-4 Years", "4-6 Years", "6-8 Years", "8-10 Years",
       "10-12 Years", "12-14 Years", "14-16 Years", "16-18 Years", "Adult"
     ])
     .default('Adult'),
@@ -119,17 +178,19 @@ const createProductSchema = yup.object({
   gender: yup
     .string()
     .required('Gender is required')
-    .oneOf(["Men", "Women", "Unisex", "Boys", "Girls", "Kids"]),
+    .oneOf(["Men", "Women", "Unisex", "Boys", "Girls", "Kids", "Baby"]),
   
   // ============== FABRIC & MATERIAL ==============
   fabric: yup
     .string()
     .required('Fabric is required')
     .oneOf([
-      "Cotton", "Polyester", "Silk", "Wool", "Linen",
-      "Denim", "Leather", "Nylon", "Rayon", "Spandex",
-      "Velvet", "Chiffon", "Georgette", "Crepe", "Satin",
-      "Blended", "Other"
+      "Cotton", "Organic Cotton", "Polyester", "Silk", "Wool", "Linen",
+      "Denim", "Leather", "Faux Leather", "Suede", "Nylon", "Rayon", "Viscose",
+      "Modal", "Tencel", "Spandex", "Elastane", "Lycra",
+      "Velvet", "Chiffon", "Georgette", "Crepe", "Satin", "Mesh", "Fleece",
+      "Canvas", "Jute", "Khadi", "Acrylic", "Cashmere", "Rubber", "EVA",
+      "Blended", "Synthetic", "Not Applicable", "Other"
     ]),
   
   fabricComposition: yup
@@ -140,36 +201,50 @@ const createProductSchema = yup.object({
   careInstructions: yup
     .array()
     .of(yup.string().oneOf([
-      "Machine Wash", "Hand Wash", "Dry Clean Only",
-      "Do Not Bleach", "Tumble Dry Low", "Line Dry",
-      "Iron Low Heat", "Do Not Iron", "Dry Flat"
+      "Machine Wash", "Machine Wash Cold", "Machine Wash Gentle",
+      "Hand Wash", "Dry Clean Only", "Spot Clean",
+      "Do Not Bleach", "Tumble Dry Low", "Line Dry", "Dry Flat",
+      "Iron Low Heat", "Iron Medium Heat", "Do Not Iron", "Steam Only"
     ]))
     .default(["Machine Wash"]),
   
   // ============== FIT & STYLE ==============
   fit: yup
     .string()
-    .oneOf(["Regular", "Slim", "Relaxed", "Oversized", "Skinny", "Boyfriend", "Bodycon"])
-    .default("Regular"),
-  
+    .oneOf([
+      "Regular", "Slim", "Relaxed", "Oversized", "Skinny", "Boyfriend", "Bodycon",
+      "Athletic", "Tailored", "Wide Leg", "Bootcut", "Flared", "Straight",
+      "High Rise", "Mid Rise", "Low Rise", "Compression", "Not Applicable"
+    ])
+    .optional(),
+
   pattern: yup
     .string()
     .oneOf([
-      "Solid", "Striped", "Checked", "Printed", "Floral",
+      "Solid", "Striped", "Checked", "Plaid", "Printed", "Floral",
       "Geometric", "Abstract", "Polka Dot", "Ethnic", "Plain",
-      "Embroidered", "Sequined", "Tie-Dye"
+      "Embroidered", "Sequined", "Tie-Dye", "Camouflage", "Animal Print",
+      "Paisley", "Houndstooth", "Not Applicable"
     ])
-    .default("Solid"),
-  
+    .optional(),
+
   sleeveType: yup
     .string()
-    .oneOf(["Full Sleeve", "Half Sleeve", "Sleeveless", "Short Sleeve", "Three-Quarter", "Puff Sleeve", "Bell Sleeve"])
-    .default("Full Sleeve"),
-  
+    .oneOf([
+      "Full Sleeve", "Half Sleeve", "Sleeveless", "Short Sleeve", "Three-Quarter",
+      "Puff Sleeve", "Bell Sleeve", "Raglan", "Cap Sleeve", "Dolman",
+      "Not Applicable"
+    ])
+    .optional(),
+
   neckType: yup
     .string()
-    .oneOf(["Round Neck", "V-Neck", "Polo Neck", "Collared", "Hooded", "Turtleneck", "Square Neck"])
-    .default("Round Neck"),
+    .oneOf([
+      "Round Neck", "V-Neck", "Deep V-Neck", "Polo Neck", "Collared", "Hooded",
+      "Turtleneck", "Square Neck", "Boat Neck", "Halter", "Off Shoulder",
+      "Mandarin Collar", "Not Applicable"
+    ])
+    .optional(),
   
   // ============== BRAND ==============
   brand: yup
@@ -185,7 +260,10 @@ const createProductSchema = yup.object({
   
   occasion: yup
     .array()
-    .of(yup.string().oneOf(["Casual", "Formal", "Party", "Wedding", "Sports", "Beach", "Office", "Travel", "Evening", "Traditional"]))
+    .of(yup.string().oneOf([
+      "Casual", "Formal", "Party", "Wedding", "Sports", "Beach", "Office",
+      "Travel", "Evening", "Traditional", "Festive", "Loungewear", "Sleepwear"
+    ]))
     .default(["Casual"]),
   
   // ============== VARIANTS ==============

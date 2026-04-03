@@ -10,10 +10,24 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
 
   // ============ CLOTHING TYPE CATEGORIES ============
   const categories = {
-    topWear: ['T-Shirt', 'Shirt', 'Jacket', 'Sweater', 'Hoodie', 'Sweatshirt', 'Top', 'Kurta', 'Blouse', 'Sherwani'],
-    bottomWear: ['Jeans', 'Trousers', 'Shorts', 'Skirt', 'Track Suit', 'Leggings', 'Capris', 'Pyjama'],
-    fullBody: ['Dress', 'Saree', 'Lehenga', 'Gown', 'Jumpsuit', 'Bodysuit'],
-    innerWear: ['Innerwear', 'Bra', 'Panties', 'Boxers', 'Briefs']
+    topWear: [
+      'T-Shirt', 'Polo Shirt', 'Shirt', 'Formal Shirt', 'Casual Shirt', 'Tank Top', 'Crop Top',
+      'Jacket', 'Sweater', 'Cardigan', 'Pullover', 'Hoodie', 'Sweatshirt', 'Blazer', 'Coat',
+      'Raincoat', 'Windcheater', 'Bomber Jacket', 'Denim Jacket', 'Shrug', 'Waistcoat', 'Gilet', 'Vest',
+      'Top', 'Tunic', 'Camisole', 'Kurta', 'Blouse', 'Sherwani', 'Nehru Jacket'
+    ],
+    bottomWear: [
+      'Jeans', 'Trousers', 'Chinos', 'Cargo Pants', 'Joggers', 'Track Pants', 'Shorts', 'Skirt',
+      'Track Suit', 'Leggings', 'Palazzo', 'Pyjama', 'Dhoti', 'Lungi'
+    ],
+    fullBody: [
+      'Dress', 'Saree', 'Lehenga', 'Gown', 'Jumpsuit', 'Romper', 'Co-ord Set', 'Suit Set',
+      'Anarkali', 'Salwar Suit', 'Dupatta', 'Bodysuit'
+    ],
+    innerWear: ['Innerwear', 'Bra', 'Sports Bra', 'Briefs', 'Boxers', 'Thermals', 'Stockings', 'Tights'],
+    footwear: [
+      'Sneakers', 'Sports Shoes', 'Formal Shoes', 'Loafers', 'Boots', 'Sandals', 'Slippers', 'Heels', 'Flats', 'Flip Flops'
+    ]
   };
 
   // ============ DYNAMIC HEADERS BASED ON CLOTHING TYPE ============
@@ -50,7 +64,23 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
         { key: 'length', label: `Length (${unit})` }
       ];
     }
-    
+
+    if (categories.innerWear.includes(clothingType)) {
+      return [
+        { key: 'size', label: 'Size' },
+        { key: 'band', label: `Band (${unit})` },
+        { key: 'cup', label: 'Cup' },
+        { key: 'chest', label: `Chest (${unit})` }
+      ];
+    }
+
+    if (categories.footwear.includes(clothingType)) {
+      return [
+        { key: 'size', label: 'Size (UK / EU / US)' },
+        { key: 'footLength', label: `Foot length (${unit})` }
+      ];
+    }
+
     // Default
     return [
       { key: 'size', label: 'Size' },
@@ -94,7 +124,16 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
         "XL": { chest: 40, waist: 34, hips: 42, length: 58 }
       };
     }
-    
+
+    if (categories.footwear.includes(clothingType)) {
+      return {
+        "UK 7": { footLength: 10.2 },
+        "UK 8": { footLength: 10.5 },
+        "UK 9": { footLength: 10.8 },
+        "UK 10": { footLength: 11.1 }
+      };
+    }
+
     return baseData;
   };
 

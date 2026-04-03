@@ -50,7 +50,59 @@ const CreateProduct = () => {
     clearProduct,
   } = useProducts();
   const { categories, getCategories } = useCategories();
+  // Simple version - Sirf Top aur Bottom identify karna hai toh
+  const getClothingCategory = (clothingType) => {
+    const topWear = [
+      "T-Shirt",
+      "Polo Shirt",
+      "Shirt",
+      "Formal Shirt",
+      "Casual Shirt",
+      "Tank Top",
+      "Crop Top",
+      "Blouse",
+      "Tunic",
+      "Top",
+      "Camisole",
+      "Sweater",
+      "Cardigan",
+      "Pullover",
+      "Hoodie",
+      "Sweatshirt",
+      "Jacket",
+      "Blazer",
+      "Coat",
+      "Raincoat",
+      "Windcheater",
+      "Bomber Jacket",
+      "Denim Jacket",
+      "Shrug",
+      "Waistcoat",
+      "Gilet",
+      "Vest",
+      "Kurta",
+      "Nehru Jacket",
+    ];
 
+    const bottomWear = [
+      "Jeans",
+      "Trousers",
+      "Chinos",
+      "Cargo Pants",
+      "Joggers",
+      "Track Pants",
+      "Leggings",
+      "Palazzo",
+      "Skirt",
+      "Shorts",
+      "Dhoti",
+      "Lungi",
+    ];
+
+    if (topWear.includes(clothingType)) return "top";
+    if (bottomWear.includes(clothingType)) return "bottom";
+    return "other";
+  };
   const {
     formData,
     updateFormData,
@@ -76,12 +128,20 @@ const CreateProduct = () => {
     SIZE_OPTIONS,
     COLOR_OPTIONS,
     CLOTHING_TYPES,
+    PRODUCT_FAMILIES,
+    AGE_GROUPS,
     GENDERS,
     FABRICS,
     FITS,
     PATTERNS,
     SLEEVE_TYPES,
     NECK_TYPES,
+    BOTTOM_STYLES,
+    WAIST_TYPES,
+    BOTTOM_LENGTHS,
+    POCKET_STYLES,
+    HEM_STYLES,
+    BOTTOM_CLOSURES,
     ALL_FEATURES,
     SEASONS,
     OCCASIONS,
@@ -115,6 +175,9 @@ const CreateProduct = () => {
     toggleOccasion,
   } = useProductForm();
 
+  const [customSizeInput, setCustomSizeInput] = useState("");
+const clothingCategory = getClothingCategory(formData.clothingType);
+console.log(clothingCategory,"clothingCategory")
   // React Quill modules
   const quillModules = {
     toolbar: [
@@ -143,7 +206,7 @@ const CreateProduct = () => {
     if (productId) {
       getProduct(productId);
     } else {
-      resetForm();  
+      resetForm();
     }
   }, [productId]);
 
@@ -182,7 +245,7 @@ const CreateProduct = () => {
         resetForm();
       }
 
-      navigate("/admin/products");
+      navigate("/admin/dashboard/all-products");
     } catch (error) {
       const errorMessage =
         error?.message ||
@@ -363,6 +426,32 @@ const CreateProduct = () => {
                   </Select>
                 </div>
 
+                {/* Product family (optional, filters / admin) */}
+                <div className="space-y-2">
+                  <Label htmlFor="productFamily">Product family</Label>
+                  <Select
+                    value={formData.productFamily || "none"}
+                    onValueChange={(value) =>
+                      updateFormData(
+                        "productFamily",
+                        value === "none" ? "" : value,
+                      )
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Optional — e.g. Footwear, Ethnic" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Not specified</SelectItem>
+                      {PRODUCT_FAMILIES.map((fam) => (
+                        <SelectItem key={fam} value={fam}>
+                          {fam}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 {/* Gender */}
                 <div className="space-y-2">
                   <Label htmlFor="gender">Gender *</Label>
@@ -410,16 +499,11 @@ const CreateProduct = () => {
                       <SelectValue placeholder="Select age group" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0-2 Years">0-2 Years</SelectItem>
-                      <SelectItem value="2-4 Years">2-4 Years</SelectItem>
-                      <SelectItem value="4-6 Years">4-6 Years</SelectItem>
-                      <SelectItem value="6-8 Years">6-8 Years</SelectItem>
-                      <SelectItem value="8-10 Years">8-10 Years</SelectItem>
-                      <SelectItem value="10-12 Years">10-12 Years</SelectItem>
-                      <SelectItem value="12-14 Years">12-14 Years</SelectItem>
-                      <SelectItem value="14-16 Years">14-16 Years</SelectItem>
-                      <SelectItem value="16-18 Years">16-18 Years</SelectItem>
-                      <SelectItem value="Adult">Adult</SelectItem>
+                      {AGE_GROUPS.map((ag) => (
+                        <SelectItem key={ag} value={ag}>
+                          {ag}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -568,11 +652,34 @@ const CreateProduct = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={addSize}
+                    onClick={() => addSize()}
                     className="border-input hover:bg-accent"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Size
+                  </Button>
+                  <Input
+                    className="max-w-[200px]"
+                    placeholder="Custom size (e.g. UK 9, 32x34)"
+                    value={customSizeInput}
+                    onChange={(e) => setCustomSizeInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        addSize(customSizeInput);
+                        setCustomSizeInput("");
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => {
+                      addSize(customSizeInput);
+                      setCustomSizeInput("");
+                    }}
+                  >
+                    Add custom
                   </Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -839,365 +946,417 @@ const CreateProduct = () => {
           </TabsContent>
 
           {/* Specifications Tab */}
-          <TabsContent value="specifications" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* LEFT COLUMN */}
-              <CardContent className="space-y-6">
-                {/* Sleeve Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="sleeveType">Sleeve Type</Label>
-                  <Select
-                    value={formData.sleeveType}
-                    onValueChange={(value) =>
-                      updateFormData("sleeveType", value)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select sleeve type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SLEEVE_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* Specifications Tab - REPLACE COMPLETELY */}
+<TabsContent value="specifications" className="space-y-6">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    {/* ========== LEFT COLUMN - Dynamic Fields ========== */}
+    <CardContent className="space-y-6">
+      
+      {/* Fabric Composition */}
+      <div className="space-y-2">
+        <Label htmlFor="fabricComposition">Fabric Composition</Label>
+        <Input
+          id="fabricComposition"
+          value={formData.fabricComposition}
+          onChange={(e) => updateFormData("fabricComposition", e.target.value)}
+          placeholder="e.g., 100% Cotton"
+        />
+      </div>
 
-                {/* Neck Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="neckType">Neck Type</Label>
-                  <Select
-                    value={formData.neckType}
-                    onValueChange={(value) => updateFormData("neckType", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select neck type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {NECK_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      {/* ===== TOP WEAR FIELDS (Sirf Top Wear ke liye) ===== */}
+      {clothingCategory === "top" && (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="sleeveType">Sleeve Type</Label>
+            <Select
+              value={formData.sleeveType}
+              onValueChange={(value) => updateFormData("sleeveType", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select sleeve type" />
+              </SelectTrigger>
+              <SelectContent>
+                {SLEEVE_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                {/* Care Instructions */}
-                <div className="space-y-2">
-                  <Label>Care Instructions</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      "Machine Wash",
-                      "Hand Wash",
-                      "Dry Clean Only",
-                      "Do Not Bleach",
-                      "Tumble Dry Low",
-                      "Line Dry",
-                      "Iron Low Heat",
-                      "Do Not Iron",
-                      "Dry Flat",
-                    ].map((instruction) => (
-                      <div
-                        key={instruction}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`care-${instruction}`}
-                          checked={formData.careInstructions.includes(
-                            instruction,
-                          )}
-                          onCheckedChange={() =>
-                            toggleCareInstruction(instruction)
-                          }
-                        />
-                        <Label
-                          htmlFor={`care-${instruction}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {instruction}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+          <div className="space-y-2">
+            <Label htmlFor="neckType">Neck Type</Label>
+            <Select
+              value={formData.neckType}
+              onValueChange={(value) => updateFormData("neckType", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select neck type" />
+              </SelectTrigger>
+              <SelectContent>
+                {NECK_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
 
-                {/* Features */}
-                <div className="space-y-2">
-                  <Label>Product Features</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {ALL_FEATURES.map((feature) => (
-                      <div
-                        key={feature}
-                        className="flex items-center space-x-2"
-                      >
-                        <Checkbox
-                          id={`feature-${feature}`}
-                          checked={formData.features.includes(feature)}
-                          onCheckedChange={() => toggleFeature(feature)}
-                        />
-                        <Label
-                          htmlFor={`feature-${feature}`}
-                          className="text-sm cursor-pointer"
-                        >
-                          {feature}
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+      {/* ===== BOTTOM WEAR FIELDS (Sirf Bottom Wear ke liye) ===== */}
+      {clothingCategory === "bottom" && (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="bottomStyle">Bottom Style</Label>
+            <Select
+              value={formData.bottomStyle}
+              onValueChange={(value) => updateFormData("bottomStyle", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select style" />
+              </SelectTrigger>
+              <SelectContent>
+                {BOTTOM_STYLES.map((style) => (
+                  <SelectItem key={style} value={style}>{style}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                {/* Season */}
-                <div className="space-y-2">
-                  <Label>Season</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {SEASONS.map((season) => (
-                      <Button
-                        key={season}
-                        type="button"
-                        variant={
-                          formData.season.includes(season)
-                            ? "default"
-                            : "outline"
-                        }
-                        size="sm"
-                        onClick={() => toggleSeason(season)}
-                        className="text-xs"
-                      >
-                        {formData.season.includes(season) && (
-                          <Check className="h-3 w-3 mr-1" />
-                        )}
-                        {season}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
+          <div className="space-y-2">
+            <Label htmlFor="waistType">Waist Type</Label>
+            <Select
+              value={formData.waistType}
+              onValueChange={(value) => updateFormData("waistType", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select waist type" />
+              </SelectTrigger>
+              <SelectContent>
+                {WAIST_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                {/* Occasion */}
-                <div className="space-y-2">
-                  <Label>Occasion</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {OCCASIONS.map((occasion) => (
-                      <Button
-                        key={occasion}
-                        type="button"
-                        variant={
-                          formData.occasion.includes(occasion)
-                            ? "default"
-                            : "outline"
-                        }
-                        size="sm"
-                        onClick={() => toggleOccasion(occasion)}
-                        className="text-xs"
-                      >
-                        {formData.occasion.includes(occasion) && (
-                          <Check className="h-3 w-3 mr-1" />
-                        )}
-                        {occasion}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="bottomLength">Bottom Length</Label>
+            <Select
+              value={formData.bottomLength}
+              onValueChange={(value) => updateFormData("bottomLength", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select length" />
+              </SelectTrigger>
+              <SelectContent>
+                {BOTTOM_LENGTHS.map((length) => (
+                  <SelectItem key={length} value={length}>{length}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              {/* RIGHT COLUMN */}
-              <CardContent className="space-y-6">
-                {/* Custom Specifications */}
-                <div className="space-y-4">
-                  <Label className="text-lg font-semibold">
-                    Custom Specifications
-                  </Label>
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        placeholder="Specification name"
-                        value={tempSpecKey}
-                        onChange={(e) => setTempSpecKey(e.target.value)}
-                      />
-                      <Input
-                        placeholder="Specification value"
-                        value={tempSpecValue}
-                        onChange={(e) => setTempSpecValue(e.target.value)}
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      onClick={addSpecification}
-                      className="w-full"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Specification
-                    </Button>
-                  </div>
+          <div className="space-y-2">
+            <Label htmlFor="pocketStyle">Pocket Style</Label>
+            <Select
+              value={formData.pocketStyle}
+              onValueChange={(value) => updateFormData("pocketStyle", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select pocket style" />
+              </SelectTrigger>
+              <SelectContent>
+                {POCKET_STYLES.map((style) => (
+                  <SelectItem key={style} value={style}>{style}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                  {/* ✅ FIXED: Specifications List with proper object/array handling */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">
-                      Added Specifications:
-                    </Label>
-                    {formData.specifications.size === 0 ? (
-                      <p className="text-sm text-gray-500">
-                        No specifications added yet
-                      </p>
-                    ) : (
-                      <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                        {Array.from(formData.specifications).map(
-                          ([key, value]) => (
-                            <div
-                              key={key}
-                              className="flex items-start justify-between p-3 border rounded-lg bg-gray-50"
-                            >
-                              <div className="flex-1">
-                                <span className="font-medium text-sm block mb-1">
-                                  {key}:
-                                </span>
-                                <div className="ml-2 text-gray-700">
-                                  {typeof value === "object" &&
-                                  value !== null ? (
-                                    // Handle objects and arrays
-                                    Array.isArray(value) ? (
-                                      // Handle arrays
-                                      <div className="flex flex-wrap gap-1">
-                                        {value.map((item, idx) => (
-                                          <Badge
-                                            key={idx}
-                                            variant="secondary"
-                                            className="text-xs"
-                                          >
-                                            {String(item)}
-                                          </Badge>
-                                        ))}
-                                      </div>
-                                    ) : (
-                                      // Handle objects
-                                      <div className="space-y-1 pl-2 border-l-2 border-gray-200">
-                                        {Object.entries(value).map(
-                                          ([subKey, subValue]) => (
-                                            <div
-                                              key={subKey}
-                                              className="text-sm"
-                                            >
-                                              <span className="font-medium text-gray-600">
-                                                {subKey}:
-                                              </span>{" "}
-                                              {Array.isArray(subValue) ? (
-                                                <span>
-                                                  {subValue.join(", ")}
-                                                </span>
-                                              ) : typeof subValue ===
-                                                "object" ? (
-                                                <pre className="text-xs bg-gray-100 p-1 rounded mt-1">
-                                                  {JSON.stringify(
-                                                    subValue,
-                                                    null,
-                                                    2,
-                                                  )}
-                                                </pre>
-                                              ) : (
-                                                <span>{String(subValue)}</span>
-                                              )}
-                                            </div>
-                                          ),
-                                        )}
-                                      </div>
-                                    )
-                                  ) : (
-                                    // Handle strings and numbers
-                                    <span className="text-sm">
-                                      {String(value)}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeSpecification(key)}
-                                className="ml-2 flex-shrink-0"
-                              >
-                                <X className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          ),
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
+          <div className="space-y-2">
+            <Label htmlFor="hemStyle">Hem Style</Label>
+            <Select
+              value={formData.hemStyle}
+              onValueChange={(value) => updateFormData("hemStyle", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select hem style" />
+              </SelectTrigger>
+              <SelectContent>
+                {HEM_STYLES.map((style) => (
+                  <SelectItem key={style} value={style}>{style}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-                {/* Package Details */}
-                <div className="space-y-4">
-                  <Label className="text-lg font-semibold">
-                    Package Details
-                  </Label>
+          <div className="space-y-2">
+            <Label htmlFor="bottomClosure">Bottom Closure</Label>
+            <Select
+              value={formData.bottomClosure}
+              onValueChange={(value) => updateFormData("bottomClosure", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select closure" />
+              </SelectTrigger>
+              <SelectContent>
+                {BOTTOM_CLOSURES.map((closure) => (
+                  <SelectItem key={closure} value={closure}>{closure}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="packageContent">Package Content</Label>
-                    <Input
-                      id="packageContent"
-                      value={formData.packageContent}
-                      onChange={(e) =>
-                        updateFormData("packageContent", e.target.value)
-                      }
-                      placeholder="e.g., 1 Piece"
-                    />
-                  </div>
+      {/* ===== COMMON FIELDS ===== */}
+      <div className="space-y-2">
+        <Label htmlFor="fit">Fit</Label>
+        <Select
+          value={formData.fit}
+          onValueChange={(value) => updateFormData("fit", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select fit" />
+          </SelectTrigger>
+          <SelectContent>
+            {FITS.map((fit) => (
+              <SelectItem key={fit} value={fit}>{fit}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="countryOfOrigin">Country of Origin</Label>
-                    <Input
-                      id="countryOfOrigin"
-                      value={formData.countryOfOrigin}
-                      onChange={(e) =>
-                        updateFormData("countryOfOrigin", e.target.value)
-                      }
-                      placeholder="e.g., India"
-                    />
-                  </div>
+      <div className="space-y-2">
+        <Label htmlFor="pattern">Pattern</Label>
+        <Select
+          value={formData.pattern}
+          onValueChange={(value) => updateFormData("pattern", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select pattern" />
+          </SelectTrigger>
+          <SelectContent>
+            {PATTERNS.map((pattern) => (
+              <SelectItem key={pattern} value={pattern}>{pattern}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="warranty">Warranty</Label>
-                    <Input
-                      id="warranty"
-                      value={formData.warranty}
-                      onChange={(e) =>
-                        updateFormData("warranty", e.target.value)
-                      }
-                      placeholder="e.g., 1 Year Warranty"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="returnPolicy">Return Policy</Label>
-                    <Input
-                      id="returnPolicy"
-                      value={formData.returnPolicy}
-                      onChange={(e) =>
-                        updateFormData("returnPolicy", e.target.value)
-                      }
-                      placeholder="e.g., 7 Days Return Available"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="returnWindow">Return Window (Days)</Label>
-                    <Input
-                      id="returnWindow"
-                      type="number"
-                      min="0"
-                      value={formData.returnWindow}
-                      onChange={(e) =>
-                        updateFormData("returnWindow", e.target.value)
-                      }
-                    />
-                  </div>
-                </div>
-              </CardContent>
+      {/* Care Instructions */}
+      <div className="space-y-2">
+        <Label>Care Instructions</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            "Machine Wash", "Hand Wash", "Dry Clean Only", "Do Not Bleach",
+            "Tumble Dry Low", "Line Dry", "Iron Low Heat", "Do Not Iron", "Dry Flat"
+          ].map((instruction) => (
+            <div key={instruction} className="flex items-center space-x-2">
+              <Checkbox
+                id={`care-${instruction}`}
+                checked={formData.careInstructions.includes(instruction)}
+                onCheckedChange={() => toggleCareInstruction(instruction)}
+              />
+              <Label htmlFor={`care-${instruction}`} className="text-sm cursor-pointer">
+                {instruction}
+              </Label>
             </div>
-          </TabsContent>
+          ))}
+        </div>
+      </div>
+
+      {/* Features */}
+      <div className="space-y-2">
+        <Label>Product Features</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {ALL_FEATURES.map((feature) => (
+            <div key={feature} className="flex items-center space-x-2">
+              <Checkbox
+                id={`feature-${feature}`}
+                checked={formData.features.includes(feature)}
+                onCheckedChange={() => toggleFeature(feature)}
+              />
+              <Label htmlFor={`feature-${feature}`} className="text-sm cursor-pointer">
+                {feature}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Season */}
+      <div className="space-y-2">
+        <Label>Season</Label>
+        <div className="flex flex-wrap gap-2">
+          {SEASONS.map((season) => (
+            <Button
+              key={season}
+              type="button"
+              variant={formData.season.includes(season) ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleSeason(season)}
+              className="text-xs"
+            >
+              {formData.season.includes(season) && <Check className="h-3 w-3 mr-1" />}
+              {season}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      {/* Occasion */}
+      <div className="space-y-2">
+        <Label>Occasion</Label>
+        <div className="flex flex-wrap gap-2">
+          {OCCASIONS.map((occasion) => (
+            <Button
+              key={occasion}
+              type="button"
+              variant={formData.occasion.includes(occasion) ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleOccasion(occasion)}
+              className="text-xs"
+            >
+              {formData.occasion.includes(occasion) && <Check className="h-3 w-3 mr-1" />}
+              {occasion}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+    </CardContent>
+
+    {/* ========== RIGHT COLUMN ========== */}
+    <CardContent className="space-y-6">
+      
+      {/* Custom Specifications */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold">Custom Specifications</Label>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              placeholder="Specification name"
+              value={tempSpecKey}
+              onChange={(e) => setTempSpecKey(e.target.value)}
+            />
+            <Input
+              placeholder="Specification value"
+              value={tempSpecValue}
+              onChange={(e) => setTempSpecValue(e.target.value)}
+            />
+          </div>
+          <Button type="button" onClick={addSpecification} className="w-full">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Specification
+          </Button>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Added Specifications:</Label>
+          {formData.specifications.size === 0 ? (
+            <p className="text-sm text-gray-500">No specifications added yet</p>
+          ) : (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {Array.from(formData.specifications).map(([key, value]) => (
+                <div key={key} className="flex items-start justify-between p-3 border rounded-lg bg-gray-50">
+                  <div className="flex-1">
+                    <span className="font-medium text-sm block mb-1">{key}:</span>
+                    <div className="ml-2 text-gray-700">
+                      {typeof value === "object" && value !== null ? (
+                        Array.isArray(value) ? (
+                          <div className="flex flex-wrap gap-1">
+                            {value.map((item, idx) => (
+                              <Badge key={idx} variant="secondary" className="text-xs">
+                                {String(item)}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="space-y-1 pl-2 border-l-2 border-gray-200">
+                            {Object.entries(value).map(([subKey, subValue]) => (
+                              <div key={subKey} className="text-sm">
+                                <span className="font-medium text-gray-600">{subKey}:</span>{" "}
+                                {String(subValue)}
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      ) : (
+                        <span className="text-sm">{String(value)}</span>
+                      )}
+                    </div>
+                  </div>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => removeSpecification(key)}>
+                    <X className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Package Details */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold">Package Details</Label>
+        
+        <div className="space-y-2">
+          <Label htmlFor="packageContent">Package Content</Label>
+          <Input
+            id="packageContent"
+            value={formData.packageContent}
+            onChange={(e) => updateFormData("packageContent", e.target.value)}
+            placeholder="e.g., 1 Piece"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="countryOfOrigin">Country of Origin</Label>
+          <Input
+            id="countryOfOrigin"
+            value={formData.countryOfOrigin}
+            onChange={(e) => updateFormData("countryOfOrigin", e.target.value)}
+            placeholder="e.g., India"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="warranty">Warranty</Label>
+          <Input
+            id="warranty"
+            value={formData.warranty}
+            onChange={(e) => updateFormData("warranty", e.target.value)}
+            placeholder="e.g., 1 Year Warranty"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="returnPolicy">Return Policy</Label>
+          <Input
+            id="returnPolicy"
+            value={formData.returnPolicy}
+            onChange={(e) => updateFormData("returnPolicy", e.target.value)}
+            placeholder="e.g., 7 Days Return Available"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="returnWindow">Return Window (Days)</Label>
+          <Input
+            id="returnWindow"
+            type="number"
+            min="0"
+            value={formData.returnWindow}
+            onChange={(e) => updateFormData("returnWindow", e.target.value)}
+          />
+        </div>
+      </div>
+      
+    </CardContent>
+  </div>
+</TabsContent>
 
           {/* Offers & Details Tab */}
           <TabsContent value="offers" className="space-y-6">

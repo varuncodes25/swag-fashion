@@ -59,6 +59,7 @@ import Pagination from "../Pagination";
 // Import Redux actions
 import {
   fetchProducts,
+  deleteProduct,  // ✅ ADD THIS
 } from "@/redux/slices/admin/productSlice";
 
 const AllProducts = () => {
@@ -68,7 +69,7 @@ const AllProducts = () => {
 
   // Redux state
   const { 
-    products:data = [], // ✅ 'data' use karo, 'products' nahi
+    products: data = [],
     loading, 
     error,
     pagination = {
@@ -83,11 +84,11 @@ const AllProducts = () => {
   const [filters, setFilters] = useState({
     category: "all",
     search: "",
-    price: "",        // Max price filter
-    minPrice: "",      // Min price filter (optional)
-    maxPrice: "",      // Max price filter (optional)
-    gender: "all",     // Gender filter
-    inStock: "all",    // Stock filter
+    price: "",
+    minPrice: "",
+    maxPrice: "",
+    gender: "all",
+    inStock: "all",
     sort: "createdAt",
     page: 1,
     limit: 9
@@ -102,47 +103,38 @@ const AllProducts = () => {
   useEffect(() => {
     const params = {};
     
-    // 🔍 Search filter
     if (filters.search && filters.search.trim() !== "") {
       params.search = filters.search.trim();
     }
     
-    // 📁 Category filter
     if (filters.category !== "all") {
       params.category = filters.category;
     }
     
-    // 👤 Gender filter
     if (filters.gender !== "all") {
       params.gender = filters.gender;
     }
     
-    // 📦 Stock filter
     if (filters.inStock !== "all") {
       params.inStock = filters.inStock;
     }
     
-    // 💰 Price filter - Max price
     if (filters.price && filters.price !== "" && !isNaN(filters.price)) {
       params.price = Number(filters.price);
     }
     
-    // 💰 Min price filter
     if (filters.minPrice && filters.minPrice !== "" && !isNaN(filters.minPrice)) {
       params.minPrice = Number(filters.minPrice);
     }
     
-    // 💰 Max price filter
     if (filters.maxPrice && filters.maxPrice !== "" && !isNaN(filters.maxPrice)) {
       params.maxPrice = Number(filters.maxPrice);
     }
     
-    // 🔄 Sort filter
     if (filters.sort !== "createdAt") {
       params.sort = filters.sort;
     }
     
-    // 📄 Pagination
     params.page = Number(filters.page);
     params.limit = Number(filters.limit);
     
@@ -156,7 +148,7 @@ const AllProducts = () => {
     setFilters(prev => ({
       ...prev,
       [key]: value,
-      page: 1 // Reset to first page on filter change
+      page: 1
     }));
   };
 
@@ -175,8 +167,51 @@ const AllProducts = () => {
 
   // Handle edit product
   const handleEditProduct = (productId) => {
-  navigate(`/admin/dashboard/edit-product/${productId}`);  // Change yahan
-};
+    navigate(`/admin/dashboard/edit-product/${productId}`);
+  };
+
+  // ✅ HANDLE DELETE PRODUCT - FIXED
+  const handleDeleteProduct = async () => {
+    if (!selectedProduct?._id) return;
+    
+    setActionLoading(true);
+    try {
+      const result = await dispatch(deleteProduct(selectedProduct._id)).unwrap();
+      
+      toast({
+        title: "Success",
+        description: result.message || "Product deleted successfully",
+        variant: "default",
+      });
+      
+      // Close dialog
+      setDeleteDialogOpen(false);
+      setSelectedProduct(null);
+      
+      // Refresh products list
+      dispatch(fetchProducts({
+        page: filters.page,
+        limit: filters.limit,
+        search: filters.search,
+        category: filters.category,
+        gender: filters.gender,
+        inStock: filters.inStock,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        sort: filters.sort,
+      }));
+      
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete product",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   // Handle delete click
   const handleDeleteClick = (product) => {
@@ -207,7 +242,7 @@ const AllProducts = () => {
     if (product.isBlacklisted) {
       return <Badge variant="destructive" className="text-xs">Blocked</Badge>;
     }
-    if (!product.isInStock) {
+    if (!product.isInStock && product.availableStock === 0) {
       return <Badge variant="destructive" className="text-xs bg-orange-500">Out Stock</Badge>;
     }
     if (product.availableStock < 10) {
@@ -227,12 +262,12 @@ const AllProducts = () => {
   };
 
   return (
-    <div className="w-full px-4 py-6">
+    <div className="w-full px-4 py-6 bg-background">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-foreground">Products</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Total {pagination?.totalProducts || 0} products
           </p>
         </div>
@@ -247,15 +282,15 @@ const AllProducts = () => {
       </div>
 
       {/* Search and Filters */}
-      <Card className="mb-6 border shadow-sm">
+      <Card className="mb-6 border shadow-sm bg-card">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search Input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search products by name..."
-                className="pl-9 h-9 text-sm"
+                className="pl-9 h-9 text-sm bg-background text-foreground"
                 value={filters.search}
                 onChange={(e) => handleFilterChange("search", e.target.value)}
               />
@@ -264,7 +299,7 @@ const AllProducts = () => {
                   onClick={() => handleFilterChange("search", "")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2"
                 >
-                  <X className="w-3 h-3 text-gray-400 hover:text-gray-600" />
+                  <X className="w-3 h-3 text-muted-foreground hover:text-foreground" />
                 </button>
               )}
             </div>
@@ -275,7 +310,7 @@ const AllProducts = () => {
                 value={filters.category}
                 onValueChange={(value) => handleFilterChange("category", value)}
               >
-                <SelectTrigger className="w-[130px] h-9 text-sm">
+                <SelectTrigger className="w-[130px] h-9 text-sm bg-background text-foreground">
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -293,7 +328,7 @@ const AllProducts = () => {
                 value={filters.sort}
                 onValueChange={(value) => handleFilterChange("sort", value)}
               >
-                <SelectTrigger className="w-[130px] h-9 text-sm">
+                <SelectTrigger className="w-[130px] h-9 text-sm bg-background text-foreground">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -322,15 +357,15 @@ const AllProducts = () => {
 
           {/* Advanced Filters */}
           {showFilters && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-4 border-t border-border">
               {/* Min Price */}
               <div>
-                <Label className="text-xs">Min Price (₹)</Label>
+                <Label className="text-xs text-foreground">Min Price (₹)</Label>
                 <Input
                   type="number"
                   min="0"
                   placeholder="Min price"
-                  className="h-8 text-sm mt-1"
+                  className="h-8 text-sm mt-1 bg-background text-foreground"
                   value={filters.minPrice}
                   onChange={(e) => handleFilterChange("minPrice", e.target.value)}
                 />
@@ -338,12 +373,12 @@ const AllProducts = () => {
               
               {/* Max Price */}
               <div>
-                <Label className="text-xs">Max Price (₹)</Label>
+                <Label className="text-xs text-foreground">Max Price (₹)</Label>
                 <Input
                   type="number"
                   min="0"
                   placeholder="Max price"
-                  className="h-8 text-sm mt-1"
+                  className="h-8 text-sm mt-1 bg-background text-foreground"
                   value={filters.maxPrice}
                   onChange={(e) => handleFilterChange("maxPrice", e.target.value)}
                 />
@@ -351,12 +386,12 @@ const AllProducts = () => {
               
               {/* Gender Filter */}
               <div>
-                <Label className="text-xs">Gender</Label>
+                <Label className="text-xs text-foreground">Gender</Label>
                 <Select
                   value={filters.gender}
                   onValueChange={(value) => handleFilterChange("gender", value)}
                 >
-                  <SelectTrigger className="h-8 text-sm mt-1">
+                  <SelectTrigger className="h-8 text-sm mt-1 bg-background text-foreground">
                     <SelectValue placeholder="Gender" />
                   </SelectTrigger>
                   <SelectContent>
@@ -371,12 +406,12 @@ const AllProducts = () => {
               
               {/* Stock Filter */}
               <div>
-                <Label className="text-xs">Stock Status</Label>
+                <Label className="text-xs text-foreground">Stock Status</Label>
                 <Select
                   value={filters.inStock}
                   onValueChange={(value) => handleFilterChange("inStock", value)}
                 >
-                  <SelectTrigger className="h-8 text-sm mt-1">
+                  <SelectTrigger className="h-8 text-sm mt-1 bg-background text-foreground">
                     <SelectValue placeholder="Stock" />
                   </SelectTrigger>
                   <SelectContent>
@@ -389,12 +424,12 @@ const AllProducts = () => {
               
               {/* Items per page */}
               <div>
-                <Label className="text-xs">Items per page</Label>
+                <Label className="text-xs text-foreground">Items per page</Label>
                 <Select
                   value={filters.limit.toString()}
                   onValueChange={(value) => handleFilterChange("limit", parseInt(value))}
                 >
-                  <SelectTrigger className="h-8 text-sm mt-1">
+                  <SelectTrigger className="h-8 text-sm mt-1 bg-background text-foreground">
                     <SelectValue placeholder="Limit" />
                   </SelectTrigger>
                   <SelectContent>
@@ -411,24 +446,24 @@ const AllProducts = () => {
       </Card>
 
       {/* Products Table */}
-      <Card className="border shadow-sm overflow-hidden w-full">
+      <Card className="border shadow-sm overflow-hidden w-full bg-card">
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50">
-              <TableRow>
-                <TableHead className="w-[60px] text-xs font-medium text-gray-500">Image</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500">Product</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500">Price</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500">Stock</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500">Rating</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500">Status</TableHead>
-                <TableHead className="text-right text-xs font-medium text-gray-500">Actions</TableHead>
+            <TableHeader className="bg-muted/50">
+              <TableRow className="border-border hover:bg-transparent">
+                <TableHead className="w-[60px] text-xs font-medium text-muted-foreground">Image</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Product</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Price</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Stock</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Rating</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                <TableHead className="text-right text-xs font-medium text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 Array.from({ length: 5 }).map((_, index) => (
-                  <TableRow key={index}>
+                  <TableRow key={index} className="border-border">
                     <TableCell><Skeleton className="w-10 h-10 rounded" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-48" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16" /></TableCell>
@@ -439,10 +474,10 @@ const AllProducts = () => {
                   </TableRow>
                 ))
               ) : !data || data.length === 0 ? (
-                <TableRow>
+                <TableRow className="border-border">
                   <TableCell colSpan={7} className="text-center py-12">
-                    <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500 text-sm">No products found</p>
+                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground text-sm">No products found</p>
                     <Button variant="link" size="sm" onClick={handleResetFilters} className="mt-2">
                       Clear filters
                     </Button>
@@ -452,17 +487,17 @@ const AllProducts = () => {
                 data.map((product) => (
                   <TableRow 
                     key={product?._id}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="hover:bg-muted/30 cursor-pointer transition-colors border-border"
                     onClick={() => handleViewProduct(product?._id)}
                   >
                     {/* Image */}
                     <TableCell>
-                      <Avatar className="w-10 h-10 rounded-lg border border-gray-200">
+                      <Avatar className="w-10 h-10 rounded-lg border border-border">
                         <AvatarImage 
                           src={product?.image?.url || "/placeholder.png"} 
                           alt={product?.name}
                         />
-                        <AvatarFallback className="rounded-lg bg-gray-100 text-xs">
+                        <AvatarFallback className="rounded-lg bg-muted text-muted-foreground text-xs">
                           {product?.name?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>
@@ -471,15 +506,15 @@ const AllProducts = () => {
                     {/* Product Details */}
                     <TableCell>
                       <div className="max-w-[250px]">
-                        <p className="font-medium text-sm text-gray-900 line-clamp-2" title={product?.name}>
+                        <p className="font-medium text-sm text-foreground line-clamp-2" title={product?.name}>
                           {product?.name}
                         </p>
                         <div className="flex items-center gap-1 mt-1">
-                          <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                          <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                             {product?.brand || "No Brand"}
                           </span>
-                          <span className="text-xs text-gray-400">•</span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <span className="text-xs text-muted-foreground">
                             {product?.clothingType}
                           </span>
                         </div>
@@ -489,12 +524,12 @@ const AllProducts = () => {
                     {/* Price */}
                     <TableCell>
                       <div className="space-y-0.5">
-                        <p className="font-semibold text-sm text-gray-900">
+                        <p className="font-semibold text-sm text-foreground">
                           ₹{product?.sellingPrice?.toFixed(0) || "0"}
                         </p>
                         {product?.discount > 0 && (
                           <div className="flex items-center gap-1">
-                            <span className="text-xs text-gray-400 line-through">
+                            <span className="text-xs text-muted-foreground line-through">
                               ₹{product?.price?.toFixed(0)}
                             </span>
                             <Badge variant="secondary" className="text-[10px] px-1">
@@ -520,7 +555,7 @@ const AllProducts = () => {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {getRatingDisplay(product?.rating)}
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-muted-foreground">
                           ({product?.reviewCount || 0})
                         </span>
                       </div>
@@ -537,7 +572,7 @@ const AllProducts = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
                           onClick={() => handleViewProduct(product?._id)}
                           title="View"
                         >
@@ -546,7 +581,7 @@ const AllProducts = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
                           onClick={() => handleEditProduct(product?._id)}
                           title="Edit"
                         >
@@ -557,14 +592,14 @@ const AllProducts = () => {
                             <Button 
                               variant="ghost" 
                               size="icon" 
-                              className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-50"
+                              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
                               title="More actions"
                             >
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel className="text-xs text-foreground">Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               onClick={() => handleDeleteClick(product)}
@@ -596,13 +631,13 @@ const AllProducts = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* ✅ Delete Confirmation Dialog - FIXED */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[350px]">
+        <DialogContent className="sm:max-w-[350px] bg-card">
           <DialogHeader>
-            <DialogTitle className="text-lg">Delete Product</DialogTitle>
-            <DialogDescription className="text-sm">
-              Are you sure you want to delete "{selectedProduct?.name}"?
+            <DialogTitle className="text-lg text-foreground">Delete Product</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Are you sure you want to delete "{selectedProduct?.name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -617,10 +652,7 @@ const AllProducts = () => {
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => {
-                // Add delete logic here
-                setDeleteDialogOpen(false);
-              }}
+              onClick={handleDeleteProduct}  // ✅ Fixed: Proper function call
               disabled={actionLoading}
             >
               {actionLoading ? "Deleting..." : "Delete"}

@@ -84,7 +84,7 @@ export const deleteProduct = createAsyncThunk(
     try {
       // Using your route: /delete-product/:id
       const response = await axios.delete(
-        `${API_URL}/product/delete-product/${id}`,
+        `${API_URL}/delete-product/${id}`,
         getAuthHeaders()
       );
       return { id, ...response.data };

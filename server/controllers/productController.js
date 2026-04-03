@@ -1,7 +1,6 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 const cloudinary = require("cloudinary").v2;
-const ROLES = require("../utils/constants");
 
 // Configure Cloudinary
 // const cloudinary = require('cloudinary').v2;
@@ -58,49 +57,104 @@ function getColorCode(colorName) {
 const createProduct = async (req, res) => {
   try {
     console.log("🚀 ============ CREATE PRODUCT STARTED ============");
-    
+    console.log(req.body);
     const {
-      name, description, shortDescription, category, clothingType, gender, fabric, brand,
-      colors, sizes, basePrice, colorCodes, colorImageMap,
-      ageGroup = "Adult", fabricComposition = "100% Cotton", fit = "Regular",
-      pattern = "Solid", sleeveType = "Full Sleeve", neckType = "Round Neck",
-      discount = 0, offerTitle, offerDescription, offerValidFrom, offerValidTill,
-      freeShipping = false, season = "All Season", occasion = "Casual", features = [],
-      packageContent = "1 Piece", countryOfOrigin = "India", careInstructions,
-      productDimensions, warranty = "No Warranty", returnPolicy = "7 Days Return Available",
-      variants,  // ← YEH IMPORTANT HAI - Frontend se variants array aa raha hai
+      name,
+      description,
+      shortDescription,
+      category,
+      clothingType,
+      gender,
+      fabric,
+      brand,
+      colors,
+      sizes,
+      basePrice,
+      colorCodes,
+      colorImageMap,
+      ageGroup = "Adult",
+      productFamily,
+      fabricComposition = "100% Cotton",
+      fit = "Regular",
+      pattern = "Solid",
+      discount = 0,
+      offerTitle,
+      offerDescription,
+      offerValidFrom,
+      offerValidTill,
+      freeShipping = false,
+      season = "All Season",
+      occasion = "Casual",
+      features = [],
+      packageContent = "1 Piece",
+      countryOfOrigin = "India",
+      careInstructions,
+      productDimensions,
+      warranty = "No Warranty",
+      returnPolicy = "7 Days Return Available",
+      variants,
     } = req.body;
 
-    console.log("📦 variants raw:", variants);
-
     // ============ VALIDATION ============
-    if (!name || !description || !category || !clothingType || !gender || !fabric || !brand) {
-      return res.status(400).json({ success: false, message: "Required fields missing" });
+    if (
+      !name ||
+      !description ||
+      !category ||
+      !clothingType ||
+      !gender ||
+      !fabric ||
+      !brand
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Required fields missing" });
     }
     if (!variants || variants.length === 0) {
-      return res.status(400).json({ success: false, message: "At least one variant is required." });
+      return res
+        .status(400)
+        .json({ success: false, message: "At least one variant is required." });
     }
     if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, message: "Please upload at least one image." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Please upload at least one image." });
     }
 
-    // ============ 1-LINE PARSING HELPER ============
-    const parse = (data, def) => !data ? def : (Array.isArray(data) ? data : (() => { try { return JSON.parse(data); } catch { return def; } })());
-
+    // ============ PARSING HELPER ============
+    const parse = (data, def) =>
+      !data
+        ? def
+        : Array.isArray(data)
+          ? data
+          : (() => {
+              try {
+                return JSON.parse(data);
+              } catch {
+                return def;
+              }
+            })();
+    const sleeveType = req.body.sleeveType;
+    const neckType = req.body.neckType;
+    const bottomStyle = req.body.bottomStyle;
+    const waistType = req.body.waistType;
+    const bottomLength = req.body.bottomLength;
+    const pocketStyle = req.body.pocketStyle;
+    const hemStyle = req.body.hemStyle;
+    const bottomClosure = req.body.bottomClosure;
     // ============ PARSE ALL DATA ============
     const colorsArray = parse(colors, []);
     const sizesArray = parse(sizes, []);
     const featuresArray = parse(features, []);
     const colorCodesArray = parse(colorCodes, []);
     const colorImageMapping = parse(colorImageMap, {});
-    const seasonArray = parse(season, ['All Season']);
-    const occasionArray = parse(occasion, ['Casual']);
-    const careInstructionsArray = parse(careInstructions, ['Machine Wash']);
-    
-    // ============ PARSE VARIANTS (YEH IMPORTANT HAI) ============
+    const seasonArray = parse(season, ["All Season"]);
+    const occasionArray = parse(occasion, ["Casual"]);
+    const careInstructionsArray = parse(careInstructions, ["Machine Wash"]);
+
+    // ============ PARSE VARIANTS ============
     let variantsArray = [];
     if (variants) {
-      if (typeof variants === 'string') {
+      if (typeof variants === "string") {
         try {
           variantsArray = JSON.parse(variants);
         } catch (e) {
@@ -110,23 +164,24 @@ const createProduct = async (req, res) => {
         variantsArray = variants;
       }
     }
-    
-    console.log("✅ Parsed variants count:", variantsArray.length);
-    console.log("✅ First variant with sizeDetails:", variantsArray[0]);
 
     // Parse dimensions
-    const parsedDimensions = productDimensions 
-      ? (typeof productDimensions === 'string' ? JSON.parse(productDimensions) : productDimensions)
+    const parsedDimensions = productDimensions
+      ? typeof productDimensions === "string"
+        ? JSON.parse(productDimensions)
+        : productDimensions
       : { length: 0, width: 0, height: 0, weight: 0.2 };
 
     // ============ UPLOAD IMAGES ============
-    console.log("☁️ Uploading images to Cloudinary...");
     const uploadedImages = await Promise.all(
       req.files.map(async (file, index) => {
         const result = await new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
-            { folder: "clothing/products", transformation: [{ width: 800, height: 800, crop: "limit" }] },
-            (error, result) => error ? reject(error) : resolve(result)
+            {
+              folder: "clothing/products",
+              transformation: [{ width: 800, height: 800, crop: "limit" }],
+            },
+            (error, result) => (error ? reject(error) : resolve(result)),
           );
           stream.end(file.buffer);
         });
@@ -136,100 +191,116 @@ const createProduct = async (req, res) => {
           isMain: index === 0,
           sortOrder: index,
         };
-      })
+      }),
     );
 
     // ============ CREATE PRODUCT ============
-    console.log("🏗️ Creating Product object...");
     const product = new Product({
       // Basic Info
-      name, description,
+      name,
+      description,
       shortDescription: shortDescription || description.substring(0, 150),
-      category, clothingType, gender, ageGroup, fabric, fabricComposition,
-      fit, pattern, sleeveType, neckType, brand,
-      
+      category,
+      clothingType,
+      gender,
+      ageGroup,
+      ...(productFamily ? { productFamily } : {}),
+      fabric,
+      fabricComposition,
+
+      // ✅ TOP WEAR FIELDS
+      fit,
+      pattern,
+      sleeveType,
+      neckType,
+
+      // ✅ BOTTOM WEAR FIELDS
+      bottomStyle,
+      waistType,
+      bottomLength,
+      pocketStyle,
+      hemStyle,
+      bottomClosure,
+
+      brand,
+
       // Arrays
       season: seasonArray,
       occasion: occasionArray,
       features: featuresArray,
       careInstructions: careInstructionsArray,
-      
+
       // Dimensions
       productDimensions: parsedDimensions,
-      
-      // Images (temporary)
+
+      // Images
       allImages: uploadedImages.map((img, idx) => ({
         ...img,
-        color: colorsArray[0] || 'Default',
-        colorCode: colorCodesArray[0] || '#808080',
+        color: colorsArray[0] || "Default",
+        colorCode: colorCodesArray[0] || "#808080",
       })),
-      
-      // ✅ USE VARIANTS ARRAY DIRECTLY FROM FRONTEND
-      variants: variantsArray.map(v => ({
+
+      // Variants
+      variants: variantsArray.map((v) => ({
         color: v.color,
         colorCode: v.colorCode,
         size: v.size,
         price: parseFloat(v.price || basePrice),
         stock: v.stock || 0,
-        sizeDetails: v.sizeDetails || {},  // ← YEH SIZE CHART AA JAYEGA
+        sizeDetails: v.sizeDetails || {},
       })),
-      
+
       // Offer & Discount
       discount: parseInt(discount) || 0,
-      offerTitle, offerDescription,
+      offerTitle,
+      offerDescription,
       offerValidFrom: offerValidFrom ? new Date(offerValidFrom) : null,
       offerValidTill: offerValidTill ? new Date(offerValidTill) : null,
       freeShipping: freeShipping === "true" || freeShipping === true,
-      
+
       // Other
-      warranty, returnPolicy, packageContent, countryOfOrigin,
+      warranty,
+      returnPolicy,
+      packageContent,
+      countryOfOrigin,
       createdBy: req.userId,
       status: "published",
     });
 
     // ============ FIX COLOR-IMAGE MAPPING ============
     if (Object.keys(colorImageMapping).length > 0) {
-      console.log("🖼️ Fixing color-image mapping...");
       const fixedImages = [];
       const colorToIndex = {};
-      
+
       Object.entries(colorImageMapping).forEach(([color, indices]) => {
         colorToIndex[color] = indices;
       });
-      
-      colorsArray.forEach(color => {
+
+      colorsArray.forEach((color) => {
         const indices = colorToIndex[color] || [];
-        indices.forEach(idx => {
+        indices.forEach((idx) => {
           if (idx < uploadedImages.length) {
             fixedImages.push({
               ...uploadedImages[idx],
               color,
-              colorCode: colorCodesArray[colorsArray.indexOf(color)] || '#808080',
+              colorCode:
+                colorCodesArray[colorsArray.indexOf(color)] || "#808080",
             });
           }
         });
       });
-      
+
       product.allImages = fixedImages;
     }
 
     // ============ SAVE ============
-    console.log("💾 Saving product to database...");
     await product.save();
-    
-    console.log("✅ Product saved. Checking sizeDetails:");
-    product.variants.forEach((v, i) => {
-      console.log(`Variant ${i+1}: ${v.color} - ${v.size}`);
-      console.log(`   sizeDetails:`, v.sizeDetails);
-    });
 
-    // ============ RESPONSE ============
     res.status(201).json({
       success: true,
       message: "Product created successfully",
       data: product.getProductDetailData(),
     });
-
   } catch (error) {
     console.error("❌ Error:", error);
     res.status(500).json({
@@ -540,130 +611,151 @@ const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const data = { ...req.body };
-    
+
     console.log("🔄 Updating product:", id);
     console.log("📦 Received data keys:", Object.keys(data));
-    
+
     // ============ HELPER FUNCTION FOR PARSING ============
     const parse = (item) => {
       if (!item) return null;
-      if (typeof item === 'string') {
-        try { return JSON.parse(item); } 
-        catch { return item; }
+      if (typeof item === "string") {
+        try {
+          return JSON.parse(item);
+        } catch {
+          return item;
+        }
       }
       return item;
     };
-    
+
     // ============ PARSE ALL FIELDS ============
     const fieldsToParse = [
-      'variants', 'colors', 'sizes', 'colorCodes', 'colorImageMap',
-      'specifications', 'features', 'season', 'occasion', 'careInstructions',
-      'keyFeatures', 'stockMatrix', 'productDimensions'
+      "variants",
+      "colors",
+      "sizes",
+      "colorCodes",
+      "colorImageMap",
+      "specifications",
+      "features",
+      "season",
+      "occasion",
+      "careInstructions",
+      "keyFeatures",
+      "stockMatrix",
+      "productDimensions",
     ];
-    
-    fieldsToParse.forEach(field => {
+
+    fieldsToParse.forEach((field) => {
       if (data[field] !== undefined) {
         data[field] = parse(data[field]);
       }
     });
-    
+
     // ============ CONVERT TYPES ============
     if (data.basePrice) data.basePrice = Number(data.basePrice);
     if (data.discount) data.discount = Number(data.discount);
     if (data.returnWindow) data.returnWindow = Number(data.returnWindow);
     if (data.handlingTime) data.handlingTime = Number(data.handlingTime);
-    if (data.estimatedDelivery) data.estimatedDelivery = Number(data.estimatedDelivery);
-    
+    if (data.estimatedDelivery)
+      data.estimatedDelivery = Number(data.estimatedDelivery);
+
     // Boolean fields
-    const booleanFields = ['freeShipping', 'isFeatured', 'isNewArrival', 'isBestSeller'];
-    booleanFields.forEach(field => {
+    const booleanFields = [
+      "freeShipping",
+      "isFeatured",
+      "isNewArrival",
+      "isBestSeller",
+    ];
+    booleanFields.forEach((field) => {
       if (data[field] !== undefined) {
-        data[field] = data[field] === 'true' || data[field] === true;
+        data[field] = data[field] === "true" || data[field] === true;
       }
     });
-    
+
     // Date fields
-    if (data.offerValidFrom) data.offerValidFrom = new Date(data.offerValidFrom);
-    if (data.offerValidTill) data.offerValidTill = new Date(data.offerValidTill);
-    
+    if (data.offerValidFrom)
+      data.offerValidFrom = new Date(data.offerValidFrom);
+    if (data.offerValidTill)
+      data.offerValidTill = new Date(data.offerValidTill);
+
     // ============ GET EXISTING PRODUCT ============
     const product = await Product.findById(id);
     if (!product) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Product not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
       });
     }
-    
+
     // ============ HANDLE IMAGES ============
     let allImages = [...(product.allImages || [])];
     let existingImageIds = [];
-    
+
     // Parse existing images from request
     if (data.existingImages) {
       try {
-        existingImageIds = Array.isArray(data.existingImages) 
-          ? data.existingImages 
+        existingImageIds = Array.isArray(data.existingImages)
+          ? data.existingImages
           : JSON.parse(data.existingImages);
       } catch (e) {
         console.error("Failed to parse existingImages:", e);
       }
     }
-    
+
     // Filter to keep only existing images
     if (existingImageIds.length > 0) {
-      allImages = allImages.filter(img => existingImageIds.includes(img.id));
-    } else if (data.existingImages === null || data.existingImages === '[]') {
+      allImages = allImages.filter((img) => existingImageIds.includes(img.id));
+    } else if (data.existingImages === null || data.existingImages === "[]") {
       // No existing images - clear all
       allImages = [];
     }
-    
+
     // Upload new images
     if (req.files && req.files.length > 0) {
       console.log(`📸 Uploading ${req.files.length} new images...`);
-      
-      const cloudinary = require('cloudinary').v2;
+
+      const cloudinary = require("cloudinary").v2;
       const newImages = await Promise.all(
         req.files.map(async (file, index) => {
           const result = await new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
-              { 
-                folder: "clothing/products", 
-                transformation: [{ width: 800, height: 800, crop: "limit" }] 
+              {
+                folder: "clothing/products",
+                transformation: [{ width: 800, height: 800, crop: "limit" }],
               },
-              (error, result) => error ? reject(error) : resolve(result)
+              (error, result) => (error ? reject(error) : resolve(result)),
             );
             stream.end(file.buffer);
           });
-          
+
           return {
             url: result.secure_url,
             id: result.public_id,
             isMain: false,
             sortOrder: allImages.length + index,
           };
-        })
+        }),
       );
-      
+
       allImages = [...allImages, ...newImages];
     }
-    
+
     // Apply color-image mapping
     if (data.colorImageMap && Object.keys(data.colorImageMap).length > 0) {
       console.log("🎨 Applying color-image mapping...");
       const colorImageMap = data.colorImageMap;
       const colorsArray = data.colors || product.colors;
       const colorCodesArray = data.colorCodes || [];
-      
+
       const fixedImages = [];
       let mainImageSet = false;
-      
+
       Object.entries(colorImageMap).forEach(([color, indices]) => {
         const colorIndex = colorsArray.indexOf(color);
-        const colorCode = colorCodesArray[colorIndex] || '#808080';
-        
+        const colorCode = colorCodesArray[colorIndex] || "#808080";
+
         if (Array.isArray(indices)) {
-          indices.forEach(idx => {
+          indices.forEach((idx) => {
             if (idx < allImages.length) {
               const img = { ...allImages[idx], color, colorCode };
               if (!mainImageSet && idx === 0) {
@@ -675,60 +767,59 @@ const updateProduct = async (req, res) => {
           });
         }
       });
-      
+
       if (fixedImages.length > 0) {
         allImages = fixedImages;
       }
     }
-    
+
     // Ensure at least one main image
-    if (allImages.length > 0 && !allImages.some(img => img.isMain)) {
+    if (allImages.length > 0 && !allImages.some((img) => img.isMain)) {
       allImages[0].isMain = true;
     }
-    
+
     data.allImages = allImages;
-    
+
     // ============ REMOVE FIELDS THAT SHOULDN'T BE UPDATED DIRECTLY ============
     delete data._id;
     delete data.__v;
     delete data.createdAt;
     delete data.slug; // Let pre-save regenerate if needed
     delete data.createdBy;
-    
+
     // ============ MERGE DATA INTO EXISTING PRODUCT ============
     Object.assign(product, data);
-    
+
     // ============ SAVE PRODUCT (TRIGGERS MIDDLEWARE) ============
     console.log("💾 Saving product with middleware...");
     await product.save();
-    
+
     console.log("✅ Product updated successfully");
     console.log(`📊 Total variants: ${product.variants.length}`);
     console.log(`📸 Total images: ${product.allImages.length}`);
-    
+
     // ============ RESPONSE ============
     return res.status(200).json({
       success: true,
       message: "Product updated successfully",
       data: product.getProductDetailData(),
     });
-    
   } catch (error) {
     console.error("❌ Update product error:", error);
-    
+
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const errors = {};
-      Object.keys(error.errors).forEach(key => {
+      Object.keys(error.errors).forEach((key) => {
         errors[key] = error.errors[key].message;
       });
       return res.status(400).json({
         success: false,
         message: "Validation failed",
-        errors: errors
+        errors: errors,
       });
     }
-    
+
     return res.status(500).json({
       success: false,
       message: error.message || "Failed to update product",
@@ -738,13 +829,6 @@ const updateProduct = async (req, res) => {
 
 // ==================== DELETE PRODUCT ====================
 const deleteProduct = async (req, res) => {
-  if (req.role !== ROLES.admin && req.role !== ROLES.seller) {
-    return res.status(401).json({
-      success: false,
-      message: "Access denied",
-    });
-  }
-
   try {
     const { id } = req.params;
 
@@ -756,23 +840,26 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    // Delete images from Cloudinary
-    for (const variant of product.variants) {
-      for (const image of variant.images) {
-        try {
-          await cloudinary.uploader.destroy(image.id);
-        } catch (error) {
-          console.error(`Failed to delete image ${image.id}:`, error);
+    // ✅ FIX: Delete images from Cloudinary from allImages array
+    if (product.allImages && product.allImages.length > 0) {
+      for (const image of product.allImages) {
+        if (image && image.id) {
+          try {
+            await cloudinary.uploader.destroy(image.id);
+            console.log(`Deleted image: ${image.id}`);
+          } catch (error) {
+            console.error(`Failed to delete image ${image.id}:`, error);
+          }
         }
       }
     }
 
+    // Delete product from database
     await product.deleteOne();
 
     return res.status(200).json({
       success: true,
       message: "Product deleted successfully",
-      data: product,
     });
   } catch (error) {
     console.error("Delete product error:", error);
