@@ -129,7 +129,7 @@ exports.createRazorpayOrder = async (req, res) => {
 exports.verifyRazorpayPayment = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-
+ console.log("🔍 verifyRazorpayPayment called with body:", req.body);
   try {
     const userId = req.user?.id || req.user?._id || req.id;
     const {

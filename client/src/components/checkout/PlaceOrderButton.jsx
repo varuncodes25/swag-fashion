@@ -76,8 +76,7 @@ const PlaceOrderButton = () => {
       if (paymentMethod === "RAZORPAY") {
         // Step 1: Create Razorpay order via Redux
         const result = await dispatch(createRazorpayOrder()).unwrap();
-
-        
+console.log("KEY:", result.key); // ✅ Sahi        
         // Step 2: Get user details
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         
