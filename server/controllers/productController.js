@@ -127,12 +127,12 @@ const createProduct = async (req, res) => {
         : Array.isArray(data)
           ? data
           : (() => {
-              try {
-                return JSON.parse(data);
-              } catch {
-                return def;
-              }
-            })();
+            try {
+              return JSON.parse(data);
+            } catch {
+              return def;
+            }
+          })();
     const sleeveType = req.body.sleeveType;
     const neckType = req.body.neckType;
     const bottomStyle = req.body.bottomStyle;
@@ -714,7 +714,6 @@ const updateProduct = async (req, res) => {
     if (req.files && req.files.length > 0) {
       console.log(`📸 Uploading ${req.files.length} new images...`);
 
-      const cloudinary = require("cloudinary").v2;
       const newImages = await Promise.all(
         req.files.map(async (file, index) => {
           const result = await new Promise((resolve, reject) => {
@@ -1137,7 +1136,35 @@ const getProductsByCategory = async (req, res) => {
         query.subCategory = subCategory._id;
       }
     }
+    // FIT
+    if (queryParams.fit) {
+      const fits = queryParams.fit.split(",").map(f => f.trim());
+      query.fit = { $in: fits };
+    }
 
+    // PATTERN
+    if (queryParams.pattern) {
+      const patterns = queryParams.pattern.split(",").map(p => p.trim());
+      query.pattern = { $in: patterns.map(p => new RegExp(`^${p}$`, "i")) };
+    }
+
+    // SLEEVE TYPE
+    if (queryParams.sleeveType) {
+      const sleeves = queryParams.sleeveType.split(",").map(s => s.trim());
+      query.sleeveType = { $in: sleeves.map(s => new RegExp(`^${s}$`, "i")) };
+    }
+
+    // NECK TYPE
+    if (queryParams.neckType) {
+      const necks = queryParams.neckType.split(",").map(n => n.trim());
+      query.neckType = { $in: necks.map(n => new RegExp(`^${n}$`, "i")) };
+    }
+
+    // FABRIC
+    if (queryParams.fabric) {
+      const fabrics = queryParams.fabric.split(",").map(f => f.trim());
+      query.fabric = { $in: fabrics.map(f => new RegExp(`^${f}$`, "i")) };
+    }
     // ============ 3. APPLY FILTERS ============
     console.log("Applying filters from query params:", queryParams);
 

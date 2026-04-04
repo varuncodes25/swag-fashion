@@ -20,13 +20,38 @@ export default function CategoryPage() {
     rating: [],
     colors: [],
     sizes: [],
-    brands: []
+    brands: [],
+
+    fit: [],
+    pattern: [],
+    sleeveType: [],
+    neckType: [],
+    fabric: []
   });
 
   // ✅ Convert filters to query params format
   const queryFilters = useMemo(() => {
     const filters = {};
+    // 🔥 T-SHIRT FILTERS ADD KAR
+    if (selectedFilters.fit.length > 0) {
+      filters.fit = selectedFilters.fit.join(',');
+    }
 
+    if (selectedFilters.pattern.length > 0) {
+      filters.pattern = selectedFilters.pattern.join(',');
+    }
+
+    if (selectedFilters.sleeveType.length > 0) {
+      filters.sleeveType = selectedFilters.sleeveType.join(',');
+    }
+
+    if (selectedFilters.neckType.length > 0) {
+      filters.neckType = selectedFilters.neckType.join(',');
+    }
+
+    if (selectedFilters.fabric.length > 0) {
+      filters.fabric = selectedFilters.fabric.join(',');
+    }
     if (selectedFilters.priceRange.length > 0) {
       filters.priceRange = selectedFilters.priceRange.join(',');
     }
@@ -63,7 +88,7 @@ export default function CategoryPage() {
 
   // ✅ updateFilter FUNCTION
   const updateFilter = useCallback((filterKey, value) => {
-   
+    console.log("Updating filter:", filterKey, value); // ✅ Debug log 
     setSelectedFilters(prev => {
       const currentValues = prev[filterKey] || [];
 

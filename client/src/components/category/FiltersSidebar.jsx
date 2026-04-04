@@ -184,10 +184,11 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
 
       {/* ================= SCROLLABLE FILTERS CONTENT ================= */}
       <div className="flex-1 overflow-y-auto p-5 space-y-5 text-gray-800 dark:text-gray-200">
-        {/* CATEGORIES */}
+      
+        {/* ================= CATEGORIES ================= */}
         <FilterSection
           title="Categories"
-          icon={<LayoutGrid size={18} className="text-blue-600 dark:text-blue-400" />}
+          icon={<LayoutGrid size={18} className="text-blue-500 dark:text-blue-400" />}
           defaultOpen={true}
         >
           <div className="space-y-2">
@@ -196,85 +197,119 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
               const isActiveCategory = slug === cat.slug;
 
               return (
-                <div key={cat.slug} className="group">
-                  {/* CATEGORY BUTTON */}
-                  <button
-                    onClick={() => setOpenCategory(isOpen ? null : cat.slug)}
-                    className={`
-                      w-full flex items-center justify-between p-3 rounded-xl
-                      transition-all duration-300 border
-                      ${isActiveCategory
-                        ? `${getActiveGradient(cat.slug)} border shadow-sm`
-                        : "bg-white hover:bg-gray-50 border-gray-100 hover:border-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:border-gray-700 dark:hover:border-gray-600"
+                <button
+                  key={cat.slug}
+                  onClick={() => setOpenCategory(isOpen ? null : cat.slug)}
+                  className={`
+            w-full flex items-center justify-between p-3 rounded-xl border
+            transition-all duration-300 group
+
+            ${isActiveCategory
+                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm dark:from-blue-900/20 dark:to-indigo-900/10 dark:border-blue-800"
+                      : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                    }
+          `}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`
+              w-8 h-8 rounded-lg flex items-center justify-center
+              ${isActiveCategory
+                        ? "bg-blue-100 dark:bg-blue-900/30"
+                        : "bg-gray-100 dark:bg-gray-700"
                       }
-                    `}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center ${getBgColor(cat.slug, isActiveCategory)}`}
-                      >
-                        {getCategoryIcon(cat.slug, isActiveCategory)}
-                      </div>
-                      <span className={`font-medium ${getTextColor(cat.slug, isActiveCategory)}`}>
-                        {cat.name}
-                      </span>
+            `}>
+                      {getCategoryIcon(cat.slug)}
                     </div>
-                    <ChevronDown
-                      size={18}
-                      className={`
-                        transition-all duration-300
-                        ${isOpen ? "rotate-180" : ""}
-                        ${isActiveCategory 
-                          ? getIconColor(cat.slug, true)
-                          : "text-gray-400 dark:text-gray-400"
-                        }
-                      `}
-                    />
-                  </button>
 
-                  {/* SUBCATEGORIES */}
-                  {isOpen && (
-                    <div className="
-                      ml-10 mt-2 space-y-1.5 pl-4 border-l-2 
-                      border-blue-100 dark:border-gray-600
-                    ">
-                      {cat.subCategories.map((sub) => {
-                        const isActiveSub = subSlug === sub.slug;
+                    <span className={`
+              text-sm font-medium
+              ${isActiveCategory
+                        ? "text-blue-700 dark:text-blue-400"
+                        : "text-gray-800 dark:text-gray-200"
+                      }
+            `}>
+                      {cat.name}
+                    </span>
+                  </div>
 
-                        return (
-                          <Link
-                            key={sub.slug}
-                            to={`/category/${cat.slug}/${sub.slug}`}
-                            className={`
-                              flex items-center gap-2 p-2 rounded-lg text-sm
-                              transition-all duration-200
-                              ${isActiveSub
-                                ? "bg-blue-100 text-blue-700 font-medium dark:bg-blue-900/30 dark:text-blue-400"
-                                : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
-                              }
-                            `}
-                          >
-                            <div
-                              className={`
-                                w-1.5 h-1.5 rounded-full
-                                ${isActiveSub
-                                  ? "bg-blue-500 dark:bg-blue-500"
-                                  : "bg-gray-300 dark:bg-gray-600"
-                                }
-                              `}
-                            ></div>
-                            <span>{sub.name}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                  
+                </button>
               );
             })}
           </div>
         </FilterSection>
 
+        {/* ================= T-SHIRT FILTERS ================= */}
+        <FilterSection
+          title="T-Shirt Filters"
+          icon={<Shirt size={18} className="text-blue-500 dark:text-blue-400" />}
+          defaultOpen={true}
+        >
+          <div className="space-y-5">
+
+            {[
+              {
+                title: "Fit",
+                key: "fit",
+                options: ["Oversized", "Regular", "Slim"],
+              },
+              {
+                title: "Pattern",
+                key: "pattern",
+                options: ["Solid", "Printed", "Graphic"],
+              },
+              {
+                title: "Sleeve Type",
+                key: "sleeveType",
+                options: ["Half Sleeve", "Full Sleeve"],
+              },
+              {
+                title: "Neck Type",
+                key: "neckType",
+                options: ["Round Neck", "V-Neck", "Polo"],
+              },
+              {
+                title: "Fabric",
+                key: "fabric",
+                options: ["Cotton", "Polyester", "Blend"],
+              },
+            ].map((section) => (
+              <div key={section.key}>
+
+                {/* SECTION TITLE */}
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-2 text-gray-500 dark:text-gray-400">
+                  {section.title}
+                </h4>
+
+                {/* OPTIONS */}
+                <div className="flex flex-wrap gap-2">
+                  {section.options.map((option) => {
+                    const isSelected = selectedFilters[section.key]?.includes(option);
+
+                    return (
+                      <button
+                        key={option}
+                        onClick={() => updateFilter(section.key, option)}
+                        className={`
+                  px-3 py-1.5 rounded-full text-xs font-medium border
+                  transition-all duration-200
+
+                  ${isSelected
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-transparent shadow-sm scale-105"
+                            : "bg-gray-50 text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-blue-400"
+                          }
+                `}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+          </div>
+        </FilterSection>
         {/* PRICE RANGE */}
         <FilterSection
           title="Price Range"
@@ -457,12 +492,12 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                   className={`
                     relative p-2.5 rounded-lg transition-all duration-200
                     ${option.color}
-                    ${isChecked 
-                      ? "ring-2 ring-offset-1 transform scale-[1.02] shadow-md" 
+                    ${isChecked
+                      ? "ring-2 ring-offset-1 transform scale-[1.02] shadow-md"
                       : "hover:scale-[1.02] hover:shadow-sm"
                     }
-                    ${isChecked 
-                      ? "ring-emerald-400 ring-offset-white dark:ring-emerald-500 dark:ring-offset-gray-800" 
+                    ${isChecked
+                      ? "ring-emerald-400 ring-offset-white dark:ring-emerald-500 dark:ring-offset-gray-800"
                       : "hover:bg-gray-50 dark:hover:bg-gray-800/50"
                     }
                   `}
@@ -537,8 +572,8 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                     <div
                       className={`
                         w-5 h-5 rounded-md border flex items-center justify-center
-                        ${isChecked 
-                          ? "bg-yellow-500 border-yellow-500" 
+                        ${isChecked
+                          ? "bg-yellow-500 border-yellow-500"
                           : "border-gray-300 dark:border-gray-600"
                         }
                       `}
@@ -577,136 +612,136 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
 
         {/* COLORS */}
         <FilterSection
-  title="Colors"
-  icon={<Palette size={18} />}
-  defaultOpen={true}
->
-  <div className="space-y-4">
-    {/* Color Grid */}
-    <div className="grid grid-cols-6 gap-2 sm:gap-3">
-      {[
-        { name: "Red", value: "red", code: "#ef4444" },
-        { name: "Blue", value: "blue", code: "#3b82f6" },
-        { name: "Green", value: "green", code: "#22c55e" },
-        { name: "Black", value: "black", code: "#1f2937" },
-        { name: "White", value: "white", code: "#f3f4f6" },
-        { name: "Yellow", value: "yellow", code: "#eab308" },
-        { name: "Purple", value: "purple", code: "#a855f7" },
-        { name: "Pink", value: "pink", code: "#ec4899" },
-        { name: "Orange", value: "orange", code: "#f97316" },
-        { name: "Gray", value: "gray", code: "#6b7280" },
-        { name: "Brown", value: "brown", code: "#78350f" },
-        { name: "Multi", value: "multi", code: "linear-gradient(135deg, #ef4444, #3b82f6, #22c55e)" },
-      ].map((color) => {
-        const isSelected = selectedFilters.colors?.includes(color.value);
-        const isWhite = color.value === "white";
+          title="Colors"
+          icon={<Palette size={18} />}
+          defaultOpen={true}
+        >
+          <div className="space-y-4">
+            {/* Color Grid */}
+            <div className="grid grid-cols-6 gap-2 sm:gap-3">
+              {[
+                { name: "Red", value: "red", code: "#ef4444" },
+                { name: "Blue", value: "blue", code: "#3b82f6" },
+                { name: "Green", value: "green", code: "#22c55e" },
+                { name: "Black", value: "black", code: "#1f2937" },
+                { name: "White", value: "white", code: "#f3f4f6" },
+                { name: "Yellow", value: "yellow", code: "#eab308" },
+                { name: "Purple", value: "purple", code: "#a855f7" },
+                { name: "Pink", value: "pink", code: "#ec4899" },
+                { name: "Orange", value: "orange", code: "#f97316" },
+                { name: "Gray", value: "gray", code: "#6b7280" },
+                { name: "Brown", value: "brown", code: "#78350f" },
+                { name: "Multi", value: "multi", code: "linear-gradient(135deg, #ef4444, #3b82f6, #22c55e)" },
+              ].map((color) => {
+                const isSelected = selectedFilters.colors?.includes(color.value);
+                const isWhite = color.value === "white";
 
-        return (
-          <button
-            key={color.value}
-            onClick={() => updateFilter("colors", color.value)}
-            className="group relative flex flex-col items-center gap-1.5"
-          >
-            {/* Color Circle with Ring Effect */}
-            <div className="relative">
-              {/* Outer Ring Animation */}
-              <div className={`
+                return (
+                  <button
+                    key={color.value}
+                    onClick={() => updateFilter("colors", color.value)}
+                    className="group relative flex flex-col items-center gap-1.5"
+                  >
+                    {/* Color Circle with Ring Effect */}
+                    <div className="relative">
+                      {/* Outer Ring Animation */}
+                      <div className={`
                 absolute -inset-0.5 rounded-full 
                 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
                 transition-all duration-300
                 bg-gradient-to-r from-blue-500 to-purple-500
               `}></div>
-              
-              {/* Main Color Circle */}
-              <div
-                className={`
+
+                      {/* Main Color Circle */}
+                      <div
+                        className={`
                   relative w-8 h-8 sm:w-9 sm:h-9 rounded-full 
                   transition-all duration-300 cursor-pointer
                   shadow-md hover:shadow-lg
                   ${isSelected ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-900 scale-110' : 'ring-1 ring-gray-200 dark:ring-gray-700'}
                   ${isWhite ? 'border border-gray-300' : ''}
                 `}
-                style={{
-                  background: color.value === "multi" 
-                    ? color.code 
-                    : `linear-gradient(135deg, ${color.code}, ${color.code}dd)`
-                }}
-              >
-                {/* Selected Checkmark */}
-                {isSelected && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/90 dark:bg-gray-800/90 flex items-center justify-center shadow-sm">
-                      <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  </div>
-                )}
+                        style={{
+                          background: color.value === "multi"
+                            ? color.code
+                            : `linear-gradient(135deg, ${color.code}, ${color.code}dd)`
+                        }}
+                      >
+                        {/* Selected Checkmark */}
+                        {isSelected && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/90 dark:bg-gray-800/90 flex items-center justify-center shadow-sm">
+                              <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
 
-                {/* Hover Tooltip */}
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                  <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                    {color.name}
-                  </div>
-                </div>
-              </div>
+                        {/* Hover Tooltip */}
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                          <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                            {color.name}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Color Name */}
+                    <span className={`
+              text-[10px] sm:text-xs font-medium transition-colors duration-200
+              ${isSelected
+                        ? 'text-blue-600 dark:text-blue-400'
+                        : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200'
+                      }
+            `}>
+                      {color.name}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Color Name */}
-            <span className={`
-              text-[10px] sm:text-xs font-medium transition-colors duration-200
-              ${isSelected 
-                ? 'text-blue-600 dark:text-blue-400' 
-                : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200'
-              }
-            `}>
-              {color.name}
-            </span>
-          </button>
-        );
-      })}
-    </div>
+            {/* Selected Colors Summary */}
+            {selectedFilters.colors?.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                <span className="text-xs text-gray-500 dark:text-gray-400">Selected:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedFilters.colors.map(colorValue => {
+                    const color = [
+                      { name: "Red", value: "red" },
+                      { name: "Blue", value: "blue" },
+                      // ... all colors
+                    ].find(c => c.value === colorValue);
 
-    {/* Selected Colors Summary */}
-    {selectedFilters.colors?.length > 0 && (
-      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-        <span className="text-xs text-gray-500 dark:text-gray-400">Selected:</span>
-        <div className="flex flex-wrap gap-1.5">
-          {selectedFilters.colors.map(colorValue => {
-            const color = [
-              { name: "Red", value: "red" },
-              { name: "Blue", value: "blue" },
-              // ... all colors
-            ].find(c => c.value === colorValue);
-            
-            return (
-              <button
-                key={colorValue}
-                onClick={() => updateFilter("colors", colorValue)}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-xs group hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                <span 
-                  className="w-2 h-2 rounded-full" 
-                  style={{ backgroundColor: color?.code || "#000" }}
-                ></span>
-                <span className="text-gray-700 dark:text-gray-300">{color?.name}</span>
-                <svg className="w-2.5 h-2.5 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            );
-          })}
-        </div>
-        <button
-          onClick={() => updateFilter("colors", null)}
-          className="text-xs text-blue-500 hover:text-blue-600 ml-auto"
-        >
-          Clear all
-        </button>
-      </div>
-    )}
-  </div>
-</FilterSection>
+                    return (
+                      <button
+                        key={colorValue}
+                        onClick={() => updateFilter("colors", colorValue)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-xs group hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: color?.code || "#000" }}
+                        ></span>
+                        <span className="text-gray-700 dark:text-gray-300">{color?.name}</span>
+                        <svg className="w-2.5 h-2.5 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => updateFilter("colors", null)}
+                  className="text-xs text-blue-500 hover:text-blue-600 ml-auto"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </div>
+        </FilterSection>
 
         {/* SIZES */}
         <FilterSection
@@ -781,40 +816,40 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
         {Object.keys(selectedFilters).some(
           (key) => selectedFilters[key] && selectedFilters[key].length > 0,
         ) && (
-          <div className="mt-6 pt-5 border-t border-gray-300 dark:border-gray-700">
-            <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
-              Applied Filters
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(selectedFilters).map(([key, values]) =>
-                values?.map((value) => (
-                  <div
-                    key={`${key}-${value}`}
-                    className="
+            <div className="mt-6 pt-5 border-t border-gray-300 dark:border-gray-700">
+              <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
+                Applied Filters
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(selectedFilters).map(([key, values]) =>
+                  values?.map((value) => (
+                    <div
+                      key={`${key}-${value}`}
+                      className="
                       flex items-center gap-1.5 px-3 py-1.5 rounded-full border
                       bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200
                       dark:from-blue-900/30 dark:to-indigo-900/20 dark:border-blue-800
                     "
-                  >
-                    <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
-                      {value}
-                    </span>
-                    <button
-                      onClick={() => updateFilter(key, value)}
-                      className="
+                    >
+                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                        {value}
+                      </span>
+                      <button
+                        onClick={() => updateFilter(key, value)}
+                        className="
                         w-4 h-4 rounded-full flex items-center justify-center
                         bg-blue-100 text-blue-600 hover:bg-blue-200
                         dark:bg-blue-900/50 dark:text-blue-400 dark:hover:bg-blue-800
                       "
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                )),
-              )}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  )),
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );
