@@ -13,8 +13,7 @@ exports.createRazorpayOrder = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?._id || req.id;
     const { productId, variantId, quantity, addressId } = req.body;
-    
-    console.log("🔄 createRazorpayOrder called:", {
+    console.log("📦 createRazorpayOrder request body:", {
       userId,
       productId,
       variantId,

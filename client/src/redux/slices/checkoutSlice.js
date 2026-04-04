@@ -230,7 +230,10 @@ export const createRazorpayOrder = createAsyncThunk(
       if (productId && !variantId) {
         throw new Error("Variant ID is required for Buy Now");
       }
-
+  console.log("✅ createRazorpayOrder response:",  addressId,
+        productId,
+        variantId,
+        );
       // ✅ USE APICLIENT
       const res = await apiClient.post("/generate-payment", {
         addressId,
@@ -239,7 +242,7 @@ export const createRazorpayOrder = createAsyncThunk(
         quantity: qty || 1,
       });
 
-  
+
 
       if (!res.data.success) {
         throw new Error(res.data.message);

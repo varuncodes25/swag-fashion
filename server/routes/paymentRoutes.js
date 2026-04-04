@@ -5,6 +5,7 @@ const {
   verifyRazorpayPayment,
 } = require("../controllers/paymentController");
 const verifyToken = require("../middlewares/verifyToken");
+const decryptRequest = require("../utils/decryptResponse");
 
 // 🔹 Payment-specific rate limiter
 const paymentLimiter = rateLimit({
@@ -14,7 +15,7 @@ const paymentLimiter = rateLimit({
 });
 
 // Routes with limiter applied
-router.post("/generate-payment", verifyToken, paymentLimiter, createRazorpayOrder);
-router.post("/verify-payment", verifyToken, paymentLimiter, verifyRazorpayPayment);
+router.post("/generate-payment", verifyToken, paymentLimiter,decryptRequest, createRazorpayOrder);
+router.post("/verify-payment", verifyToken, paymentLimiter,decryptRequest, verifyRazorpayPayment);
 
 module.exports = router;
