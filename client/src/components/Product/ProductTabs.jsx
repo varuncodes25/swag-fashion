@@ -1,7 +1,7 @@
-import React ,{ useState, useEffect } from "react";
-import { 
-  Truck, Package, Award, 
-  Ruler, Heart, Shield, 
+import React, { useState, useEffect } from "react";
+import {
+  Truck, Package, Award,
+  Ruler, Heart, Shield,
   Clock, RefreshCw, Check,
   FileText, Info, Sparkles,
   Palette, Scissors, Droplet,
@@ -22,7 +22,16 @@ const ProductTabs = ({ product }) => {
   }, []);
 
   if (!mounted) return null;
+  const isValidValue = (value) => {
+    if (!value) return false;
 
+    if (typeof value === "string") {
+      const v = value.trim().toLowerCase();
+      return !["not applicable", "n/a", "na", ""].includes(v);
+    }
+
+    return true;
+  };
   const toggleSection = (section) => {
     setOpenSections(prev => ({
       ...prev,
@@ -45,168 +54,179 @@ const ProductTabs = ({ product }) => {
     return icons[instruction] || <Check className="w-3.5 h-3.5" />;
   };
 
-  const renderSpecifications = () => {
-    const specs = product.specifications || {};
-    
-    return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column - Product Details */}
-        {specs["Product Details"] && (
-          <div className="bg-white dark:bg-gray-800/50 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h4 className="text-lg font-semibold mb-5 flex items-center gap-2 text-gray-900 dark:text-white">
-              <div className="w-8 h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-                <Info className="w-4 h-4 text-primary dark:text-primary-400" />
-              </div>
-              Product Details
+ const renderSpecifications = () => {
+  const specs = product.specifications || {};
+
+  const productDetails = Object.entries(specs["Product Details"] || {})
+    .filter(([_, value]) => isValidValue(value));
+
+  const careInstructions = (specs["Care Instructions"] || [])
+    .filter((item) => isValidValue(item));
+
+  const packageDetails = Object.entries(specs["Package Details"] || {})
+    .filter(([_, value]) => isValidValue(value));
+
+  const dimensions = Object.entries(specs["Dimensions & Weight"] || {})
+    .filter(([_, value]) => isValidValue(value));
+
+  const seasonOccasion = Object.entries(specs["Season & Occasion"] || {})
+    .filter(([_, value]) => isValidValue(value));
+
+  const features = (specs["Features"] || [])
+    .filter((item) => isValidValue(item));
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      {/* Product Details */}
+      {productDetails.length > 0 && (
+        <div className="bg-white dark:bg-gray-800/60 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+          <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+            Product Details
+          </h4>
+
+          {productDetails.map(([key, value]) => (
+            <div key={key} className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
+                {key}
+              </span>
+              <span className="font-medium text-gray-900 dark:text-white text-sm">
+                {value}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Right Column */}
+      <div className="space-y-6">
+
+        {/* Care Instructions */}
+        {careInstructions.length > 0 && (
+          <div className="bg-white dark:bg-gray-800/60 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Care Instructions
             </h4>
-            <div className="space-y-3">
-              {Object.entries(specs["Product Details"]).map(([key, value]) => (
-                <div key={key} className="flex items-start justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                  <span className="text-gray-600 dark:text-gray-400 text-sm">{key}</span>
-                  <span className="font-medium text-right ml-4 text-gray-900 dark:text-white">{value}</span>
+
+            <div className="grid grid-cols-2 gap-3">
+              {careInstructions.map((item, i) => (
+                <div
+                  key={i}
+                  className="text-sm bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 p-2 rounded-lg border border-gray-200 dark:border-gray-600"
+                >
+                  {item}
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Right Column - Care Instructions & Package Details */}
-        <div className="space-y-6">
-          {/* CARE INSTRUCTIONS */}
-          {specs["Care Instructions"] && specs["Care Instructions"].length > 0 && (
-            <div className="bg-white dark:bg-gray-800/50 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Droplet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-primary-400" />
-                </div>
-                Care Instructions
-              </h4>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                {specs["Care Instructions"].map((instruction, idx) => (
-                  <div 
-                    key={idx} 
-                    className="flex items-center gap-2 text-xs sm:text-sm bg-gray-50 dark:bg-gray-700/50 p-2 sm:p-2.5 rounded-lg border border-gray-100 dark:border-gray-600"
-                  >
-                    <span className="text-primary dark:text-primary-400 flex-shrink-0">
-                      {getCareIcon(instruction)}
-                    </span>
-                    <span className="text-gray-700 dark:text-gray-300 break-words">
-                      {instruction}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+        {/* Package Details */}
+        {packageDetails.length > 0 && (
+          <div className="bg-white dark:bg-gray-800/60 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Package Details
+            </h4>
 
-          {/* Package Details */}
-          {specs["Package Details"] && (
-            <div className="bg-white dark:bg-gray-800/50 rounded-xl p-4 sm:p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary dark:text-primary-400" />
-                </div>
-                Package Details
-              </h4>
-              
-              <div className="space-y-2 sm:space-y-3">
-                {Object.entries(specs["Package Details"]).map(([key, value]) => (
-                  <div key={key} className="flex flex-col sm:flex-row sm:justify-between py-1.5 sm:py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                    <span className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm">{key}</span>
-                    <span className="font-medium text-gray-900 dark:text-white text-sm sm:text-base break-words">
-                      {value}
-                    </span>
-                  </div>
-                ))}
+            {packageDetails.map(([key, value]) => (
+              <div key={key} className="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700 last:border-0">
+                <span className="text-gray-600 dark:text-gray-400 text-sm">
+                  {key}
+                </span>
+                <span className="text-gray-900 dark:text-white text-sm font-medium">
+                  {value}
+                </span>
               </div>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Row - Dimensions, Season & Occasion, Features */}
-        <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Dimensions & Weight */}
-          {specs["Dimensions & Weight"] && (
-            <div className="bg-white dark:bg-gray-800/50 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                <div className="w-8 h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Ruler className="w-4 h-4 text-primary dark:text-primary-400" />
-                </div>
-                Dimensions & Weight
-              </h4>
-              <div className="grid grid-cols-2 gap-4">
-                {Object.entries(specs["Dimensions & Weight"]).map(([key, value]) => (
-                  <div key={key} className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-600">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{key}</div>
-                    <div className="font-semibold mt-1 text-gray-900 dark:text-white">{value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Season & Occasion */}
-          {specs["Season & Occasion"] && (
-            <div className="bg-white dark:bg-gray-800/50 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                <div className="w-8 h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-primary dark:text-primary-400" />
-                </div>
-                Season & Occasion
-              </h4>
-              <div className="space-y-4">
-                {Object.entries(specs["Season & Occasion"]).map(([key, value]) => (
-                  <div key={key} className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 w-20">{key}:</span>
-                    <div className="flex flex-wrap gap-2">
-                      {value.split(", ").map((item, i) => (
-                        <span 
-                          key={i} 
-                          className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs border border-gray-200 dark:border-gray-600"
-                        >
-                          {item}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Features */}
-          {specs["Features"] && specs["Features"].length > 0 && (
-            <div className="md:col-span-2 bg-white dark:bg-gray-800/50 rounded-xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
-              <h4 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
-                <div className="w-8 h-8 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-primary dark:text-primary-400" />
-                </div>
-                Features
-              </h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {specs["Features"].map((feature, idx) => (
-                  <div 
-                    key={idx} 
-                    className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-lg border border-gray-100 dark:border-gray-600"
-                  >
-                    <Check className="w-3.5 h-3.5 text-green-500 dark:text-green-400 flex-shrink-0" />
-                    <span className="text-sm truncate text-gray-700 dark:text-gray-300">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
-    );
-  };
+
+      {/* Bottom Section */}
+      <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Dimensions */}
+        {dimensions.length > 0 && (
+          <div className="bg-white dark:bg-gray-800/60 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Dimensions & Weight
+            </h4>
+
+            <div className="grid grid-cols-2 gap-3">
+              {dimensions.map(([key, value]) => (
+                <div
+                  key={key}
+                  className="bg-gray-100 dark:bg-gray-700/60 p-3 rounded-lg border border-gray-200 dark:border-gray-600"
+                >
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {key}
+                  </div>
+                  <div className="font-semibold text-gray-900 dark:text-white">
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Season */}
+        {seasonOccasion.length > 0 && (
+          <div className="bg-white dark:bg-gray-800/60 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Season & Occasion
+            </h4>
+
+            {seasonOccasion.map(([key, value]) => (
+              <div key={key} className="mb-3">
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  {key}:
+                </span>
+
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {value.split(", ").map((item, i) => (
+                    <span
+                      key={i}
+                      className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs border border-gray-300 dark:border-gray-600"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Features */}
+        {features.length > 0 && (
+          <div className="md:col-span-2 bg-white dark:bg-gray-800/60 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
+            <h4 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+              Features
+            </h4>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {features.map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 p-2 rounded-lg border border-gray-200 dark:border-gray-600 text-sm"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
   return (
     <div className="bg-background dark:bg-background rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden transition-colors duration-200">
       {/* ===== ACCORDION ===== */}
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-        
+
         {/* Description Accordion */}
         <div className="p-4 sm:p-6">
           <button
@@ -227,19 +247,19 @@ const ProductTabs = ({ product }) => {
               <ChevronDown className="w-5 h-5 text-gray-500" />
             )}
           </button>
-          
+
           {openSections.description && (
             <div className="mt-4 animate-slideDown">
               <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
-                <div 
-                  dangerouslySetInnerHTML={{ __html: product.description }} 
+                <div
+                  dangerouslySetInnerHTML={{ __html: product.description }}
                   className="leading-relaxed text-gray-700 dark:text-gray-300"
                 />
               </div>
-              
+
               {product.fullDescription && product.fullDescription !== product.description && (
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <div 
+                  <div
                     dangerouslySetInnerHTML={{ __html: product.fullDescription }}
                     className="prose prose-sm sm:prose-base dark:prose-invert max-w-none text-gray-600 dark:text-gray-400"
                   />
@@ -269,7 +289,7 @@ const ProductTabs = ({ product }) => {
               <ChevronDown className="w-5 h-5 text-gray-500" />
             )}
           </button>
-          
+
           {openSections.specifications && (
             <div className="mt-4 animate-slideDown">
               {renderSpecifications()}
@@ -297,7 +317,7 @@ const ProductTabs = ({ product }) => {
               <ChevronDown className="w-5 h-5 text-gray-500" />
             )}
           </button>
-          
+
           {openSections.shipping && (
             <div className="mt-4 space-y-4 animate-slideDown">
               {/* Delivery Card */}
@@ -308,11 +328,11 @@ const ProductTabs = ({ product }) => {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 dark:text-white mb-3">Delivery</h4>
-                    
+
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-gray-600 dark:text-gray-400">Estimated by</span>
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {new Date(Date.now() + (product.estimatedDelivery || 7) * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { 
+                        {new Date(Date.now() + (product.estimatedDelivery || 7) * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', {
                           day: 'numeric', month: 'short', year: 'numeric'
                         })}
                       </span>
@@ -336,7 +356,7 @@ const ProductTabs = ({ product }) => {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 dark:text-white mb-3">Returns</h4>
-                    
+
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-gray-600 dark:text-gray-400">Policy</span>
                       <span className="font-medium text-green-600 dark:text-green-400">

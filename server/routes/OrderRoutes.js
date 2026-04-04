@@ -24,7 +24,7 @@ router.post("/orders/create", verifyToken,decryptRequest, createOrder);
 
 router.get("/track/:id", trackShipment);
 
-router.post("/cancel-order", verifyToken,cancelOrder);
+router.post("/cancel-order", verifyToken,decryptRequest,cancelOrder);
 router.get("/orders/:orderId", verifyToken, getOrderDetails);
 
 module.exports = router;
