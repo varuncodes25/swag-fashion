@@ -7,7 +7,7 @@ import TrackingSection from "../../components/order/TrackingSection";
 import { getStatusIcon, getStatusColor, formatDate } from "@/utils/orderHelpers";
 
 const OrderData = ({
-  id,              // ✅ YEH HAI ORDER ID!
+  id,              // ORDER ID
   orderNumber,
   date,
   status = "PENDING",
@@ -15,6 +15,9 @@ const OrderData = ({
   pricing = {},
   shipping = {},
   summary = {},
+  tracking = {},    // TRACKING OBJECT
+  invoice = {},     // INVOICE OBJECT
+  shiprocket = {},  // SHIPROCKET DETAILS
   onCancel,
 }) => {
   const [trackingData, setTrackingData] = useState([]);
@@ -23,12 +26,23 @@ const OrderData = ({
   const [showActions, setShowActions] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
 
-  // Extract data directly without mapping
+  // Extract data directly
   const amount = pricing?.totalAmount || 0;
   const subtotal = pricing?.subtotal || 0;
   const shippingCharge = pricing?.shippingCharge || 0;
   const createdAt = date;
   const _id = id;
+
+  // Get tracking info from props
+  const awb = tracking?.awb || shiprocket?.awb || null;
+  const courierName = tracking?.courierName || shiprocket?.courierName || null;
+  const trackingUrl = tracking?.trackingUrl || shiprocket?.trackingUrl || null;
+  const isShipped = tracking?.isShipped || !!awb;
+  
+  // Get invoice info from props
+  const invoiceUrl = invoice?.url || shiprocket?.invoiceUrl || null;
+  const irnNo = invoice?.irnNo || shiprocket?.irnNo || null;
+  const isInvoiceGenerated = invoice?.isGenerated || !!invoiceUrl;
 
   // Memoized calculations
   const formattedStatus = useMemo(
@@ -52,24 +66,29 @@ const OrderData = ({
     [status, statusIcon, formattedStatus]
   );
 
-  // Track order handler
+  // Track order handler - opens tracking URL
   const handleTrackOrder = async () => {
-    if (showTracking) {
-      setShowTracking(false);
-      return;
+    if (trackingUrl) {
+      window.open(trackingUrl, '_blank', 'noopener,noreferrer');
+    } else if (awb) {
+      const shiprocketTrackUrl = `https://shiprocket.co/tracking/${awb}`;
+      window.open(shiprocketTrackUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      alert("Tracking information not available yet. Please check back later.");
     }
+  };
 
-    try {
-      setLoading(true);
-      const token = localStorage.getItem("token");
-      // Implement your tracking API
-      // const data = await orderApi.trackOrder(id, token);
-      // setTrackingData(data);
-      setShowTracking(true);
-    } catch (error) {
-      alert(error.message || "Failed to fetch tracking data");
-    } finally {
-      setLoading(false);
+  // Download invoice handler
+  const handleDownloadInvoice = async () => {
+    if (invoiceUrl) {
+      try {
+        window.open(invoiceUrl, '_blank', 'noopener,noreferrer');
+      } catch (error) {
+        console.error("Failed to download invoice:", error);
+        alert("Failed to download invoice. Please try again.");
+      }
+    } else {
+      alert("Invoice not available yet. Please check back later.");
     }
   };
 
@@ -79,25 +98,12 @@ const OrderData = ({
     }
   };
 
-  // Download invoice handler
-  const handleDownloadInvoice = async () => {
-    try {
-      // Implement invoice download
-      alert("Invoice download to be implemented");
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   // Return/exchange handler
   const handleReturnOrder = () => {
     alert("Return/exchange to be implemented");
   };
 
-  // ✅ CANCEL SUCCESS HANDLER
   const handleCancelSuccess = (data) => {
-   
-    // Parent component ko batao (OrderDetails.jsx)
     if (onCancel) {
       onCancel(data);
     }
@@ -105,6 +111,10 @@ const OrderData = ({
 
   return (
     <div className="space-y-6">
+      {/* ❌ REMOVED - Tracking Info Banner */}
+      {/* ❌ REMOVED - Invoice Available Banner */}
+      {/* All actions now handled by OrderActions component below */}
+
       {/* Products List Section */}
       <div className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between px-2 sm:px-0">
@@ -138,9 +148,9 @@ const OrderData = ({
         setShowBreakdown={setShowBreakdown}
       />
 
-      {/* Order Actions Section - ✅ FIXED: orderId and onCancelSuccess PASS KARO! */}
+      {/* Order Actions Section - All buttons here */}
       <OrderActions
-        orderId={id}                    // ✅ ORDER ID PASS KARO!
+        orderId={id}
         status={status}
         loading={loading}
         showActions={showActions}
@@ -148,11 +158,15 @@ const OrderData = ({
         handleTrackOrder={handleTrackOrder}
         handleDownloadInvoice={handleDownloadInvoice}
         handleReturnOrder={handleReturnOrder}
-        onCancelSuccess={handleCancelSuccess}  // ✅ CANCEL SUCCESS CALLBACK!
+        onCancelSuccess={handleCancelSuccess}
+        hasTracking={isShipped}
+        hasInvoice={isInvoiceGenerated}
+        trackingUrl={trackingUrl}
+        invoiceUrl={invoiceUrl}
       />
 
-      {/* Tracking Section */}
-      {showTracking && (
+      {/* Tracking Section - for detailed tracking history */}
+      {showTracking && trackingData.length > 0 && (
         <TrackingSection trackingData={trackingData} />
       )}
     </div>

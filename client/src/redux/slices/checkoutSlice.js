@@ -218,10 +218,8 @@ export const createRazorpayOrder = createAsyncThunk(
         productId,
         variantId,
         qty,
-        summary,
+        summary,  // ✅ summary mein shippingInfo hai
       } = state.checkout;
-
-
 
       if (!addressId) {
         throw new Error("Address is required");
@@ -230,19 +228,32 @@ export const createRazorpayOrder = createAsyncThunk(
       if (productId && !variantId) {
         throw new Error("Variant ID is required for Buy Now");
       }
-  console.log("✅ createRazorpayOrder response:",  addressId,
-        productId,
-        variantId,
-        );
-      // ✅ USE APICLIENT
+
+      // ✅ GET shippingInfo from summary
+      const shippingInfo = summary?.shippingInfo;
+      if (!shippingInfo?.courierId) {
+        throw new Error("Shipping information missing. Please re-select address.");
+      }
+
+      console.log("✅ Sending shippingMeta to backend:", {
+        courierId: shippingInfo.courierId,
+        courierName: shippingInfo.courierName,
+        estimatedDelivery: shippingInfo.estimatedDelivery
+      });
+
+      // ✅ SEND shippingMeta in request
       const res = await apiClient.post("/generate-payment", {
         addressId,
         productId,
         variantId,
         quantity: qty || 1,
+        shippingMeta: {  // 🔥 CRITICAL: Send this
+          courierId: shippingInfo.courierId,
+          courierName: shippingInfo.courierName,
+          estimatedDelivery: shippingInfo.estimatedDelivery,
+          serviceType: shippingInfo.serviceType || "STANDARD"
+        }
       });
-
-
 
       if (!res.data.success) {
         throw new Error(res.data.message);

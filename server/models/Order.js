@@ -127,16 +127,37 @@ const orderSchema = new mongoose.Schema(
       labelUrl: String,
       manifestUrl: String,
       trackingUrl: String,
+      // 🆕 INVOICE FIELDS - ADD THESE
+      invoiceUrl: {
+        type: String,
+        default: null,
+      },
+      irnNo: {
+        type: String,
+        default: null,
+      },
+      invoiceGeneratedAt: {
+        type: Date,
+        default: null,
+      },
+      mode: {
+        type: String,
+        enum: ["TESTING", "PRODUCTION"],
+        default: "TESTING",
+      },
     },
+    
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       default: null,
     },
+    
     categoryName: {
       type: String,
       default: "Uncategorized",
     },
+    
     /* 🧾 ORDER STATUS */
     status: {
       type: String,
@@ -178,7 +199,6 @@ const orderSchema = new mongoose.Schema(
       default: false,
     },
 
-    cancelReason: String,
     cancelledAt: Date,
 
     cancelledBy: {
@@ -234,18 +254,27 @@ orderSchema.methods.canReturn = function () {
 
   return new Date() <= returnDeadline;
 };
-// Schema mein yeh hook add karo (line 170 ke baad):
+
+// 🆕 Get invoice URL
+orderSchema.methods.getInvoiceUrl = function () {
+  return this.shiprocket?.invoiceUrl || null;
+};
+
+// 🆕 Check if invoice is available
+orderSchema.methods.hasInvoice = function () {
+  return !!(this.shiprocket?.invoiceUrl);
+};
+
+// Schema hook for order number generation
 orderSchema.pre("save", async function (next) {
   if (this.isNew && !this.orderNumber) {
     try {
-      // Format: SIS-YYYYMMDD-XXXXX
       const date = new Date();
       const dateStr =
         date.getFullYear().toString() +
         (date.getMonth() + 1).toString().padStart(2, "0") +
         date.getDate().toString().padStart(2, "0");
 
-      // Get today's order count
       const startOfDay = new Date(date.setHours(0, 0, 0, 0));
       const endOfDay = new Date(date.setHours(23, 59, 59, 999));
 
@@ -256,12 +285,12 @@ orderSchema.pre("save", async function (next) {
       const sequence = (todaysOrders + 1).toString().padStart(4, "0");
       this.orderNumber = `SIS-${dateStr}-${sequence}`;
     } catch (error) {
-      // Fallback
       this.orderNumber = `SIS-${Date.now().toString().slice(-9)}`;
     }
   }
   next();
 });
+
 // Generate order summary for email
 orderSchema.methods.getSummary = function () {
   return {
@@ -331,6 +360,11 @@ orderSchema.statics.generateOrderNumber = async function () {
 
   const sequence = (todaysOrders + 1).toString().padStart(4, "0");
   return `SIS-${dateStr}-${sequence}`;
+};
+
+// 🆕 Static method to get order with invoice
+orderSchema.statics.getOrderWithInvoice = async function (orderId) {
+  return this.findById(orderId).select('orderNumber shiprocket.invoiceUrl shiprocket.irnNo shiprocket.awb totalAmount shippingAddress');
 };
 
 const Order = mongoose.model("Order", orderSchema);

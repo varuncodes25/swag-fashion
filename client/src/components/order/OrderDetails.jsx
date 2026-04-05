@@ -2,8 +2,8 @@
 import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Home, Package } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";  // ✅ Import
-import { fetchOrderDetails } from "@/redux/slices/order";  // ✅ Import thunk
+import { useDispatch, useSelector } from "react-redux";
+import { fetchOrderDetails } from "@/redux/slices/order";
 import OrderData from "../../components/custom/OrderData";
 import { formatPrice, formatDate, StatusDisplay } from "../../utils/orderHelpers";
 
@@ -12,32 +12,33 @@ const OrderDetails = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  // ============ ✅ REDUX STATE - DIRECT LO! ============
+  // Redux state
   const { 
     currentOrder: order, 
     loading, 
     error 
   } = useSelector((state) => state.order);
-
-  // ============ ✅ FETCH ORDER DETAILS ============
+  
+  console.log("🔍 OrderDetails - Current Order from Redux:", order);
+  
+  // Fetch order details
   useEffect(() => {
     if (orderId) {
       dispatch(fetchOrderDetails(orderId));
     }
   }, [dispatch, orderId]);
 
-  // ============ ✅ CANCEL SUCCESS HANDLER ============
+  // Cancel success handler
   const handleCancelSuccess = () => {
-    // Order details refresh karo
     dispatch(fetchOrderDetails(orderId));
   };
 
-  // ============ LOADING STATE ============
+  // Loading state
   if (loading && !order) {
     return <LoadingSkeleton />;
   }
 
-  // ============ ERROR STATE ============
+  // Error state
   if (error || !order) {
     return <ErrorPage error={error} navigate={navigate} />;
   }
@@ -52,6 +53,27 @@ const OrderDetails = () => {
   const orderItems = order.items || order.products || [];
   const address = order.shipping?.address || order.shippingAddress || {};
   const paymentMethod = order.payment?.method || order.paymentMethod || "COD";
+
+  // Extract tracking and invoice data from order
+  const trackingData = order.tracking || {
+    awb: order.shiprocket?.awb || null,
+    courierName: order.shiprocket?.courierName || null,
+    trackingUrl: order.shiprocket?.trackingUrl || null,
+    isShipped: !!(order.shiprocket?.awb)
+  };
+  
+  const invoiceData = order.invoice || {
+    url: order.shiprocket?.invoiceUrl || null,
+    irnNo: order.shiprocket?.irnNo || null,
+    isGenerated: !!(order.shiprocket?.invoiceUrl)
+  };
+  
+  console.log("📦 Order Details:", {
+    tracking: trackingData,
+    invoice: invoiceData
+  });
+  
+  const shiprocketData = order.shiprocket || {};
 
   return (
     <div className="min-h-screen bg-background">
@@ -76,7 +98,7 @@ const OrderDetails = () => {
               </button>
             </div>
 
-            {/* Simple Order Header */}
+            {/* Order Header */}
             <div className="bg-card rounded-xl p-5 border border-border mb-6 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -102,7 +124,7 @@ const OrderDetails = () => {
             </div>
           </div>
 
-          {/* Main Order Content - OrderData component */}
+          {/* Main Order Content - WITH tracking and invoice data */}
           <OrderData
             id={order._id || order.id}
             orderNumber={orderNumber}
@@ -121,7 +143,10 @@ const OrderDetails = () => {
               itemCount: orderItems.length,
               totalQuantity: orderItems.reduce((sum, item) => sum + (item.quantity || 1), 0)
             }}
-            onCancelSuccess={handleCancelSuccess}  // ✅ Cancel ke baad refresh
+            tracking={trackingData}
+            invoice={invoiceData}
+            shiprocket={shiprocketData}
+            onCancelSuccess={handleCancelSuccess}
           />
 
           {/* Additional Info Card */}
@@ -150,34 +175,53 @@ const OrderDetails = () => {
                 )}
               </div>
 
-              {/* Payment Info */}
+              {/* Payment & Shipment Info */}
               <div>
                 <h4 className="font-medium text-foreground/80 mb-2">
-                  Payment Information
+                  Payment & Shipment
                 </h4>
-                <div className="text-muted-foreground text-sm space-y-2">
-                  <div>
+                <div className="text-muted-foreground text-sm space-y-3">
+                  {/* <div>
                     <p className="font-medium text-foreground/90">{paymentMethod}</p>
                     <p className="text-muted-foreground/70">Payment Method</p>
                   </div>
+                   */}
+                  {/* Show Shipment Info if available */}
+                  {trackingData.awb && (
+                    <div className="pt-2 border-t border-border">
+                      <p className="font-medium text-foreground/90">Shipment Details</p>
+                      <p className="text-muted-foreground/70">
+                        Courier: {trackingData.courierName || "Not assigned"}
+                      </p>
+                      <p className="text-muted-foreground/70">
+                        AWB Number: {trackingData.awb}
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Show Invoice Info if available */}
+                  {invoiceData.isGenerated && (
+                    <div className="pt-2 border-t border-border">
+                      <p className="font-medium text-foreground/90">Invoice Details</p>
+                      {invoiceData.irnNo && (
+                        <p className="text-muted-foreground/70">
+                          e-Invoice No: {invoiceData.irnNo}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Simple Action Buttons */}
-          <div className="mt-8 flex gap-4">
+          {/* ✅ Only Back to Orders button - All actions now in OrderActions */}
+          <div className="mt-8">
             <button
               onClick={() => navigate("/orders")}
               className="px-6 py-3 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground font-medium transition-colors"
             >
               Back to Orders
-            </button>
-            <button
-              onClick={() => window.print()}
-              className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-medium transition-colors shadow-sm hover:shadow-md"
-            >
-              Print Invoice
             </button>
           </div>
         </div>
@@ -186,7 +230,7 @@ const OrderDetails = () => {
   );
 };
 
-// Loading Skeleton (same as before)
+// Loading Skeleton
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-background">
     <div className="container mx-auto px-4 py-8">
@@ -208,7 +252,7 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-// Error Page (same as before)
+// Error Page
 const ErrorPage = ({ error, navigate }) => (
   <div className="min-h-screen bg-background flex items-center justify-center">
     <div className="text-center max-w-md p-8">

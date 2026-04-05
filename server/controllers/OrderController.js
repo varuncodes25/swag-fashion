@@ -19,6 +19,7 @@ const {
 const axios = require("axios");
 const Cart = require("../models/Cart");
 const { default: mongoose } = require("mongoose");
+const shipmentSchema = require("../models/shipmentSchema");
 
 const getOrdersByUserId = async (req, res) => {
   const userId = req.id;
@@ -27,9 +28,9 @@ const getOrdersByUserId = async (req, res) => {
   const skip = (page - 1) * limit;
 
   try {
-    // Fetch orders with pagination - NO POPULATE NEEDED (items are embedded)
+    // Fetch orders with pagination - Include shipment reference
     const orders = await Order.find({ userId })
-      .select("_id orderNumber createdAt status totalAmount paymentMethod paymentStatus shippingAddress items subtotal shippingCharge discount")
+      .select("_id orderNumber createdAt status totalAmount paymentMethod paymentStatus shippingAddress items subtotal shippingCharge discount shiprocket currentShipmentId")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
@@ -51,17 +52,30 @@ const getOrdersByUserId = async (req, res) => {
       });
     }
 
-    // Format data correctly
+    // Get all shipment IDs to fetch tracking info
+    const shipmentIds = orders.filter(o => o.currentShipmentId).map(o => o.currentShipmentId);
+    
+    // Fetch shipments for tracking and invoice URLs
+    const shipments = await shipmentSchema.find({
+      _id: { $in: shipmentIds }
+    }).lean();
+    
+    // Create map for quick lookup
+    const shipmentMap = new Map();
+    shipments.forEach(s => {
+      shipmentMap.set(s.orderId.toString(), s);
+    });
+
+    // Format data correctly with tracking and invoice URLs
     const formattedOrders = orders.map(order => {
-      // Get all items from the order
+      // Get items from the order
       const orderItems = order.items || [];
       
-      // Calculate correct item count (sum of quantities)
+      // Calculate correct item count
       const itemCount = orderItems.reduce((total, item) => {
         return total + (item.quantity || 1);
       }, 0);
       
-      // Get distinct product count
       const productCount = orderItems.length;
       
       // Get first item for thumbnail
@@ -72,7 +86,7 @@ const getOrdersByUserId = async (req, res) => {
         price: orderItems[0].finalPrice || orderItems[0].price || 0
       } : null;
       
-      // Get all product images for UI
+      // Get all product images
       const productImages = orderItems.map(item => ({
         image: item.image || "/placeholder.png",
         name: item.name || "Product",
@@ -81,8 +95,30 @@ const getOrdersByUserId = async (req, res) => {
         size: item.size
       }));
       
-      // Calculate total from order data
       const totalAmount = order.totalAmount || 0;
+      
+      // 🆕 Get tracking and invoice info from shipment or shiprocket
+      const shipment = shipmentMap.get(order._id.toString());
+      
+      // Tracking information
+      const trackingInfo = {
+        awb: order.shiprocket?.awb || shipment?.awb || null,
+        courierName: order.shiprocket?.courierName || shipment?.courier || null,
+        trackingUrl: order.shiprocket?.trackingUrl || shipment?.trackingUrl || null,
+        status: order.shiprocket?.status || shipment?.shippingStatus || "PENDING",
+        isShipped: !!(order.shiprocket?.awb || shipment?.awb)
+      };
+      
+      // 🆕 Invoice information
+      const invoiceInfo = {
+        url: order.shiprocket?.invoiceUrl || shipment?.invoiceUrl || null,
+        irnNo: order.shiprocket?.irnNo || shipment?.irnNo || null,
+        isGenerated: !!(order.shiprocket?.invoiceUrl || shipment?.invoiceUrl),
+        generatedAt: order.shiprocket?.invoiceGeneratedAt || null
+      };
+      
+      // 🆕 Shipment tracking history
+      const trackingHistory = shipment?.statusHistory || [];
       
       return {
         id: order._id,
@@ -90,14 +126,14 @@ const getOrdersByUserId = async (req, res) => {
         date: order.createdAt,
         status: order.status || "PENDING",
         
-        // Correct item counts
+        // Item summary
         summary: {
-          itemCount: itemCount,  // Total quantity of all items
-          productCount: productCount,  // Number of different products
+          itemCount: itemCount,
+          productCount: productCount,
           totalQuantity: itemCount
         },
         
-        // Pricing information
+        // Pricing
         amount: totalAmount,
         pricing: {
           totalAmount: totalAmount,
@@ -107,22 +143,22 @@ const getOrdersByUserId = async (req, res) => {
           taxAmount: order.taxAmount || 0
         },
         
-        // Payment information
+        // Payment
         payment: {
           method: order.paymentMethod || "COD",
           status: order.paymentStatus || "PENDING",
           isPaid: order.paymentStatus === "PAID"
         },
         
-        // Items information for UI
+        // Items
         items: orderItems.map(item => ({
           productId: item.productId,
           variantId: item.variantId,
           name: item.name || "Product",
           image: item.image || "/placeholder.png",
           quantity: item.quantity || 1,
-          price: item.price || 0, // MRP
-          finalPrice: item.finalPrice || 0, // Price after discount
+          price: item.price || 0,
+          finalPrice: item.finalPrice || 0,
           discountPercent: item.discountPercent || 0,
           discountAmount: item.discountAmount || 0,
           lineTotal: item.lineTotal || 0,
@@ -131,19 +167,40 @@ const getOrdersByUserId = async (req, res) => {
           sku: item.sku || "N/A"
         })),
         
-        // Product images for thumbnail display
-        productImages: productImages.slice(0, 4), // Max 4 for thumbnail
+        // Product images
+        productImages: productImages.slice(0, 4),
         
-        // First item for quick preview
+        // First item preview
         firstItem: firstItem,
         
-        // Delivery information
+        // Delivery address
         delivery: {
           city: order.shippingAddress?.city || "N/A",
           state: order.shippingAddress?.state || "N/A",
           pincode: order.shippingAddress?.pincode || "N/A",
           name: order.shippingAddress?.name || "N/A",
-          phone: order.shippingAddress?.phone || "N/A"
+          phone: order.shippingAddress?.phone || "N/A",
+          address: order.shippingAddress?.addressLine1 || "N/A"
+        },
+        
+        // 🆕 TRACKING INFORMATION
+        tracking: trackingInfo,
+        
+        // 🆕 INVOICE INFORMATION
+        invoice: invoiceInfo,
+        
+        // 🆕 SHIPMENT HISTORY
+        shipmentHistory: trackingHistory,
+        
+        // 🆕 Shiprocket details
+        shiprocket: {
+          orderId: order.shiprocket?.orderId || null,
+          shipmentId: order.shiprocket?.shipmentId || shipment?.shiprocketOrderId || null,
+          awb: order.shiprocket?.awb || shipment?.awb || null,
+          courierName: order.shiprocket?.courierName || shipment?.courier || null,
+          trackingUrl: order.shiprocket?.trackingUrl || shipment?.trackingUrl || null,
+          status: order.shiprocket?.status || shipment?.shippingStatus || "PENDING",
+          mode: order.shiprocket?.mode || shipment?.mode || "TESTING"
         }
       };
     });
@@ -196,7 +253,39 @@ const getOrderDetails = async (req, res) => {
       });
     }
 
+    // 🆕 Fetch shipment details if shipmentId exists
+    let shipment = null;
+    if (order.currentShipmentId) {
+      shipment = await shipmentSchema.findById(order.currentShipmentId).lean();
+    }
+
     const orderItems = Array.isArray(order.items) ? order.items : [];
+    
+    // 🆕 Extract dynamic tracking data from order/shipment
+    const awb = order.shiprocket?.awb || shipment?.awb || null;
+    const courierName = order.shiprocket?.courierName || shipment?.courier || order.shippingMeta?.courierName || null;
+    const trackingUrl = order.shiprocket?.trackingUrl || shipment?.trackingUrl || null;
+    const shiprocketStatus = order.shiprocket?.status || shipment?.shippingStatus || order.status || "PENDING";
+    
+    // 🆕 Extract dynamic invoice data from order/shipment
+    const invoiceUrl = order.shiprocket?.invoiceUrl || shipment?.invoiceUrl || null;
+    const irnNo = order.shiprocket?.irnNo || shipment?.irnNo || null;
+    const invoiceGeneratedAt = order.shiprocket?.invoiceGeneratedAt || shipment?.invoiceGeneratedAt || null;
+    
+    // 🆕 Determine if testing mode
+    const isTesting = order.shiprocket?.mode === "TESTING" || process.env.NODE_ENV !== 'production';
+    
+    // 🆕 Generate tracking URL if missing (for testing)
+    let finalTrackingUrl = trackingUrl;
+    let finalInvoiceUrl = invoiceUrl;
+    
+    if (isTesting && awb && !trackingUrl) {
+      finalTrackingUrl = `https://shiprocket.co/tracking/${awb}`;
+    }
+    
+    if (isTesting && !invoiceUrl && order.shiprocket?.orderId) {
+      finalInvoiceUrl = `https://testing.shiprocket.com/invoice/${order.shiprocket.orderId}`;
+    }
     
     // Calculate timeline
     const timeline = [];
@@ -218,8 +307,8 @@ const getOrderDetails = async (req, res) => {
       timeline.push({
         status: "SHIPPED",
         date: order.shippedAt,
-        description: order.shiprocket?.awb 
-          ? `Shipped via ${order.shippingMeta?.courierName || 'courier'} (AWB: ${order.shiprocket.awb})`
+        description: awb 
+          ? `Shipped via ${courierName || 'courier'} (AWB: ${awb})`
           : "Shipped"
       });
     }
@@ -238,10 +327,27 @@ const getOrderDetails = async (req, res) => {
       });
     }
 
-    // Format order details
+    // Format order details with DYNAMIC tracking and invoice objects
     const formattedOrder = {
       id: order._id,
       orderNumber: order.orderNumber,
+      
+      // 🆕 DYNAMIC TRACKING OBJECT (from database)
+      tracking: {
+        awb: awb,
+        courierName: courierName,
+        trackingUrl: finalTrackingUrl,
+        status: shiprocketStatus,
+        isShipped: !!(awb)
+      },
+      
+      // 🆕 DYNAMIC INVOICE OBJECT (from database)
+      invoice: {
+        url: finalInvoiceUrl,
+        irnNo: irnNo,
+        isGenerated: !!(finalInvoiceUrl),
+        generatedAt: invoiceGeneratedAt
+      },
       
       // 📅 DATES
       dates: {
@@ -288,11 +394,13 @@ const getOrderDetails = async (req, res) => {
         shiprocket: {
           orderId: order.shiprocket?.orderId,
           shipmentId: order.shiprocket?.shipmentId,
-          awb: order.shiprocket?.awb,
-          status: order.shiprocket?.status || "PENDING",
+          awb: awb,
+          courierName: courierName,
+          status: shiprocketStatus,
           labelUrl: order.shiprocket?.labelUrl,
           manifestUrl: order.shiprocket?.manifestUrl,
-          trackingUrl: order.shiprocket?.trackingUrl
+          trackingUrl: finalTrackingUrl,
+          mode: isTesting ? "TESTING" : "PRODUCTION"
         }
       },
       

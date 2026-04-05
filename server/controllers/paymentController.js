@@ -12,13 +12,14 @@ const { createShiprocketOrder } = require("../service/shiprocketService");
 exports.createRazorpayOrder = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?._id || req.id;
-    const { productId, variantId, quantity, addressId } = req.body;
+    const { productId, variantId, quantity, addressId, shippingMeta } = req.body; // ✅ ADD shippingMeta
     console.log("📦 createRazorpayOrder request body:", {
       userId,
       productId,
       variantId,
       quantity,
-      addressId
+      addressId,
+      shippingMeta  // ✅ Log shippingMeta
     });
 
     /* ================= BASIC VALIDATION ================= */
@@ -33,6 +34,14 @@ exports.createRazorpayOrder = async (req, res) => {
       return res.status(400).json({ 
         success: false,
         message: "Address is required" 
+      });
+    }
+
+    // ✅ VALIDATE shippingMeta
+    if (!shippingMeta || !shippingMeta.courierId) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Shipping information is required. Please select a courier service." 
       });
     }
 
@@ -92,19 +101,33 @@ exports.createRazorpayOrder = async (req, res) => {
     /* ================= RAZORPAY AMOUNT ================= */
     const amountInPaise = Math.round(orderData.summary.total * 100);
 
-    /* ================= CREATE RAZORPAY ORDER ================= */
+    /* ================= CREATE RAZORPAY ORDER WITH SHIPPING META IN NOTES ================= */
     const rpOrder = await razorpay.orders.create({
       amount: amountInPaise,
       currency: "INR",
       receipt: `rcpt_${Date.now()}_${userId.slice(-5)}`,
       notes: {
+        // Existing fields
         userId: userId.toString(),
         productId: productId || null,
         variantId: variantId || null,
         addressId: addressId,
         checkoutType: orderData.checkoutType || "BUY_NOW",
-        quantity: quantity || null
+        quantity: quantity?.toString() || "1",
+        
+        // 🔥 CRITICAL: Store shippingMeta in notes
+        courierId: shippingMeta.courierId.toString(),
+        courierName: shippingMeta.courierName || "",
+        estimatedDelivery: shippingMeta.estimatedDelivery || "",
+        serviceType: shippingMeta.serviceType || "STANDARD",
+        shippingCharge: orderData.summary.shipping.toString()
       },
+    });
+
+    console.log("✅ Razorpay order created with shipping in notes:", {
+      razorpayOrderId: rpOrder.id,
+      courierId: shippingMeta.courierId,
+      courierName: shippingMeta.courierName
     });
 
     return res.status(200).json({
@@ -129,7 +152,8 @@ exports.createRazorpayOrder = async (req, res) => {
 exports.verifyRazorpayPayment = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
- console.log("🔍 verifyRazorpayPayment called with body:", req.body);
+  console.log("🔍 verifyRazorpayPayment called with body:", req.body);
+  
   try {
     const userId = req.user?.id || req.user?._id || req.id;
     const {
@@ -141,15 +165,6 @@ exports.verifyRazorpayPayment = async (req, res) => {
       quantity,
       addressId,
     } = req.body;
-
-    console.log("🔍 verifyRazorpayPayment called:", {
-      userId,
-      razorpay_order_id,
-      productId,
-      variantId,
-      quantity,
-      addressId
-    });
 
     // ✅ Basic validation
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -175,6 +190,22 @@ exports.verifyRazorpayPayment = async (req, res) => {
     const notes = rpOrder.notes || {};
     
     console.log("📝 Razorpay order notes:", notes);
+    
+    // ✅ Extract shippingMeta from notes
+    const shippingMeta = {
+      courierId: notes.courierId ? parseInt(notes.courierId) : null,
+      courierName: notes.courierName || "",
+      estimatedDelivery: notes.estimatedDelivery || "",
+      serviceType: notes.serviceType || "STANDARD",
+      shippingCharge: parseFloat(notes.shippingCharge) || 0
+    };
+    
+    // ✅ Validate courierId
+    if (!shippingMeta.courierId) {
+      throw new Error("Shipping information missing in payment order");
+    }
+    
+    console.log("📦 Retrieved shippingMeta:", shippingMeta);
 
     // ✅ Idempotency check
     const existingOrder = await Order.findOne(
@@ -215,26 +246,6 @@ exports.verifyRazorpayPayment = async (req, res) => {
       addressDoc
     );
 
-    console.log("✅ Recalculated order data:", {
-      items: orderData.items?.map(item => ({
-        productId: item.productId,
-        variantId: item.variantId,
-        color: item.color,
-        size: item.size,
-        quantity: item.quantity,
-        sellingPrice: item.sellingPrice,
-        weight: item.weight,
-        length: item.length,
-        width: item.width,
-        height: item.height
-      })),
-      subtotal: orderData.summary?.subtotal,
-      shipping: orderData.summary?.shipping,
-      discount: orderData.summary?.discount,
-      total: orderData.summary?.total,
-      checkoutType: orderData.checkoutType
-    });
-
     // ✅ Amount verify
     const expectedAmount = Math.round(orderData.summary.total * 100);
 
@@ -264,26 +275,18 @@ exports.verifyRazorpayPayment = async (req, res) => {
     const orderItems = orderData.items.map(item => ({
       productId: item.productId,
       variantId: item.variantId,
-      
-      // Required fields
       name: item.name,
       image: item.image || "",
-      
-      // Price fields
       price: item.price,
       discountPercent: item.discountPercent || 0,
       discountAmount: (item.price - item.sellingPrice) * item.quantity,
       finalPrice: item.sellingPrice,
-      
       quantity: item.quantity,
       lineTotal: item.sellingPrice * item.quantity,
-      
-      // Dimensions
       weight: item.weight || 0.5,
       length: item.length || 20,
       width: item.width || 15,
       height: item.height || 10,
-      
       color: item.color || "",
       size: item.size || "",
       sku: item.sku || ""
@@ -292,7 +295,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
     // ✅ Generate order number
     const orderNumber = await Order.generateOrderNumber();
 
-    // ✅ Create order
+    // ✅ Create order WITH shippingMeta from notes
     const [order] = await Order.create(
       [
         {
@@ -316,11 +319,12 @@ exports.verifyRazorpayPayment = async (req, res) => {
             signature: razorpay_signature
           },
           
+          // ✅ FIXED: Use shippingMeta from notes
           shippingMeta: {
-            courierId: "",
-            courierName: "",
-            estimatedDelivery: "",
-            serviceType: ""
+            courierId: shippingMeta.courierId,
+            courierName: shippingMeta.courierName,
+            estimatedDelivery: shippingMeta.estimatedDelivery,
+            serviceType: shippingMeta.serviceType
           },
           
           shiprocket: {
@@ -344,75 +348,31 @@ exports.verifyRazorpayPayment = async (req, res) => {
       { session }
     );
 
-    console.log("✅ Order created in DB:", {
+    console.log("✅ Order created with courier:", {
       orderId: order._id,
-      orderNumber: order.orderNumber,
-      itemsCount: order.items.length,
-      totalAmount: order.totalAmount
+      courierId: order.shippingMeta.courierId,
+      courierName: order.shippingMeta.courierName
     });
 
-    /* ===================== 📦 STOCK MANAGEMENT - USING PRODUCT METHODS ===================== */
-    
-    // ✅ Reserve stock for each variant using Product model methods
+    // ✅ Reserve stock
     for (const item of order.items) {
       const product = await Product.findById(item.productId).session(session);
-      
       if (!product) {
         throw new Error(`Product ${item.productId} not found`);
       }
 
-      // 🔥 METHOD 1: Check available stock using product method
-      const availableStock = product.availableStock; // Virtual field
-      console.log(`📊 Product ${product.name} - Total available stock: ${availableStock}`);
-
-      // 🔥 METHOD 2: Use getVariant() method to find variant
       const variant = product.getVariant(item.color, item.size);
-      
       if (!variant) {
-        throw new Error(`Variant ${item.color}-${item.size} not found in product ${product.name}`);
+        throw new Error(`Variant not found`);
       }
 
-      // 🔥 METHOD 3: Use reserveVariantStock() method - YE SABSE IMPORTANT HAI!
       const reserved = product.reserveVariantStock(variant._id, item.quantity);
-      
       if (!reserved) {
-        // Check individual variant stock for better error message
-        const variantStock = variant.stock - (variant.reservedStock || 0);
-        throw new Error(
-          `${product.name} (${variant.color}-${variant.size}) - ` +
-          `Requested: ${item.quantity}, Available: ${variantStock}`
-        );
+        throw new Error(`Failed to reserve stock for ${product.name}`);
       }
 
-      // ✅ Save product with updated reservedStock
-      await product.save({ session });
-      
-      console.log(`📦 Stock reserved for ${product.name}:`, {
-        variantId: variant._id,
-        color: variant.color,
-        size: variant.size,
-        quantity: item.quantity,
-        method: 'reserveVariantStock()',
-        reservedStock: variant.reservedStock,
-        remainingStock: variant.stock - variant.reservedStock
-      });
-    }
-
-    // ✅ Alternative: Agar aapko direct variantId se kaam karna hai
-    /*
-    for (const item of order.items) {
-      const product = await Product.findById(item.productId).session(session);
-      
-      // 🔥 Direct variantId se reserve karo
-      const reserved = product.reserveVariantStock(item.variantId, item.quantity);
-      
-      if (!reserved) {
-        throw new Error(`Failed to reserve stock for variant ${item.variantId}`);
-      }
-      
       await product.save({ session });
     }
-    */
 
     // ✅ Clear cart if cart checkout
     if (orderData.checkoutType === "CART") {
@@ -426,19 +386,18 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     console.log("✅ Database transaction committed");
 
-    // ✅ Call Shiprocket
+    // ✅ Call Shiprocket (ab courierId milega!)
     let shiprocketCreated = false;
     try {
       const shiprocketResponse = await createShiprocketOrder(order);
       shiprocketCreated = true;
       
-      Order.findByIdAndUpdate(order._id, {
+      await Order.findByIdAndUpdate(order._id, {
         "shiprocket.orderId": shiprocketResponse.order_id,
         "shiprocket.shipmentId": shiprocketResponse.shipment_id,
         "shiprocket.awb": shiprocketResponse.awb,
-        "shiprocket.channelId": shiprocketResponse.channel_order_id,
-        "shiprocket.status": "NEW"
-      }).catch(err => console.error("Failed to update Shiprocket details:", err));
+        "shiprocket.status": "CONFIRMED"
+      });
       
       console.log("🚀 Shiprocket order created successfully");
     } catch (shiprocketError) {
