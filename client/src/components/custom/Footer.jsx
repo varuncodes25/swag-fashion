@@ -98,7 +98,7 @@ const Footer = () => {
               <Facebook size={20} />
             </a>
             <a
-              href="https://youtube.com/@uniqueswagfashion?si=U9ikibPt0kcq_sXE"
+              href="https://www.youtube.com/@Swagfashion-h8d"
               aria-label="YouTube"
               target="_blank"
               rel="noopener noreferrer"
@@ -106,7 +106,7 @@ const Footer = () => {
               <Youtube size={20} />
             </a>
             <a
-              href="https://www.instagram.com/swag_fashion.07/profilecard/?igsh=cTV3ODZxZHhpYndi"
+              href="https://www.instagram.com/swagfashion.in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
               aria-label="Instagram"
               target="_blank"
               rel="noopener noreferrer"
