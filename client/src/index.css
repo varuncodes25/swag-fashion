@@ -3,85 +3,182 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================================
+   Design tokens — single source of truth (light / dark)
+   Use Tailwind: bg-background, text-foreground, bg-primary, text-muted-foreground, etc.
+   ============================================================================= */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 0 0% 99%;
+    --foreground: 240 10% 9%;
+
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 240 10% 9%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
-    --chart-1: 12 76% 61%;
+    --popover-foreground: 240 10% 9%;
+
+    /* Brand — rose (fashion CTA, links, focus) */
+    --primary: 346 77% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 12%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 45%;
+
+    --accent: 346 40% 96%;
+    --accent-foreground: 346 77% 38%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 346 77% 48%;
+
+    --success: 142 71% 41%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 83% 14%;
+
+    --info: 221 83% 53%;
+    --info-foreground: 0 0% 100%;
+
+    /* Accent gold / highlights (badges, offers) — tied to brand */
+    --highlight: 43 96% 56%;
+    --highlight-foreground: 26 83% 14%;
+
+    /* Ecommerce Additional Colors */
+    --product-bg: 0 0% 100%;
+    --sale-price: 346 77% 48%;
+    --original-price: 240 4% 45%;
+    --star-active: 43 96% 56%;
+    --star-inactive: 240 6% 90%;
+    --cart-badge: 346 77% 48%;
+    --wishlist-hover: 346 77% 95%;
+    --shipping-bar: 43 96% 56%;
+    --shipping-bg: 240 5% 96%;
+    --flash-sale: 0 84% 60%;
+    --flash-sale-bg: 0 84% 95%;
+    --newsletter-bg: 346 40% 96%;
+    --newsletter-border: 346 77% 85%;
+    --trust-bg: 240 5% 96%;
+    --trust-text: 240 6% 12%;
+    --divider: 240 6% 90%;
+
+    /* Gradients */
+    --gradient-rose-gold: linear-gradient(135deg, hsl(346 77% 48%), hsl(43 96% 56%));
+    --gradient-rose: linear-gradient(135deg, hsl(346 77% 48%), hsl(346 77% 35%));
+    --gradient-light-rose: linear-gradient(135deg, hsl(346 40% 96%), hsl(346 77% 48%));
+
+    --chart-1: 346 77% 55%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+
     --radius: 0.5rem;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-primary: 346 77% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    
+    --sidebar-ring: 346 77% 48%;
   }
+
   .dark {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 6%;
     --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
+
+    --card: 240 8% 11%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+
+    --popover: 240 8% 11%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
+
+    --primary: 346 70% 58%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
+
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 64%;
+
+    --accent: 346 35% 18%;
+    --accent-foreground: 346 80% 90%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 4% 18%;
+    --input: 240 4% 18%;
+    --ring: 346 70% 58%;
+
+    --success: 142 65% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 83% 14%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 240 10% 6%;
+
+    --highlight: 43 96% 56%;
+    --highlight-foreground: 26 83% 14%;
+
+    /* Dark Mode Ecommerce Colors */
+    --product-bg: 240 8% 11%;
+    --sale-price: 346 70% 58%;
+    --original-price: 240 5% 64%;
+    --star-active: 43 96% 56%;
+    --star-inactive: 240 4% 18%;
+    --cart-badge: 346 70% 58%;
+    --wishlist-hover: 346 35% 18%;
+    --shipping-bar: 43 96% 56%;
+    --shipping-bg: 240 4% 16%;
+    --flash-sale: 0 62% 45%;
+    --flash-sale-bg: 0 62% 20%;
+    --newsletter-bg: 346 35% 18%;
+    --newsletter-border: 346 35% 28%;
+    --trust-bg: 240 4% 16%;
+    --trust-text: 0 0% 98%;
+    --divider: 240 4% 18%;
+
+    /* Dark Mode Gradients */
+    --gradient-rose-gold: linear-gradient(135deg, hsl(346 70% 58%), hsl(43 96% 56%));
+    --gradient-rose: linear-gradient(135deg, hsl(346 70% 58%), hsl(346 70% 40%));
+    --gradient-light-rose: linear-gradient(135deg, hsl(346 35% 18%), hsl(346 70% 58%));
+
+    --chart-1: 346 70% 55%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
+
+    --sidebar-background: 240 8% 8%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary: 346 70% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    
+    --sidebar-ring: 346 70% 58%;
   }
 }
+
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
 
@@ -127,19 +224,18 @@ body {
   font-weight: 800;
 }
 
-/* in your CSS file */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 4px;             /* thin scrollbar */
+  width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent; /* transparent track */
+  background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(156, 163, 175, 0.3); /* gray with opacity */
-  border-radius: 9999px;  /* round edges */
+  background-color: hsl(var(--muted-foreground) / 0.35);
+  border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(156, 163, 175, 0.6); /* darker on hover */
+  background-color: hsl(var(--muted-foreground) / 0.55);
 }
 
 @keyframes fadeUp {
@@ -163,6 +259,21 @@ body {
   100% { transform: translateX(200%); opacity: 0; }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
 .animate-fadeUp {
   animation: fadeUp 0.8s ease-out forwards;
 }
@@ -179,9 +290,22 @@ body {
   animation: shine 1.2s linear infinite;
 }
 
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.5s ease-out forwards;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
-  height: 2px
+  height: 2px;
 }
 
 ::-webkit-scrollbar-track {
@@ -189,17 +313,20 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #ff0080, #ff8c00, #40e0d0);
+  background: hsl(var(--primary) / 0.45);
   border-radius: 20px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #ff1493, #ffa500, #20b2aa);
+  background: hsl(var(--primary) / 0.65);
 }
 
-/* Dark Mode */
 .dark ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #ff5fa2, #ff9770, #5dd4c6);
+  background: hsl(var(--primary) / 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.7);
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -207,4 +334,363 @@ body {
 }
 .no-scrollbar {
   scrollbar-width: none;
+}
+
+/* =============================================================================
+   Ecommerce Component Styles
+   ============================================================================= */
+
+/* Product Card Styles */
+.product-card {
+  background: hsl(var(--product-bg));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Price Styles */
+.sale-price {
+  color: hsl(var(--sale-price));
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.original-price {
+  color: hsl(var(--original-price));
+  text-decoration: line-through;
+  font-size: 0.875rem;
+}
+
+/* Badge Styles */
+.discount-badge {
+  background: hsl(var(--warning));
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.hot-badge {
+  background: hsl(var(--flash-sale));
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.new-badge {
+  background: hsl(var(--success));
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Button Styles */
+.btn-primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+  border-radius: calc(var(--radius) - 0.125rem);
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  background: hsl(var(--primary) / 0.9);
+  transform: scale(1.02);
+}
+
+.btn-secondary {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+  border-radius: calc(var(--radius) - 0.125rem);
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background: hsl(var(--secondary) / 0.8);
+}
+
+.btn-outline {
+  border: 2px solid hsl(var(--primary));
+  color: hsl(var(--primary));
+  background: transparent;
+  transition: all 0.2s ease;
+  padding: 0.5rem 1rem;
+  border-radius: calc(var(--radius) - 0.125rem);
+  font-weight: 500;
+}
+
+.btn-outline:hover {
+  background: hsl(var(--primary) / 0.1);
+  transform: scale(1.02);
+}
+
+/* Status Indicators */
+.status-instock {
+  color: hsl(var(--success));
+  background: hsl(var(--success) / 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-lowstock {
+  color: hsl(var(--warning));
+  background: hsl(var(--warning) / 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-outofstock {
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Rating Stars */
+.rating-star {
+  color: hsl(var(--star-active));
+}
+
+.rating-star-empty {
+  color: hsl(var(--star-inactive));
+}
+
+/* Quantity Selector */
+.quantity-selector {
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+.quantity-btn {
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  padding: 0.25rem 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.quantity-btn:hover {
+  background: hsl(var(--secondary) / 0.8);
+}
+
+.quantity-input {
+  width: 3rem;
+  text-align: center;
+  border: none;
+  background: transparent;
+}
+
+/* Order Summary */
+.order-summary {
+  background: hsl(var(--secondary));
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+/* Shipping Progress Bar */
+.shipping-progress-bar {
+  background: hsl(var(--shipping-bg));
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.shipping-progress-fill {
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--highlight)));
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+/* Promotional Banner */
+.promo-banner {
+  background: var(--gradient-rose-gold);
+  color: white;
+  padding: 1rem;
+  border-radius: var(--radius);
+}
+
+.flash-sale-banner {
+  background: var(--gradient-rose);
+  color: white;
+  padding: 1rem;
+  border-radius: var(--radius);
+}
+
+/* Hero Section */
+.hero-gradient {
+  background: var(--gradient-light-rose);
+}
+
+/* Newsletter Section */
+.newsletter-section {
+  background: hsl(var(--newsletter-bg));
+  border: 1px solid hsl(var(--newsletter-border));
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+
+/* Trust Badge */
+.trust-badge {
+  background: hsl(var(--trust-bg));
+  color: hsl(var(--trust-text));
+  padding: 1rem;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+/* Divider */
+.divider {
+  border-top: 1px solid hsl(var(--divider));
+  margin: 1rem 0;
+}
+
+/* Wishlist Button */
+.wishlist-btn {
+  transition: all 0.2s ease;
+}
+
+.wishlist-btn:hover {
+  background: hsl(var(--wishlist-hover));
+  transform: scale(1.1);
+}
+
+/* Cart Badge */
+.cart-badge {
+  background: hsl(var(--cart-badge));
+  color: white;
+  border-radius: 9999px;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--border)) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shine 1.5s infinite;
+}
+
+/* Tooltip */
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Modal */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Toast Notification */
+.toast-success {
+  background: hsl(var(--success));
+  color: hsl(var(--success-foreground));
+}
+
+.toast-error {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+.toast-warning {
+  background: hsl(var(--warning));
+  color: hsl(var(--warning-foreground));
+}
+
+/* Product Image Zoom */
+.product-image-zoom {
+  transition: transform 0.3s ease;
+}
+
+.product-image-zoom:hover {
+  transform: scale(1.05);
+}
+
+/* Category Card */
+.category-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Testimonial Card */
+.testimonial-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+/* Feature Icon */
+.feature-icon {
+  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  padding: 0.75rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none;
+  }
 }

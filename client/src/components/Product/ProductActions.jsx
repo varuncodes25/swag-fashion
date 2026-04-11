@@ -39,8 +39,8 @@ const ProductActions = ({
             size="lg"
             className="
               gap-3 px-8 py-6 text-base
-              bg-orange-500 
-              hover:bg-orange-600 
+              bg-warning 
+              hover:bg-warning/90 
               dark:bg-orange-600 
               dark:hover:bg-orange-700 
               text-white
@@ -67,7 +67,7 @@ const ProductActions = ({
             size="lg"
             className="
               gap-1 px-8 py-6 text-base
-              bg-amber-500 
+              bg-highlight 
               hover:bg-amber-600 
               dark:bg-amber-600 
               dark:hover:bg-amber-700 

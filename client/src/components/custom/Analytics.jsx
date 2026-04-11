@@ -56,10 +56,10 @@ const formatPercent = (value = 0) => {
     text: `${num > 0 ? "+" : ""}${num.toFixed(1)}%`,
     color:
       num > 0
-        ? "text-emerald-600 dark:text-emerald-400"
+        ? "text-success"
         : num < 0
         ? "text-rose-600 dark:text-rose-400"
-        : "text-gray-500 dark:text-gray-400",
+        : "text-muted-foreground",
     Icon: num >= 0 ? ArrowUpRight : ArrowDownRight,
   };
 };
@@ -120,7 +120,7 @@ const Analytics = () => {
   if (!metrics) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-gray-500 dark:text-gray-400">No data available</p>
+        <p className="text-muted-foreground">No data available</p>
       </div>
     );
   }
@@ -145,10 +145,10 @@ const Analytics = () => {
           {/* HEADER WITH FILTERS */}
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                 Analytics Dashboard
               </h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {getPeriodLabel()} {selectedYear}
               </p>
             </div>
@@ -198,31 +198,31 @@ const Analytics = () => {
           </div>
 
           {/* PERIOD SUMMARY CARD */}
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-primary/25 dark:border-primary/30">
             <CardContent className="p-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-sm text-blue-600 dark:text-blue-400">Period Revenue</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-sm text-primary dark:text-primary">Period Revenue</p>
+                  <p className="text-xl font-bold text-foreground">
                     {formatCurrency(overview?.periodRevenue || 0)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-blue-600 dark:text-blue-400">Period Orders</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-sm text-primary dark:text-primary">Period Orders</p>
+                  <p className="text-xl font-bold text-foreground">
                     {formatNumber(overview?.periodOrders || 0)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-blue-600 dark:text-blue-400">Avg Monthly</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-sm text-primary dark:text-primary">Avg Monthly</p>
+                  <p className="text-xl font-bold text-foreground">
                     {formatCurrency((overview?.periodRevenue || 0) / 
                       (selectedHalf === "full" ? 12 : 6))}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-blue-600 dark:text-blue-400">Best Month</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  <p className="text-sm text-primary dark:text-primary">Best Month</p>
+                  <p className="text-xl font-bold text-foreground">
                     {charts?.monthlyRevenue?.length > 0 
                       ? formatCurrency(Math.max(...charts.monthlyRevenue.map(m => m.revenue)))
                       : '₹0'}
@@ -254,7 +254,7 @@ const Analytics = () => {
               icon={ShoppingBag}
               badge={{
                 text: `${overview?.totalCOD || 0} COD · ${overview?.totalPrepaid || 0} Prepaid`,
-                color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                color: "bg-blue-100 text-info dark:bg-primary/20 dark:text-primary"
               }}
             />
 
@@ -339,15 +339,15 @@ const Analytics = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Average Delivery</p>
+                    <p className="text-sm text-muted-foreground">Average Delivery</p>
                     <p className="text-2xl font-bold">{overview?.avgDeliveryDays || 0} days</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Shipped Orders</p>
+                    <p className="text-sm text-muted-foreground">Shipped Orders</p>
                     <p className="text-2xl font-bold">{statusDistribution?.shipped || 0}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Delivered Today</p>
+                    <p className="text-sm text-muted-foreground">Delivered Today</p>
                     <p className="text-2xl font-bold">
                       {statusDistribution?.delivered || 0}
                     </p>
@@ -406,17 +406,17 @@ const Analytics = () => {
                           <p className="font-medium truncate">
                             {index + 1}. {product.name}
                           </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-muted-foreground">
                             {product.quantity} units · {product.orders} orders
                           </p>
                         </div>
-                        <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                        <p className="font-semibold text-success">
                           {formatCurrency(product.revenue)}
                         </p>
                       </div>
                     ))}
                     {(!charts?.topProducts || charts.topProducts.length === 0) && (
-                      <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                      <p className="text-muted-foreground text-center py-4">
                         No product data available
                       </p>
                     )}
@@ -430,7 +430,7 @@ const Analytics = () => {
           </div>
 
           {/* PERIOD INFO */}
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-right">
+          <div className="text-xs text-muted-foreground text-right">
             Period: {new Date(metrics?.timestamps?.period?.start).toLocaleDateString()} - {new Date(metrics?.timestamps?.period?.end).toLocaleDateString()}
           </div>
         </div>
@@ -448,9 +448,9 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, trend, badge }) => (
     <CardContent className="p-6">
       <div className="flex justify-between items-start">
         <div>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <p className="text-2xl font-bold mt-2 text-gray-900 dark:text-white">{value}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <p className="text-2xl font-bold mt-2 text-foreground">{value}</p>
+          <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
           
           {trend && (
             <div className="flex items-center gap-1 mt-2">
@@ -458,15 +458,15 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, trend, badge }) => (
               <span className={`text-xs font-medium ${trend.color}`}>
                 {trend.value}
               </span>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {trend.label}
               </span>
             </div>
           )}
         </div>
         
-        <div className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
-          <Icon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+        <div className="p-2 bg-muted rounded-lg">
+          <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
       </div>
       
@@ -482,9 +482,9 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, trend, badge }) => (
 const SimpleMetricCard = ({ title, value, subtitle, trend }) => (
   <Card>
     <CardContent className="p-4">
-      <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
-      <p className="text-xl font-bold text-gray-900 dark:text-white">{value}</p>
-      <p className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</p>
+      <p className="text-sm text-muted-foreground">{title}</p>
+      <p className="text-xl font-bold text-foreground">{value}</p>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
       {trend && (
         <div className="flex items-center gap-1 mt-1">
           <trend.Icon className={`h-3 w-3 ${trend.color}`} />
@@ -498,7 +498,7 @@ const SimpleMetricCard = ({ title, value, subtitle, trend }) => (
 const StatusCard = ({ title, icon: Icon, data, total }) => {
   const statusConfig = {
     pending: { label: "Pending", color: "bg-yellow-500" },
-    confirmed: { label: "Confirmed", color: "bg-blue-500" },
+    confirmed: { label: "Confirmed", color: "bg-primary" },
     shipped: { label: "Shipped", color: "bg-purple-500" },
     delivered: { label: "Delivered", color: "bg-emerald-500" },
     cancelled: { label: "Cancelled", color: "bg-rose-500" },
@@ -528,7 +528,7 @@ const StatusCard = ({ title, icon: Icon, data, total }) => {
               <div key={key}>
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-gray-700 dark:text-gray-300">{config.label}</span>
-                  <span className="font-medium text-gray-900 dark:text-white">
+                  <span className="font-medium text-foreground">
                     {value} ({percentage}%)
                   </span>
                 </div>
@@ -561,7 +561,7 @@ const RecentSales = ({ orders = [] }) => {
           {orders.slice(0, 8).map((order) => (
             <div
               key={order.id}
-              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center justify-between p-3 bg-muted/40/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <Avatar className="h-9 w-9 shrink-0">
@@ -579,7 +579,7 @@ const RecentSales = ({ orders = [] }) => {
                       {order.paymentMethod}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span>#{order.orderNumber?.slice(-8)}</span>
                     <span>•</span>
                     <span>{order.itemsPreview?.length || 0} items</span>
@@ -592,10 +592,10 @@ const RecentSales = ({ orders = [] }) => {
               </div>
               
               <div className="text-right ml-4">
-                <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <p className="font-semibold text-success">
                   {formatCurrency(order.amount)}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   {formatDate(order.date)}
                 </p>
               </div>
@@ -603,7 +603,7 @@ const RecentSales = ({ orders = [] }) => {
           ))}
           
           {orders.length === 0 && (
-            <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+            <p className="text-center text-muted-foreground py-8">
               No recent orders
             </p>
           )}

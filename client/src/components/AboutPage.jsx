@@ -20,7 +20,7 @@ const AboutPage = () => {
       {/* Hero Section */}
       <div className="text-center mb-12">
         <h1 className="text-4xl font-bold mb-4">About Us</h1>
-        <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        <p className="text-muted-foreground max-w-2xl mx-auto">
           At Swag Fashion, we turn blank tees into bold statements. Founded in
           2025, we specialize in high-quality, custom T-shirt printing that
           brings your ideas to life — whether for brands, events, businesses, or
@@ -55,21 +55,21 @@ const AboutPage = () => {
         <div className="grid md:grid-cols-3 gap-8 text-center">
           <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow">
             <h3 className="text-xl font-bold mb-2">Design</h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-muted-foreground">
               We design and print exactly the way you want. Your style, your
               vision – made real.
             </p>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow">
             <h3 className="text-xl font-bold mb-2">About Tshirt</h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-muted-foreground">
               Premium 220 GSM, 100% cotton T-shirts – built for comfort, made to
               last. Style that feels as good as it looks.
             </p>
           </div>
           <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow">
             <h3 className="text-xl font-bold mb-2">Print on T-shirt</h3>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-muted-foreground">
               High-quality 220 GSM, 100% cotton T-shirts printed using advanced
               DTF technology and heat press – for vibrant, long-lasting designs.
             </p>
@@ -79,14 +79,14 @@ const AboutPage = () => {
           <div className="md:col-span-3 flex justify-center gap-8">
             <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
               <h3 className="text-xl font-bold mb-2">Quality check</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-muted-foreground">
                 We thoroughly check each product and its quality before dispatch
                 to ensure you receive only the best.
               </p>
             </div>
             <div className="p-6 bg-white dark:bg-zinc-800 rounded-xl shadow w-full md:w-1/3">
               <h3 className="text-xl font-bold mb-2">Delivery</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-muted-foreground">
                 We ensure safe, fast, and reliable delivery, so your order reaches
                 you on time and in perfect condition.
               </p>

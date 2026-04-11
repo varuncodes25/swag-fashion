@@ -29,10 +29,10 @@ const BannerForm = ({
 
   const tagOptions = [
     { value: "BEST SELLER", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
-    { value: "POPULAR", color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
+    { value: "POPULAR", color: "bg-blue-100 text-info dark:bg-primary/20 dark:text-primary" },
     { value: "SALE", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
     { value: "NEW", color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300" },
-    { value: "FEATURED", color: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300" },
+    { value: "FEATURED", color: "bg-indigo-100 text-indigo-800 dark:bg-primary/20 dark:text-indigo-300" },
   ];
 
   // BannerForm.jsx - Add logging
@@ -263,12 +263,12 @@ const handleEdit = (banner) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border dark:border-gray-700 shadow-sm transition-colors duration-200">
+    <div className="bg-card rounded-xl border dark:border-gray-700 shadow-sm transition-colors duration-200">
       <div className="p-6 border-b dark:border-gray-700">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-xl font-semibold text-foreground">
           {isEditing ? "Edit Banner" : "Create New Banner"}
         </h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           {isEditing
             ? "Update your existing banner details"
             : "Add a new banner to display on homepage"}
@@ -286,11 +286,11 @@ const handleEdit = (banner) => {
             required
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+            className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-foreground transition-colors"
             placeholder="Enter banner title"
             maxLength={100}
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Max 100 characters
           </p>
         </div>
@@ -304,11 +304,11 @@ const handleEdit = (banner) => {
             type="text"
             value={formData.subtitle}
             onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+            className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-foreground transition-colors"
             placeholder="Enter banner subtitle"
             maxLength={200}
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Optional, max 200 characters
           </p>
         </div>
@@ -328,8 +328,8 @@ const handleEdit = (banner) => {
             onDrop={handleDrop}
             className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
               dragActive
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                ? "border-primary bg-primary/10 dark:bg-blue-900/20"
+                : "border-border hover:border-gray-400 dark:hover:border-gray-500"
             }`}
           >
             {selectedFile ? (
@@ -337,13 +337,13 @@ const handleEdit = (banner) => {
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-3">
                   <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                    <ImageIcon className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                    <ImageIcon className="w-6 h-6 text-muted-foreground" />
                   </div>
                   <div className="text-left">
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="font-medium text-foreground">
                       {selectedFile.name}
                     </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-muted-foreground">
                       {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -352,7 +352,7 @@ const handleEdit = (banner) => {
                     onClick={handleClearImage}
                     className="ml-auto p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                   >
-                    <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <X className="w-5 h-5 text-muted-foreground" />
                   </button>
                 </div>
                 
@@ -367,7 +367,7 @@ const handleEdit = (banner) => {
                   <button
                     type="button"
                     onClick={() => previewImage && setPreviewImage(previewImage)}
-                    className="flex-1 py-2 px-4 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                    className="flex-1 py-2 px-4 bg-blue-100 dark:bg-primary/20 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                   >
                     <Eye className="w-4 h-4" />
                     Preview
@@ -379,25 +379,25 @@ const handleEdit = (banner) => {
               <div className="space-y-3">
                 <div className="flex justify-center">
                   <div className="p-3 bg-gray-100 dark:bg-gray-700 rounded-full">
-                    <Upload className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+                    <Upload className="w-6 h-6 text-muted-foreground" />
                   </div>
                 </div>
                 <div>
                   <p className="text-gray-700 dark:text-gray-300 font-medium">
                     Drag & drop your image here
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     or
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-6 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 font-medium transition-colors"
+                  className="px-6 py-2 bg-primary dark:bg-blue-700 text-white rounded-lg hover:bg-primary/90 dark:hover:bg-primary/90 font-medium transition-colors"
                 >
                   Browse Files
                 </button>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   JPG, PNG, WebP, GIF up to 5MB
                 </p>
               </div>
@@ -417,7 +417,7 @@ const handleEdit = (banner) => {
           <div className="mt-4">
             <div className="flex items-center mb-2">
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-              <span className="px-3 text-sm text-gray-500 dark:text-gray-400">Or enter URL</span>
+              <span className="px-3 text-sm text-muted-foreground">Or enter URL</span>
               <div className="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
             </div>
             <div className="flex gap-2">
@@ -426,7 +426,7 @@ const handleEdit = (banner) => {
                   type="url"
                   value={formData.image}
                   onChange={handleImageUrlChange}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                  className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-foreground transition-colors"
                   placeholder="https://example.com/image.jpg"
                 />
               </div>
@@ -436,8 +436,8 @@ const handleEdit = (banner) => {
                 disabled={!formData.image}
                 className={`px-4 rounded-lg transition-colors flex items-center gap-2 ${
                   formData.image
-                    ? "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                    ? "bg-primary dark:bg-blue-700 text-white hover:bg-primary/90 dark:hover:bg-primary/90"
+                    : "bg-gray-100 dark:bg-gray-700 text-muted-foreground cursor-not-allowed"
                 }`}
               >
                 <Eye size={18} />
@@ -446,7 +446,7 @@ const handleEdit = (banner) => {
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             Recommended size: 1200×500 pixels for optimal display
           </p>
         </div>
@@ -461,7 +461,7 @@ const handleEdit = (banner) => {
               <button
                 type="button"
                 onClick={() => setPreviewImage("")}
-                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                className="text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300"
               >
                 <X size={18} />
               </button>
@@ -489,7 +489,7 @@ const handleEdit = (banner) => {
             <select
               value={formData.tag}
               onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-foreground transition-colors"
             >
               {tagOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -509,9 +509,9 @@ const handleEdit = (banner) => {
               max="10"
               value={formData.priority}
               onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 5 })}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-foreground transition-colors"
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               1 (Low) - 10 (High)
             </p>
           </div>
@@ -523,16 +523,16 @@ const handleEdit = (banner) => {
             Redirect Link
           </label>
           <div className="flex items-center gap-2">
-            <LinkIcon size={18} className="text-gray-400 dark:text-gray-500" />
+            <LinkIcon size={18} className="text-muted-foreground" />
             <input
               type="text"
               value={formData.link}
               onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-              className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+              className="flex-1 px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-foreground transition-colors"
               placeholder="/category/toys or https://..."
             />
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Where users will be redirected on click
           </p>
         </div>
@@ -540,8 +540,8 @@ const handleEdit = (banner) => {
         {/* Active Toggle */}
         <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
           <div>
-            <span className="font-medium text-gray-900 dark:text-white">Status</span>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="font-medium text-foreground">Status</span>
+            <p className="text-sm text-muted-foreground">
               {formData.isActive
                 ? "Banner will be visible on homepage"
                 : "Banner will be hidden from homepage"}
@@ -554,7 +554,7 @@ const handleEdit = (banner) => {
             }
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               formData.isActive 
-                ? "bg-blue-600 dark:bg-blue-500" 
+                ? "bg-primary dark:bg-primary" 
                 : "bg-gray-300 dark:bg-gray-600"
             }`}
           >
@@ -571,7 +571,7 @@ const handleEdit = (banner) => {
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 dark:bg-blue-700 text-white font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary dark:bg-blue-700 text-white font-semibold rounded-lg hover:bg-primary/90 dark:hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? (
               <>
@@ -594,7 +594,7 @@ const handleEdit = (banner) => {
           <button
             type="button"
             onClick={handleReset}
-            className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="px-6 py-3 border border-border text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             {isEditing ? "Cancel" : "Reset"}
           </button>

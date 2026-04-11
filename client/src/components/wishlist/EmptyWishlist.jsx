@@ -19,47 +19,47 @@ const EmptyWishlist = () => {
           </div>
         </div>
         
-        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
           Your Wishlist is Empty
         </h1>
         
-        <p className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-lg mx-auto">
+        <p className="text-xl text-muted-foreground mb-10 max-w-lg mx-auto">
           Save your favorite products here to easily find them later. Start exploring our collection!
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+          <div className="p-6 bg-card rounded-2xl shadow-lg">
             <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Heart className="w-6 h-6 text-pink-500" />
             </div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="font-semibold text-foreground mb-2">
               Save Favorites
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Click the heart icon on any product
             </p>
           </div>
           
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+          <div className="p-6 bg-card rounded-2xl shadow-lg">
             <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-6 h-6 text-amber-500" />
             </div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="font-semibold text-foreground mb-2">
               Compare Later
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Review and compare saved items
             </p>
           </div>
           
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
+          <div className="p-6 bg-card rounded-2xl shadow-lg">
             <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShoppingBag className="w-6 h-6 text-emerald-500" />
             </div>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="font-semibold text-foreground mb-2">
               Quick Purchase
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Buy directly from wishlist
             </p>
           </div>
@@ -76,7 +76,7 @@ const EmptyWishlist = () => {
           
           <Link
             to="/categories"
-            className="px-10 py-4 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl hover:border-amber-500 hover:text-amber-600 dark:hover:border-amber-500 transition-all duration-300"
+            className="px-10 py-4 border-2 border-border text-gray-700 dark:text-gray-300 font-semibold rounded-2xl hover:border-amber-500 hover:text-highlight dark:hover:border-amber-500 transition-all duration-300"
           >
             Browse Categories
           </Link>

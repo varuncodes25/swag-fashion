@@ -22,7 +22,7 @@ const WishlistSkeleton = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(8)].map((_, index) => (
             <div key={index} className="animate-pulse">
-              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+              <div className="bg-card rounded-2xl shadow-lg overflow-hidden">
                 <div className="aspect-square bg-gray-200 dark:bg-gray-700"></div>
                 <div className="p-4 space-y-3">
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>

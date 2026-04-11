@@ -8,7 +8,7 @@ const RatingBadge = ({ rating, reviewCount }) => {
         <span className="font-bold">{rating || 0}</span>
         <Star size={14} fill="currentColor" />
       </div>
-      <span className="text-gray-600 dark:text-gray-400">
+      <span className="text-muted-foreground">
         ({reviewCount || 0} {reviewCount === 1 ? 'Review' : 'Reviews'})
       </span>
     </div>

@@ -13,7 +13,7 @@ const OrderProductTile = ({ id, name, price, quantity, color, size }) => {
           className="w-20 sm:w-24 h-20 sm:h-24 object-cover rounded-lg border border-gray-200 dark:border-zinc-700"
         />
         <div className="flex flex-col gap-1">
-          <h1 className="font-semibold text-base sm:text-lg text-gray-900 dark:text-white">
+          <h1 className="font-semibold text-base sm:text-lg text-foreground">
             {id?.name || name}
           </h1>
           <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600 dark:text-customGray">

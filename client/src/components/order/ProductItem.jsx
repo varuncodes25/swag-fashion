@@ -26,7 +26,7 @@ const ProductItem = ({ item }) => {
   const getColorClass = (color) => {
     const colorMap = {
       'red': 'bg-red-500',
-      'blue': 'bg-blue-500',
+      'blue': 'bg-primary',
       'green': 'bg-green-500',
       'black': 'bg-black',
       'white': 'bg-white border border-border',
@@ -35,7 +35,7 @@ const ProductItem = ({ item }) => {
       'pink': 'bg-pink-400',
       'purple': 'bg-purple-500',
       'yellow': 'bg-yellow-400',
-      'orange': 'bg-orange-500',
+      'orange': 'bg-warning',
       'brown': 'bg-yellow-800',
     };
     return colorMap[color.toLowerCase()] || 'bg-gray-300';
@@ -116,7 +116,7 @@ const ProductItem = ({ item }) => {
                 </div>
                 
                 {mrp > sellingPrice && (
-                  <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-1">
+                  <p className="text-xs text-success font-medium mt-1">
                     You saved ₹{savedAmount}
                   </p>
                 )}
@@ -169,7 +169,7 @@ const ProductItem = ({ item }) => {
               {mrp > sellingPrice && (
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground/70">You Saved</p>
-                  <p className="font-medium text-green-600 dark:text-green-400">
+                  <p className="font-medium text-success">
                     ₹{savedAmount}
                   </p>
                 </div>

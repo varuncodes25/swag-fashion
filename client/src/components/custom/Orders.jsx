@@ -29,13 +29,13 @@ import { Search, X } from "lucide-react";
 const getPaymentStatusColor = (status) => {
   switch (status) {
     case "PAID":
-      return "text-green-600 dark:text-green-400";
+      return "text-success";
     case "PENDING":
       return "text-yellow-600 dark:text-yellow-400";
     case "FAILED":
-      return "text-red-600 dark:text-red-400";
+      return "text-destructive";
     default:
-      return "text-gray-600 dark:text-gray-400";
+      return "text-muted-foreground";
   }
 };
 
@@ -203,10 +203,10 @@ const Orders = () => {
     <>
       {/* HEADER */}
       <div className="flex justify-between items-center mb-6 px-3">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-foreground">
           Orders Management
         </h1>
-        <div className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="text-sm text-muted-foreground">
           Total: {pagination.total} orders
           {loading && <span className="ml-2 animate-pulse">• Loading...</span>}
         </div>
@@ -217,12 +217,12 @@ const Orders = () => {
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search by order #, phone, name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-white dark:bg-gray-800"
+              className="pl-10 bg-card"
             />
             {searchQuery && (
               <button
@@ -236,7 +236,7 @@ const Orders = () => {
 
           {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-[180px] bg-white dark:bg-gray-800">
+            <SelectTrigger className="w-full sm:w-[180px] bg-card">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
@@ -262,7 +262,7 @@ const Orders = () => {
       <div className="flex flex-col gap-6 max-w-7xl mx-auto px-2">
         {orders.length === 0 ? (
           <div className="text-center py-12">
-            <h2 className="text-gray-500 dark:text-gray-400 text-xl">
+            <h2 className="text-muted-foreground text-xl">
               {loading ? "Loading orders..." : "No orders found"}
             </h2>
           </div>
@@ -338,7 +338,7 @@ const Orders = () => {
               </PaginationContent>
             </Pagination>
 
-            <div className="text-center text-sm text-gray-500 dark:text-gray-400 mt-2">
+            <div className="text-center text-sm text-muted-foreground mt-2">
               Page {pagination.page} of {pagination.pages} • {orders.length} orders
             </div>
           </div>
@@ -351,15 +351,15 @@ const Orders = () => {
 /* ================= ORDER CARD COMPONENT ================= */
 const OrderCard = ({ order, loading, expandedOrders, toggleStatusHistory, updateOrderStatus }) => {
   return (
-    <Card className="p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 space-y-4 hover:shadow-md transition-shadow bg-white dark:bg-gray-900">
+    <Card className="p-5 rounded-2xl shadow-sm border border-border space-y-4 hover:shadow-md transition-shadow bg-card">
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Order ID</p>
-          <p className="font-mono text-sm font-medium text-gray-900 dark:text-gray-100">
+          <p className="text-sm text-muted-foreground">Order ID</p>
+          <p className="font-mono text-sm font-medium text-foreground">
             #{order.orderNumber || order.id?.slice(-8)}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-muted-foreground">
             {formatDate(order.orderDate)}
           </p>
         </div>
@@ -380,10 +380,10 @@ const OrderCard = ({ order, loading, expandedOrders, toggleStatusHistory, update
       {/* CANCELLATION REASON */}
       {order.cancelReason && (
         <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 rounded-md">
-          <p className="text-sm font-medium text-red-800 dark:text-red-300">
+          <p className="text-sm font-medium text-destructive">
             Cancellation Reason:
           </p>
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-destructive">
             {order.cancelReason}
           </p>
         </div>
@@ -391,7 +391,7 @@ const OrderCard = ({ order, loading, expandedOrders, toggleStatusHistory, update
 
       {/* ITEMS PREVIEW */}
       <div>
-        <p className="font-medium mb-3 text-gray-900 dark:text-white">
+        <p className="font-medium mb-3 text-foreground">
           Products ({order.summary.totalItems})
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -401,7 +401,7 @@ const OrderCard = ({ order, loading, expandedOrders, toggleStatusHistory, update
         </div>
       </div>
 
-      <hr className="border-gray-200 dark:border-gray-800" />
+      <hr className="border-border" />
 
       {/* INFO GRID */}
       <div className="grid md:grid-cols-3 gap-6">
@@ -415,7 +415,7 @@ const OrderCard = ({ order, loading, expandedOrders, toggleStatusHistory, update
 
 /* ================= PRODUCT CARD ================= */
 const ProductCard = ({ product }) => (
-  <div className="border border-gray-200 dark:border-gray-800 rounded-lg p-3 bg-gray-50/50 dark:bg-gray-800/50">
+  <div className="border border-border rounded-lg p-3 bg-gray-50/50 dark:bg-gray-800/50">
     <div className="flex items-start gap-3">
       <img
         src={product.image}
@@ -426,17 +426,17 @@ const ProductCard = ({ product }) => (
         }}
       />
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm line-clamp-2 text-gray-900 dark:text-white">
+        <p className="font-medium text-sm line-clamp-2 text-foreground">
           {product.name}
         </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Qty: {product.quantity}
         </p>
-        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+        <p className="text-sm font-semibold text-foreground">
           ₹{product.price}
         </p>
         {product.color && product.color !== "Default" && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Color: {product.color} {product.size && `| Size: ${product.size}`}
           </p>
         )}
@@ -448,20 +448,20 @@ const ProductCard = ({ product }) => (
 /* ================= CUSTOMER INFO ================= */
 const CustomerInfo = ({ order }) => (
   <div className="space-y-2">
-    <p className="font-semibold text-sm text-gray-900 dark:text-white">
+    <p className="font-semibold text-sm text-foreground">
       Customer Details
     </p>
-    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
-      <p className="font-medium text-gray-900 dark:text-white">
+    <div className="bg-muted/40/50 p-3 rounded-lg border border-border">
+      <p className="font-medium text-foreground">
         {order.customer?.name || 'N/A'}
       </p>
       {order.customer?.phone && (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           📞 {order.customer.phone}
         </p>
       )}
       {order.customer?.email && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+        <p className="text-sm text-muted-foreground truncate">
           ✉️ {order.customer.email}
         </p>
       )}
@@ -472,18 +472,18 @@ const CustomerInfo = ({ order }) => (
 /* ================= SHIPPING ADDRESS ================= */
 const ShippingAddress = ({ order }) => (
   <div className="space-y-2">
-    <p className="font-semibold text-sm text-gray-900 dark:text-white">
+    <p className="font-semibold text-sm text-foreground">
       Shipping Address
     </p>
-    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
-      <p className="font-medium text-gray-900 dark:text-white">
+    <div className="bg-muted/40/50 p-3 rounded-lg border border-border">
+      <p className="font-medium text-foreground">
         {order.shipping?.name || order.customer?.name || 'N/A'}
       </p>
-      <p className="text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-muted-foreground">
         {order.shipping?.city}, {order.shipping?.pincode}
       </p>
       {order.shipping?.awb && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-xs text-muted-foreground mt-2">
           📦 AWB: {order.shipping.awb}
         </p>
       )}
@@ -494,20 +494,20 @@ const ShippingAddress = ({ order }) => (
 /* ================= PAYMENT INFO ================= */
 const PaymentInfo = ({ order }) => (
   <div className="space-y-2">
-    <p className="font-semibold text-sm text-gray-900 dark:text-white">
+    <p className="font-semibold text-sm text-foreground">
       Payment Details
     </p>
-    <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
+    <div className="bg-muted/40/50 p-3 rounded-lg border border-border">
       <div className="flex justify-between items-center">
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-muted-foreground">
           Method:
         </span>
-        <span className="font-medium capitalize text-gray-900 dark:text-white">
+        <span className="font-medium capitalize text-foreground">
           {order.payment?.method || 'N/A'}
         </span>
       </div>
       <div className="flex justify-between items-center mt-2">
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-sm text-muted-foreground">
           Status:
         </span>
         <span
@@ -517,8 +517,8 @@ const PaymentInfo = ({ order }) => (
         </span>
       </div>
       {order.payment?.razorpayId && (
-        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+        <div className="mt-2 pt-2 border-t border-border">
+          <p className="text-xs text-muted-foreground truncate">
             ID: {order.payment.razorpayId}
           </p>
         </div>
@@ -554,7 +554,7 @@ const OrderStatusSelector = ({ order, loading, updateOrderStatus }) => {
         onValueChange={(value) => updateOrderStatus(value, order.id)}
         disabled={loading}
       >
-        <SelectTrigger className="w-[150px] capitalize bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700">
+        <SelectTrigger className="w-[150px] capitalize bg-card border-border">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -576,8 +576,8 @@ const OrderStatusSelector = ({ order, loading, updateOrderStatus }) => {
 /* ================= ORDER AMOUNT ================= */
 const OrderAmount = ({ amount }) => (
   <div className="text-right">
-    <p className="text-sm text-gray-500 dark:text-gray-400">Total Amount</p>
-    <p className="text-lg font-bold text-gray-900 dark:text-white">
+    <p className="text-sm text-muted-foreground">Total Amount</p>
+    <p className="text-lg font-bold text-foreground">
       ₹{amount?.toLocaleString() || 0}
     </p>
   </div>

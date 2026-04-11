@@ -38,10 +38,10 @@ const OrderSummary = ({
         {/* Mobile: Stacked Cards View */}
         <div className="sm:hidden space-y-4 p-4">
           {/* Date Card */}
-          <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-500/10 rounded-lg">
+          <div className="flex items-center justify-between p-3 bg-primary/10 dark:bg-primary/10 rounded-lg">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
-                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div className="w-10 h-10 bg-blue-100 dark:bg-primary/20 rounded-lg flex items-center justify-center">
+                <Calendar className="w-5 h-5 text-primary dark:text-primary" />
               </div>
               <span className="text-muted-foreground">Order Date</span>
             </div>
@@ -80,8 +80,8 @@ const OrderSummary = ({
                 <IndianRupee
                   className={`w-5 h-5 ${
                     shippingCharge === 0
-                      ? "text-green-600 dark:text-green-400"
-                      : "text-purple-600 dark:text-purple-400"
+                      ? "text-success"
+                      : "text-primary dark:text-purple-400"
                   }`}
                 />
               </div>
@@ -90,7 +90,7 @@ const OrderSummary = ({
             <span
               className={`font-semibold ${
                 shippingCharge === 0
-                  ? "text-green-600 dark:text-green-400"
+                  ? "text-success"
                   : "text-foreground"
               }`}
             >
@@ -99,11 +99,11 @@ const OrderSummary = ({
           </div>
 
           {/* Total Amount Card (Highlighted) */}
-          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 rounded-xl border-2 border-blue-200 dark:border-blue-800">
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-500/10 dark:to-indigo-500/10 rounded-xl border-2 border-primary/25 dark:border-primary/30">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-500/20 rounded-full flex items-center justify-center">
-                  <IndianRupee className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                <div className="w-12 h-12 bg-blue-100 dark:bg-primary/20 rounded-full flex items-center justify-center">
+                  <IndianRupee className="w-6 h-6 text-primary dark:text-primary" />
                 </div>
                 <div>
                   <p className="text-muted-foreground text-sm">
@@ -117,7 +117,7 @@ const OrderSummary = ({
             </div>
 
             {/* Mobile Breakdown */}
-            <div className="pt-3 border-t border-blue-200 dark:border-blue-800">
+            <div className="pt-3 border-t border-primary/25 dark:border-primary/30">
               <button 
                 onClick={() => setShowBreakdown(!showBreakdown)}
                 className="flex items-center justify-between w-full cursor-pointer text-sm text-primary"
@@ -134,7 +134,7 @@ const OrderSummary = ({
                   </div>
                   
                   {couponDiscount > 0 && (
-                    <div className="flex justify-between text-green-600 dark:text-green-400">
+                    <div className="flex justify-between text-success">
                       <span>Coupon Discount:</span>
                       <span>-{formatPrice(couponDiscount)}</span>
                     </div>
@@ -142,7 +142,7 @@ const OrderSummary = ({
                   
                   <div className="flex justify-between text-muted-foreground">
                     <span>Shipping:</span>
-                    <span className={shippingCharge === 0 ? "text-green-600 dark:text-green-400" : ""}>
+                    <span className={shippingCharge === 0 ? "text-success" : ""}>
                       {shippingCharge === 0 ? "FREE" : formatPrice(shippingCharge)}
                     </span>
                   </div>
@@ -198,7 +198,7 @@ const OrderSummary = ({
             </div>
             <div
               className={`md:col-span-3 py-2 flex items-center gap-2 ${
-                shippingCharge === 0 ? "text-green-600 dark:text-green-400" : "text-foreground"
+                shippingCharge === 0 ? "text-success" : "text-foreground"
               }`}
             >
               <IndianRupee className="w-5 h-5 text-purple-500 md:hidden" />
@@ -214,8 +214,8 @@ const OrderSummary = ({
             </div>
             <div className="md:col-span-3 py-2">
               <div className="flex items-center gap-3">
-                <div className="md:hidden w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-lg flex items-center justify-center">
-                  <IndianRupee className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <div className="md:hidden w-10 h-10 bg-blue-100 dark:bg-primary/20 rounded-lg flex items-center justify-center">
+                  <IndianRupee className="w-5 h-5 text-primary dark:text-primary" />
                 </div>
                 <div>
                   <div className="font-bold text-xl text-foreground">
@@ -248,7 +248,7 @@ const OrderSummary = ({
               {/* Desktop Breakdown Details */}
               <div className="hidden md:flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
                   <span className="text-muted-foreground">
                     Subtotal: {formatPrice(subtotal)}
                   </span>
@@ -257,7 +257,7 @@ const OrderSummary = ({
                 {couponDiscount > 0 && (
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-green-600 dark:text-green-400">
+                    <span className="text-success">
                       Coupon: -{formatPrice(couponDiscount)}
                     </span>
                   </div>
@@ -265,7 +265,7 @@ const OrderSummary = ({
                 
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full ${shippingCharge === 0 ? "bg-green-500" : "bg-purple-500"}`}></div>
-                  <span className={shippingCharge === 0 ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
+                  <span className={shippingCharge === 0 ? "text-success" : "text-muted-foreground"}>
                     Shipping: {shippingCharge === 0 ? "FREE" : formatPrice(shippingCharge)}
                   </span>
                 </div>
@@ -297,13 +297,13 @@ const OrderSummary = ({
                   {couponDiscount > 0 && (
                     <div className="flex justify-between items-center p-3 bg-card rounded-lg">
                       <span className="text-muted-foreground">Coupon Discount</span>
-                      <span className="font-semibold text-green-600 dark:text-green-400">-{formatPrice(couponDiscount)}</span>
+                      <span className="font-semibold text-success">-{formatPrice(couponDiscount)}</span>
                     </div>
                   )}
                   
                   <div className="flex justify-between items-center p-3 bg-card rounded-lg">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span className={`font-semibold ${shippingCharge === 0 ? "text-green-600 dark:text-green-400" : "text-foreground"}`}>
+                    <span className={`font-semibold ${shippingCharge === 0 ? "text-success" : "text-foreground"}`}>
                       {shippingCharge === 0 ? "FREE" : formatPrice(shippingCharge)}
                     </span>
                   </div>

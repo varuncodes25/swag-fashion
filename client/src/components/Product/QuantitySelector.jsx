@@ -28,7 +28,7 @@ const QuantitySelector = ({ value, onChange, max = 10 }) => {
         
         <div className="flex items-center gap-2">
           {/* Mobile Buttons */}
-          <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+          <div className="flex items-center border border-border rounded-lg bg-card">
             {/* Decrement Button */}
             <button
               onClick={handleDecrement}
@@ -50,7 +50,7 @@ const QuantitySelector = ({ value, onChange, max = 10 }) => {
             {/* Quantity Display */}
             <div className="
               px-4 py-2 md:px-6 md:py-3
-              border-l border-r border-gray-200 dark:border-gray-700
+              border-l border-r border-border
               min-w-[50px] md:min-w-[60px] text-center
             ">
               <input
@@ -65,7 +65,7 @@ const QuantitySelector = ({ value, onChange, max = 10 }) => {
                   text-base md:text-lg
                   font-semibold
                   bg-transparent
-                  text-gray-900 dark:text-white
+                  text-foreground
                   focus:outline-none focus:ring-0
                   [appearance:textfield]
                   [&::-webkit-outer-spin-button]:appearance-none
@@ -95,14 +95,14 @@ const QuantitySelector = ({ value, onChange, max = 10 }) => {
           </div>
           
           {/* Max Info - Mobile Hidden */}
-          <div className="hidden md:block text-sm text-gray-500 dark:text-gray-400">
+          <div className="hidden md:block text-sm text-muted-foreground">
             Max: <span className="font-medium text-gray-700 dark:text-gray-300">{max}</span>
           </div>
         </div>
       </div>
       
       {/* Max Info - Mobile Only */}
-      <div className="md:hidden mt-2 text-xs text-gray-500 dark:text-gray-400">
+      <div className="md:hidden mt-2 text-xs text-muted-foreground">
         Max {max} per order
       </div>
     </div>

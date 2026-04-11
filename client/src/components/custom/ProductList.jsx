@@ -104,7 +104,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
+                <div className="bg-card rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
                   <div className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg mb-4" />
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
                   <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-3" />
@@ -125,9 +125,9 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
     {/* Search Results Header */}
     {search && (
       <div className="mb-6 animate-slideDown">
-        <div className="inline-flex items-center px-4 py-3 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+        <div className="inline-flex items-center px-4 py-3 bg-card rounded-xl shadow-md border border-border">
           <svg 
-            className="w-5 h-5 text-gray-400 dark:text-gray-500 mr-2" 
+            className="w-5 h-5 text-muted-foreground mr-2" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
@@ -139,13 +139,13 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
               d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
             />
           </svg>
-          <span className="hidden lg:block text-gray-600 dark:text-gray-400">
+          <span className="hidden lg:block text-muted-foreground">
             Showing results for:{" "}
           </span>
-          <span className="ml-2 font-semibold text-gray-900 dark:text-white">
+          <span className="ml-2 font-semibold text-foreground">
             "{search}"
           </span>
-          <span className="ml-3 px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 rounded-full font-medium">
+          <span className="ml-3 px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/50 text-primary dark:text-primary rounded-full font-medium">
             {products.length} items
           </span>
         </div>
@@ -182,10 +182,10 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
         {loading && products.length > 0 && (
           <div className="flex flex-col items-center justify-center my-12 py-8">
             <div className="relative">
-              <div className="w-16 h-16 border-4 border-gray-200 dark:border-gray-700 rounded-full"></div>
-              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-border rounded-full"></div>
+              <div className="absolute top-0 left-0 w-16 h-16 border-4 border-primary dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400 font-medium">
+            <p className="mt-4 text-muted-foreground font-medium">
               Loading more products...
             </p>
           </div>
@@ -194,10 +194,10 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
         {/* End of Results Message */}
         {!hasMore && products.length > 0 && (
           <div className="flex justify-center my-12">
-            <div className="text-center px-6 py-4 bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-200 dark:border-gray-700">
+            <div className="text-center px-6 py-4 bg-card rounded-xl shadow-md border border-border">
               <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 flex items-center justify-center">
                 <svg 
-                  className="w-6 h-6 text-emerald-600 dark:text-emerald-400" 
+                  className="w-6 h-6 text-success" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -213,7 +213,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
               <p className="text-gray-700 dark:text-gray-300 font-semibold">
                 🎉 All products loaded
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 Showing {products.length} products
               </p>
             </div>
@@ -223,7 +223,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
     ) : (
       /* Empty State - Card Style */
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center max-w-md mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+        <div className="text-center max-w-md mx-auto bg-card rounded-2xl shadow-xl p-8 border border-border">
           <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
             <svg 
               className="w-10 h-10 text-gray-400 dark:text-gray-300" 
@@ -244,7 +244,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
             No products found
           </h3>
           
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-muted-foreground mb-6">
             {search || category !== "All" || price 
               ? "Try adjusting your search or filter to find what you're looking for."
               : "Check back later for new products."
@@ -257,7 +257,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Suggestions:
               </p>
-              <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+              <ul className="text-sm text-muted-foreground space-y-1">
                 <li className="flex items-center">
                   <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -288,11 +288,11 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
   {products.length > 8 && (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-8 right-8 w-12 h-12 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-xl transition-all duration-300 z-50"
+      className="fixed bottom-8 right-8 w-12 h-12 bg-card rounded-full shadow-lg border border-border flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-xl transition-all duration-300 z-50"
       aria-label="Back to top"
     >
       <svg 
-        className="w-5 h-5 text-gray-600 dark:text-gray-400" 
+        className="w-5 h-5 text-muted-foreground" 
         fill="none" 
         stroke="currentColor" 
         viewBox="0 0 24 24"

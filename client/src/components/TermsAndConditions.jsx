@@ -5,7 +5,7 @@ const TermsAndConditions = () => {
   return (
     <div className="max-w-4xl mx-auto  bg-white dark:bg-black text-gray-900 dark:text-neutral-50 rounded-lg shadow-md my-10 ">
       <header
-        className="w-full text-3xl font-bold text-center p-4 bg-white dark:bg-gray-900 
+        className="w-full text-3xl font-bold text-center p-4 bg-card 
              [box-shadow:0_4px_6px_-1px_rgba(0,0,0,0.1)]"
       >
         Terms and Conditions
@@ -114,7 +114,7 @@ const TermsAndConditions = () => {
 
 
       </div>
-      <section className="w-full h-36 bg-white dark:bg-gray-800 text-center rounded-t-md shadow-md flex flex-col items-center justify-center mt-6">
+      <section className="w-full h-36 bg-card text-center rounded-t-md shadow-md flex flex-col items-center justify-center mt-6">
     <h1 className="text-lg font-bold mb-2">Swag Fashion</h1>
     <img src={swagiconDark} alt="Swag Icon" className="h-16 w-16" />
   </section>

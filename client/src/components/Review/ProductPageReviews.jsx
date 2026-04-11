@@ -152,7 +152,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
     return (
       <div className="mt-8 md:mt-12">
         <div className="flex items-center justify-between mb-4 md:mb-6 px-4 md:px-0">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl md:text-2xl font-bold text-foreground">
             Customer Reviews
           </h3>
         </div>
@@ -179,12 +179,12 @@ const ProductPageReviews = ({ productId, productSlug }) => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+          <h3 className="text-xl md:text-2xl font-bold text-foreground">
             Customer Reviews ({reviews.length})
           </h3>
           {reviews.length > 0 && (
             <div className="flex items-center gap-2 mt-1">
-              <p className="text-gray-600 dark:text-gray-400 text-xs md:text-sm">
+              <p className="text-muted-foreground text-xs md:text-sm">
                 {reviews.length} reviews • {calculateAverageRating(reviews)}/5 average
               </p>
             </div>
@@ -196,7 +196,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
           <Link to={`/product/${productId}/reviews`}>
             <Button
               size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-primary hover:bg-primary/90 text-white"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
               Write Review
@@ -207,12 +207,12 @@ const ProductPageReviews = ({ productId, productSlug }) => {
 
       {/* Reviews List */}
       {reviews.length === 0 ? (
-        <div className="text-center py-8 md:py-12 bg-white dark:bg-gray-900 rounded-xl md:rounded-2xl border border-gray-200 dark:border-gray-800">
+        <div className="text-center py-8 md:py-12 bg-card rounded-xl md:rounded-2xl border border-border">
           <MessageCircle className="h-10 w-10 md:h-12 md:w-12 text-gray-400 dark:text-gray-600 mx-auto mb-3 md:mb-4" />
           <h4 className="text-lg md:text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
             No reviews yet
           </h4>
-          <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base px-4 mb-6">
+          <p className="text-muted-foreground text-sm md:text-base px-4 mb-6">
             Be the first to share your thoughts
           </p>
         </div>
@@ -250,7 +250,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
               >
                 <Button
                   variant="outline"
-                  className="w-full text-sm border-blue-600 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                  className="w-full text-sm border-primary text-primary hover:bg-primary/10 hover:text-primary"
                 >
                   <span>View All Reviews</span>
                   <ChevronRight className="ml-2 h-4 w-4" />

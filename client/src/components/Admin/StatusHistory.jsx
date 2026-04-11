@@ -16,7 +16,7 @@ const StatusHistory = ({ order }) => {
           {order.statusHistory.map((change, index) => (
             <div 
               key={index} 
-              className="border-l-4 border-blue-500 pl-4 py-3 bg-gray-50 rounded-r-lg dark:bg-gray-800 dark:border-blue-400"
+              className="border-l-4 border-primary pl-4 py-3 bg-gray-50 rounded-r-lg dark:bg-gray-800 dark:border-blue-400"
             >
               <div className="flex justify-between items-start">
                 <div>
@@ -24,7 +24,7 @@ const StatusHistory = ({ order }) => {
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       change.status === 'DELIVERED' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
                       change.status === 'CANCELLED' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' :
-                      change.status === 'SHIPPED' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                      change.status === 'SHIPPED' ? 'bg-blue-100 text-info dark:bg-primary/20 dark:text-primary' :
                       change.status === 'CONFIRMED' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' :
                       change.status === 'PACKED' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
                       'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
@@ -32,7 +32,7 @@ const StatusHistory = ({ order }) => {
                       {change.status}
                     </span>
                     {change.changedBy?.name && (
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                      <span className="text-sm text-muted-foreground">
                         by {change.changedBy.name}
                       </span>
                     )}
@@ -46,10 +46,10 @@ const StatusHistory = ({ order }) => {
                 </div>
                 
                 <div className="text-right">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     {new Date(change.changedAt).toLocaleDateString()}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {new Date(change.changedAt).toLocaleTimeString()}
                   </p>
                 </div>

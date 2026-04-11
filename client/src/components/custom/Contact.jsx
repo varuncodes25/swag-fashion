@@ -54,9 +54,9 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-zinc-900 py-16 px-6 sm:px-12">
+    <div className="min-h-screen bg-muted py-16 px-6 sm:px-12">
       <div className="max-w-4xl mx-auto bg-white dark:bg-zinc-800 rounded-2xl shadow-lg p-8 md:p-12">
-        <h2 className="text-3xl font-extrabold text-center text-gray-900 dark:text-white mb-8">
+        <h2 className="text-3xl font-extrabold text-center text-foreground mb-8">
           Contact Us
         </h2>
 

@@ -36,18 +36,18 @@ const ReviewHeader = ({ review, formatDate, getRandomAvatar }) => {
             className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-800 object-cover"
           />
           <div>
-            <h4 className="font-semibold text-gray-900 dark:text-white text-sm">
+            <h4 className="font-semibold text-foreground text-sm">
               {shortName}
             </h4>
             <div className="flex items-center gap-1 mt-0.5">
               {renderStars(12)}
-              <span className="text-xs font-semibold text-amber-600 dark:text-amber-500 ml-1">
+              <span className="text-xs font-semibold text-highlight dark:text-amber-500 ml-1">
                 {rating}.0
               </span>
             </div>
           </div>
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-muted-foreground">
           {new Date(date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -65,17 +65,17 @@ const ReviewHeader = ({ review, formatDate, getRandomAvatar }) => {
         <div className="flex-1">
           <div className="flex items-start justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-foreground">
                 {userName}
               </h4>
               <div className="flex items-center gap-2 mt-1">
                 {renderStars(14)}
-                <span className="text-sm font-semibold text-amber-600 dark:text-amber-500">
+                <span className="text-sm font-semibold text-highlight dark:text-amber-500">
                   {rating}.0
                 </span>
               </div>
             </div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">
+            <span className="text-sm text-muted-foreground">
               {formatDate(date)}
             </span>
           </div>

@@ -243,7 +243,7 @@ const AllProducts = () => {
       return <Badge variant="destructive" className="text-xs">Blocked</Badge>;
     }
     if (!product.isInStock && product.availableStock === 0) {
-      return <Badge variant="destructive" className="text-xs bg-orange-500">Out Stock</Badge>;
+      return <Badge variant="destructive" className="text-xs bg-warning">Out Stock</Badge>;
     }
     if (product.availableStock < 10) {
       return <Badge variant="warning" className="text-xs bg-yellow-500">Low Stock</Badge>;
@@ -572,7 +572,7 @@ const AllProducts = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950"
+                          className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10 dark:hover:bg-blue-950"
                           onClick={() => handleViewProduct(product?._id)}
                           title="View"
                         >

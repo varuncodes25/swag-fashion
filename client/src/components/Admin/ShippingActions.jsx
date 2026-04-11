@@ -57,9 +57,9 @@ const ShippingActions = ({ order, fetchOrders }) => {
         };
       case "CREATED":
         return {
-          icon: <Package className="h-5 w-5 text-blue-600" />,
+          icon: <Package className="h-5 w-5 text-primary" />,
           label: "Shipment Created",
-          color: "bg-blue-100 text-blue-800",
+          color: "bg-blue-100 text-info",
           description: "Processing courier assignment automatically",
           showButton: false
         };
@@ -73,7 +73,7 @@ const ShippingActions = ({ order, fetchOrders }) => {
         };
       case "DELIVERED":
         return {
-          icon: <CheckCircle className="h-5 w-5 text-purple-600" />,
+          icon: <CheckCircle className="h-5 w-5 text-primary" />,
           label: "Delivered",
           color: "bg-purple-100 text-purple-800",
           description: shipment.deliveredAt 
@@ -125,7 +125,7 @@ const ShippingActions = ({ order, fetchOrders }) => {
         <button
           onClick={createShipment}
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-primary hover:bg-primary/90 text-white py-2 px-4 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>

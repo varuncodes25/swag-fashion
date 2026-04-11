@@ -83,7 +83,7 @@ const LocationButton = ({ onClick, isLoading, isAvailable }) => {
       type="button"
       onClick={onClick}
       disabled={isLoading}
-      className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-2 px-4 py-2 text-sm bg-primary/10 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-primary dark:text-primary rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {isLoading ? (
         <>
@@ -167,8 +167,8 @@ const AddressDetailsSection = React.memo(({
     
     {/* Location Auto-fill */}
     {isGeolocationAvailable && (
-      <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex justify-between items-center p-3 bg-primary/10 dark:bg-blue-900/20 rounded-lg">
+        <span className="text-sm text-muted-foreground">
           Fill address automatically
         </span>
         <LocationButton
@@ -181,7 +181,7 @@ const AddressDetailsSection = React.memo(({
 
     {locationError && (
       <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p className="text-sm text-destructive">
           {locationError}
         </p>
       </div>
@@ -228,7 +228,7 @@ const AddressDetailsSection = React.memo(({
             onChange={handleChange}
             disabled={loading}
             required
-            className="w-full h-12 rounded-lg px-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 rounded-lg px-4 bg-card text-foreground border border-border focus:border-primary dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="">
               {loading ? "Loading states..." : "Select State"}
@@ -275,7 +275,7 @@ const AddressDetailsSection = React.memo(({
             name="address_type"
             value={form.address_type}
             onChange={handleChange}
-            className="w-full h-12 rounded-lg px-4 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/30"
+            className="w-full h-12 rounded-lg px-4 bg-card text-foreground border border-border focus:border-primary dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/30"
           >
             {ADDRESS_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
@@ -292,20 +292,20 @@ const AddressDetailsSection = React.memo(({
 AddressDetailsSection.displayName = "AddressDetailsSection";
 
 const PreferencesSection = React.memo(({ form, handleChange }) => (
-  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+  <div className="p-4 bg-muted/40/50 rounded-xl border border-border">
     <label className="flex items-center gap-3 cursor-pointer">
       <input
         type="checkbox"
         name="isDefault"
         checked={form.isDefault}
         onChange={handleChange}
-        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+        className="w-5 h-5 rounded border-border text-primary dark:text-primary focus:ring-primary dark:focus:ring-blue-400"
       />
       <div>
-        <span className="font-medium text-gray-900 dark:text-gray-100">
+        <span className="font-medium text-foreground">
           Set as default address
         </span>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+        <p className="text-sm text-muted-foreground mt-0.5">
           Use this address for all future orders
         </p>
       </div>
@@ -317,7 +317,7 @@ PreferencesSection.displayName = "PreferencesSection";
 
 const FormActions = React.memo(({ isModal, isSubmitting, isEditMode, onClose, handleSubmit }) => (
   isModal ? (
-    <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+    <div className="flex justify-end gap-4 pt-4 border-t border-border">
       <Button
         type="button"
         variant="outline"
@@ -330,7 +330,7 @@ const FormActions = React.memo(({ isModal, isSubmitting, isEditMode, onClose, ha
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="h-11 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
+        className="h-11 px-6 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg"
       >
         {isSubmitting ? (
           <span className="flex items-center gap-2">
@@ -346,11 +346,11 @@ const FormActions = React.memo(({ isModal, isSubmitting, isEditMode, onClose, ha
       </Button>
     </div>
   ) : (
-    <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 pt-4 pb-6">
+    <div className="sticky bottom-0 bg-card border-t border-border pt-4 pb-6">
       <Button
         type="submit"
         disabled={isSubmitting}
-        className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg"
+        className="w-full h-12 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white shadow-lg"
       >
         {isSubmitting ? (
           <span className="flex items-center justify-center gap-2">
@@ -364,7 +364,7 @@ const FormActions = React.memo(({ isModal, isSubmitting, isEditMode, onClose, ha
           </span>
         )}
       </Button>
-      <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
+      <p className="text-xs text-muted-foreground text-center mt-3">
         Fields marked with <span className="text-red-500">*</span> are required
       </p>
     </div>
@@ -615,18 +615,18 @@ const AddressForm = ({ onClose, editAddress, isModal = false }) => {
   if (isModal) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-        <div className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800/30 p-6">
+        <div className="w-full max-w-2xl max-h-[90vh] bg-card rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-primary/30/30 p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl">
+                <div className="p-3 bg-gradient-to-r from-primary to-primary/90 rounded-xl">
                   <MapPin className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  <h3 className="text-xl font-bold text-foreground">
                     {isEditMode ? "Edit Address" : "Add New Address"}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  <p className="text-muted-foreground text-sm">
                     Please fill in all required fields marked with *
                   </p>
                 </div>
@@ -637,7 +637,7 @@ const AddressForm = ({ onClose, editAddress, isModal = false }) => {
                 disabled={isSubmitting}
                 aria-label="Close"
               >
-                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <X className="w-5 h-5 text-muted-foreground" />
               </button>
             </div>
           </div>
@@ -652,22 +652,22 @@ const AddressForm = ({ onClose, editAddress, isModal = false }) => {
 
   // Mobile Full Screen View
   return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
-      <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between z-10">
+    <div className="fixed inset-0 z-50 bg-card overflow-y-auto">
+      <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
         <button
           onClick={onClose}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           disabled={isSubmitting}
           aria-label="Go back"
         >
-          <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          <ChevronLeft className="w-5 h-5 text-muted-foreground" />
         </button>
         <div className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg">
             {addressTypeIcon}
           </div>
           <div>
-            <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg">
+            <h3 className="font-bold text-foreground text-lg">
               {isEditMode ? "Edit Address" : "Add Address"}
             </h3>
           </div>

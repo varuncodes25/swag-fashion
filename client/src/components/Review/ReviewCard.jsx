@@ -31,7 +31,7 @@ const ReviewCard = ({
   const isReviewOwner = user?._id === review?.user?._id;
 
   return (
-    <div className="p-4 md:p-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+    <div className="p-4 md:p-6 rounded-xl border border-border bg-card">
       {/* Review Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -42,7 +42,7 @@ const ReviewCard = ({
           />
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
+              <h4 className="font-semibold text-foreground">
                 {review?.user?.name}
               </h4>
               <span className="text-xs text-gray-500">
@@ -189,7 +189,7 @@ const ReviewCard = ({
             variant="ghost"
             size="sm"
             onClick={() => setReplyingTo(review._id)}
-            className="text-blue-600 hover:text-blue-700"
+            className="text-primary hover:text-primary"
           >
             Reply
           </Button>
@@ -199,7 +199,7 @@ const ReviewCard = ({
         {review.replies && review.replies.length > 0 && (
           <div className="mt-4 space-y-3">
             {review.replies.map((reply, idx) => (
-              <div key={idx} className="pl-4 border-l-2 border-blue-200">
+              <div key={idx} className="pl-4 border-l-2 border-primary/25">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium text-sm">
                     {reply.user?.name || "User"}
@@ -208,7 +208,7 @@ const ReviewCard = ({
                     {formatDate(reply.createdAt)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   {reply.review}
                 </p>
               </div>

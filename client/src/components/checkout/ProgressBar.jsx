@@ -50,7 +50,7 @@ const ProgressBar = ({
         
         {/* Progress line */}
         <div 
-          className="absolute top-6 left-0 h-1.5 bg-blue-500 dark:bg-blue-600 rounded-full transition-all duration-500 ease-out"
+          className="absolute top-6 left-0 h-1.5 bg-primary dark:bg-primary rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progressPercentage}%` }}
         />
         
@@ -71,12 +71,12 @@ const ProgressBar = ({
                     relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-2
                     transition-all duration-300
                     ${isCompleted 
-                      ? 'bg-blue-500 border-blue-500 text-white' 
+                      ? 'bg-primary border-primary text-white' 
                       : isActive
-                      ? 'bg-white dark:bg-gray-800 border-blue-500 text-blue-500 dark:text-blue-400'
+                      ? 'bg-card border-primary text-blue-500 dark:text-primary'
                       : step.enabled
-                      ? 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:border-blue-300 dark:hover:border-blue-500'
-                      : 'bg-gray-100 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                      ? 'bg-card border-border text-muted-foreground hover:border-blue-300 dark:hover:border-primary'
+                      : 'bg-muted border-border text-gray-300 dark:text-gray-600 cursor-not-allowed'
                     }
                   `}
                 >
@@ -91,13 +91,13 @@ const ProgressBar = ({
                 <div className="mt-3 text-center">
                   <p className={`
                     text-sm font-medium
-                    ${isActive ? 'text-blue-600 dark:text-blue-400' : 
-                     step.enabled ? 'text-gray-600 dark:text-gray-400' : 
+                    ${isActive ? 'text-primary dark:text-primary' : 
+                     step.enabled ? 'text-muted-foreground' : 
                      'text-gray-400 dark:text-gray-600'}
                   `}>
                     {step.title}
                   </p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Step {step.id}
                   </p>
                 </div>
@@ -114,7 +114,7 @@ const ProgressBar = ({
 
       {/* Status Indicator */}
       <div className="text-center">
-        <p className="text-sm text-gray-600 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           {currentStep === 1 && "Add your delivery address"}
           {currentStep === 2 && "Select payment method"}
           {currentStep === 3 && "Review & place order"}

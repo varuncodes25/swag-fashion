@@ -9,14 +9,14 @@ const PriceBreakup = () => {
     <div className="bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-2xl p-6 shadow-lg">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-zinc-800">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <div className="p-2 bg-blue-100 dark:bg-primary/20 rounded-lg">
+          <CreditCard className="w-5 h-5 text-primary dark:text-primary" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+          <h2 className="text-xl font-bold text-foreground">
             Price Breakdown
           </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Review your order summary
           </p>
         </div>
@@ -31,15 +31,15 @@ const PriceBreakup = () => {
               <ShoppingBag className="w-4 h-4 text-gray-700 dark:text-gray-300" />
             </div>
             <div>
-              <p className="font-medium text-gray-900 dark:text-gray-100">
+              <p className="font-medium text-foreground">
                 Subtotal
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Price of all items
               </p>
             </div>
           </div>
-          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-lg font-semibold text-foreground">
             ₹{summary.subtotal?.toFixed(2) || "0.00"}
           </p>
         </div>
@@ -49,34 +49,34 @@ const PriceBreakup = () => {
           <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-100 dark:border-green-800/30">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 dark:bg-green-800/40 rounded-md">
-                <Tag className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <Tag className="w-4 h-4 text-success" />
               </div>
               <div>
                 <p className="font-medium text-green-700 dark:text-green-300">
                   Discount
                 </p>
-                <p className="text-xs text-green-600 dark:text-green-400">
+                <p className="text-xs text-success">
                   Savings on your order
                 </p>
               </div>
             </div>
-            <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+            <p className="text-lg font-semibold text-success">
               -₹{summary.discount?.toFixed(2) || "0.00"}
             </p>
           </div>
         )}
 
         {/* Shipping */}
-        <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <div className="flex items-center justify-between p-3 bg-primary/10 dark:bg-blue-900/20 rounded-lg">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-800/40 rounded-md">
-              <Truck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <Truck className="w-4 h-4 text-primary dark:text-primary" />
             </div>
             <div>
-              <p className="font-medium text-gray-900 dark:text-gray-100">
+              <p className="font-medium text-foreground">
                 Shipping
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Delivery charges
               </p>
             </div>
@@ -84,15 +84,15 @@ const PriceBreakup = () => {
           <div className="text-right">
             {summary.shipping === 0 ? (
               <div>
-                <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                <p className="text-lg font-semibold text-success">
                   FREE
                 </p>
-                <p className="text-xs text-green-600 dark:text-green-400 line-through">
+                <p className="text-xs text-success line-through">
                   ₹{summary.shipping?.toFixed(2) || "0.00"}
                 </p>
               </div>
             ) : (
-              <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              <p className="text-lg font-semibold text-foreground">
                 ₹{summary.shipping?.toFixed(2) || "0.00"}
               </p>
             )}
@@ -106,11 +106,11 @@ const PriceBreakup = () => {
               <p className="font-medium text-amber-700 dark:text-amber-300">
                 Tax & Charges
               </p>
-              <p className="text-xs text-amber-600 dark:text-amber-400">
+              <p className="text-xs text-highlight dark:text-amber-400">
                 GST and other fees
               </p>
             </div>
-            <p className="text-lg font-semibold text-amber-600 dark:text-amber-400">
+            <p className="text-lg font-semibold text-highlight dark:text-amber-400">
               ₹{summary.tax?.toFixed(2) || "0.00"}
             </p>
           </div>
@@ -120,20 +120,20 @@ const PriceBreakup = () => {
         <div className="border-t border-gray-200 dark:border-zinc-700 my-4"></div>
 
         {/* Grand Total */}
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-100 dark:border-blue-800">
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl border border-blue-100 dark:border-primary/30">
           <div>
-            <p className="font-bold text-lg text-gray-900 dark:text-gray-100">
+            <p className="font-bold text-lg text-foreground">
               Total Amount
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Amount to be paid
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            <p className="text-2xl font-bold text-foreground">
               ₹{summary.total?.toFixed(2) || "0.00"}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-xs text-muted-foreground">
               Inclusive of all charges
             </p>
           </div>
@@ -145,13 +145,13 @@ const PriceBreakup = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 bg-green-100 dark:bg-green-800/40 rounded-md">
-                  <Tag className="w-3 h-3 text-green-600 dark:text-green-400" />
+                  <Tag className="w-3 h-3 text-success" />
                 </div>
                 <span className="text-sm font-medium text-green-700 dark:text-green-300">
                   Total Savings
                 </span>
               </div>
-              <span className="text-lg font-bold text-green-600 dark:text-green-400">
+              <span className="text-lg font-bold text-success">
                 ₹{summary.discount?.toFixed(2) || "0.00"}
               </span>
             </div>
@@ -161,9 +161,9 @@ const PriceBreakup = () => {
 
       {/* Payment Info */}
       <div className="mt-6 pt-4 border-t border-gray-100 dark:border-zinc-800">
-        <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>Payment method</span>
-          <span className="font-medium text-gray-900 dark:text-gray-100">
+          <span className="font-medium text-foreground">
             {summary.paymentMethod === "COD" ? "Cash on Delivery" : "Online Payment"}
           </span>
         </div>

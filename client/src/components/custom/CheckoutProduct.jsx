@@ -11,7 +11,7 @@ const CheckoutProduct = ({
   color = Colors.customYellow,
 }) => {
   return (
-    <div className="flex justify-between items-start p-3 rounded-lg bg-gray-100 dark:bg-zinc-900">
+    <div className="flex justify-between items-start p-3 rounded-lg bg-muted">
       <div className="flex flex-row items-center gap-2">
         <img src={image} alt={name} className="w-20 sm:w-24 rounded-lg" />
         <div className="grid sm:gap-1">

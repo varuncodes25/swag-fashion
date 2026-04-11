@@ -48,7 +48,7 @@ const AdminBannerManager = () => {
   // Available tags with colors
   const tagOptions = [
     { value: "BEST SELLER", color: "bg-red-100 text-red-800" },
-    { value: "POPULAR", color: "bg-blue-100 text-blue-800" },
+    { value: "POPULAR", color: "bg-blue-100 text-info" },
     { value: "SALE", color: "bg-green-100 text-green-800" },
     { value: "NEW", color: "bg-purple-100 text-purple-800" },
     { value: "TRENDING", color: "bg-orange-100 text-orange-800" },
@@ -224,7 +224,7 @@ const AdminBannerManager = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition"
                   placeholder="Enter banner title"
                   maxLength={100}
                 />
@@ -244,7 +244,7 @@ const AdminBannerManager = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, subtitle: e.target.value })
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition"
                   placeholder="Enter banner subtitle"
                   maxLength={200}
                 />
@@ -265,7 +265,7 @@ const AdminBannerManager = () => {
                       required
                       value={formData.image}
                       onChange={handleImageChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition"
                       placeholder="https://images.unsplash.com/photo-..."
                     />
                   </div>
@@ -314,7 +314,7 @@ const AdminBannerManager = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, tag: e.target.value })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition"
                   >
                     {tagOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -339,7 +339,7 @@ const AdminBannerManager = () => {
                         priority: parseInt(e.target.value) || 5,
                       })
                     }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition"
                   />
                   <p className="text-xs text-gray-500 mt-1">1 (Low) - 10 (High)</p>
                 </div>
@@ -358,7 +358,7 @@ const AdminBannerManager = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, link: e.target.value })
                     }
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition"
                     placeholder="/category/toys or https://..."
                   />
                 </div>
@@ -383,7 +383,7 @@ const AdminBannerManager = () => {
                     setFormData({ ...formData, isActive: !formData.isActive })
                   }
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    formData.isActive ? "bg-blue-600" : "bg-gray-300"
+                    formData.isActive ? "bg-primary" : "bg-gray-300"
                   }`}
                 >
                   <span
@@ -399,7 +399,7 @@ const AdminBannerManager = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting || loading}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
                   {isSubmitting ? (
                     <>
@@ -450,7 +450,7 @@ const AdminBannerManager = () => {
               <div className="text-sm text-gray-500">Active</div>
             </div>
             <div className="bg-white p-4 rounded-xl border shadow-sm">
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold text-primary">
                 {banners.filter((b) => b.priority >= 8).length}
               </div>
               <div className="text-sm text-gray-500">High Priority</div>
@@ -471,7 +471,7 @@ const AdminBannerManager = () => {
             <div className="divide-y">
               {loading && banners.length === 0 ? (
                 <div className="p-8 text-center">
-                  <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
                   <p className="mt-2 text-gray-500">Loading banners...</p>
                 </div>
               ) : banners.length === 0 ? (
@@ -577,7 +577,7 @@ const AdminBannerManager = () => {
 
                           <button
                             onClick={() => handleEdit(banner)}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition"
+                            className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-blue-100 transition"
                           >
                             <Edit size={14} />
                             Edit
@@ -621,14 +621,14 @@ const AdminBannerManager = () => {
           </div>
 
           {/* Help Text */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mt-6 p-4 bg-primary/10 border border-primary/25 rounded-lg">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <h4 className="font-medium text-blue-900 mb-1">
                   Banner Best Practices
                 </h4>
-                <ul className="text-sm text-blue-700 space-y-1">
+                <ul className="text-sm text-primary space-y-1">
                   <li>• Use high-quality images (1200x500px recommended)</li>
                   <li>• Keep titles short and compelling</li>
                   <li>• Set higher priority for important banners</li>

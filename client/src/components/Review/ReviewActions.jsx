@@ -47,8 +47,8 @@ const ReviewActions = ({
             onClick={() => setReplyingTo(isReplying ? null : review._id)}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
               isReplying 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'
+                ? 'bg-blue-100 dark:bg-primary/20 text-primary dark:text-primary' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-muted-foreground hover:text-primary dark:hover:text-blue-400'
             }`}
           >
             {isReplying ? (
@@ -95,14 +95,14 @@ const ReviewActions = ({
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors">
+                    <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-muted-foreground transition-colors">
                       <MoreVertical className="h-4 w-4" />
                       <span className="text-sm font-medium">More</span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
-                    className="w-48 p-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg"
+                    className="w-48 p-2 bg-card border border-border rounded-xl shadow-lg"
                   >
                     
 
@@ -116,11 +116,11 @@ const ReviewActions = ({
                       className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-gray-700 dark:text-gray-300 mt-1"
                     >
                       <div className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                        <Edit2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <Edit2 className="h-4 w-4 text-highlight dark:text-amber-400" />
                       </div>
                       <div>
                         <p className="font-medium text-sm">Edit Review</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           Update your review content
                         </p>
                       </div>
@@ -134,7 +134,7 @@ const ReviewActions = ({
                           handleDeleteReview(review._id);
                         }
                       }}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer text-red-600 dark:text-red-400 mt-1"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer text-destructive mt-1"
                     >
                       <div className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30">
                         <Trash2 className="h-4 w-4" />
@@ -155,14 +155,14 @@ const ReviewActions = ({
       </div>
 
       {/* Desktop Actions */}
-      <div className="hidden md:flex items-center justify-between mt-3 md:mt-4 pt-3 md:pt-4 border-t border-gray-200 dark:border-gray-800">
+      <div className="hidden md:flex items-center justify-between mt-3 md:mt-4 pt-3 md:pt-4 border-t border-border">
         <div className="flex gap-3 md:gap-4">
           <button
             onClick={() => setReplyingTo(isReplying ? null : review._id)}
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
               isReplying 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
-                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-blue-600'
+                ? 'bg-blue-100 dark:bg-primary/20 text-primary dark:text-primary' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-muted-foreground hover:text-primary'
             }`}
           >
             <Reply className="h-4 w-4" />
@@ -208,7 +208,7 @@ const ReviewActions = ({
                     review: review.review,
                     rating: review.rating,
                   })}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-600 dark:text-amber-400 transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20 text-highlight dark:text-amber-400 transition-colors"
                 >
                   <Edit2 className="h-4 w-4" />
                   <span className="text-sm font-medium">Edit</span>
@@ -216,7 +216,7 @@ const ReviewActions = ({
                 <button
                   onClick={() => handleDeleteReview(review._id)}
                   disabled={loading.delete}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-destructive transition-colors disabled:opacity-50"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span className="text-sm font-medium">
@@ -231,13 +231,13 @@ const ReviewActions = ({
 
       {/* Reply Input Form - Enhanced for Mobile */}
       {isReplying && (
-        <div className="mt-4 p-4 bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-900/10 dark:to-gray-900 rounded-xl border border-blue-100 dark:border-blue-800/30 shadow-sm">
+        <div className="mt-4 p-4 bg-gradient-to-br from-blue-50/50 to-white dark:from-blue-900/10 dark:to-gray-900 rounded-xl border border-blue-100 dark:border-primary/30/30 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <Label className="block text-sm font-semibold text-gray-900 dark:text-white mb-1">
+              <Label className="block text-sm font-semibold text-foreground mb-1">
                 Write a Reply
               </Label>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Your reply will be visible to everyone
               </p>
             </div>
@@ -256,7 +256,7 @@ const ReviewActions = ({
             placeholder="Type your thoughtful reply here..."
             value={newReply.review}
             onChange={(e) => setNewReply({ review: e.target.value })}
-            className="mb-3 text-sm min-h-[80px] md:min-h-[100px] rounded-lg border-gray-300 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-500 bg-white dark:bg-gray-900"
+            className="mb-3 text-sm min-h-[80px] md:min-h-[100px] rounded-lg border-border focus:border-primary dark:focus:border-primary bg-card"
             autoFocus
           />
           
@@ -286,7 +286,7 @@ const ReviewActions = ({
                 setReplyingTo(null);
                 setNewReply({ review: "" });
               }}
-              className="flex-1 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="flex-1 border-border hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               Cancel
             </Button>
@@ -297,7 +297,7 @@ const ReviewActions = ({
             <span className={`text-xs ${
               newReply.review.length > 500 
                 ? 'text-red-500' 
-                : 'text-gray-500 dark:text-gray-400'
+                : 'text-muted-foreground'
             }`}>
               {newReply.review.length}/500 characters
             </span>

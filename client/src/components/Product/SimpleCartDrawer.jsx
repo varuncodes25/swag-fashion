@@ -62,7 +62,7 @@ const SimpleCartDrawer = ({
           className={`relative z-10 transition-all duration-300 ${
             isCheckoutPage 
               ? "text-gray-400 dark:text-gray-600" 
-              : "text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 group-hover:scale-110"
+              : "text-success group-hover:text-emerald-700 dark:group-hover:text-emerald-300 group-hover:scale-110"
           }`}
           strokeWidth={1.5}
         />
@@ -82,7 +82,7 @@ const SimpleCartDrawer = ({
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-[380px] lg:w-[420px] bg-white dark:bg-gray-900 z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
+      <div className="fixed right-0 top-0 h-full w-full sm:w-[380px] lg:w-[420px] bg-card z-50 shadow-2xl flex flex-col animate-in slide-in-from-right duration-500">
         
         {/* ✅ HEADER */}
         <div className="relative bg-gradient-to-r from-emerald-600 to-green-600 dark:from-emerald-500 dark:to-green-500 px-4 py-3 flex-shrink-0">
@@ -121,7 +121,7 @@ const SimpleCartDrawer = ({
         {/* ✅ ITEMS SECTION - FIXED HEIGHT CALCULATION */}
         <div 
           ref={itemsContainerRef}
-          className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-800/50"
+          className="flex-1 overflow-y-auto bg-muted/40/50"
           style={{
             height: isAuthenticated && items.length > 0 
               ? 'calc(100vh - 180px)' // ✅ Fixed: Header 60px + Footer 120px
@@ -135,13 +135,13 @@ const SimpleCartDrawer = ({
               <div className="relative mb-4">
                 <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl"></div>
                 <div className="relative bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 p-4 rounded-full">
-                  <ShoppingCart size={48} className="text-emerald-600 dark:text-emerald-400" />
+                  <ShoppingCart size={48} className="text-success" />
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-xl font-bold text-foreground mb-1">
                 Login to View Cart
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-xs">
+              <p className="text-sm text-muted-foreground mb-6 max-w-xs">
                 Sign in to see your saved items
               </p>
               <div className="space-y-2 w-full max-w-xs">
@@ -171,13 +171,13 @@ const SimpleCartDrawer = ({
               <div className="relative mb-4">
                 <div className="absolute inset-0 bg-emerald-500/20 rounded-full blur-2xl"></div>
                 <div className="relative bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50 p-4 rounded-full">
-                  <ShoppingBag size={48} className="text-emerald-600 dark:text-emerald-400" />
+                  <ShoppingBag size={48} className="text-success" />
                 </div>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-xl font-bold text-foreground mb-1">
                 Your Cart is Empty
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-xs">
+              <p className="text-sm text-muted-foreground mb-6 max-w-xs">
                 Add items to get started
               </p>
               <div className="space-y-2 w-full max-w-xs">
@@ -219,23 +219,23 @@ const SimpleCartDrawer = ({
 
         {/* ✅ FOOTER - FIXED AT BOTTOM */}
         {isAuthenticated && items.length > 0 && (
-          <div className="bg-white dark:bg-gray-900 border-t dark:border-gray-800 shadow-lg px-4 py-3 flex-shrink-0">
+          <div className="bg-card border-t dark:border-gray-800 shadow-lg px-4 py-3 flex-shrink-0">
             {/* Price Summary */}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                <span className="font-medium text-gray-900 dark:text-white">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium text-foreground">
                   ₹{(subtotal || totalPrice).toLocaleString('en-IN')}
                 </span>
               </div>
               
               {totalSavings > 0 && (
                 <div className="flex justify-between items-center text-xs">
-                  <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                  <span className="text-muted-foreground flex items-center gap-1">
                     <Tag size={12} className="text-green-600" />
                     Savings
                   </span>
-                  <span className="font-medium text-green-600 dark:text-green-400">
+                  <span className="font-medium text-success">
                     -₹{totalSavings.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -244,12 +244,12 @@ const SimpleCartDrawer = ({
               {/* Total */}
               <div className="pt-2 border-t dark:border-gray-800">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">Total</span>
+                  <span className="text-sm font-bold text-foreground">Total</span>
                   <div className="text-right">
-                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    <span className="text-lg font-bold text-foreground">
                       ₹{totalPrice.toLocaleString('en-IN')}
                     </span>
-                    <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                    <p className="text-[10px] text-muted-foreground">
                       incl. taxes
                     </p>
                   </div>

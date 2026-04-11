@@ -77,8 +77,8 @@ const ColorSelector = ({
                   hover:shadow-md
                   border-2
                   ${isSelected 
-                    ? 'border-orange-500 dark:border-orange-400 shadow-lg' 
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    ? 'border-warning dark:border-orange-400 shadow-lg' 
+                    : 'border-border hover:border-gray-300 dark:hover:border-gray-600'
                   }
                 `}
                 aria-label={`Select ${color} color`}
@@ -94,7 +94,7 @@ const ColorSelector = ({
                     />
                     {/* Overlay for better text visibility */}
                     {isSelected && (
-                      <div className="absolute inset-0 bg-orange-500 bg-opacity-20" />
+                      <div className="absolute inset-0 bg-warning bg-opacity-20" />
                     )}
                   </div>
                 ) : (
@@ -118,8 +118,8 @@ const ColorSelector = ({
                 <span className={`
                   text-xs font-medium capitalize
                   ${isSelected 
-                    ? 'text-orange-600 dark:text-orange-400 font-semibold' 
-                    : 'text-gray-600 dark:text-gray-400'
+                    ? 'text-warning dark:text-orange-400 font-semibold' 
+                    : 'text-muted-foreground'
                   }
                 `}>
                   {color}

@@ -34,18 +34,18 @@ const ProductVariants = ({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-foreground">
                 Select Color
               </h3>
               {selectedColor && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Selected: <span className="font-medium text-gray-900 dark:text-white capitalize">
+                <p className="text-sm text-muted-foreground mt-1">
+                  Selected: <span className="font-medium text-foreground capitalize">
                     {selectedColor}
                   </span>
                 </p>
               )}
             </div>
-            <div className="text-xs px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
+            <div className="text-xs px-3 py-1.5 rounded-full bg-muted text-gray-700 dark:text-gray-300">
               {colors.length} options
             </div>
           </div>
@@ -64,12 +64,12 @@ const ProductVariants = ({
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-foreground">
                 Select Size
               </h3>
               {selectedSize && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                  Selected: <span className="font-medium text-gray-900 dark:text-white">
+                <p className="text-sm text-muted-foreground mt-1">
+                  Selected: <span className="font-medium text-foreground">
                     {selectedSize}
                   </span>
                 </p>
@@ -81,7 +81,7 @@ const ProductVariants = ({
               {hasSizeChart && (
                 <button 
                   onClick={() => setShowSizeChart(true)}
-                  className="flex items-center gap-1.5 text-sm text-pink-500 hover:text-pink-600 font-medium transition-colors"
+                  className="flex items-center gap-1.5 text-sm text-pink-500 hover:text-primary font-medium transition-colors"
                 >
                   <Ruler className="w-4 h-4" />
                   Size Chart
@@ -92,7 +92,7 @@ const ProductVariants = ({
               {sizeGuide && !hasSizeChart && (
                 <button 
                   onClick={() => window.open(sizeGuide, '_blank')}
-                  className="flex items-center gap-1.5 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors"
+                  className="flex items-center gap-1.5 text-sm text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 hover:underline transition-colors"
                 >
                   <Ruler className="w-4 h-4" />
                   Size Guide
@@ -109,9 +109,9 @@ const ProductVariants = ({
           
           {/* Size Help */}
           {!selectedSize && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30">
-              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 dark:bg-blue-900/20 border border-blue-100 dark:border-primary/30/30">
+              <Info className="w-4 h-4 text-primary dark:text-primary mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-primary dark:text-primary">
                 Please select a size to check availability and pricing
               </p>
             </div>
@@ -119,7 +119,7 @@ const ProductVariants = ({
 
           {/* 🔥 SIZE CHART PREVIEW - Small hint that size chart exists */}
           {hasSizeChart && selectedSize && (
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="w-1 h-1 rounded-full bg-green-500"></span>
               <span>Size measurements available. Click "Size Chart" to view.</span>
             </div>
@@ -142,20 +142,20 @@ const ProductVariants = ({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className={`w-2 h-2 rounded-full ${
-                  stock > 10 ? 'bg-green-500' : 'bg-amber-500'
+                  stock > 10 ? 'bg-green-500' : 'bg-highlight'
                 }`} />
-                <span className="text-gray-600 dark:text-gray-400">
+                <span className="text-muted-foreground">
                   {stock > 10 ? 'Good availability' : 'Limited stock'}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Only {stock} units remaining
               </p>
             </div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-red-500" />
-              <span className="text-red-600 dark:text-red-400 font-medium">
+              <span className="text-destructive font-medium">
                 Currently unavailable
               </span>
             </div>

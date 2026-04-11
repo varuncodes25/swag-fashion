@@ -18,7 +18,7 @@ export default function NotFound({ title = "Not Found", message, icon }) {
       <div
         className="
           flex items-center justify-center
-          text-gray-600 dark:text-gray-300
+          text-muted-foreground
         "
       >
         {icon} {/* <<===== YAHAN SVG AYEGA */}
