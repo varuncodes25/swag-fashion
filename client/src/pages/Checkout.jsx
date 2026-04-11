@@ -23,7 +23,9 @@ const CheckoutPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState("address");
-
+  useEffect(() => {
+  window.scrollTo(0, 0);
+}, [currentStep]);
   const {
     addressId,
     paymentMethod,
@@ -288,74 +290,7 @@ useEffect(() => {
 </div>
 
                 {/* Price Details Card */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-gray-900/50 border dark:border-gray-700 p-6 transition-colors">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg">
-                      <Tag className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900 dark:text-white text-lg">Price Details</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Breakdown of your order</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center py-3 border-b dark:border-gray-700">
-                      <span className="text-gray-700 dark:text-gray-300">Total MRP</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">₹{subtotal.toFixed(2)}</span>
-                    </div>
-
-                    {discount > 0 && (
-                      <div className="flex justify-between items-center py-3 border-b dark:border-gray-700">
-                        <div className="flex items-center gap-3">
-                          <span className="text-gray-700 dark:text-gray-300">Discount</span>
-                          <span className="text-xs bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-700 dark:text-green-400 px-3 py-1 rounded-full font-medium">
-                            SAVED
-                          </span>
-                        </div>
-                        <span className="font-semibold text-green-600 dark:text-green-400">-₹{discount.toFixed(2)}</span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-center py-3 border-b dark:border-gray-700">
-                      <div className="flex items-center gap-3">
-                        <Truck className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                        <span className="text-gray-700 dark:text-gray-300">Delivery Charges</span>
-                      </div>
-                      <span className={`font-semibold ${shipping === 0 ? "text-green-600 dark:text-green-400" : "text-gray-900 dark:text-white"}`}>
-                        {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
-                      </span>
-                    </div>
-
-                    {tax > 0 && (
-                      <div className="flex justify-between items-center py-3 border-b dark:border-gray-700">
-                        <span className="text-gray-700 dark:text-gray-300">Taxes & Charges</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">₹{tax.toFixed(2)}</span>
-                      </div>
-                    )}
-
-                    {/* Total Amount */}
-                    <div className="mt-6 pt-6 border-t dark:border-gray-700">
-                      <div className="bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/20 rounded-xl p-5">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <p className="font-bold text-gray-900 dark:text-white text-lg">Total Amount</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">(Inclusive of all taxes)</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold text-gray-900 dark:text-white text-2xl">₹{total.toFixed(2)}</p>
-                            {discount > 0 && (
-                              <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                                You save ₹{discount.toFixed(2)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
+                
                 {/* Desktop Continue Button */}
                 <div className="hidden lg:flex justify-end">
                   <button
