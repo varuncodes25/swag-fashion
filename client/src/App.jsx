@@ -10,6 +10,7 @@ import Error from "./pages/Error";
 import Success from "./pages/Success";
 import RootLayout from "./layouts/RootLayout";
 import AdminLayout from "./layouts/AdminLayout";
+import MyProfile from "./components/custom/MyProfile";
 import CreateProducts from "./components/custom/CreateProducts";
 import AllProducts from "./components/custom/AllProducts";
 import Analytics from "./components/custom/Analytics";
@@ -32,6 +33,7 @@ import WishlistPage from "./pages/Wishlist";
 import AdminProductDetails from "./components/Admin/AdminProductDetails";
 import { useEffect } from "react";
 import { setUserLogout } from "./redux/slices/authSlice";
+import AccountLayout from "./layouts/AccountLayout";
 
 export default function App() {
   const dispatch=useDispatch()
@@ -55,6 +57,11 @@ export default function App() {
       path: "/",
       element: <RootLayout children={<Home />} />,
     },
+    {
+              path: "account",
+              element: <AccountLayout />,
+              children: [{ index: true, element: <MyProfile /> }],
+            },
     {
       path: "/product/:productId",
       element: <RootLayout children={<Product />} />,

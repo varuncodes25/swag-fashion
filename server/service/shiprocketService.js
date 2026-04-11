@@ -7,7 +7,7 @@ const Order = require("../models/Order");
 const IS_TESTING = process.env.NODE_ENV !== 'production' || process.env.MOCK_SHIPROCKET === 'true';
 
 async function createShiprocketOrder(order) {
-  console.log("order",order)
+
   const token = await getShiprocketToken();
 
   if (!order.shippingMeta?.courierId) {
@@ -217,9 +217,10 @@ async function createAdhocOrderOnShiprocket(order, token) {
 
     console.log("📦 Shiprocket Response:", response.data);
 
-    if (response.data.status_code !== 1) {
-      throw new Error(`Adhoc order failed: ${JSON.stringify(response.data)}`);
-    }
+ // ✅ Accept both status 1 (NEW) and 2 (INVOICED)
+if (response.data.status_code !== 1 && response.data.status_code !== 2) {
+  throw new Error(`Adhoc order failed: ${JSON.stringify(response.data)}`);
+}
 
     return response.data;
   } catch (error) {

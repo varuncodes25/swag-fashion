@@ -23,13 +23,40 @@ const LogoutToggle = ({ user }) => {
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="center">
-        <DropdownMenuItem onClick={() => dispatch(setUserLogout())}>
+      
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel>
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium">{user?.name}</p>
+            <p className="text-xs text-gray-500">{user?.email}</p>
+          </div>
+        </DropdownMenuLabel>
+        
+        <DropdownMenuSeparator />
+        
+        {/* My Account Link */}
+        <Link to="/account" className="w-full">
+          <DropdownMenuItem className="cursor-pointer">
+            My Account
+          </DropdownMenuItem>
+        </Link>
+        
+        {/* My Orders Link */}
+        <Link to="/orders" className="w-full">
+          <DropdownMenuItem className="cursor-pointer">
+            My Orders
+          </DropdownMenuItem>
+        </Link>
+        
+        <DropdownMenuSeparator />
+        
+        {/* Logout Button */}
+        <DropdownMenuItem 
+          onClick={() => dispatch(setUserLogout())}
+          className="cursor-pointer text-red-600 focus:text-red-600"
+        >
           Logout
         </DropdownMenuItem>
-        <Link to="/orders">
-          <DropdownMenuItem>My Orders</DropdownMenuItem>
-        </Link>
       </DropdownMenuContent>
     </DropdownMenu>
   );

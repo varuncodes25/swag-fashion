@@ -623,7 +623,29 @@ const updateOrderStatus = async (req, res) => {
     });
   }
 };
+const createShipmentForOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
 
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    // if (order.shippingStatus !== "NOT_CREATED") {
+    //   return res.status(400).json({ message: "Shipment already created" });
+    // }
+
+    // Call Shiprocket
+    const shiprocketResponse = await createShiprocketOrder(order);
+
+    res.json({
+      success: true,
+      message: "Shipment created successfully",
+      shiprocketOrderId: shiprocketResponse.order_id,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+};
 const getMetrics = async (req, res) => {
   if (req.role !== ROLES.admin) {
     return res.status(403).json({
@@ -1800,4 +1822,5 @@ module.exports = {
   cancelOrder,
   exchangeOrder,
   trackShipment,
+  createShipmentForOrder
 };
