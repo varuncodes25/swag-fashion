@@ -7,6 +7,7 @@ const Order = require("../models/Order");
 const IS_TESTING = process.env.NODE_ENV !== 'production' || process.env.MOCK_SHIPROCKET === 'true';
 
 async function createShiprocketOrder(order) {
+  console.log("order",order)
   const token = await getShiprocketToken();
 
   if (!order.shippingMeta?.courierId) {
@@ -126,7 +127,7 @@ async function createAdhocOrderOnShiprocket(order, token) {
   const boxHeight = Math.max(10, ...order.items.map((i) => Number(i.height) || 10));
 
   const order_items = order.items.map((item) => {
-    const sellingPrice = Number(item.finalPrice || item.price);
+    const sellingPrice = Number(item.finalPrice ?? item.sellingPrice ?? item.price);
     
     return {
       name: item.name.substring(0, 100),
@@ -138,12 +139,39 @@ async function createAdhocOrderOnShiprocket(order, token) {
     };
   });
 
+  /**
+   * `order.subtotal` DB = selling total (checkout `summary.subtotal`).
+   * Line sum verify / fallback — Shiprocket sub_total must match line items.
+   */
+  const sellingSubtotal = order.items.reduce((sum, item) => {
+    const line =
+      item.lineTotal != null
+        ? Number(item.lineTotal)
+        : Number(item.finalPrice ?? item.sellingPrice ?? item.price) *
+          Number(item.quantity || 1);
+    return sum + line;
+  }, 0);
+
+  const taxAmt = Number(order.taxAmount || 0);
+  const subTotalForRocket = Math.round(sellingSubtotal * 100) / 100;
+  const recomputedTotal =
+    Math.round((subTotalForRocket + Number(order.shippingCharge || 0) + taxAmt) * 100) / 100;
+  if (Math.abs(recomputedTotal - Number(order.totalAmount)) > 0.05) {
+    console.warn("⚠️ Shiprocket amounts check: totalAmount vs parts", {
+      totalAmount: order.totalAmount,
+      recomputedTotal,
+      subTotalForRocket,
+      shipping: order.shippingCharge,
+      tax: taxAmt,
+    });
+  }
+
   const payload = {
     order_id: String(order.orderNumber),
     order_date: new Date().toISOString().split("T")[0],
     payment_method: order.paymentMethod === "COD" ? "COD" : "Prepaid",
     
-    sub_total: Number(order.subtotal),
+    sub_total: subTotalForRocket,
     shipping_charges: Number(order.shippingCharge),
     pickup_location: "Home",
     total_price: Number(order.totalAmount),
