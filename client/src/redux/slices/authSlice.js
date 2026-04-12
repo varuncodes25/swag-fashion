@@ -886,6 +886,8 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(getProfile.fulfilled, (state, action) => {
+        console.log("Full profile response:", action.payload);
+  console.log("Profile data structure:", action.payload.data || action.payload);
         state.profileLoading = false;
         state.loading = false;
         state.profile = action.payload.data || action.payload;

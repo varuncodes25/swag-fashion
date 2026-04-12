@@ -1,22 +1,27 @@
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, User, Mail, Phone, Lock } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { 
+  User, Mail, Phone, Lock, 
+  Eye, EyeOff, Edit2, Save, X,
+  Camera
+} from "lucide-react";
 import { useSelector } from "react-redux";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { changePassword, updateProfile, getProfile } from "@/redux/slices/authSlice"; // ✅ getProfile import karo
+import { getProfile, updateProfile, changePassword } from "@/redux/slices/authSlice";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export default function MyProfile() {
-  const { isAuthenticated, user, profile, profileLoading } = useSelector((state) => state.auth); // ✅ profile bhi lo
+  const { isAuthenticated } = useSelector((state) => state.auth);
+  const { profile, loading, updating, changingPassword } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const { toast } = useToast();
 
-  // State for form fields
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,22 +31,25 @@ export default function MyProfile() {
     confirmPassword: ""
   });
 
-  // Loading states
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
-  
-  // State for form changes
   const [hasChanges, setHasChanges] = useState(false);
   const [passwordChanges, setPasswordChanges] = useState(false);
+  
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  
+  const fileInputRef = useRef(null);
 
-  // ✅ Fetch profile using Redux thunk (not direct API call)
   useEffect(() => {
     if (isAuthenticated && !profile) {
       dispatch(getProfile());
     }
-  }, [isAuthenticated, dispatch, profile,updateProfile]);
+  }, [isAuthenticated, dispatch, profile]);
 
-  // ✅ Update form data when profile or user changes
   useEffect(() => {
     if (profile) {
       setFormData(prev => ({
@@ -50,100 +58,96 @@ export default function MyProfile() {
         email: profile.email || "",
         phone: profile.phone || ""
       }));
-    } else if (user) {
-      setFormData(prev => ({
-        ...prev,
-        name: user.name || "",
-        email: user.email || "",
-        phone: user.phone || ""
-      }));
     }
-  }, [profile, user]);
+  }, [profile]);
 
-  // Handle input changes
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Check if personal info has changed
-    if (["name", "phone"].includes(field)) {
-      const originalName = profile?.name || user?.name || "";
-      const originalPhone = profile?.phone || user?.phone || "";
-      
-      if (field === "name") {
-        setHasChanges(value !== originalName);
-      } else if (field === "phone") {
-        setHasChanges(value !== originalPhone);
-      }
-    }
-    
-    // Check if password fields have changes
-    if (["currentPassword", "newPassword", "confirmPassword"].includes(field)) {
-      const hasPasswordChanges = 
-        formData.currentPassword.trim() !== "" || 
-        formData.newPassword.trim() !== "" || 
-        formData.confirmPassword.trim() !== "" ||
-        value.trim() !== "";
-      setPasswordChanges(hasPasswordChanges);
-    }
+    setHasChanges(true);
   };
 
-  // Handle save changes for personal info
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Invalid file type", description: "Please select an image file", variant: "destructive" });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Image must be less than 5MB", variant: "destructive" });
+      return;
+    }
+
+    setSelectedAvatar(file);
+    // Create preview
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreview(previewUrl);
+  };
+
   const handleSaveChanges = async () => {
-    if (!hasChanges) return;
+    if (!hasChanges && !selectedAvatar) return;
     
-    setIsUpdatingProfile(true);
+    setUploading(true);
     
     try {
-      // ✅ Use Redux updateProfile (not direct API call)
-      const result = await dispatch(updateProfile({
-        name: formData.name,
-        phone: formData.phone
-      })).unwrap();
-         await dispatch(getProfile()).unwrap();
+      const formDataToSend = new FormData();
+      
+      // Add text fields if changed
+      if (hasChanges) {
+        if (formData.name !== profile?.name) {
+          formDataToSend.append('name', formData.name);
+        }
+        if (formData.phone !== profile?.phone) {
+          formDataToSend.append('phone', formData.phone);
+        }
+      }
+      
+      // Add avatar if selected
+      if (selectedAvatar) {
+        formDataToSend.append('avatar', selectedAvatar);
+      }
+      
+      await dispatch(updateProfile(formDataToSend)).unwrap();
+      await dispatch(getProfile()).unwrap();
 
-      console.log("✅ Profile update response:", result);
-      
-      toast({
-        title: "✅ Profile Updated",
-        description: "Your personal information has been updated successfully.",
-        variant: "default",
-      });
-      
+      toast({ title: "✅ Profile Updated", description: "Your information has been updated.", variant: "default" });
       setHasChanges(false);
-      
+      setIsEditing(false);
+      setSelectedAvatar(null);
+      setAvatarPreview(null);
     } catch (err) {
-      console.error("❌ Profile update error:", err);
-      toast({
-        title: "Update Failed",
-        description: err.message || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Update Failed", description: err.message || "Something went wrong.", variant: "destructive" });
     } finally {
-      setIsUpdatingProfile(false);
+      setUploading(false);
     }
   };
 
-  // Handle password update
+  const handleCancelEdit = () => {
+    setFormData(prev => ({
+      ...prev,
+      name: profile?.name || "",
+      phone: profile?.phone || ""
+    }));
+    setHasChanges(false);
+    setIsEditing(false);
+    setSelectedAvatar(null);
+    setAvatarPreview(null);
+  };
+
   const handlePasswordUpdate = async () => {
     if (!passwordChanges) return;
 
     if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      return toast({
-        title: "All fields required",
-        description: "Please fill all password fields",
-        variant: "destructive",
-      });
+      return toast({ title: "All fields required", description: "Please fill all password fields", variant: "destructive" });
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      return toast({
-        title: "Password mismatch",
-        description: "New password and confirm password must match",
-        variant: "destructive",
-      });
+      return toast({ title: "Password mismatch", description: "New password and confirm password must match", variant: "destructive" });
     }
-
-    setIsUpdatingPassword(true);
 
     try {
       await dispatch(changePassword({
@@ -152,59 +156,36 @@ export default function MyProfile() {
         confirmPassword: formData.confirmPassword,
       })).unwrap();
 
-      toast({
-        title: "✅ Password Updated",
-        description: "Your password has been changed successfully.",
-        variant: "default",
-      });
+      toast({ title: "✅ Password Updated", description: "Your password has been changed.", variant: "default" });
 
-      // Clear fields on success
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: ""
-      }));
-
+      setFormData(prev => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
       setPasswordChanges(false);
-
     } catch (err) {
-      console.error("❌ Password change error:", err);
-      toast({
-        title: "Password Change Failed",
-        description: typeof err === 'string' ? err : err.message || "Invalid current password or something went wrong",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdatingPassword(false);
+      toast({ title: "Password Change Failed", description: err.message || "Invalid current password", variant: "destructive" });
     }
   };
 
-  // Loading state
-  if (profileLoading) {
+  if (loading && !profile) {
     return (
-      <div className="w-full bg-muted/30 dark:bg-muted/20 transition-colors min-h-screen flex items-center justify-center">
-        <Card className="mx-auto w-full max-w-xl p-12 text-center">
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <Card className="p-12 text-center">
           <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading profile...</p>
+          <p>Loading profile...</p>
         </Card>
       </div>
     );
   }
 
-  // If not authenticated or no user data
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return (
-      <div className="w-full bg-muted/30 dark:bg-muted/20 transition-colors min-h-[60vh]">
-        <Card className="mx-auto w-full max-w-xl sm:max-w-2xl md:max-w-3xl rounded-2xl shadow-sm bg-card text-card-foreground px-6 py-12 text-center">
+      <div className="w-full min-h-[60vh]">
+        <Card className="mx-auto w-full max-w-xl px-6 py-12 text-center">
           <div className="space-y-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-full">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
               <User className="w-8 h-8" />
             </div>
             <h2 className="text-2xl font-semibold">Please Sign In</h2>
-            <p className="text-muted-foreground">
-              You need to be signed in to view your profile.
-            </p>
+            <p>You need to be signed in to view your profile.</p>
             <Button className="rounded-full px-8 mt-4" asChild>
               <Link to="/login">Sign In</Link>
             </Button>
@@ -214,276 +195,267 @@ export default function MyProfile() {
     );
   }
 
-  // Get display data (prefer profile over user)
-  const displayName = profile?.name || user?.name || "";
-  const displayEmail = user?.email || "";
-  const displayPhone = profile?.phone || user?.phone || "";
-  const displayRole = user?.role || "";
+  const displayName = profile?.name || "";
+  const displayEmail = profile?.email || "";
+  const displayPhone = profile?.phone || "";
+  
+  // Show preview if new avatar selected, otherwise show existing avatar
+  const avatarUrl = avatarPreview || profile?.avatar;
 
   return (
-    <div className="w-full bg-muted/30 dark:bg-muted/20 transition-colors min-h-screen">
-      <Card
-        className="
-          mx-auto w-full
-          max-w-xl sm:max-w-2xl md:max-w-3xl
-          rounded-2xl shadow-sm
-          bg-card text-card-foreground
-          px-4 sm:px-6 md:px-10
-          py-6 sm:py-8 md:py-12
-          transition-colors
-        "
-      >
-        {/* HEADER WITH USER INFO */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">
-              My Profile
-            </h1>
-            <p className="text-sm text-muted-foreground max-w-md">
-              Manage your personal information and keep your account secure.
-            </p>
-          </div>
-          
-          {/* USER ROLE BADGE */}
-          <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <User className="w-4 h-4 mr-2" />
-            {displayRole.charAt(0).toUpperCase() + displayRole.slice(1) || "User"}
-          </div>
-        </div>
+    <div className="w-full max-w-4xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          Profile Settings
+        </h1>
+        <p className="text-muted-foreground mt-2">Manage your personal information and account security</p>
+      </div>
 
-        <Separator className="my-6 sm:my-8 md:my-10" />
-
-        {/* PERSONAL INFO */}
-        <section className="space-y-6 sm:space-y-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <User className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-medium">
-                Personal details
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                This information will be used for orders and communication.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 md:gap-8">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-muted-foreground" />
-                <Label className="text-sm">Full name</Label>
+      <div className="space-y-6">
+        {/* Personal Information Card with Avatar */}
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <User className="w-5 h-5 text-primary" />
               </div>
-              <Input
-                className="h-10 sm:h-11 bg-background"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                <Label className="text-sm">Email address</Label>
-              </div>
-              <Input
-                className="h-10 sm:h-11 bg-muted/50 dark:bg-muted/30"
-                value={formData.email}
-                disabled
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Email cannot be changed
-              </p>
-            </div>
-
-            <div className="space-y-2 sm:col-span-2">
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                <Label className="text-sm">Mobile number</Label>
-              </div>
-              <div className="flex gap-3 max-w-sm">
-                <Button
-                  variant="outline"
-                  className="
-                    h-10 sm:h-11 px-3 rounded-lg shrink-0
-                    bg-background dark:bg-muted/30
-                    gap-2
-                  "
-                >
-                  🇮🇳 <ChevronDown size={14} />
-                </Button>
-                <Input
-                  className="h-10 sm:h-11 bg-background"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  placeholder="Enter your mobile number"
-                />
+              <div>
+                <h2 className="text-lg font-semibold">Personal Information</h2>
+                <p className="text-sm text-muted-foreground">
+                  {isEditing ? "Edit your personal details" : "View your personal information"}
+                </p>
               </div>
             </div>
-          </div>
-
-          <div className="pt-2 flex items-center gap-4">
-            <Button
-              className="
-                w-full sm:w-auto
-                px-8
-                h-10 sm:h-11
-                rounded-full
-              "
-              onClick={handleSaveChanges}
-              disabled={!hasChanges || isUpdatingProfile}
-            >
-              {isUpdatingProfile ? (
-                <>
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Saving...
-                </>
-              ) : (
-                hasChanges ? "Save changes" : "No changes"
-              )}
-            </Button>
-            {hasChanges && (
-              <Button
-                variant="ghost"
-                className="rounded-full"
-                onClick={() => {
-                  setFormData(prev => ({
-                    ...prev,
-                    name: displayName,
-                    phone: displayPhone
-                  }));
-                  setHasChanges(false);
-                }}
-              >
-                Discard changes
+            {!isEditing ? (
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2">
+                <Edit2 className="w-4 h-4" /> Edit Profile
               </Button>
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="gap-1">
+                  <X className="w-4 h-4" /> Cancel
+                </Button>
+                <Button size="sm" onClick={handleSaveChanges} disabled={(!hasChanges && !selectedAvatar) || uploading} className="gap-1">
+                  <Save className="w-4 h-4" /> {uploading ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
             )}
           </div>
-        </section>
 
-        <Separator className="my-10 sm:my-12 md:my-14" />
+          {/* Avatar Section */}
+          <div className="flex flex-col items-center mb-8 pb-6 border-b">
+            <div className="relative group">
+              <Avatar className="h-28 w-28 border-4 border-primary/20">
+                <AvatarImage src={avatarUrl} className="object-cover" />
+                <AvatarFallback className="bg-primary text-white text-3xl">
+                  {displayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* Edit Avatar Button - Only show in edit mode */}
+              {isEditing && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="absolute bottom-0 right-0 p-2 bg-primary rounded-full text-white shadow-lg hover:bg-primary/90 transition group-hover:scale-110"
+                >
+                  <Camera className="w-4 h-4" />
+                </button>
+              )}
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            </div>
+            {isEditing && (
+              <>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Click the camera icon to change profile picture
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Supported formats: JPG, PNG, GIF (Max 5MB)
+                </p>
+              </>
+            )}
+          </div>
 
-        {/* SECURITY */}
-        <section className="space-y-6 sm:space-y-8">
-          <div className="flex items-center gap-3">
+          {/* Form Fields */}
+          {!isEditing ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label className="text-muted-foreground text-xs">Full Name</Label>
+                <p className="font-medium mt-1 text-lg">{displayName}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-xs">Email Address</Label>
+                <p className="font-medium mt-1">{displayEmail}</p>
+                {profile?.isEmailVerified && (
+                  <span className="text-xs text-green-600">✓ Verified</span>
+                )}
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-xs">Mobile Number</Label>
+                <p className="font-medium mt-1">{displayPhone || "Not added"}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground text-xs">Account Type</Label>
+                <p className="font-medium mt-1 capitalize">{profile?.role || "User"}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <Label>Full Name *</Label>
+                  <Input 
+                    value={formData.name} 
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Email Address</Label>
+                  <Input 
+                    value={formData.email} 
+                    disabled 
+                    className="bg-muted/50"
+                  />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                </div>
+                
+                <div className="space-y-2 md:col-span-2">
+                  <Label>Mobile Number</Label>
+                  <div className="flex gap-3">
+                    <Button variant="outline" className="gap-2 shrink-0" type="button">
+                      🇮🇳 <ChevronDown size={14} />
+                    </Button>
+                    <Input 
+                      value={formData.phone} 
+                      onChange={(e) => handleInputChange("phone", e.target.value)} 
+                      placeholder="Enter mobile number"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Add your mobile number for faster checkout</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* Security Card - Change Password */}
+        <Card className="p-6">
+          <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Lock className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-medium">Security</h2>
-              <p className="text-sm text-muted-foreground">
-                Change your password to protect your account.
-              </p>
+              <h2 className="text-lg font-semibold">Change Password</h2>
+              <p className="text-sm text-muted-foreground">Update your password to keep your account secure</p>
             </div>
           </div>
 
-          <div className="max-w-sm space-y-5 sm:space-y-6">
+          <div className="max-w-md space-y-4">
             <div className="space-y-2">
-              <Label className="text-sm">Current password</Label>
-              <Input 
-                className="h-10 sm:h-11 bg-background" 
-                type="password"
-                value={formData.currentPassword}
-                onChange={(e) => handleInputChange("currentPassword", e.target.value)}
-                placeholder="Enter current password"
-              />
+              <Label>Current Password</Label>
+              <div className="relative">
+                <Input 
+                  type={showCurrentPassword ? "text" : "password"} 
+                  value={formData.currentPassword} 
+                  onChange={(e) => { 
+                    handleInputChange("currentPassword", e.target.value); 
+                    setPasswordChanges(true); 
+                  }}
+                  placeholder="Enter current password"
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm">New password</Label>
-              <Input 
-                className="h-10 sm:h-11 bg-background" 
-                type="password"
-                value={formData.newPassword}
-                onChange={(e) => handleInputChange("newPassword", e.target.value)}
-                placeholder="Enter new password"
-              />
+              <Label>New Password</Label>
+              <div className="relative">
+                <Input 
+                  type={showNewPassword ? "text" : "password"} 
+                  value={formData.newPassword} 
+                  onChange={(e) => { 
+                    handleInputChange("newPassword", e.target.value); 
+                    setPasswordChanges(true); 
+                  }}
+                  placeholder="Enter new password"
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowNewPassword(!showNewPassword)} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm">Confirm new password</Label>
-              <Input 
-                className="h-10 sm:h-11 bg-background" 
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                placeholder="Confirm new password"
-              />
+              <Label>Confirm New Password</Label>
+              <div className="relative">
+                <Input 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  value={formData.confirmPassword} 
+                  onChange={(e) => { 
+                    handleInputChange("confirmPassword", e.target.value); 
+                    setPasswordChanges(true); 
+                  }}
+                  placeholder="Confirm new password"
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                className="
-                  w-full sm:w-auto
-                  h-10 sm:h-11
-                  rounded-full
-                  px-6
-                "
-                onClick={handlePasswordUpdate}
-                disabled={!passwordChanges || isUpdatingPassword}
-              >
-                {isUpdatingPassword ? (
-                  <>
-                    <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                    Updating...
-                  </>
-                ) : (
-                  passwordChanges ? "Update password" : "No changes"
-                )}
-              </Button>
-              
-              {passwordChanges && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="rounded-full"
-                  onClick={() => {
-                    setFormData(prev => ({
-                      ...prev,
-                      currentPassword: "",
-                      newPassword: "",
-                      confirmPassword: ""
-                    }));
-                    setPasswordChanges(false);
+            {passwordChanges && (
+              <div className="flex gap-3 pt-2">
+                <Button 
+                  variant="default" 
+                  onClick={handlePasswordUpdate} 
+                  disabled={changingPassword}
+                >
+                  {changingPassword ? "Updating..." : "Update Password"}
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => { 
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      currentPassword: "", 
+                      newPassword: "", 
+                      confirmPassword: "" 
+                    })); 
+                    setPasswordChanges(false); 
                   }}
                 >
                   Clear
                 </Button>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* ACCOUNT INFO SECTION */}
-        <Separator className="my-10 sm:my-12 md:my-14" />
-        
-        <section className="space-y-6 sm:space-y-8">
-          <div>
-            <h2 className="text-base sm:text-lg font-medium">Account Information</h2>
-            <p className="text-sm text-muted-foreground">
-              Your account details and identification.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <div className="space-y-3 p-4 rounded-lg bg-muted/30">
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-                Account Created
-              </Label>
-              <div className="text-sm">
-                Member since: {new Date(user.createdAt || Date.now()).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
               </div>
-            </div>
+            )}
           </div>
-        </section>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

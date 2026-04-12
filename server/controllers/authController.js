@@ -15,6 +15,7 @@ const {
   NotFoundError,
   UnauthorizedError,
 } = require("../utils/handlar/ApiError");
+const { default: mongoose } = require("mongoose");
 
 // ============ USER SIGNUP ============
 const signup = asyncHandler(async (req, res, next) => {
@@ -516,35 +517,89 @@ const changePassword = asyncHandler(async (req, res, next) => {
 });
 
 // ============ GET PROFILE ============
+// controllers/userController.js
 const getProfile = asyncHandler(async (req, res, next) => {
   try {
-    const user = await userRepository.getProfile(req.id);
+    const userId = req.id;
 
-    if (!user) {
-      return next(new NotFoundError("User"));
+    // ✅ Correct aggregation query
+    const [userData] = await User.aggregate([
+      { $match: { _id: new mongoose.Types.ObjectId(userId) } },
+      
+      // Orders lookup
+      {
+        $lookup: {
+          from: 'orders',
+          localField: '_id',
+          foreignField: 'userId',
+          as: 'orders'
+        }
+      },
+      
+      // ✅ Wishlist lookup from Wishlist model
+      {
+        $lookup: {
+          from: 'wishlists',  // MongoDB collection name (usually lowercase plural)
+          let: { userId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$user', '$$userId'] } } },
+            {
+              $lookup: {
+                from: 'products',
+                localField: 'product',
+                foreignField: '_id',
+                as: 'productDetails'
+              }
+            },
+            { $unwind: '$productDetails' },
+            { $replaceRoot: { newRoot: '$productDetails' } }
+          ],
+          as: 'wishlist'
+        }
+      },
+      
+      // Addresses lookup
+      {
+        $lookup: {
+          from: 'addresses',
+          localField: 'addresses',
+          foreignField: '_id',
+          as: 'addresses'
+        }
+      },
+      
+      // Add stats
+      {
+        $addFields: {
+          'stats.totalOrders': { $size: '$orders' },
+          'stats.totalSpent': { $sum: '$orders.totalAmount' },
+          'stats.wishlistCount': { $size: '$wishlist' },
+          'stats.addressesCount': { $size: '$addresses' }
+        }
+      },
+      
+      // Project hidden fields
+      {
+        $project: {
+          password: 0,
+          refreshToken: 0,
+          __v: 0
+        }
+      }
+    ]);
+
+    if (!userData) {
+      return next(new NotFoundError("User not found"));
     }
 
-    const userData = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      avatar: user.avatar,
-      isEmailVerified: user.isEmailVerified,
-      addresses: user.addresses,
-      wishlist: user.wishlist,
-      preferences: user.preferences,
-      createdAt: user.createdAt,
-    };
+    // Sort orders
+    userData.orders = userData.orders
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 10);
 
-    // ✅ Success response with encryption
-    const response = new ApiResponse(
-      200,
-      userData,
-      "Profile fetched successfully",
-    );
+    const response = new ApiResponse(200, userData, "Profile fetched successfully");
     return res.json(await encryptResponse(response));
+    
   } catch (error) {
     next(error);
   }
