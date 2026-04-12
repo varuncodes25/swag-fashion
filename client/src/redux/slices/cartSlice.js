@@ -6,6 +6,13 @@ import apiClient from "../../api/axiosConfig";  // ✅ Import apiClient
 const initialState = {
   items: [],
   cartItems: [],
+  summary: {              
+    totalItems: 0,
+    totalPrice: 0,
+    totalDiscount: 0,
+    itemsCount: 0,
+    estimatedDelivery: ""
+  },
   loading: false,
   error: null,
   cartCount: 0,
@@ -14,10 +21,10 @@ const initialState = {
   totalPrice: 0,
   totalDiscount: 0,
   lastUpdated: null,
-  isCartOpen: false,  // ✅ ADD THIS - Cart open/close state
-  previousItems: [],  // For rollback
-  removedItem: null,  // For rollback
-  removedIndex: -1,   // For rollback
+  isCartOpen: false,
+  previousItems: [],
+  removedItem: null,
+  removedIndex: -1,
 };
 
 // ✅ Helper function to get auth headers (apiClient already handles token)
@@ -47,27 +54,46 @@ const calculateTotals = (items) => {
 };
 
 // ✅ FETCH CART - Using apiClient
+// ✅ FETCH CART - CORRECTED VERSION
 export const fetchCart = createAsyncThunk(
   "cart/fetchCart",
   async (_, { rejectWithValue }) => {
     try {
-      // ✅ Use apiClient instead of axios
       const response = await apiClient.get("/cart");
       
-      // ✅ Response structure based on your apiClient
-      const cartData = response.data?.data || response.data?.cart || response.data;
-      const items = cartData.items || [];
+      // ✅ Direct response.data hi cart hai
+      const cart = response.data;
+      
+      // ✅ Handle different response structures
+      let items = [];
+      let summary = {};
+      
+      if (cart.items && Array.isArray(cart.items)) {
+        items = cart.items;
+        summary = cart.summary || {};
+      } else if (cart.cart && cart.cart.items) {
+        items = cart.cart.items;
+        summary = cart.cart.summary || {};
+      } else if (cart.data && cart.data.items) {
+        items = cart.data.items;
+        summary = cart.data.summary || {};
+      }
+      
+      console.log("✅ Final Items:", items);
+      console.log("✅ Final Summary:", summary);
       
       return {
         items: items,
         cartItems: items,
-        cartCount: cartData.summary?.itemsCount || items.length,
-        totalItems: cartData.summary?.totalItems || items.reduce((sum, item) => sum + item.quantity, 0),
-        totalQuantity: cartData.summary?.totalItems || items.reduce((sum, item) => sum + item.quantity, 0),
-        totalPrice: cartData.summary?.totalPrice || items.reduce((sum, item) => sum + (item.sellingPrice * item.quantity), 0),
-        totalDiscount: cartData.summary?.totalDiscount || 0,
+        summary: summary,
+        cartCount: summary.itemsCount || items.length,
+        totalItems: summary.totalItems || items.reduce((sum, item) => sum + (item.quantity || 1), 0),
+        totalQuantity: summary.totalItems || items.reduce((sum, item) => sum + (item.quantity || 1), 0),
+        totalPrice: summary.totalPrice || items.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0),
+        totalDiscount: summary.totalDiscount || 0,
       };
     } catch (error) {
+      console.error("Fetch cart error:", error);
       return rejectWithValue(
         error.response?.data?.message || error.message || "Failed to fetch cart"
       );
@@ -435,24 +461,30 @@ const cartSlice = createSlice({
       .addCase(fetchCart.pending, (state) => {
         state.loading = true;
       })
-      .addCase(fetchCart.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = action.payload.items;
-        state.cartItems = action.payload.cartItems;
-        state.cartCount = action.payload.cartCount;
-        state.totalItems = action.payload.totalItems;
-        state.totalQuantity = action.payload.totalQuantity;
-        state.totalPrice = action.payload.totalPrice;
-        state.totalDiscount = action.payload.totalDiscount;
-        state.lastUpdated = new Date().toISOString();
-        state.error = null;
-        
-        // Clear optimistic flags
-        state.items.forEach(item => {
-          delete item.isOptimistic;
-          delete item.isPending;
-        });
-      })
+     .addCase(fetchCart.fulfilled, (state, action) => {
+  console.log("📦 Payload received:", action.payload);
+  
+  state.loading = false;
+  state.items = action.payload.items;
+  state.cartItems = action.payload.cartItems;
+  state.summary = action.payload.summary;  
+  state.cartCount = action.payload.cartCount;
+  state.totalItems = action.payload.totalItems;
+  state.totalQuantity = action.payload.totalQuantity;
+  state.totalPrice = action.payload.totalPrice;
+  state.totalDiscount = action.payload.totalDiscount;
+  state.lastUpdated = new Date().toISOString();
+  state.error = null;
+  
+  console.log("📦 State after update - summary:", state.summary);
+  console.log("📦 State after update - totalPrice:", state.totalPrice);
+  
+  // Clear optimistic flags
+  state.items.forEach(item => {
+    delete item.isOptimistic;
+    delete item.isPending;
+  });
+})
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;

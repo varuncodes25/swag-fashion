@@ -45,10 +45,10 @@ export default function MyProfile() {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (isAuthenticated && !profile) {
+    if (isAuthenticated) {
       dispatch(getProfile());
     }
-  }, [isAuthenticated, dispatch, profile]);
+  }, [ dispatch]);
 
   useEffect(() => {
     if (profile) {
