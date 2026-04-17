@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import ProductCard from "../custom/ProductCard";
 
 const SimilarProducts = ({ productId }) => {
   const [products, setProducts] = useState([]);
@@ -10,7 +11,6 @@ const SimilarProducts = ({ productId }) => {
   useEffect(() => {
     const fetchSimilarProducts = async () => {
       try {
-        // You can modify this API call based on your backend
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/similar-products/${productId}`
         );
@@ -32,36 +32,37 @@ const SimilarProducts = ({ productId }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Similar Products</h2>
-        <button className="text-primary hover:underline">View All</button>
+        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          Similar Products
+        </h2>
+        <button 
+          onClick={() => navigate("/products")}
+          className="text-primary hover:text-primary/80 hover:underline transition-colors duration-200 font-medium flex items-center gap-1"
+        >
+          View All
+          <span aria-hidden="true">→</span>
+        </button>
       </div>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
         {products.slice(0, 5).map((product) => (
-          <div
-            key={product._id}
-            className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => navigate(`/product/${product.slug}`)}
-          >
-            <img
-              src={product.image?.url}
-              alt={product.name}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-3">
-              <h3 className="font-medium text-sm line-clamp-2 mb-2">
-                {product.name}
-              </h3>
-              <div className="flex items-center justify-between">
-                <span className="font-bold">₹{product.price}</span>
-                {product.discount > 0 && (
-                  <span className="text-xs text-red-600 bg-red-100 px-2 py-1 rounded">
-                    {product.discount}% OFF
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+          <ProductCard
+            key={product._id || product.id}
+            _id={product._id || product.id}
+            name={product.name || product.title}
+            productType={product.productType || product.category}
+            price={product.price || product.originalPrice}
+            sellingPrice={product.sellingPrice || product.discountedPrice || product.price}
+            discount={product.discount || product.discountPercentage}
+            rating={product.rating || product.averageRating}
+            image={product.image || product.images?.[0]}
+            totalStock={product.totalStock || product.stock}
+            reviewCount={product.reviewCount || product.reviews?.length}
+            isNewArrival={product.isNewArrival}
+            isBestSeller={product.isBestSeller}
+            colors={product.colors}
+            sizes={product.sizes}
+          />
         ))}
       </div>
     </div>

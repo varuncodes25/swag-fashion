@@ -144,9 +144,9 @@ const AllReviewsPage = () => {
       : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30 dark:bg-card">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm border-b sticky top-0 z-10">
+      <div className="bg-card shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -154,7 +154,7 @@ const AllReviewsPage = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                className="flex items-center gap-2 text-muted-foreground hover:text-gray-900 dark:hover:text-white"
               >
                 <ArrowLeft className="h-5 w-5" />
                 Back to Product
@@ -162,14 +162,14 @@ const AllReviewsPage = () => {
 
               <Link
                 to="/"
-                className="hidden md:flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                className="hidden md:flex items-center gap-2 text-muted-foreground hover:text-gray-900 dark:hover:text-white"
               >
                 <Home className="h-5 w-5" />
                 Home
               </Link>
             </div>
 
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-xl font-bold text-foreground">
               Customer Reviews
             </h1>
           </div>
@@ -181,14 +181,14 @@ const AllReviewsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - Rating Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 sticky top-24">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+            <div className="bg-card rounded-xl p-6 shadow-sm border border-border sticky top-24">
+              <h2 className="text-2xl font-bold text-foreground mb-6">
                 Rating Summary
               </h2>
 
               {/* Average Rating */}
               <div className="text-center mb-8">
-                <div className="text-5xl font-bold text-gray-900 dark:text-white mb-2">
+                <div className="text-5xl font-bold text-foreground mb-2">
                   {averageRating}
                 </div>
                 <div className="flex justify-center mb-2">
@@ -204,7 +204,7 @@ const AllReviewsPage = () => {
                     />
                   ))}
                 </div>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-muted-foreground">
                   Based on {reviewList.length} reviews
                 </p>
               </div>
@@ -224,8 +224,8 @@ const AllReviewsPage = () => {
                         onClick={() => setFilter(`${rating}-star`)}
                         className={`flex items-center gap-1 text-sm ${
                           filter === `${rating}-star`
-                            ? "text-blue-600 dark:text-blue-400 font-semibold"
-                            : "text-gray-600 dark:text-gray-400"
+                            ? "text-primary dark:text-primary font-semibold"
+                            : "text-muted-foreground"
                         }`}
                       >
                         <span>{rating}</span>
@@ -240,7 +240,7 @@ const AllReviewsPage = () => {
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 w-10 text-right">
+                      <span className="text-sm text-muted-foreground w-10 text-right">
                         {count}
                       </span>
                     </div>
@@ -266,10 +266,10 @@ const AllReviewsPage = () => {
           <div className="lg:col-span-3">
             {/* Header */}
             <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-3xl font-bold text-foreground mb-2">
                 Customer Reviews ({filteredReviews.length})
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-muted-foreground">
                 Read what customers are saying about this product
               </p>
             </div>
@@ -279,7 +279,7 @@ const AllReviewsPage = () => {
               <div className="mb-8">
                 <Button
                   onClick={() => setShowWriteForm(true)}
-                  className="w-full md:w-auto px-8 py-3 text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                  className="w-full md:w-auto px-8 py-3 text-base bg-primary hover:bg-primary/90 text-white font-semibold"
                 >
                   Write a Review
                 </Button>
@@ -299,7 +299,7 @@ const AllReviewsPage = () => {
             )}
 
             {/* Sort Options */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 bg-card rounded-xl p-4 shadow-sm border border-border">
               <div className="flex items-center gap-2">
                 <Filter className="h-5 w-5 text-gray-500" />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -313,7 +313,7 @@ const AllReviewsPage = () => {
                     onClick={() => setSortBy(option)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       sortBy === option
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                        ? "bg-blue-100 dark:bg-primary/20 text-primary dark:text-primary"
                         : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
@@ -328,15 +328,15 @@ const AllReviewsPage = () => {
             {/* Reviews List */}
             {loading.fetch ? (
               <div className="flex justify-center items-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
               </div>
             ) : filteredReviews.length === 0 ? (
-              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+              <div className="text-center py-12 bg-card rounded-2xl border border-border">
                 <div className="text-5xl mb-4">😕</div>
                 <h4 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   No reviews found
                 </h4>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                <p className="text-muted-foreground mb-6">
                   {filter !== "all"
                     ? `No ${filter} reviews available`
                     : "Be the first to share your thoughts about this product"}

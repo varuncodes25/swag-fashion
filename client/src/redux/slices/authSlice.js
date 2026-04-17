@@ -177,7 +177,7 @@ export const getProfile = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await apiClient.get("/profile", {
+      const response = await apiClient.get("/users/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -199,7 +199,7 @@ export const updateProfile = createAsyncThunk(
   async (profileData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await apiClient.put("/profile", profileData, {
+      const response = await apiClient.put("/users/profile", profileData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -426,7 +426,11 @@ const initialState = {
   isAdminAuthenticated: !!localStorage.getItem("adminToken"),
 
   // Profile data
-  profile: null,
+  profile: null,  // ✅ Complete profile data (phone, addresses, etc.)
+  profileLoading: false,
+  profileError: null,
+  profileUpdateLoading: false,
+  profileUpdateSuccess: false,
   sessions: [],
   wishlist: [],
 
@@ -882,6 +886,8 @@ const authSlice = createSlice({
         state.loading = true;
       })
       .addCase(getProfile.fulfilled, (state, action) => {
+        console.log("Full profile response:", action.payload);
+  console.log("Profile data structure:", action.payload.data || action.payload);
         state.profileLoading = false;
         state.loading = false;
         state.profile = action.payload.data || action.payload;

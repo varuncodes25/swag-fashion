@@ -13,11 +13,11 @@ const BannerCard = ({
 }) => {
   const tagColors = {
     "BEST SELLER": "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-    "POPULAR": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+    "POPULAR": "bg-blue-100 text-info dark:bg-primary/20 dark:text-primary",
     "SALE": "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
     "NEW": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
     "TRENDING": "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
-    "FEATURED": "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300",
+    "FEATURED": "bg-indigo-100 text-indigo-800 dark:bg-primary/20 dark:text-indigo-300",
     "HOT": "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-300",
   };
 
@@ -40,11 +40,11 @@ const BannerCard = ({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between">
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white truncate">
+              <h4 className="font-semibold text-foreground truncate">
                 {banner.title}
               </h4>
               {banner.subtitle && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
+                <p className="text-sm text-muted-foreground truncate mt-1">
                   {banner.subtitle}
                 </p>
               )}
@@ -69,7 +69,7 @@ const BannerCard = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
             <span>Priority: {banner.priority}</span>
             <span>•</span>
             <span className="truncate">
@@ -105,7 +105,7 @@ const BannerCard = ({
 
           <button
             onClick={onEdit}
-            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary dark:bg-blue-900/20 dark:text-primary rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
           >
             <Edit size={14} />
             Edit
@@ -117,7 +117,7 @@ const BannerCard = ({
           {index > 0 && (
             <button
               onClick={onIncreasePriority}
-              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               title="Increase priority"
             >
               <ArrowUp size={16} />
@@ -126,7 +126,7 @@ const BannerCard = ({
           {index < total - 1 && (
             <button
               onClick={onDecreasePriority}
-              className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               title="Decrease priority"
             >
               <ArrowDown size={16} />

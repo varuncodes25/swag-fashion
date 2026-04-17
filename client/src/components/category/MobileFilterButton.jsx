@@ -52,10 +52,10 @@ export default function MobileFilterButton({
       {/* FILTER BUTTON - Same as before */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-8 right-8 z-50 lg:hidden p-3.5 bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-2xl shadow-lg hover:shadow-xl active:scale-95 transition-all duration-300 group overflow-visible border border-white/20"
+        className="fixed bottom-8 right-8 z-50 lg:hidden p-3.5 bg-gradient-to-br from-primary to-primary/90 dark:from-blue-600 dark:to-indigo-700 text-white rounded-2xl shadow-lg hover:shadow-xl active:scale-95 transition-all duration-300 group overflow-visible border border-white/20"
       >
         {appliedFilterCount > 0 && (
-          <div className="absolute -top-2 -right-2 z-20 w-7 h-7 bg-white border-2 border-blue-500 text-blue-600 dark:text-blue-700 font-bold text-sm rounded-full flex items-center justify-center transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
+          <div className="absolute -top-2 -right-2 z-20 w-7 h-7 bg-white border-2 border-primary text-primary dark:text-primary font-bold text-sm rounded-full flex items-center justify-center transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
             {appliedFilterCount}
           </div>
         )}
@@ -89,7 +89,7 @@ export default function MobileFilterButton({
             {/* Header with ref */}
             <div
               ref={headerRef}
-              className="sticky top-0 z-10 px-6 py-5 bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white shadow-lg"
+              className="sticky top-0 z-10 px-6 py-5 bg-gradient-to-r from-primary to-primary/90 dark:from-blue-600 dark:to-indigo-700 text-white shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -155,7 +155,7 @@ export default function MobileFilterButton({
                 </button>
                 <button
                   onClick={handleApplyFilters}
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 text-white font-medium rounded-xl hover:from-blue-600 hover:to-indigo-700 dark:hover:from-blue-700 dark:hover:to-indigo-800 transition-all duration-200 shadow-md"
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-primary to-primary/90 dark:from-blue-600 dark:to-indigo-700 text-white font-medium rounded-xl hover:from-blue-600 hover:to-indigo-700 dark:hover:from-blue-700 dark:hover:to-indigo-800 transition-all duration-200 shadow-md"
                 >
                   Apply Filters
                 </button>

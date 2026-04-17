@@ -19,7 +19,7 @@ const ProductCard = ({
   price = 2000,
   sellingPrice = price,
   discount = 0,
-  rating = 4,
+  rating = 0,
   image = null,
   totalStock = 0,
   reviewCount = 0,
@@ -41,6 +41,7 @@ const ProductCard = ({
   const safePrice = Number(price) || 0;
   const safeSellingPrice = Number(sellingPrice) || safePrice;
   const safeRating = Number(rating) || 0;
+  console.log(safeRating,"safeRating")
   const safeDiscount = Number(discount) || 0;
 
   // Discount calculation
@@ -113,12 +114,12 @@ const ProductCard = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link to={`/product/${_id}`} className="block h-full">
-        <div className="overflow-hidden rounded-xl bg-white dark:bg-gray-900 shadow-sm hover:shadow-lg transition-all duration-300 h-full flex flex-col border border-gray-200 dark:border-gray-800">
+        <div className="overflow-hidden rounded-xl bg-card shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col border border-border hover:border-primary/30">
           
           {/* Image Container */}
-          <div className="relative w-full aspect-[3/4] overflow-hidden bg-gray-100 dark:bg-gray-800">
+          <div className="relative w-full aspect-[3/4] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
             {!imageLoaded && (
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 animate-pulse" />
             )}
             
             <img
@@ -135,108 +136,132 @@ const ProductCard = ({
               } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             />
 
-            
+            {/* Badges - Left Side */}
+            <div className="absolute top-2 left-2 flex flex-col gap-1">
+              {isBestSeller && (
+                <span className="px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-md shadow-lg">
+                  🔥 Bestseller
+                </span>
+              )}
+            </div>
 
-            {/* Top Right - Discount Badge */}
-{hasRealDiscount && (
-  <div className="absolute bottom-2 right-2">
-    <span className="px-2 py-1 bg-gradient-to-r from-purple-600 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg">
-      {discountPercentage}% OFF
-    </span>
-  </div>
-)}
+            {/* Discount Badge - Right Side with Rose Gradient */}
+            {hasRealDiscount && (
+              <div className="absolute top-2 right-2">
+                <span className="px-2 py-1 bg-gradient-to-r from-primary to-primary/80 text-white text-xs font-bold rounded-md shadow-lg animate-pulse">
+                  {discountPercentage}% OFF
+                </span>
+              </div>
+            )}
 
-            {/* Top Right - Wishlist Button (below discount) */}
+            {/* Wishlist Button - White color */}
             <button
               onClick={handleWishlistToggle}
               disabled={isToggling}
-              className={`absolute bottom-2 left-2 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 shadow-md ${
+              className={`absolute bottom-2 left-2 transition-all duration-300 ${
                 wishlisted 
-                  ? 'bg-red-500 text-white hover:bg-red-600' 
-                  : 'bg-white/90 dark:bg-gray-800/90 text-gray-600 dark:text-gray-300 hover:bg-red-500 hover:text-white backdrop-blur-sm'
+                  ? 'text-primary' 
+                  : 'text-white hover:text-primary'
               }`}
             >
-              <Heart size={16} fill={wishlisted ? "currentColor" : "none"} />
+              <Heart size={20} fill={wishlisted ? "currentColor" : "none"} />
             </button>
 
-            {/* ===== FLIPKART STYLE RATING - Bottom Right ===== */}
-           {safeRating > 0 && (
-  <div className="absolute bottom-2 right-2">
-<div className="flex items-center gap-1 bg-green-800 text-white px-2 py-1 rounded-sm shadow">      <span className="text-xs font-bold">
-        {safeRating.toFixed(1)}
-      </span>
-      <Star size={12} className="text-white fill-white" />
-      {reviewCount > 0 && (
-        <span className="text-xs text-white/80 ml-1">
-          ({reviewCount})
-        </span>
-      )}
-    </div>
-  </div>
-)}
+            {/* FLIPKART STYLE RATING - Bottom Right */}
+            {safeRating > 0 && (
+              <div className="absolute bottom-2 right-2">
+                <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-0.5 rounded-sm shadow-md">
+                  <span className="text-xs font-bold">
+                    {safeRating.toFixed(1)}
+                  </span>
+                  <Star size={10} className="fill-white text-white" />
+                  {reviewCount > 0 && (
+                    <span className="text-xs text-white/90 ml-0.5">
+                      ({reviewCount})
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
-          <div className="p-3 flex-1 flex flex-col bg-white dark:bg-gray-900">
+          <div className="p-4 flex-1 flex flex-col bg-card">
             
             {/* Product Name & Type */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              <h3 className="text-sm font-semibold text-foreground line-clamp-1 group-hover:text-primary dark:group-hover:text-primary/80 transition-colors">
                 {name}
               </h3>
               {productType && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
+                <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                   {productType}
                 </p>
               )}
             </div>
 
-            {/* Price Section */}
+            {/* Price Section with Rose Color for Sale Price */}
             <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-base font-bold text-gray-900 dark:text-white">
+              <span className="text-base font-bold text-primary">
                 ₹{safeSellingPrice.toLocaleString("en-IN")}
               </span>
               {hasRealDiscount && (
-                <span className="text-xs text-gray-400 dark:text-gray-500 line-through">
+                <span className="text-xs text-muted-foreground line-through">
                   ₹{safePrice.toLocaleString("en-IN")}
                 </span>
               )}
             </div>
 
             {/* Color/Size Indicators */}
-            {(colors?.length > 0 || sizes?.length > 0) && (
-              <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                {colors?.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <div className="flex -space-x-1">
-                      {colors.slice(0, 3).map((color, idx) => (
-                        <div
-                          key={idx}
-                          className="w-4 h-4 rounded-full border border-white dark:border-gray-800 shadow-sm"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-                    {colors.length > 3 && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        +{colors.length - 3}
-                      </span>
-                    )}
-                  </div>
-                )}
-                
-                {sizes?.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {sizes.slice(0, 3).join(', ')}
-                      {sizes.length > 3 && ' +more'}
-                    </span>
-                  </div>
-                )}
+            {/* Color/Size Indicators */}
+{(colors?.length > 0 || sizes?.length > 0) && (
+  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border">
+    {/* Color Swatches */}
+    {colors?.length > 0 && (
+  <div className="flex items-center gap-1">
+    <div className="flex -space-x-1">
+      {colors.slice(0, 3).map((color, idx) => (
+        <div
+          key={idx}
+          className="w-3 h-3 rounded-full border-2 border-border shadow-sm transition-transform hover:scale-110 cursor-pointer"
+          style={{ backgroundColor: color }}
+          title={color}
+        />
+      ))}
+    </div>
+    {colors.length > 3 && (
+      <span className="text-xs text-muted-foreground">
+        +{colors.length - 3}
+      </span>
+    )}
+  </div>
+)}
+    
+    {/* Sizes */}
+    {sizes?.length > 0 && (
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-muted-foreground">
+          {sizes.slice(0, 3).join(', ')}
+          {sizes.length > 3 && (
+            <span className="text-primary text-xs ml-1 font-medium">
+              +{sizes.length - 3}
+            </span>
+          )}
+        </span>
+      </div>
+    )}
+  </div>
+)}
+
+            {/* Stock Status with Colors */}
+            {totalStock > 0 && totalStock <= 5 && (
+              <div className="mt-2">
+                <span className="text-xs text-warning bg-warning/10 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <Clock size={10} />
+                  Only {totalStock} left
+                </span>
               </div>
             )}
-
-      
           </div>
         </div>
       </Link>

@@ -209,7 +209,7 @@ const Signup = () => {
       
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-60 -right-60 w-96 h-96 bg-blue-400/10 dark:bg-blue-500/5 rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
+        <div className="absolute -top-60 -right-60 w-96 h-96 bg-blue-400/10 dark:bg-primary/5 rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
         <div className="absolute -bottom-60 -left-60 w-96 h-96 bg-purple-400/10 dark:bg-purple-500/5 rounded-full mix-blend-overlay filter blur-3xl animate-float delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-500/5 to-purple-500/5 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
       </div>
@@ -239,7 +239,7 @@ const Signup = () => {
               <h3 className="text-2xl font-bold text-emerald-700 dark:text-emerald-300 mb-2">
                 Redirecting to Login...
               </h3>
-              <p className="text-emerald-600 dark:text-emerald-400">
+              <p className="text-success">
                 Your account has been created successfully!
               </p>
             </div>
@@ -274,7 +274,7 @@ const Signup = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   disabled={signupLoading || signupSuccess}
-                  className={`pl-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.name ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
+                  className={`pl-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.name ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-border focus:border-primary dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
                 />
                 <User className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 transition-colors duration-300 ${errors.name ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'}`} />
               </div>
@@ -300,7 +300,7 @@ const Signup = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   disabled={signupLoading || signupSuccess}
-                  className={`pl-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.email ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
+                  className={`pl-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.email ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-border focus:border-primary dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
                 />
                 <Mail className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 transition-colors duration-300 ${errors.email ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'}`} />
               </div>
@@ -327,7 +327,7 @@ const Signup = () => {
                   onChange={handleInputChange}
                   maxLength={10}  // Added maxlength
                   disabled={signupLoading || signupSuccess}
-                  className={`pl-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.phone ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
+                  className={`pl-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.phone ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-border focus:border-primary dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
                 />
                 <Phone className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 transition-colors duration-300 ${errors.phone ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'}`} />
               </div>
@@ -353,7 +353,7 @@ const Signup = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   disabled={signupLoading || signupSuccess}
-                  className={`pl-12 pr-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.password ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
+                  className={`pl-12 pr-12 h-14 bg-white/80 dark:bg-gray-800/80 border-2 ${errors.password ? 'border-rose-500 dark:border-rose-400 focus:border-rose-500 dark:focus:border-rose-400' : 'border-border focus:border-primary dark:focus:border-blue-400'} rounded-2xl focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20 transition-all duration-300 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 font-medium`}
                 />
                 <Lock className={`absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 transition-colors duration-300 ${errors.password ? 'text-rose-500' : 'text-gray-400 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'}`} />
                 <button
@@ -394,7 +394,7 @@ const Signup = () => {
                   {errors.password}
                 </p>
               ) : (
-                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
                   <Shield className="h-3 w-3" />
                   Use at least 8 characters with uppercase, numbers, and symbols  {/* Changed from 6 to 8 */}
                 </p>
@@ -402,7 +402,7 @@ const Signup = () => {
             </div>
 
             {/* Terms Checkbox */}
-            <div className={`p-5 rounded-2xl transition-all duration-300 ${errors.terms ? 'bg-rose-50/50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800' : 'bg-blue-50/50 dark:bg-gray-800/30 border border-blue-100 dark:border-gray-700'}`}>
+            <div className={`p-5 rounded-2xl transition-all duration-300 ${errors.terms ? 'bg-rose-50/50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800' : 'bg-primary/10/50 dark:bg-gray-800/30 border border-blue-100 dark:border-gray-700'}`}>
               <div className="flex items-start space-x-4">
                 <Checkbox
                   id="terms"
@@ -424,7 +424,7 @@ const Signup = () => {
                     <Globe className="h-4 w-4" />
                     I agree to the Terms & Conditions
                   </label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed">
                     By creating an account, you agree to our Terms of Service and Privacy Policy. 
                     We'll never share your personal information without your consent.
                   </p>
@@ -467,7 +467,7 @@ const Signup = () => {
               </Button>
               
               {signupSuccess && (
-                <p className="text-center text-emerald-600 dark:text-emerald-400 text-sm mt-4 animate-pulse">
+                <p className="text-center text-success text-sm mt-4 animate-pulse">
                   Redirecting to login page in 3 seconds...
                 </p>
               )}
@@ -477,11 +477,11 @@ const Signup = () => {
 
           {/* Login Link */}
           <div className="mt-12 pt-8 border-t border-gray-200/70 dark:border-gray-700/70 text-center relative z-10">
-            <p className="text-gray-600 dark:text-gray-300 font-medium">
+            <p className="text-muted-foreground font-medium">
               Already part of our community?{" "}
               <Link
                 to="/login"
-                className="font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors inline-flex items-center gap-2 group"
+                className="font-bold text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 transition-colors inline-flex items-center gap-2 group"
               >
                 Sign In Now
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />

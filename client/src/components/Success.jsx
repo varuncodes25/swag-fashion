@@ -14,7 +14,7 @@ const Success = () => {
 
       <button
         onClick={() => navigate("/")}
-        className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
+        className="bg-primary text-white px-6 py-3 rounded hover:bg-primary/90 transition"
       >
         Continue Shopping
       </button>

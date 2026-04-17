@@ -18,8 +18,8 @@ const Items = () => {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-2">
-        <Package className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-        <span className="text-sm font-medium text-gray-900 dark:text-white">
+        <Package className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm font-medium text-foreground">
           Items ({items.length})
         </span>
       </div>
@@ -27,7 +27,7 @@ const Items = () => {
       {items.map((item) => (
   <div
     key={item.productId}
-    className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+    className="flex items-center justify-between p-3 bg-card border border-border rounded-lg"
   >
     <div className="flex items-center gap-3">
       <img
@@ -36,16 +36,16 @@ const Items = () => {
         className="w-14 h-14 object-cover rounded-lg border border-gray-100 dark:border-gray-700"
       />
       <div>
-        <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[140px]">
+        <p className="text-sm font-medium text-foreground truncate max-w-[140px]">
           {item.name}
         </p>
         <div className="flex items-center gap-3 mt-1">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className="text-xs text-muted-foreground">
             Qty: {item.quantity}
           </span>
 
           {item.discountPercent > 0 && (
-            <span className="text-xs font-medium text-green-600 dark:text-green-400">
+            <span className="text-xs font-medium text-success">
               {item.discountPercent}% OFF
             </span>
           )}
@@ -54,12 +54,12 @@ const Items = () => {
     </div>
 
     <div className="text-right">
-      <p className="text-sm font-semibold text-gray-900 dark:text-white">
+      <p className="text-sm font-semibold text-foreground">
         ₹{item.lineTotal.toFixed(2)}
       </p>
 
       {item.discountAmount > 0 && (
-        <p className="text-xs text-gray-400 dark:text-gray-500 line-through">
+        <p className="text-xs text-muted-foreground line-through">
           ₹{(item.price * item.quantity).toFixed(2)}
         </p>
       )}

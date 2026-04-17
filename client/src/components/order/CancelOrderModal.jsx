@@ -107,18 +107,18 @@ const CancelOrderModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl animate-fadeScale">
+      <div className="bg-card rounded-2xl max-w-md w-full p-6 shadow-2xl animate-fadeScale">
         
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+            <AlertTriangle className="w-6 h-6 text-destructive" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h3 className="text-xl font-bold text-foreground">
               Cancel Order
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Please tell us the reason for cancellation
             </p>
           </div>
@@ -132,9 +132,9 @@ const CancelOrderModal = ({
               className={`flex items-center p-3 rounded-xl border-2 cursor-pointer transition-all
                 ${cancelReason === reason.value 
                   ? reason.value === "custom"
-                    ? "border-orange-500 bg-orange-50 dark:bg-orange-900/20"
+                    ? "border-warning bg-warning/15 dark:bg-warning/15"
                     : "border-red-500 bg-red-50 dark:bg-red-900/20"
-                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  : "border-border hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
             >
               <input
@@ -160,9 +160,9 @@ const CancelOrderModal = ({
               placeholder="Please specify your reason..."
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
-              className="w-full p-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl 
+              className="w-full p-3 border-2 border-border rounded-xl 
                 focus:border-red-500 dark:focus:border-red-500 focus:ring-0
-                bg-white dark:bg-gray-900 text-gray-900 dark:text-white"
+                bg-card text-foreground"
               rows="3"
               autoFocus
             />
@@ -173,7 +173,7 @@ const CancelOrderModal = ({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-3 border-2 border-gray-200 dark:border-gray-700 
+            className="flex-1 px-4 py-3 border-2 border-border 
               text-gray-700 dark:text-gray-300 font-semibold rounded-xl
               hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
             disabled={cancelLoading}
@@ -203,7 +203,7 @@ const CancelOrderModal = ({
         </div>
 
         {/* Note */}
-        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
+        <p className="text-xs text-muted-foreground text-center mt-4">
           ⚠️ This action cannot be undone. Order will be cancelled and stock will be restored.
         </p>
       </div>

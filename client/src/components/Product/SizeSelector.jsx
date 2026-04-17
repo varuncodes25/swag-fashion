@@ -79,14 +79,14 @@ const SizeSelector = ({ sizes, value, onChange, stockData }) => {
                 text-sm
                 font-medium
                 ${isSelected
-                  ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white border-orange-500 shadow-sm'
+                  ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white border-warning shadow-sm'
                   : isOutOfStock
-                    ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700 cursor-not-allowed'
+                    ? 'bg-muted text-muted-foreground border-border cursor-not-allowed'
                     : status === 'popular'
                       ? 'bg-green-50 dark:bg-green-900/20 text-gray-800 dark:text-gray-200 border-green-200 dark:border-green-800 hover:border-green-300 dark:hover:border-green-700 hover:shadow-sm'
                       : status === 'low-stock'
                         ? 'bg-amber-50 dark:bg-amber-900/20 text-gray-800 dark:text-gray-200 border-amber-200 dark:border-amber-800 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-sm'
-                        : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
+                        : 'bg-card text-gray-700 dark:text-gray-300 border-border hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm'
                 }
                 hover:scale-105
                 active:scale-95
@@ -114,14 +114,14 @@ const SizeSelector = ({ sizes, value, onChange, stockData }) => {
               )}
               
               {!isSelected && !isOutOfStock && status === 'low-stock' && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center border border-white dark:border-gray-900">
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-highlight flex items-center justify-center border border-white dark:border-gray-900">
                   <span className="text-[8px] font-bold text-white">!</span>
                 </div>
               )}
               
               {/* Out of stock indicator */}
               {isOutOfStock && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 bg-opacity-80 rounded-md">
+                <div className="absolute inset-0 flex items-center justify-center bg-muted bg-opacity-80 rounded-md">
                   <span className="text-gray-400 dark:text-gray-600 text-xs">×</span>
                 </div>
               )}
@@ -131,7 +131,7 @@ const SizeSelector = ({ sizes, value, onChange, stockData }) => {
       </div>
       
       {/* Compact Legend */}
-      <div className="flex items-center  gap-3 text-xs text-gray-500 dark:text-gray-400 pt-1">
+      <div className="flex items-center  gap-3 text-xs text-muted-foreground pt-1">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center">
             <Zap className="w-2 h-2 text-white" />
@@ -140,14 +140,14 @@ const SizeSelector = ({ sizes, value, onChange, stockData }) => {
         </div>
         
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-full bg-amber-500 flex items-center justify-center">
+          <div className="w-3 h-3 rounded-full bg-highlight flex items-center justify-center">
             <span className="text-[8px] font-bold text-white">!</span>
           </div>
           <span>Low stock</span>
         </div>
         
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded border border-orange-500 bg-orange-500 flex items-center justify-center">
+          <div className="w-3 h-3 rounded border border-warning bg-warning flex items-center justify-center">
             <Check className="w-2 h-2 text-white" />
           </div>
           <span>Selected</span>

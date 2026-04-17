@@ -82,7 +82,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
   const getActiveGradient = (slug) => {
     switch (slug) {
       case "men":
-        return "border-blue-200 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:border-blue-800 dark:bg-gradient-to-r dark:from-blue-900/20 dark:to-blue-800/10";
+        return "border-primary/25 bg-gradient-to-r from-blue-50 to-blue-100/50 dark:border-primary/30 dark:bg-gradient-to-r dark:from-blue-900/20 dark:to-blue-800/10";
       case "women":
         return "border-pink-200 bg-gradient-to-r from-pink-50 to-pink-100/50 dark:border-pink-800 dark:bg-gradient-to-r dark:from-pink-900/20 dark:to-pink-800/10";
       case "kids":
@@ -97,11 +97,11 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
   };
 
   const getBgColor = (slug, isActive) => {
-    if (!isActive) return "bg-gray-100 dark:bg-gray-800";
+    if (!isActive) return "bg-muted";
 
     switch (slug) {
       case "men":
-        return "bg-blue-100 dark:bg-blue-900/30";
+        return "bg-blue-100 dark:bg-primary/20";
       case "women":
         return "bg-pink-100 dark:bg-pink-900/30";
       case "kids":
@@ -111,26 +111,26 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
       case "style":
         return "bg-purple-100 dark:bg-purple-900/30";
       default:
-        return "bg-gray-100 dark:bg-gray-800";
+        return "bg-muted";
     }
   };
 
   const getIconColor = (slug, isActive) => {
-    if (!isActive) return "text-gray-600 dark:text-gray-400";
+    if (!isActive) return "text-muted-foreground";
 
     switch (slug) {
       case "men":
-        return "text-blue-600 dark:text-blue-400";
+        return "text-primary dark:text-primary";
       case "women":
-        return "text-pink-600 dark:text-pink-400";
+        return "text-primary dark:text-primary";
       case "kids":
-        return "text-green-600 dark:text-green-400";
+        return "text-success";
       case "collections":
         return "text-yellow-600 dark:text-yellow-400";
       case "style":
-        return "text-purple-600 dark:text-purple-400";
+        return "text-primary dark:text-purple-400";
       default:
-        return "text-gray-600 dark:text-gray-400";
+        return "text-muted-foreground";
     }
   };
 
@@ -139,11 +139,11 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
 
     switch (slug) {
       case "men":
-        return "text-blue-700 dark:text-blue-400";
+        return "text-primary dark:text-primary";
       case "women":
-        return "text-pink-700 dark:text-pink-400";
+        return "text-primary dark:text-primary";
       case "kids":
-        return "text-green-700 dark:text-green-400";
+        return "text-success";
       case "collections":
         return "text-yellow-700 dark:text-yellow-400";
       case "style":
@@ -161,7 +161,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
       transition-colors duration-300
     ">
       {/* ================= FIXED HEADER ================= */}
-      <div className=" hidden lg:block p-2 flex-shrink-0 border-b border-gray-300 dark:border-gray-700">
+      <div className=" hidden lg:block p-2 flex-shrink-0 border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
@@ -174,7 +174,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
               ">
                 Filters
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 Refine your search
               </p>
             </div>
@@ -188,7 +188,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
         {/* ================= CATEGORIES ================= */}
         <FilterSection
           title="Categories"
-          icon={<LayoutGrid size={18} className="text-blue-500 dark:text-blue-400" />}
+          icon={<LayoutGrid size={18} className="text-blue-500 dark:text-primary" />}
           defaultOpen={true}
         >
           <div className="space-y-2">
@@ -205,7 +205,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
             transition-all duration-300 group
 
             ${isActiveCategory
-                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm dark:from-blue-900/20 dark:to-indigo-900/10 dark:border-blue-800"
+                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-primary/25 shadow-sm dark:from-blue-900/20 dark:to-indigo-900/10 dark:border-primary/30"
                       : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
                     }
           `}
@@ -214,7 +214,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                     <div className={`
               w-8 h-8 rounded-lg flex items-center justify-center
               ${isActiveCategory
-                        ? "bg-blue-100 dark:bg-blue-900/30"
+                        ? "bg-blue-100 dark:bg-primary/20"
                         : "bg-gray-100 dark:bg-gray-700"
                       }
             `}>
@@ -224,7 +224,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                     <span className={`
               text-sm font-medium
               ${isActiveCategory
-                        ? "text-blue-700 dark:text-blue-400"
+                        ? "text-primary dark:text-primary"
                         : "text-gray-800 dark:text-gray-200"
                       }
             `}>
@@ -242,7 +242,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
         {/* ================= T-SHIRT FILTERS ================= */}
         <FilterSection
           title="T-Shirt Filters"
-          icon={<Shirt size={18} className="text-blue-500 dark:text-blue-400" />}
+          icon={<Shirt size={18} className="text-blue-500 dark:text-primary" />}
           defaultOpen={true}
         >
           <div className="space-y-5">
@@ -277,7 +277,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
               <div key={section.key}>
 
                 {/* SECTION TITLE */}
-                <h4 className="text-xs font-semibold uppercase tracking-wide mb-2 text-gray-500 dark:text-gray-400">
+                <h4 className="text-xs font-semibold uppercase tracking-wide mb-2 text-muted-foreground">
                   {section.title}
                 </h4>
 
@@ -295,8 +295,8 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                   transition-all duration-200
 
                   ${isSelected
-                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-transparent shadow-sm scale-105"
-                            : "bg-gray-50 text-gray-700 border-gray-200 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-blue-400"
+                            ? "bg-gradient-to-r from-primary to-primary/90 text-white border-transparent shadow-sm scale-105"
+                            : "bg-gray-50 text-gray-700 border-gray-200 hover:border-blue-400 hover:text-primary hover:bg-primary/10 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-blue-400"
                           }
                 `}
                       >
@@ -361,8 +361,8 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                       p-3 rounded-xl border text-sm font-medium text-center
                       transition-all duration-200
                       ${isChecked
-                        ? `bg-gradient-to-r ${option.color} border-transparent shadow-sm text-gray-900 dark:text-gray-100`
-                        : "bg-white border-gray-200 hover:border-blue-300 hover:shadow dark:bg-gray-800 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:shadow-lg dark:text-gray-300"
+                        ? `bg-gradient-to-r ${option.color} border-transparent shadow-sm text-foreground`
+                        : "bg-white border-gray-200 hover:border-blue-300 hover:shadow dark:bg-gray-800 dark:border-gray-700 dark:hover:border-primary dark:hover:shadow-lg dark:text-gray-300"
                       }
                     `}
                   >
@@ -378,13 +378,13 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
               border-gray-200 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700
             ">
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2 text-gray-800 dark:text-gray-300">
-                <Tag size={16} className="text-blue-500 dark:text-blue-400" />
+                <Tag size={16} className="text-blue-500 dark:text-primary" />
                 Custom Price Range
               </h4>
               <div className="flex items-center gap-3 mb-3">
                 <div className="flex-1">
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 font-medium text-gray-500 dark:text-gray-400">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 font-medium text-muted-foreground">
                       ₹
                     </span>
                     <input
@@ -394,17 +394,17 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                         w-full pl-10 pr-3 py-2.5 rounded-lg text-sm border border-gray-300
                         focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400
                         dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 
-                        dark:placeholder-gray-500 dark:focus:ring-blue-500 dark:focus:border-blue-500
+                        dark:placeholder-gray-500 dark:focus:ring-primary dark:focus:border-primary
                       "
                       value={customMinPrice}
                       onChange={(e) => setCustomMinPrice(e.target.value)}
                     />
                   </div>
                 </div>
-                <div className="text-gray-400 dark:text-gray-500">-</div>
+                <div className="text-muted-foreground">-</div>
                 <div className="flex-1">
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 font-medium text-gray-500 dark:text-gray-400">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 font-medium text-muted-foreground">
                       ₹
                     </span>
                     <input
@@ -414,7 +414,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                         w-full pl-10 pr-3 py-2.5 rounded-lg text-sm border border-gray-300
                         focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400
                         dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 
-                        dark:placeholder-gray-500 dark:focus:ring-blue-500 dark:focus:border-blue-500
+                        dark:placeholder-gray-500 dark:focus:ring-primary dark:focus:border-primary
                       "
                       value={customMaxPrice}
                       onChange={(e) => setCustomMaxPrice(e.target.value)}
@@ -424,7 +424,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
               </div>
               <button
                 onClick={applyCustomPrice}
-                className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-all shadow-sm hover:shadow"
+                className="w-full py-2.5 bg-gradient-to-r from-primary to-primary/90 text-white rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-all shadow-sm hover:shadow"
               >
                 Apply Price
               </button>
@@ -435,7 +435,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
         {/* DISCOUNT */}
         <FilterSection
           title="Discount Offers"
-          icon={<Percent size={16} className="text-emerald-600 dark:text-emerald-400" />}
+          icon={<Percent size={16} className="text-success" />}
           defaultOpen={true}
         >
           <div className="grid grid-cols-3 gap-2">
@@ -450,8 +450,8 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
               {
                 label: "20%",
                 value: "20",
-                color: "bg-gradient-to-br from-blue-50 to-cyan-100 border border-blue-200 dark:from-blue-900/40 dark:to-cyan-900/30 dark:border-blue-800/30",
-                textColor: "text-blue-700 dark:text-blue-300",
+                color: "bg-gradient-to-br from-blue-50 to-cyan-100 border border-primary/25 dark:from-blue-900/40 dark:to-cyan-900/30 dark:border-primary/30/30",
+                textColor: "text-primary dark:text-primary",
                 badgeColor: "bg-gradient-to-r from-blue-400 to-cyan-500",
               },
               {
@@ -472,7 +472,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                 label: "50%",
                 value: "50",
                 color: "bg-gradient-to-br from-pink-50 to-rose-100 border border-pink-200 dark:from-pink-900/40 dark:to-rose-900/30 dark:border-pink-800/30",
-                textColor: "text-pink-700 dark:text-pink-300",
+                textColor: "text-primary dark:text-pink-300",
                 badgeColor: "bg-gradient-to-r from-pink-400 to-rose-500",
               },
               {
@@ -521,7 +521,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                     `}>
                       {option.label}
                     </span>
-                    <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400">
+                    <span className="text-[10px] font-medium text-muted-foreground">
                       OFF
                     </span>
                   </div>
@@ -574,7 +574,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                         w-5 h-5 rounded-md border flex items-center justify-center
                         ${isChecked
                           ? "bg-yellow-500 border-yellow-500"
-                          : "border-gray-300 dark:border-gray-600"
+                          : "border-border"
                         }
                       `}
                     >
@@ -658,7 +658,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                   relative w-8 h-8 sm:w-9 sm:h-9 rounded-full 
                   transition-all duration-300 cursor-pointer
                   shadow-md hover:shadow-lg
-                  ${isSelected ? 'ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-900 scale-110' : 'ring-1 ring-gray-200 dark:ring-gray-700'}
+                  ${isSelected ? 'ring-2 ring-offset-2 ring-primary dark:ring-offset-gray-900 scale-110' : 'ring-1 ring-gray-200 dark:ring-gray-700'}
                   ${isWhite ? 'border border-gray-300' : ''}
                 `}
                         style={{
@@ -691,8 +691,8 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                     <span className={`
               text-[10px] sm:text-xs font-medium transition-colors duration-200
               ${isSelected
-                        ? 'text-blue-600 dark:text-blue-400'
-                        : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-gray-200'
+                        ? 'text-primary dark:text-primary'
+                        : 'text-muted-foreground group-hover:text-gray-900 dark:group-hover:text-gray-200'
                       }
             `}>
                       {color.name}
@@ -705,7 +705,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
             {/* Selected Colors Summary */}
             {selectedFilters.colors?.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                <span className="text-xs text-gray-500 dark:text-gray-400">Selected:</span>
+                <span className="text-xs text-muted-foreground">Selected:</span>
                 <div className="flex flex-wrap gap-1.5">
                   {selectedFilters.colors.map(colorValue => {
                     const color = [
@@ -718,7 +718,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                       <button
                         key={colorValue}
                         onClick={() => updateFilter("colors", colorValue)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-xs group hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded-full text-xs group hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       >
                         <span
                           className="w-2 h-2 rounded-full"
@@ -734,7 +734,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                 </div>
                 <button
                   onClick={() => updateFilter("colors", null)}
-                  className="text-xs text-blue-500 hover:text-blue-600 ml-auto"
+                  className="text-xs text-blue-500 hover:text-primary ml-auto"
                 >
                   Clear all
                 </button>
@@ -767,8 +767,8 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                         py-2.5 text-sm font-bold rounded-lg
                         transition-all duration-200
                         ${isSelected
-                          ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg transform scale-105"
-                          : "bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-blue-600 hover:shadow dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:border-blue-500 dark:hover:text-blue-400 dark:hover:shadow-lg"
+                          ? "bg-gradient-to-r from-primary to-primary/90 text-white shadow-lg transform scale-105"
+                          : "bg-white text-gray-700 border border-gray-300 hover:border-blue-400 hover:text-primary hover:shadow dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:border-primary dark:hover:text-blue-400 dark:hover:shadow-lg"
                         }
                       `}
                     >
@@ -799,7 +799,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                         transition-all duration-200
                         ${isSelected
                           ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md"
-                          : "bg-white text-gray-700 border border-gray-300 hover:border-purple-400 hover:text-purple-600 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:border-purple-500 dark:hover:text-purple-400"
+                          : "bg-white text-gray-700 border border-gray-300 hover:border-purple-400 hover:text-primary dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:border-purple-500 dark:hover:text-purple-400"
                         }
                       `}
                     >
@@ -816,7 +816,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
         {Object.keys(selectedFilters).some(
           (key) => selectedFilters[key] && selectedFilters[key].length > 0,
         ) && (
-            <div className="mt-6 pt-5 border-t border-gray-300 dark:border-gray-700">
+            <div className="mt-6 pt-5 border-t border-border">
               <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">
                 Applied Filters
               </h3>
@@ -827,19 +827,19 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                       key={`${key}-${value}`}
                       className="
                       flex items-center gap-1.5 px-3 py-1.5 rounded-full border
-                      bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200
-                      dark:from-blue-900/30 dark:to-indigo-900/20 dark:border-blue-800
+                      bg-gradient-to-r from-blue-50 to-indigo-50 border-primary/25
+                      dark:from-blue-900/30 dark:to-indigo-900/20 dark:border-primary/30
                     "
                     >
-                      <span className="text-xs font-medium text-blue-700 dark:text-blue-300">
+                      <span className="text-xs font-medium text-primary dark:text-primary">
                         {value}
                       </span>
                       <button
                         onClick={() => updateFilter(key, value)}
                         className="
                         w-4 h-4 rounded-full flex items-center justify-center
-                        bg-blue-100 text-blue-600 hover:bg-blue-200
-                        dark:bg-blue-900/50 dark:text-blue-400 dark:hover:bg-blue-800
+                        bg-blue-100 text-primary hover:bg-blue-200
+                        dark:bg-blue-900/50 dark:text-primary dark:hover:bg-blue-800
                       "
                       >
                         <X size={12} />
@@ -861,7 +861,7 @@ function FilterSection({ title, children, icon, defaultOpen = true }) {
 
   return (
     <div className="
-      mb-5 pb-5 border-b border-gray-300 dark:border-gray-700 
+      mb-5 pb-5 border-b border-border 
       last:border-0 last:mb-0 last:pb-0
     ">
       <button
@@ -891,9 +891,9 @@ function FilterSection({ title, children, icon, defaultOpen = true }) {
           dark:bg-gray-800 dark:group-hover:bg-gray-700
         ">
           {open ? (
-            <ChevronUp size={18} className="text-gray-600 dark:text-gray-400" />
+            <ChevronUp size={18} className="text-muted-foreground" />
           ) : (
-            <ChevronDown size={18} className="text-gray-600 dark:text-gray-400" />
+            <ChevronDown size={18} className="text-muted-foreground" />
           )}
         </div>
       </button>

@@ -43,7 +43,7 @@ const ForgotPassword = () => {
             <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Forgot Password?
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-muted-foreground mt-2">
               Enter your email to receive a reset link
             </p>
           </div>
@@ -59,7 +59,7 @@ const ForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
-                className="h-12 px-4 bg-white/80 dark:bg-gray-800/80 border-2 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400 rounded-xl transition-all duration-300"
+                className="h-12 px-4 bg-white/80 dark:bg-gray-800/80 border-2 border-border focus:border-primary dark:focus:border-blue-400 rounded-xl transition-all duration-300"
                 required
               />
             </div>
@@ -75,7 +75,7 @@ const ForgotPassword = () => {
             <div className="text-center">
               <a
                 href="/login"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors"
+                className="text-sm text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 hover:underline transition-colors"
               >
                 ← Back to Login
               </a>

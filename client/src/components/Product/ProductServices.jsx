@@ -42,11 +42,11 @@ const ProductServices = ({ promises = [] }) => {
       darkGradientFrom: "dark:from-blue-900/20",
       darkGradientTo: "dark:to-cyan-900/10",
       borderColor: "border-blue-100",
-      darkBorderColor: "dark:border-blue-800/30",
-      hoverBorder: "hover:border-blue-200",
+      darkBorderColor: "dark:border-primary/30/30",
+      hoverBorder: "hover:border-primary/25",
       darkHoverBorder: "dark:hover:border-blue-700/50",
-      textColor: "text-blue-700",
-      darkTextColor: "dark:text-blue-300"
+      textColor: "text-primary",
+      darkTextColor: "dark:text-primary"
     },
     {
       id: "secure",
@@ -124,11 +124,11 @@ const ProductServices = ({ promises = [] }) => {
 
   // Icon color mapping
   const ICON_COLOR_CLASSES = {
-    green: "text-green-600 dark:text-green-400",
-    blue: "text-blue-600 dark:text-blue-400",
-    purple: "text-purple-600 dark:text-purple-400",
-    orange: "text-orange-600 dark:text-orange-400",
-    gray: "text-gray-600 dark:text-gray-400",
+    green: "text-success",
+    blue: "text-primary dark:text-primary",
+    purple: "text-primary dark:text-purple-400",
+    orange: "text-warning dark:text-orange-400",
+    gray: "text-muted-foreground",
     cyan: "text-cyan-600 dark:text-cyan-400"
   };
 
@@ -138,15 +138,15 @@ const ProductServices = ({ promises = [] }) => {
       <div className="mb-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base font-semibold text-foreground">
               Our Promise to You
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Everything you need for a worry-free purchase
             </p>
           </div>
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted">
+            <CheckCircle2 className="w-3.5 h-3.5 text-success" />
             <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
               {STATIC_SERVICES.length} benefits
             </span>
@@ -226,7 +226,7 @@ const ProductServices = ({ promises = [] }) => {
               `}>
                 {service.title}
               </h4>
-              <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
+              <p className="text-[10px] text-muted-foreground leading-tight">
                 {service.desc}
               </p>
             </div>
@@ -337,7 +337,7 @@ const ProductServices = ({ promises = [] }) => {
                   `}>
                     {service.title}
                   </h4>
-                  <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
+                  <p className="text-[10px] text-muted-foreground leading-tight">
                     {service.desc}
                   </p>
                 </div>

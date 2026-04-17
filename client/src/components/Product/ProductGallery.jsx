@@ -92,7 +92,7 @@ const ProductGallery = ({
   // ✅ CORRECT: Early return AFTER all hooks
   if (!activeImage || !images || images.length === 0) {
     return (
-      <div className="w-full h-[400px] bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+      <div className="w-full h-[400px] bg-muted rounded-lg flex items-center justify-center">
         <div className="text-gray-500">No image available</div>
       </div>
     );
@@ -115,7 +115,7 @@ const ProductGallery = ({
                 }}
                 className={`w-14 h-14 rounded-md border transition-all ${
                   selectedImage === i
-                    ? "border-orange-500 border-2 scale-105"
+                    ? "border-warning border-2 scale-105"
                     : "border-gray-300 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/30"
                 }`}
               >
@@ -285,7 +285,7 @@ const ProductGallery = ({
                 }}
                 className={`shrink-0 w-16 h-16 rounded-md border transition-all ${
                   selectedImage === i
-                    ? "border-orange-500 border-2"
+                    ? "border-warning border-2"
                     : "border-gray-300 dark:border-white/10"
                 }`}
               >
@@ -324,7 +324,7 @@ const ProductGallery = ({
 
       {/* SIMPLE INSTRUCTION TEXT */}
       <div className="hidden lg:block mt-3">
-        <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+        <div className="text-sm text-muted-foreground text-center">
           {isZoomed 
             ? "Click image to exit zoom mode" 
             : showZoom 

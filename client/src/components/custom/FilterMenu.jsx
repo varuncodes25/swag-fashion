@@ -61,7 +61,7 @@ const FilterMenu = ({ onSearch }) => {
                 placeholder:text-sm sm:placeholder:text-base
                 focus-visible:ring-0 focus-visible:ring-offset-0
                 transition-all duration-200
-                ${isFocused ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'}
+                ${isFocused ? 'text-foreground' : 'text-gray-700 dark:text-gray-300'}
                 rounded-xl
               `}
             />
@@ -75,7 +75,7 @@ const FilterMenu = ({ onSearch }) => {
                   p-1.5 sm:p-2 rounded-full
                   bg-gray-100 dark:bg-zinc-800/70
                   hover:bg-gray-200 dark:hover:bg-zinc-700
-                  text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300
+                  text-muted-foreground hover:text-gray-700 dark:hover:text-gray-300
                   transition-all duration-200
                   active:scale-95
                 `}
@@ -94,7 +94,7 @@ const FilterMenu = ({ onSearch }) => {
                   px-2 py-1 rounded
                   text-xs font-mono
                   bg-gray-100 dark:bg-zinc-800
-                  text-gray-600 dark:text-gray-400
+                  text-muted-foreground
                   border border-gray-200 dark:border-zinc-700
                 ">
                   ⌘K
@@ -150,17 +150,17 @@ const FilterMenu = ({ onSearch }) => {
             flex flex-col sm:flex-row sm:items-center justify-between gap-2
           ">
             <div className="flex items-center gap-2">
-              <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                Searching: <span className="font-medium text-gray-900 dark:text-white">"{search}"</span>
+              <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse"></div>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                Searching: <span className="font-medium text-foreground">"{search}"</span>
               </p>
             </div>
             <button
               onClick={handleClearSearch}
               className="
                 text-xs sm:text-sm font-medium
-                text-blue-600 dark:text-blue-400
-                hover:text-blue-700 dark:hover:text-blue-300
+                text-primary dark:text-primary
+                hover:text-primary dark:hover:text-blue-300
                 hover:underline transition-all duration-200
                 text-right
               "

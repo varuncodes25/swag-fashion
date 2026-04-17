@@ -49,10 +49,10 @@ const TrackingStep = ({ step, isLast, isActive }) => {
       </div>
       
       {/* Content */}
-      <div className={`p-4 rounded-lg ${isActive ? "bg-blue-50 border border-blue-100" : "bg-gray-50"}`}>
+      <div className={`p-4 rounded-lg ${isActive ? "bg-primary/10 border border-blue-100" : "bg-gray-50"}`}>
         <div className="flex justify-between items-start">
           <div>
-            <h4 className={`font-semibold ${isActive ? "text-blue-800" : "text-gray-800"}`}>
+            <h4 className={`font-semibold ${isActive ? "text-info" : "text-gray-800"}`}>
               {step.status || "Status Update"}
             </h4>
             <p className="text-sm text-gray-600 mt-1">
@@ -60,7 +60,7 @@ const TrackingStep = ({ step, isLast, isActive }) => {
             </p>
           </div>
           {isActive && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-info">
               Current
             </span>
           )}
@@ -91,16 +91,16 @@ const TrackingHistory = ({ trackingData }) => {
   const activeStepIndex = getActiveStepIndex();
 
   return (
-    <div className="mt-6 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+    <div className="mt-6 p-6 bg-card rounded-xl border border-border shadow-sm">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
-          <Truck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+        <div className="w-10 h-10 bg-blue-100 dark:bg-primary/20 rounded-lg flex items-center justify-center">
+          <Truck className="w-5 h-5 text-primary dark:text-primary" />
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
+          <h3 className="font-semibold text-foreground text-lg">
             Tracking History
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Latest updates on your order delivery
           </p>
         </div>
@@ -123,7 +123,7 @@ const TrackingHistory = ({ trackingData }) => {
           <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
             No Tracking Available Yet
           </h4>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Tracking information will appear here once your order is shipped
           </p>
         </div>
@@ -133,7 +133,7 @@ const TrackingHistory = ({ trackingData }) => {
 };
 
 const NoTrackingMessage = () => (
-  <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+  <div className="mt-6 p-6 bg-muted/40 rounded-xl border border-border">
     <div className="text-center">
       <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
         <Truck className="w-8 h-8 text-gray-400" />
@@ -141,10 +141,10 @@ const NoTrackingMessage = () => (
       <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
         Tracking Not Available
       </h4>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+      <p className="text-sm text-muted-foreground mb-4">
         This order hasn't been shipped yet. Tracking information will be available once the order is dispatched.
       </p>
-      <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-sm">
+      <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 dark:bg-blue-900/20 text-primary dark:text-primary rounded-lg text-sm">
         <Clock className="w-4 h-4" />
         Expected in 3-5 business days
       </div>

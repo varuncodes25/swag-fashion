@@ -95,7 +95,7 @@ const Navbar = () => {
               >
                 <Heart
                   size={18}
-                  className="text-pink-500 dark:text-pink-400 group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors"
+                  className="text-pink-500 dark:text-primary group-hover:text-rose-500 dark:group-hover:text-rose-400 transition-colors"
                   strokeWidth={1.5}
                   fill={wishlistCount > 0 ? "currentColor" : "none"}
                 />
@@ -105,7 +105,7 @@ const Navbar = () => {
                   key={`wishlist-${wishlistCount}`}
                   className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 
                     flex items-center justify-center 
-                    bg-gradient-to-br from-pink-500 to-rose-500 
+                    bg-gradient-to-br from-primary to-primary/90 
                     text-white text-[10px] font-bold rounded-full 
                     shadow-lg ring-2 ring-white dark:ring-gray-900
                     animate-in zoom-in duration-200"
@@ -124,7 +124,7 @@ const Navbar = () => {
                 className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full 
                   transition-all duration-200 
                   ${isCheckoutPage || loading
-                    ? "bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-60"
+                    ? "bg-muted cursor-not-allowed opacity-60"
                     : "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 hover:from-emerald-100 hover:to-green-100 dark:hover:from-emerald-800/30 dark:hover:to-green-800/30 border border-emerald-100 dark:border-emerald-800/30 hover:shadow-sm hover:scale-105"
                   }`}
               >
@@ -133,8 +133,8 @@ const Navbar = () => {
                   <ShoppingCart
                     size={18}
                     className={isCheckoutPage 
-                      ? "text-gray-400 dark:text-gray-500"
-                      : "text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-300"
+                      ? "text-muted-foreground"
+                      : "text-success group-hover:text-emerald-700 dark:group-hover:text-emerald-300"
                     }
                     strokeWidth={1.5}
                   />
@@ -167,7 +167,7 @@ const Navbar = () => {
                     dark:from-blue-900/20 dark:to-indigo-900/20 
                     hover:from-blue-100 hover:to-indigo-100 
                     dark:hover:from-blue-800/30 dark:hover:to-indigo-800/30 
-                    border border-blue-100 dark:border-blue-800/30 
+                    border border-blue-100 dark:border-primary/30/30 
                     hover:shadow-sm transition-all duration-200">
                     <LogoutToggle user={user} iconSize={18} />
                   </div>
@@ -185,12 +185,12 @@ const Navbar = () => {
                     dark:from-blue-900/20 dark:to-indigo-900/20 
                     hover:from-blue-100 hover:to-indigo-100 
                     dark:hover:from-blue-800/30 dark:hover:to-indigo-800/30 
-                    border border-blue-100 dark:border-blue-800/30 
+                    border border-blue-100 dark:border-primary/30/30 
                     hover:shadow-sm hover:scale-105 transition-all duration-200"
                 >
                   <User
                     size={18}
-                    className="text-blue-600 dark:text-blue-400"
+                    className="text-primary dark:text-primary"
                     strokeWidth={1.5}
                   />
                 </button>

@@ -75,7 +75,7 @@ const OrderActions = ({
         onClick: handleTrackOrder,
         disabled: loading,
         description: "Track shipment",
-        gradient: "from-blue-500 to-indigo-600",
+        gradient: "from-primary to-primary/90",
         shadow: "shadow-blue-500/20"
       });
     }
@@ -148,10 +148,10 @@ const OrderActions = ({
   <div className="flex items-center justify-between mb-4 md:mb-6">
     <div className="flex items-center gap-2 md:gap-3">
       <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-amber-500" />
-      <h3 className="font-bold text-gray-800 dark:text-white text-xl md:text-2xl bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+      <h3 className="font-bold text-foreground text-xl md:text-2xl bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
         Quick Actions
       </h3>
-      <span className="text-xs md:text-sm font-medium text-gray-400 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 md:px-3 md:py-1.5 rounded-full">
+      <span className="text-xs md:text-sm font-medium text-gray-400 bg-muted px-2.5 py-1 md:px-3 md:py-1.5 rounded-full">
         {availableActions.length} available
       </span>
     </div>
@@ -166,12 +166,12 @@ const OrderActions = ({
         ))}
       </div>
     ) : (
-      <div className="text-center py-10 md:py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl md:rounded-2xl border border-gray-200 dark:border-gray-700">
+      <div className="text-center py-10 md:py-16 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 rounded-xl md:rounded-2xl border border-border">
         <div className="relative inline-block">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-20 animate-pulse" />
           <Package className="w-16 h-16 md:w-20 md:h-20 text-gray-400 mx-auto relative" />
         </div>
-        <p className="text-gray-600 dark:text-gray-400 font-semibold text-lg md:text-xl mt-4 md:mt-6">
+        <p className="text-muted-foreground font-semibold text-lg md:text-xl mt-4 md:mt-6">
           No Actions Available
         </p>
         <p className="text-sm md:text-base text-gray-500 dark:text-gray-500 mt-2 md:mt-3">

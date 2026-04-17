@@ -37,7 +37,7 @@ const CartDrawer = () => {
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger className="relative" aria-label="Open cart">
         <ShoppingCart
-          className="text-gray-800 dark:text-white hover:scale-105 transition-all ease-in-out cursor-pointer"
+          className="text-foreground hover:scale-105 transition-all ease-in-out cursor-pointer"
           strokeWidth={1.3}
           size={28}
         />

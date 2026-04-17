@@ -72,7 +72,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
           
           {/* ZOOM LEVEL INDICATOR */}
           {scale > 1 && (
-            <div className="text-white text-sm px-3 py-1.5 bg-orange-500/90 rounded-full flex items-center gap-1">
+            <div className="text-white text-sm px-3 py-1.5 bg-warning/90 rounded-full flex items-center gap-1">
               <ZoomIn size={14} />
               {scale.toFixed(1)}x
             </div>
@@ -170,7 +170,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
                 onClick={() => onSelect(i)}
                 className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                   i === activeIndex
-                    ? "border-orange-500 scale-105"
+                    ? "border-warning scale-105"
                     : "border-white/20"
                 }`}
               >
@@ -180,7 +180,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
                   className="h-full w-full object-cover"
                 />
                 {i === activeIndex && (
-                  <div className="absolute inset-0 bg-orange-500/20 border-2 border-orange-500" />
+                  <div className="absolute inset-0 bg-warning/20 border-2 border-warning" />
                 )}
               </button>
             ))}

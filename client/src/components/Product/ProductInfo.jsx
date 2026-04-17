@@ -12,7 +12,7 @@ const ProductInfo = ({
   return (
     <div className="space-y-3">
       {/* Product Name */}
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+      <h1 className="text-xl font-bold text-foreground">
         {name}
       </h1>
 
@@ -32,7 +32,7 @@ const ProductInfo = ({
             ))}
           </div>
 
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-muted-foreground">
             {rating?.toFixed(1) || "0.0"}
           </span>
         </div>
@@ -40,13 +40,13 @@ const ProductInfo = ({
 
       {/* Price */}
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+        <span className="text-2xl font-bold text-foreground">
           ₹{displayPrice?.toFixed(0) || price?.toFixed(0)}
         </span>
 
         {isOfferActive && discount > 0 && price && displayPrice && (
           <>
-            <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
+            <span className="text-lg text-muted-foreground line-through">
               ₹{price?.toFixed(0)}
             </span>
             <span className="px-2 py-1 bg-red-500 dark:bg-red-600 text-white text-xs rounded">

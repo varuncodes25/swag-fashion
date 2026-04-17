@@ -31,7 +31,7 @@ const PaymentMethod = ({ disabled = false }) => {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h2 className="text-lg font-semibold text-foreground">
           Select Payment Method
         </h2>
       </div>
@@ -51,9 +51,9 @@ const PaymentMethod = ({ disabled = false }) => {
     ${
       isSelected
         ? method.color === "blue"
-          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+          ? "border-primary bg-primary/10 dark:bg-blue-900/20"
           : "border-green-500 bg-green-50 dark:bg-green-900/20"
-        : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+        : "border-border hover:bg-gray-50 dark:hover:bg-gray-800"
     }
     ${disabled ? "opacity-50 cursor-not-allowed" : ""}
   `}
@@ -66,9 +66,9 @@ const PaymentMethod = ({ disabled = false }) => {
       ${
         isSelected
           ? method.color === "blue"
-            ? "border-blue-500 bg-blue-500"
+            ? "border-primary bg-primary"
             : "border-green-500 bg-green-500"
-          : "border-gray-300 dark:border-gray-600"
+          : "border-border"
       }
     `}
                 >
@@ -82,27 +82,27 @@ const PaymentMethod = ({ disabled = false }) => {
                     ? method.color === "blue"
                       ? "bg-blue-100 dark:bg-blue-800"
                       : "bg-green-100 dark:bg-green-800"
-                    : "bg-gray-100 dark:bg-gray-800"
+                    : "bg-muted"
                 }`}
               >
                 <method.icon
                   className={`w-5 h-5 ${
                     isSelected
                       ? method.color === "blue"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-green-600 dark:text-green-400"
-                      : "text-gray-600 dark:text-gray-400"
+                        ? "text-primary dark:text-primary"
+                        : "text-success"
+                      : "text-muted-foreground"
                   }`}
                 />
               </div>
 
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900 dark:text-white">
+                  <h3 className="font-medium text-foreground">
                     {method.title}
                   </h3>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   {method.desc}
                 </p>
               </div>
@@ -111,7 +111,7 @@ const PaymentMethod = ({ disabled = false }) => {
         })}
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 pt-3 border-t">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-3 border-t">
         <Shield className="w-4 h-4 flex-shrink-0" />
         <span>100% secure payments</span>
       </div>

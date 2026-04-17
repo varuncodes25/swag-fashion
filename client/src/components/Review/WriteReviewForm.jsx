@@ -94,16 +94,16 @@ const WriteReviewForm = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200 dark:border-gray-800">
+    <div className="bg-card rounded-2xl p-6 md:p-8 shadow-lg border border-border">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="p-2 bg-blue-100 dark:bg-primary/20 rounded-lg">
+          <User className="h-6 w-6 text-primary dark:text-primary" />
         </div>
         <div>
-          <h4 className="font-bold text-xl text-gray-900 dark:text-white">
+          <h4 className="font-bold text-xl text-foreground">
             Write Your Review
           </h4>
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             Your feedback helps others make better decisions
           </p>
         </div>
@@ -122,7 +122,7 @@ const WriteReviewForm = ({
               size="lg"
             />
             {newReview.rating > 0 && (
-              <span className="ml-3 text-lg font-semibold text-amber-600 dark:text-amber-500">
+              <span className="ml-3 text-lg font-semibold text-highlight dark:text-amber-500">
                 {newReview.rating}.0
               </span>
             )}
@@ -153,7 +153,7 @@ const WriteReviewForm = ({
             <div className="flex flex-wrap gap-3">
               {images.map((image, index) => (
                 <div className="relative group" key={index}>
-                  <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-gray-300 dark:border-gray-700 group-hover:border-blue-500 transition-all">
+                  <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-border group-hover:border-primary transition-all">
                     <img
                       src={image.preview}
                       alt={`Preview ${index + 1}`}
@@ -172,10 +172,10 @@ const WriteReviewForm = ({
               {images.length < MAX_IMAGES && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all flex flex-col items-center justify-center"
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-all flex flex-col items-center justify-center"
                 >
-                  <Upload className="h-6 w-6 text-gray-500 dark:text-gray-400 mb-1" />
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                  <span className="text-xs text-muted-foreground">
                     Add
                   </span>
                 </button>
@@ -191,7 +191,7 @@ const WriteReviewForm = ({
               ref={fileInputRef}
             />
 
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Upload up to {MAX_IMAGES} images. Max 5MB per image.
             </p>
           </div>
@@ -204,7 +204,7 @@ const WriteReviewForm = ({
             disabled={
               loading || !newReview.review.trim() || !newReview.rating
             }
-            className="flex-1 px-8 py-3 text-base bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            className="flex-1 px-8 py-3 text-base bg-primary hover:bg-primary/90 text-white font-semibold"
           >
             {loading ? (
               <span className="flex items-center gap-2">

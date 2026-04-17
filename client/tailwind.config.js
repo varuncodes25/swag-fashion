@@ -5,9 +5,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['Inter', 'Poppins', 'Manrope', 'system-ui', 'sans-serif'],
-        'display': ['Poppins', 'Inter', 'Manrope', 'sans-serif'],
-        'body': ['Inter', 'Manrope', 'system-ui', 'sans-serif'],
+        sans: ["Mulish", "Inter", "system-ui", "sans-serif"],
+        display: ["Mulish", "Inter", "system-ui", "sans-serif"],
+        body: ["Mulish", "Inter", "system-ui", "sans-serif"],
       },
       keyframes: {
         fadeIn: {
@@ -21,10 +21,12 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       colors: {
-        customYellow: "#edcf5d",
-        customBlack: "#010101",
-        customIsabelline: "#f2f0ea",
-        customGray: "#a4a4a4",
+        /* Legacy aliases → design tokens (index.css) */
+        customYellow: "hsl(var(--highlight))",
+        customBlack: "hsl(var(--foreground))",
+        customIsabelline: "hsl(var(--muted))",
+        customGray: "hsl(var(--muted-foreground))",
+
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         card: {
@@ -55,6 +57,22 @@ export default {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+        highlight: {
+          DEFAULT: "hsl(var(--highlight))",
+          foreground: "hsl(var(--highlight-foreground))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -79,5 +97,4 @@ export default {
     },
   },
   plugins: [require("tailwindcss-animate")],
-  
 };

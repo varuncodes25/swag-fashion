@@ -9,11 +9,11 @@ const MobileStickyCTA = ({
   onBuyNow,
 }) => {
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-xl p-4 z-50">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-xl p-4 z-50">
       <div className="flex items-center justify-between gap-3">
         <div className="flex-1">
           <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-gray-900 dark:text-white">
+            <span className="text-xl font-bold text-foreground">
               ₹{Number(displayPrice).toFixed(2)}
             </span>
             {isOfferActive && (
@@ -22,7 +22,7 @@ const MobileStickyCTA = ({
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Inclusive of all taxes</p>
+          <p className="text-xs text-muted-foreground">Inclusive of all taxes</p>
         </div>
         
         <div className="flex gap-2">
@@ -32,7 +32,7 @@ const MobileStickyCTA = ({
             variant="outline"
             className="
               gap-2 
-              bg-amber-500 
+              bg-highlight 
               hover:bg-amber-600 
               dark:bg-amber-600 
               dark:hover:bg-amber-700 
@@ -61,8 +61,8 @@ const MobileStickyCTA = ({
             size="sm"
             className="
               gap-2 
-              bg-orange-500 
-              hover:bg-orange-600 
+              bg-warning 
+              hover:bg-warning/90 
               dark:bg-orange-600 
               dark:hover:bg-orange-700 
               text-white

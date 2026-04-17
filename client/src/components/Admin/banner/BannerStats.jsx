@@ -9,23 +9,23 @@ const BannerStats = ({ banners }) => {
 
   return (
     <div className="grid grid-cols-3 gap-4 mb-6">
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700 shadow-sm">
-        <div className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className="bg-card p-4 rounded-xl border dark:border-gray-700 shadow-sm">
+        <div className="text-2xl font-bold text-foreground">
           {stats.total}
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">Total Banners</div>
+        <div className="text-sm text-muted-foreground">Total Banners</div>
       </div>
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700 shadow-sm">
+      <div className="bg-card p-4 rounded-xl border dark:border-gray-700 shadow-sm">
         <div className="text-2xl font-bold text-green-600 dark:text-green-500">
           {stats.active}
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">Active</div>
+        <div className="text-sm text-muted-foreground">Active</div>
       </div>
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-700 shadow-sm">
-        <div className="text-2xl font-bold text-blue-600 dark:text-blue-500">
+      <div className="bg-card p-4 rounded-xl border dark:border-gray-700 shadow-sm">
+        <div className="text-2xl font-bold text-primary dark:text-blue-500">
           {stats.highPriority}
         </div>
-        <div className="text-sm text-gray-500 dark:text-gray-400">High Priority</div>
+        <div className="text-sm text-muted-foreground">High Priority</div>
       </div>
     </div>
   );

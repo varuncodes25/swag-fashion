@@ -245,7 +245,11 @@ exports.verifyRazorpayPayment = async (req, res) => {
       },
       addressDoc
     );
-
+console.log("🧮 CALCULATED DATA:", {
+  subtotal: orderData.summary.subtotal,
+  shipping: orderData.summary.shipping,
+  total: orderData.summary.total
+});
     // ✅ Amount verify
     const expectedAmount = Math.round(orderData.summary.total * 100);
 
@@ -294,7 +298,11 @@ exports.verifyRazorpayPayment = async (req, res) => {
 
     // ✅ Generate order number
     const orderNumber = await Order.generateOrderNumber();
-
+console.log("💾 BEFORE SAVE:", {
+  subtotal: orderData.summary.subtotal,
+  shipping: orderData.summary.shipping,
+  total: orderData.summary.total
+});
     // ✅ Create order WITH shippingMeta from notes
     const [order] = await Order.create(
       [
@@ -304,6 +312,7 @@ exports.verifyRazorpayPayment = async (req, res) => {
           items: orderItems,
           
           subtotal: orderData.summary.subtotal,
+          mrpTotal: orderData.summary.mrpTotal ?? 0,
           shippingCharge: orderData.summary.shipping,
           taxAmount: orderData.summary.tax || 0,
           discount: orderData.summary.discount,
@@ -347,13 +356,16 @@ exports.verifyRazorpayPayment = async (req, res) => {
       ],
       { session }
     );
-
-    console.log("✅ Order created with courier:", {
-      orderId: order._id,
-      courierId: order.shippingMeta.courierId,
-      courierName: order.shippingMeta.courierName
-    });
-
+console.log("📦 SAVED ORDER:", {
+  subtotal: order.subtotal,
+  shipping: order.shippingCharge,
+  total: order.totalAmount
+});
+    console.log("🚀 SENDING TO SHIPROCKET:", {
+  subtotal: order.subtotal,
+  shipping: order.shippingCharge,
+  total: order.totalAmount
+});
     // ✅ Reserve stock
     for (const item of order.items) {
       const product = await Product.findById(item.productId).session(session);

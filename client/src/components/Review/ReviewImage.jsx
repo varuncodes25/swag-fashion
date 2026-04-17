@@ -49,7 +49,7 @@ const ReviewImage = ({ reviewImages }) => {
               onClick={() => openGallery(index)}
             >
               {/* Small Thumbnail - Flipkart Size */}
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-50 dark:bg-gray-800">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded border border-border overflow-hidden bg-muted/40">
                 <img
                   src={img.url}
                   alt={`Review ${index + 1}`}
@@ -70,9 +70,9 @@ const ReviewImage = ({ reviewImages }) => {
               className="relative group cursor-pointer"
               onClick={() => openGallery(3)}
             >
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded border border-gray-200 dark:border-gray-700 overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded border border-border overflow-hidden bg-muted flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-lg md:text-xl font-bold text-gray-600 dark:text-gray-400">
+                  <div className="text-lg md:text-xl font-bold text-muted-foreground">
                     +{reviewImages.length - 3}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
@@ -90,7 +90,7 @@ const ReviewImage = ({ reviewImages }) => {
         </div>
         
         {/* Image Count Text */}
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        <div className="mt-2 text-xs text-muted-foreground">
           {reviewImages.length} photo{reviewImages.length > 1 ? 's' : ''}
         </div>
       </div>
@@ -150,7 +150,7 @@ const ReviewImage = ({ reviewImages }) => {
                     onClick={() => setCurrentImageIndex(index)}
                     className={`flex-shrink-0 w-12 h-12 md:w-16 md:h-16 rounded overflow-hidden border-2 ${
                       index === currentImageIndex
-                        ? "border-blue-500"
+                        ? "border-primary"
                         : "border-transparent"
                     }`}
                   >

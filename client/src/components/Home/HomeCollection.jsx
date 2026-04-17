@@ -41,10 +41,10 @@ export default function HomeCollections() {
 
   const getColor = (name) => {
     const colors = {
-      men: "bg-blue-500 hover:bg-blue-600",
-      women: "bg-pink-500 hover:bg-pink-600",
+      men: "bg-primary hover:bg-primary/90",
+      women: "bg-primary/100 hover:bg-primary",
       kids: "bg-emerald-500 hover:bg-emerald-600",
-      new: "bg-amber-500 hover:bg-amber-600",
+      new: "bg-highlight hover:bg-amber-600",
     };
     const key = Object.keys(colors).find(k => name.toLowerCase().includes(k));
     return colors[key] || "bg-gray-500 hover:bg-gray-600";

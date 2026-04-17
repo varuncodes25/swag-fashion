@@ -145,7 +145,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
     // Top Wear Diagram
     if (categories.topWear.includes(clothingType)) {
       return (
-        <div className="relative w-full h-64 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
+        <div className="relative w-full h-64 bg-muted/40 rounded-lg overflow-hidden">
           <svg viewBox="0 0 300 300" className="w-full h-full">
             {/* T-Shirt Body */}
             <path 
@@ -228,7 +228,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
     // Bottom Wear Diagram
     if (categories.bottomWear.includes(clothingType)) {
       return (
-        <div className="relative w-full h-64 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
+        <div className="relative w-full h-64 bg-muted/40 rounded-lg overflow-hidden">
           <svg viewBox="0 0 300 300" className="w-full h-full">
             {/* Pants Outline */}
             <path 
@@ -286,7 +286,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
     // Full Body Diagram
     if (categories.fullBody.includes(clothingType)) {
       return (
-        <div className="relative w-full h-64 bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
+        <div className="relative w-full h-64 bg-muted/40 rounded-lg overflow-hidden">
           <svg viewBox="0 0 300 300" className="w-full h-full">
             {/* Dress Outline */}
             <path 
@@ -341,7 +341,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
       );
     }
 
-    return <div className="w-full h-64 bg-gray-50 dark:bg-gray-800 rounded-lg flex items-center justify-center">No diagram available</div>;
+    return <div className="w-full h-64 bg-muted/40 rounded-lg flex items-center justify-center">No diagram available</div>;
   };
 
   // ============ DYNAMIC MEASUREMENT TIPS ============
@@ -381,30 +381,30 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+        <div className="sticky top-0 bg-card border-b border-border p-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Ruler className="w-5 h-5 text-pink-500" />
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-semibold text-foreground">
                 Size Chart - {clothingType}
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {productName} • Size {variant?.size}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {/* Unit Toggle */}
-            <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <div className="flex bg-muted rounded-lg p-1">
               <button
                 onClick={() => setUnit('inches')}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
                   unit === 'inches' 
                     ? 'bg-white dark:bg-gray-700 text-pink-500 shadow-sm' 
-                    : 'text-gray-600 dark:text-gray-400'
+                    : 'text-muted-foreground'
                 }`}
               >
                 IN
@@ -414,7 +414,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
                   unit === 'cm' 
                     ? 'bg-white dark:bg-gray-700 text-pink-500 shadow-sm' 
-                    : 'text-gray-600 dark:text-gray-400'
+                    : 'text-muted-foreground'
                 }`}
               >
                 CM
@@ -431,8 +431,8 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
           
           {/* Title */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Size Chart</h1>
-            <h2 className="text-lg text-gray-600 dark:text-gray-400 mt-1">Size Chart | How to measure</h2>
+            <h1 className="text-2xl font-bold text-foreground">Size Chart</h1>
+            <h2 className="text-lg text-muted-foreground mt-1">Size Chart | How to measure</h2>
           </div>
 
           {/* Two Column Layout */}
@@ -460,10 +460,10 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
               <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Size Chart - {clothingType}
               </h3>
-              <div className="overflow-x-auto border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="overflow-x-auto border border-border rounded-lg">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-gray-100 dark:bg-gray-800">
+                    <tr className="bg-muted">
                       {headersList.map((header) => (
                         <th key={header.key} className="px-3 py-2 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 border-b">
                           {header.label}
@@ -474,9 +474,9 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
                   <tbody>
                     {Object.entries(sizeChartData).map(([size, measurements], index) => (
                       <tr key={size} className={`${
-                        index % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800/50'
-                      } hover:bg-pink-50 dark:hover:bg-pink-900/20 ${
-                        variant?.size === size ? 'bg-pink-50 dark:bg-pink-900/20' : ''
+                        index % 2 === 0 ? 'bg-card' : 'bg-muted/40/50'
+                      } hover:bg-primary/10 dark:hover:bg-pink-900/20 ${
+                        variant?.size === size ? 'bg-primary/10 dark:bg-primary/15' : ''
                       }`}>
                         {headersList.map((header) => {
                           if (header.key === 'size') {
@@ -503,13 +503,13 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
           </div>
 
           {/* Divider */}
-          <hr className="my-6 border-gray-200 dark:border-gray-700" />
+          <hr className="my-6 border-border" />
 
           {/* How to Measure */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">How to measure</h3>
+            <h3 className="text-xl font-semibold text-foreground mb-4">How to measure</h3>
             
-            <button onClick={() => setShowGuide(!showGuide)} className="flex items-center justify-between w-full text-left mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <button onClick={() => setShowGuide(!showGuide)} className="flex items-center justify-between w-full text-left mb-4 p-3 bg-muted/40 rounded-lg">
               <span className="text-base font-medium">Measurement Guide</span>
               {showGuide ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </button>
@@ -521,7 +521,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
                     <div className={`w-2 h-2 mt-1.5 rounded-full bg-${tip.color}-500`}></div>
                     <div>
                       <span className="font-medium text-sm">{tip.name}</span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{tip.desc}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{tip.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -531,8 +531,8 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
         </div>
 
         {/* Close Button */}
-        <div className="sticky bottom-0 bg-white dark:bg-gray-900 border-t p-4">
-          <button onClick={onClose} className="w-full bg-pink-500 text-white py-3 rounded-lg hover:bg-pink-600">
+        <div className="sticky bottom-0 bg-card border-t p-4">
+          <button onClick={onClose} className="w-full bg-primary/100 text-white py-3 rounded-lg hover:bg-primary">
             Close
           </button>
         </div>

@@ -104,8 +104,8 @@ const wishlistState = useSelector((state) => state.wishlist);
     disabled={isToggling}
     className={`flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-xl transition-all duration-300 transform active:scale-95 ${
       isWishlisted
-        ? "bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/30 dark:to-pink-900/30 text-red-600 dark:text-red-400 border-2 border-red-200 dark:border-red-800 shadow-md"
-        : "bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-gray-700 dark:text-gray-300 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 border-2 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md"
+        ? "bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/30 dark:to-pink-900/30 text-destructive border-2 border-red-200 dark:border-red-800 shadow-md"
+        : "bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-gray-700 dark:text-gray-300 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 border-2 border-border shadow-sm hover:shadow-md"
     } ${isToggling ? "opacity-70 cursor-not-allowed" : ""}`}
   >
     {isToggling ? (
@@ -116,8 +116,8 @@ const wishlistState = useSelector((state) => state.wishlist);
           size={22} 
           className={`transition-all duration-300 ${
             isWishlisted 
-              ? "text-red-600 dark:text-red-400 scale-110" 
-              : "text-gray-600 dark:text-gray-400"
+              ? "text-destructive scale-110" 
+              : "text-muted-foreground"
           }`}
           fill={isWishlisted ? "currentColor" : "none"} 
         />
@@ -136,11 +136,11 @@ const wishlistState = useSelector((state) => state.wishlist);
   {/* Share Button - Mobile pe sirf icon, desktop pe icon+text */}
   <button
     onClick={handleShare}
-    className="flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-blue-700 dark:text-blue-300 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-800/40 dark:hover:to-indigo-800/40 border-2 border-blue-200 dark:border-blue-800 shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 group"
+    className="flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-primary dark:text-primary hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-800/40 dark:hover:to-indigo-800/40 border-2 border-primary/25 dark:border-primary/30 shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 group"
   >
     <Share2 
       size={22} 
-      className="group-hover:rotate-12 transition-transform duration-300 text-blue-600 dark:text-blue-400" 
+      className="group-hover:rotate-12 transition-transform duration-300 text-primary dark:text-primary" 
     />
     {/* Desktop Text - Hidden on mobile */}
     <span className="hidden sm:inline font-medium">Share</span>

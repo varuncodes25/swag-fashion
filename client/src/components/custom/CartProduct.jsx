@@ -85,7 +85,7 @@ const CartProduct = ({
   };
 
   return (
-    <div className="flex gap-3 p-2 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 last:border-0">
+    <div className="flex gap-3 p-2 bg-card border-b border-gray-100 dark:border-gray-800 last:border-0">
       
       {/* Image - Fixed size, no extra styling */}
       <div className="w-16 h-16 flex-shrink-0">
@@ -108,12 +108,12 @@ const CartProduct = ({
         {/* Variants Row */}
         <div className="flex flex-wrap items-center gap-1 mt-0.5">
           {color && (
-            <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+            <span className="text-xs px-1.5 py-0.5 bg-muted rounded">
               {color}
             </span>
           )}
           {size && (
-            <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+            <span className="text-xs px-1.5 py-0.5 bg-muted rounded">
               {size}
             </span>
           )}
@@ -123,7 +123,7 @@ const CartProduct = ({
         <div className="flex items-center justify-between mt-2">
           
           {/* Quantity Controls - Compact */}
-          <div className="flex items-center border border-gray-200 dark:border-gray-700 rounded">
+          <div className="flex items-center border border-border rounded">
             <button
               onClick={handleDecrease}
               disabled={!itemId || isUpdating}
@@ -169,7 +169,7 @@ const CartProduct = ({
 
         {/* Stock Warning - Only if low stock */}
         {stock < 5 && stock > 0 && (
-          <div className="mt-1 text-[10px] text-amber-600">
+          <div className="mt-1 text-[10px] text-highlight">
             Only {stock} left
           </div>
         )}

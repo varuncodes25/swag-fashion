@@ -160,9 +160,9 @@ const Login = () => {
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-md">
+        <div className="bg-card p-6 rounded-lg max-w-md">
           <h3 className="text-lg font-bold mb-2">Set Password</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Your account was created with Google. Set a password to enable email login.
           </p>
           <Input
@@ -198,17 +198,17 @@ const Login = () => {
         {isAuthenticated && !loginLoading && (
           <div className="fixed inset-0 bg-white/90 dark:bg-gray-900/90 flex items-center justify-center z-50 transition-all duration-300">
             <div className="text-center p-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-gradient-to-br from-success to-success/90 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="h-12 w-12 text-white animate-bounce" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-3">
+              <h2 className="text-3xl font-bold text-foreground mb-3">
                 Welcome Back! 🎉
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-8">
+              <p className="text-muted-foreground mb-8">
                 Redirecting to dashboard...
               </p>
               <div className="w-48 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-600 animate-progress"></div>
+                <div className="h-full bg-gradient-to-r from-success to-success/90 animate-progress"></div>
               </div>
             </div>
           </div>
@@ -219,10 +219,10 @@ const Login = () => {
           
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2 transition-colors duration-300">
+            <h1 className="text-3xl font-bold text-foreground mb-2 transition-colors duration-300">
               Welcome Back
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 transition-colors duration-300">
+            <p className="text-muted-foreground transition-colors duration-300">
               Sign in to continue your journey
             </p>
           </div>
@@ -243,22 +243,22 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   disabled={loginLoading}
-                  className={`pl-10 h-12 bg-white dark:bg-gray-800 ${
+                  className={`pl-10 h-12 bg-card ${
                     errors.email 
                       ? 'border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500' 
-                      : 'border-gray-300 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                  } focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20 
+                      : 'border-border focus:border-primary dark:focus:border-blue-400'
+                  } focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20 
                     text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
                     transition-all duration-300 disabled:opacity-50`}
                 />
                 <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 
                                ${errors.email 
                                  ? 'text-red-500 dark:text-red-400' 
-                                 : 'text-gray-400 dark:text-gray-500 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'
+                                 : 'text-muted-foreground group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'
                                } transition-colors duration-300`} />
               </div>
               {errors.email && (
-                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 transition-colors duration-300">
+                <p className="text-sm text-destructive flex items-center gap-1 transition-colors duration-300">
                   ⚠️ {errors.email}
                 </p>
               )}
@@ -272,7 +272,7 @@ const Login = () => {
                 </label>
                 <Link
                   to="/forgot-password"
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-300"
+                  className="text-xs text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 transition-colors duration-300"
                 >
                   Forgot Password?
                 </Link>
@@ -285,18 +285,18 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   disabled={loginLoading}
-                  className={`pl-10 pr-10 h-12 bg-white dark:bg-gray-800 ${
+                  className={`pl-10 pr-10 h-12 bg-card ${
                     errors.password 
                       ? 'border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500' 
-                      : 'border-gray-300 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400'
-                  } focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-blue-400/20
+                      : 'border-border focus:border-primary dark:focus:border-blue-400'
+                  } focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20
                     text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
                     transition-all duration-300 disabled:opacity-50`}
                 />
                 <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 
                                 ${errors.password 
                                   ? 'text-red-500 dark:text-red-400' 
-                                  : 'text-gray-400 dark:text-gray-500 group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'
+                                  : 'text-muted-foreground group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'
                                 } transition-colors duration-300`} />
                 <button
                   type="button"
@@ -313,7 +313,7 @@ const Login = () => {
                 </button>
               </div>
               {errors.password && (
-                <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 transition-colors duration-300">
+                <p className="text-sm text-destructive flex items-center gap-1 transition-colors duration-300">
                   ⚠️ {errors.password}
                 </p>
               )}
@@ -328,10 +328,10 @@ const Login = () => {
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
                   disabled={loginLoading}
-                  className="h-4 w-4 rounded border-gray-300 dark:border-gray-600 
-                           text-blue-600 dark:text-blue-500 
-                           focus:ring-blue-500 dark:focus:ring-blue-400 
-                           bg-white dark:bg-gray-800 
+                  className="h-4 w-4 rounded border-border 
+                           text-primary dark:text-blue-500 
+                           focus:ring-primary dark:focus:ring-blue-400 
+                           bg-card 
                            transition-colors duration-300"
                 />
                 <label
@@ -379,10 +379,10 @@ const Login = () => {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300 dark:border-gray-700"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/90 dark:bg-gray-900/90 text-gray-500 dark:text-gray-400">
+              <span className="px-2 bg-white/90 dark:bg-gray-900/90 text-muted-foreground">
                 Or continue with
               </span>
             </div>
@@ -392,12 +392,12 @@ const Login = () => {
           <GoogleLoginButton type="token" />
 
           {/* Signup Link */}
-          <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-800 transition-colors duration-300 mt-6">
-            <p className="text-gray-600 dark:text-gray-400 text-sm transition-colors duration-300">
+          <div className="text-center pt-4 border-t border-border transition-colors duration-300 mt-6">
+            <p className="text-muted-foreground text-sm transition-colors duration-300">
               Don't have an account?{" "}
               <Link
                 to="/signup"
-                className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 
+                className="font-medium text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 
                          transition-colors duration-300 inline-flex items-center gap-1 group"
               >
                 Create Account
@@ -409,7 +409,7 @@ const Login = () => {
 
         {/* Footer */}
         <div className="text-center mt-6">
-          <p className="text-xs text-gray-400 dark:text-gray-500 transition-colors duration-300">
+          <p className="text-xs text-muted-foreground transition-colors duration-300">
             By signing in, you agree to our Terms and Privacy Policy
           </p>
         </div>

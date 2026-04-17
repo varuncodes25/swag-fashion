@@ -54,16 +54,16 @@ export const getStockStatus = (stock) => {
   if (stock <= 0) {
     return {
       text: "Out of Stock",
-      color: "text-red-600 dark:text-red-300",
-      bg: "bg-red-50 dark:bg-red-900/20",
-      border: "border border-red-200 dark:border-red-800",
+      color: "text-destructive",
+      bg: "bg-destructive/10 dark:bg-destructive/20",
+      border: "border border-destructive/30",
     };
   }
 
   if (stock <= 5) {
     return {
       text: `Only ${stock} left`,
-      color: "text-amber-600 dark:text-amber-300",
+      color: "text-highlight dark:text-amber-300",
       bg: "bg-amber-50 dark:bg-amber-900/20",
       border: "border border-amber-200 dark:border-amber-800",
     };
@@ -71,9 +71,9 @@ export const getStockStatus = (stock) => {
 
   return {
     text: "In Stock",
-    color: "text-emerald-600 dark:text-emerald-300",
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
-    border: "border border-emerald-200 dark:border-emerald-800",
+    color: "text-success",
+    bg: "bg-success/10 dark:bg-success/20",
+    border: "border border-success/30",
   };
 };
 

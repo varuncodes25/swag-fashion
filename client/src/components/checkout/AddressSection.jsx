@@ -75,17 +75,17 @@ const AddressSection = () => {
   const getAddressIcon = (type) => {
     switch (type?.toLowerCase()) {
       case "home":
-        return <Home size={18} className="text-blue-600 dark:text-blue-400" />;
+        return <Home size={18} className="text-primary dark:text-primary" />;
       case "office":
         return (
           <Building
             size={18}
-            className="text-purple-600 dark:text-purple-400"
+            className="text-primary dark:text-purple-400"
           />
         );
       default:
         return (
-          <MapPin size={18} className="text-gray-600 dark:text-gray-400" />
+          <MapPin size={18} className="text-muted-foreground" />
         );
     }
   };
@@ -116,14 +116,14 @@ const AddressSection = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 md:p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <MapPin className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-1.5 md:p-2 bg-blue-100 dark:bg-primary/20 rounded-lg">
+              <MapPin className="w-5 h-5 md:w-6 md:h-6 text-primary dark:text-primary" />
             </div>
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h2 className="text-lg md:text-xl font-bold text-foreground">
                 Delivery Address
               </h2>
-              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs md:text-sm text-muted-foreground">
                 Select or add a delivery address
               </p>
             </div>
@@ -147,12 +147,12 @@ const AddressSection = () => {
               <h3 className="text-base md:text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
                 No Address Found
               </h3>
-              <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-3 md:mb-4">
+              <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
                 Add an address to deliver your order
               </p>
               <Button
                 onClick={handleAddAddress}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base w-full sm:w-auto"
+                className="bg-primary hover:bg-primary/90 text-white text-sm md:text-base w-full sm:w-auto"
               >
                 <Plus size={14} className="mr-1 md:mr-2" />
                 Add Your First Address
@@ -171,7 +171,7 @@ const AddressSection = () => {
                     border-2
                     ${
                       selected
-                        ? "border-blue-500 dark:border-blue-400 bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-900 shadow-lg"
+                        ? "border-primary dark:border-blue-400 bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-900 shadow-lg"
                         : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-md "
                     }
                   `}
@@ -187,7 +187,7 @@ const AddressSection = () => {
                           w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center
                           ${
                             selected
-                              ? "border-blue-600 dark:border-blue-400 bg-blue-600 dark:bg-blue-400"
+                              ? "border-primary dark:border-blue-400 bg-primary dark:bg-blue-400"
                               : "border-gray-300 dark:border-zinc-600 "
                           }
                         `}
@@ -204,15 +204,15 @@ const AddressSection = () => {
   <div className="flex items-center justify-between gap-3">
     <div className="flex items-center gap-2 md:gap-4 min-w-0">
       <div className="flex-shrink-0 p-2 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl">
-        <div className="text-blue-600 dark:text-blue-400">
+        <div className="text-primary dark:text-primary">
           {getAddressIcon(addr.address_type)}
         </div>
       </div>
       <div className="min-w-0">
-        <h3 className="font-bold text-gray-900 dark:text-gray-100 truncate text-base md:text-lg  tracking-tight">
+        <h3 className="font-bold text-foreground truncate text-base md:text-lg  tracking-tight">
           {addr.name}
         </h3>
-        <span className="inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-800/30">
+        <span className="inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-primary dark:text-primary border border-blue-100 dark:border-primary/30/30">
           {addr.address_type || "Other"}
         </span>
       </div>
@@ -224,14 +224,14 @@ const AddressSection = () => {
       className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
     >
       <ChevronRight
-        className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-300 ${
+        className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${
           isExpanded ? "rotate-90" : ""
         }`}
       />
     </button>
 
     {selected && (
-      <span className="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full">
+      <span className="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-success bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full">
         <CheckCircle size={18} className="flex-shrink-0" />
         Selected
       </span>
@@ -240,7 +240,7 @@ const AddressSection = () => {
 
   {/* Selected badge for mobile */}
   {selected && (
-    <div className="md:hidden inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full w-fit">
+    <div className="md:hidden inline-flex items-center gap-1.5 text-sm font-semibold text-success bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full w-fit">
       <CheckCircle size={14} className="flex-shrink-0" />
       Selected
     </div>
@@ -262,7 +262,7 @@ const AddressSection = () => {
       {/* Full Address Lines */}
       {addr.address_line2 && (
         <div className="flex items-start gap-2">
-          <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <MapPin className="w-4 h-4 text-highlight dark:text-amber-400 mt-0.5 flex-shrink-0" />
           <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base font-medium tracking-wide">
             {addr.address_line2}
           </p>
@@ -270,8 +270,8 @@ const AddressSection = () => {
       )}
       
       <div className="flex items-start gap-2">
-        <Globe className="w-4 h-4 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-        <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base font-medium">
+        <Globe className="w-4 h-4 text-primary dark:text-purple-400 mt-0.5 flex-shrink-0" />
+        <p className="text-muted-foreground text-sm md:text-base font-medium">
           {addr.country}
         </p>
       </div>
@@ -280,7 +280,7 @@ const AddressSection = () => {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-5 pt-3 md:pt-4">
         <div className="inline-flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
           <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-full">
-            <Phone className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <Phone className="w-4 h-4 text-primary dark:text-primary" />
           </div>
           <span className="text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 tracking-tight">
             {addr.phone}
@@ -307,7 +307,7 @@ const AddressSection = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="hidden md:flex text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 flex-shrink-0"
+                      className="hidden md:flex text-muted-foreground hover:text-primary dark:hover:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-900/20 flex-shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditAddress(addr);
@@ -323,7 +323,7 @@ const AddressSection = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="md:hidden text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                      className="md:hidden text-xs text-muted-foreground hover:text-primary dark:hover:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-900/20"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditAddress(addr);
@@ -337,7 +337,7 @@ const AddressSection = () => {
                     {isExpanded && (
                       <button
                         onClick={(e) => toggleAddressExpand(addr._id, e)}
-                        className="md:hidden text-xs text-blue-600 dark:text-blue-400 font-medium"
+                        className="md:hidden text-xs text-primary dark:text-primary font-medium"
                       >
                         View Less
                       </button>
@@ -353,19 +353,19 @@ const AddressSection = () => {
       {/* Desktop Modal Form */}
       {showForm && isDesktop && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60">
-          <div className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="w-full max-w-2xl max-h-[90vh] bg-card rounded-2xl shadow-2xl overflow-hidden">
             {/* Desktop Header */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-blue-800/30 p-6">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-primary/30/30 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl">
+                  <div className="p-3 bg-gradient-to-r from-primary to-primary/90 rounded-xl">
                     <MapPin className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    <h3 className="text-xl font-bold text-foreground">
                       {editAddress ? "Edit Address" : "Add New Address"}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm">
+                    <p className="text-muted-foreground text-sm">
                       Please fill in all required fields marked with *
                     </p>
                   </div>
@@ -374,7 +374,7 @@ const AddressSection = () => {
                   onClick={handleCloseForm}
                   className="p-2 rounded-lg hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
                 >
-                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                  <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
             </div>
@@ -392,19 +392,19 @@ const AddressSection = () => {
 
       {/* Mobile Full Screen Form */}
       {isMobileFormOpen && !isDesktop && (
-        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
-          <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 flex items-center justify-between z-10">
+        <div className="fixed inset-0 z-50 bg-card overflow-y-auto">
+          <div className="sticky top-0 bg-card border-b border-border p-4 flex items-center justify-between z-10">
             <button
               onClick={handleCloseForm}
               className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400 rotate-180" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground rotate-180" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="p-1 bg-blue-100 dark:bg-blue-900/30 rounded">
-                <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div className="p-1 bg-blue-100 dark:bg-primary/20 rounded">
+                <MapPin className="w-5 h-5 text-primary dark:text-primary" />
               </div>
-              <h3 className="font-bold text-gray-900 dark:text-gray-100">
+              <h3 className="font-bold text-foreground">
                 {editAddress ? "Edit Address" : "Add Address"}
               </h3>
             </div>

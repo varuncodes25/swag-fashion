@@ -64,26 +64,26 @@ const DeliveryChecker = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-800 shadow-sm">
+    <div className="bg-card rounded-lg p-4 border border-border shadow-sm">
       {/* Header with Deliver To */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+          <MapPin className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Deliver To
           </span>
           {deliveryInfo ? (
             <>
-              <span className="text-sm text-gray-900 dark:text-white font-semibold">
+              <span className="text-sm text-foreground font-semibold">
                 {deliveryInfo.pincode}
               </span>
-              <span className="text-xs text-gray-400 dark:text-gray-500 mx-1">•</span>
-              <span className="text-xs text-green-600 dark:text-green-400 font-medium">
+              <span className="text-xs text-muted-foreground mx-1">•</span>
+              <span className="text-xs text-success font-medium">
                 Free
               </span>
             </>
           ) : (
-            <span className="text-sm text-gray-900 dark:text-white font-semibold">
+            <span className="text-sm text-foreground font-semibold">
               {pincode || "______"}
             </span>
           )}
@@ -91,7 +91,7 @@ const DeliveryChecker = () => {
         {(pincode || deliveryInfo) && (
           <button 
             onClick={handleChangeClick}
-            className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium transition-colors"
+            className="text-xs text-primary dark:text-primary hover:underline font-medium transition-colors"
           >
             Change
           </button>
@@ -100,7 +100,7 @@ const DeliveryChecker = () => {
 
       {/* Delivery Info Section - When available */}
       {deliveryInfo ? (
-        <div className="flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+        <div className="flex items-center gap-2 text-success bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
           <Truck className="w-4 h-4 flex-shrink-0" />
           <span className="text-sm">
             Free delivery in {deliveryInfo.deliveryDays}–{parseInt(deliveryInfo.deliveryDays) + 1} days
@@ -111,7 +111,7 @@ const DeliveryChecker = () => {
         <>
           {/* Instruction Text */}
           {!error && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               Enter your pincode to check delivery date.
             </p>
           )}
@@ -124,20 +124,20 @@ const DeliveryChecker = () => {
                 value={pincode}
                 onChange={handleChange}
                 placeholder="Enter pincode"
-                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                className="w-full px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-400 bg-card text-foreground placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
                 maxLength="6"
                 disabled={loading}
               />
               {loading && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                  <Loader2 className="w-4 h-4 text-blue-500 dark:text-blue-400 animate-spin" />
+                  <Loader2 className="w-4 h-4 text-blue-500 dark:text-primary animate-spin" />
                 </div>
               )}
             </div>
             <button
               onClick={handleCheck}
               disabled={pincode.length !== 6 || loading}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-blue-300 dark:disabled:bg-blue-800 text-white text-sm font-medium rounded-md transition-colors min-w-[70px] disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 disabled:bg-blue-300 dark:disabled:bg-blue-800 text-white text-sm font-medium rounded-md transition-colors min-w-[70px] disabled:cursor-not-allowed"
             >
               {loading ? "..." : "Check"}
             </button>
@@ -147,7 +147,7 @@ const DeliveryChecker = () => {
 
       {/* Error Message */}
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+        <p className="text-xs text-destructive bg-red-50 dark:bg-red-900/20 p-2 rounded">
           {error}
         </p>
       )}

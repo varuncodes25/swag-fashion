@@ -188,7 +188,7 @@ const AdminProductDetails = () => {
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <Eye className="w-5 h-5 text-blue-600" />
+              <Eye className="w-5 h-5 text-primary" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Views</p>
@@ -210,7 +210,7 @@ const AdminProductDetails = () => {
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 bg-purple-100 rounded-lg">
-              <Star className="w-5 h-5 text-purple-600" />
+              <Star className="w-5 h-5 text-primary" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Rating</p>
@@ -221,7 +221,7 @@ const AdminProductDetails = () => {
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2 bg-orange-100 rounded-lg">
-              <Clock className="w-5 h-5 text-orange-600" />
+              <Clock className="w-5 h-5 text-warning" />
             </div>
             <div>
               <p className="text-sm text-gray-500">Wishlist</p>

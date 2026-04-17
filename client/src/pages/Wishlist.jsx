@@ -40,24 +40,24 @@ const WishlistPage = () => {
   // If not authenticated
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-muted/30 dark:bg-card">
         <div className="text-center max-w-md">
           <div className="mb-6">
             <Heart className="w-20 h-20 text-pink-400 mx-auto" />
           </div>
           
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
             Login Required
           </h1>
           
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
+          <p className="text-muted-foreground mb-8">
             Please login to view your saved items
           </p>
           
           <div className="flex gap-4 justify-center">
             <button
               onClick={() => navigate('/login')}
-              className="px-6 py-3 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600"
+              className="px-6 py-3 bg-primary/100 text-white font-medium rounded-lg hover:bg-primary"
             >
               Login
             </button>
@@ -79,7 +79,7 @@ const WishlistPage = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading your wishlist...</p>
         </div>
       </div>
@@ -89,23 +89,23 @@ const WishlistPage = () => {
   // Empty wishlist
   if (wishlistItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-muted/30 dark:bg-card">
         <div className="text-center max-w-md">
           <div className="mb-6">
             <Heart className="w-24 h-24 text-gray-300 mx-auto" />
           </div>
           
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
             Your Wishlist is Empty
           </h1>
           
-          <p className="text-gray-600 dark:text-gray-400 mb-8">
+          <p className="text-muted-foreground mb-8">
             Save items you like to your wishlist. They will appear here.
           </p>
           
           <button
             onClick={() => navigate('/products')}
-            className="px-6 py-3 bg-pink-500 text-white font-medium rounded-lg hover:bg-pink-600"
+            className="px-6 py-3 bg-primary/100 text-white font-medium rounded-lg hover:bg-primary"
           >
             Browse Products
           </button>
@@ -115,9 +115,9 @@ const WishlistPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30 dark:bg-card">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm">
+      <div className="bg-card shadow-sm">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -127,7 +127,7 @@ const WishlistPage = () => {
               >
                 <Home size={20} />
               </button>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-foreground">
                 My Wishlist ({wishlistItems.length})
               </h1>
             </div>
@@ -146,7 +146,7 @@ const WishlistPage = () => {
               {/* Remove Button */}
               <button
                 onClick={() => handleRemoveItem(product._id)}
-                className="absolute top-3 right-3 z-10 w-9 h-9 bg-white dark:bg-gray-800 rounded-full shadow-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="absolute top-3 right-3 z-10 w-9 h-9 bg-card rounded-full shadow-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 title="Remove from wishlist"
               >
                 <Heart 
@@ -164,12 +164,12 @@ const WishlistPage = () => {
         </div>
 
         {/* Summary */}
-        {/* <div className="mt-12 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+        {/* <div className="mt-12 bg-card rounded-lg p-6 shadow-sm">
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-lg font-semibold text-foreground mb-2">
               Your Saved Items
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-muted-foreground mb-6">
               {wishlistItems.length} items in your wishlist
             </p>
             
@@ -189,7 +189,7 @@ const WishlistPage = () => {
                     description: "All items added to cart",
                   });
                 }}
-                className="px-6 py-3 bg-pink-500 text-white rounded-lg hover:bg-pink-600 flex items-center gap-2"
+                className="px-6 py-3 bg-primary/100 text-white rounded-lg hover:bg-primary flex items-center gap-2"
               >
                 <ShoppingCart size={18} />
                 Add All to Cart
