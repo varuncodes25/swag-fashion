@@ -69,18 +69,7 @@ const Contact = () => {
                 swagfashion077@gmail.com
               </span>
             </div>
-            <div className="flex items-center space-x-4">
-              <Phone className="text-customYellow" />
-              <span className="text-gray-700 dark:text-customGray">
-                +91 7410797961
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <MapPin className="text-customYellow" />
-              <span className="text-gray-700 dark:text-customGray">
-                PARSHV ELITE BLDG NO.01, BIRWADI ROAD, NEAR RAILWAY PHATAK, UMROLI EAST, Umroli, Palghar, Maharashtra - 401404
-              </span>
-            </div>
+            
           </div>
 
           {/* Contact Form */}
