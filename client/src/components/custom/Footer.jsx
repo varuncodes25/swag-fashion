@@ -61,10 +61,10 @@ const Footer = () => {
               <a href="#" className="bg-[#1877F2] text-white p-2 rounded-full hover:scale-110">
                 <Facebook size={18} />
               </a>
-              <a href="#" className="bg-[#FF0000] text-white p-2 rounded-full hover:scale-110">
+              <a href="https://www.youtube.com/@Swagfashion-h8d" target="_blank" className="bg-[#FF0000] text-white p-2 rounded-full hover:scale-110">
                 <Youtube size={18} />
               </a>
-              <a href="#" className="bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white p-2 rounded-full hover:scale-110">
+              <a  href="https://www.instagram.com/swagfashion.in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" className="bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white p-2 rounded-full hover:scale-110">
                 <Instagram size={18} />
               </a>
             </div>

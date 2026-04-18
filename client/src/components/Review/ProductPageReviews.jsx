@@ -2,11 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
-import { useSelector, useDispatch } from "react-redux"; // ✅ Direct Redux
+import { useSelector, useDispatch } from "react-redux";
 import { MessageCircle, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Import divided components
 import ReviewCard from "./ReviewCard";
 import {
   getRandomAvatar,
@@ -14,7 +13,6 @@ import {
   calculateAverageRating,
 } from "./reviewUtils";
 
-// ✅ Import Redux actions directly
 import { 
   fetchReviews, 
   deleteReview, 
@@ -34,34 +32,36 @@ const ProductPageReviews = ({ productId, productSlug }) => {
 
   const { toast } = useToast();
   const { user } = useSelector((state) => state.auth);
-  
-  // ✅ DIRECT REDUX HOOKS
   const dispatch = useDispatch();
-  
-  // ✅ DIRECT SELECTORS - नए structure के according
   const { reviews, loading, error } = useSelector((state) => state.reviews);
   
-  // ✅ DIRECT FETCH
   useEffect(() => {
-   
-    dispatch(fetchReviews(productId));
+    if (productId) {
+      dispatch(fetchReviews(productId));
+    }
   }, [productId, dispatch]);
 
-  // ✅ Debug log when reviews change
-  useEffect(() => {
-   
-  }, [reviews]);
-
   const handleDeleteReview = async (reviewId) => {
+    // ✅ Check if user is owner or admin
+    const reviewToDelete = reviews.find(r => r._id === reviewId);
+    const reviewUserId = reviewToDelete?.user?._id || reviewToDelete?.user;
+    const isOwner = user?._id === reviewUserId;
+    const isAdmin = user?.role === "admin";
+    
+    if (!isOwner && !isAdmin) {
+      toast({
+        title: "Unauthorized",
+        description: "You can only delete your own reviews",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!confirm("Are you sure you want to delete this review?")) return;
     
-   
     try {
       await dispatch(deleteReview(reviewId)).unwrap();
-      
-      // ✅ Auto refresh
       dispatch(fetchReviews(productId));
-      
       toast({
         title: "Review deleted",
         description: "Your review has been deleted successfully",
@@ -77,9 +77,23 @@ const ProductPageReviews = ({ productId, productSlug }) => {
   };
 
   const handleEditReview = async (reviewId) => {
+    // ✅ Check if user is owner or admin
+    const reviewToEdit = reviews.find(r => r._id === reviewId);
+    const reviewUserId = reviewToEdit?.user?._id || reviewToEdit?.user;
+    const isOwner = user?._id === reviewUserId;
+    const isAdmin = user?.role === "admin";
+    
+    if (!isOwner && !isAdmin) {
+      toast({
+        title: "Unauthorized",
+        description: "You can only edit your own reviews",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!confirm("Are you sure you want to save changes?")) return;
-
-   
+    
     try {
       await dispatch(updateReview({ 
         reviewId, 
@@ -101,7 +115,6 @@ const ProductPageReviews = ({ productId, productSlug }) => {
         description: "Your review has been updated successfully",
       });
       
-      // ✅ Auto refresh
       dispatch(fetchReviews(productId));
     } catch (error) {
       console.error("❌ Update error:", error);
@@ -114,6 +127,18 @@ const ProductPageReviews = ({ productId, productSlug }) => {
   };
 
   const handleAddReply = async (reviewId) => {
+    // ✅ Only admins can reply
+    const isAdmin = user?.role === "admin";
+    
+    if (!isAdmin) {
+      toast({
+        title: "Unauthorized",
+        description: "Only admins can reply to reviews",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!newReply.review.trim()) {
       toast({
         title: "Reply required",
@@ -136,7 +161,6 @@ const ProductPageReviews = ({ productId, productSlug }) => {
       
       setNewReply({ review: "" });
       setReplyingTo(null);
-      // ✅ Auto refresh
       dispatch(fetchReviews(productId));
     } catch (error) {
       console.error("❌ Reply error:", error);
@@ -168,11 +192,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
     );
   }
 
- 
-
- 
-
-  const displayedReviews = reviews.slice(0, 2);
+  const displayedReviews = reviews?.slice(0, 2) || [];
 
   return (
     <div className="mt-8 md:mt-12 md:px-0">
@@ -180,9 +200,9 @@ const ProductPageReviews = ({ productId, productSlug }) => {
       <div className="flex items-center justify-between mb-4 md:mb-6">
         <div>
           <h3 className="text-xl md:text-2xl font-bold text-foreground">
-            Customer Reviews ({reviews.length})
+            Customer Reviews ({reviews?.length || 0})
           </h3>
-          {reviews.length > 0 && (
+          {reviews?.length > 0 && (
             <div className="flex items-center gap-2 mt-1">
               <p className="text-muted-foreground text-xs md:text-sm">
                 {reviews.length} reviews • {calculateAverageRating(reviews)}/5 average
@@ -192,7 +212,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
         </div>
 
         {/* Write Review Button */}
-        {productSlug && (
+        {productSlug && user && (
           <Link to={`/product/${productId}/reviews`}>
             <Button
               size="sm"
@@ -206,7 +226,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
       </div>
 
       {/* Reviews List */}
-      {reviews.length === 0 ? (
+      {!reviews || reviews.length === 0 ? (
         <div className="text-center py-8 md:py-12 bg-card rounded-xl md:rounded-2xl border border-border">
           <MessageCircle className="h-10 w-10 md:h-12 md:w-12 text-gray-400 dark:text-gray-600 mx-auto mb-3 md:mb-4" />
           <h4 className="text-lg md:text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -263,15 +283,6 @@ const ProductPageReviews = ({ productId, productSlug }) => {
           )}
         </>
       )}
-      
-      {/* Debug Section - Remove in production */}
-      {/* <div className="mt-4 p-2 bg-yellow-100 text-xs">
-        <strong>Debug Info:</strong><br />
-        Product ID: {productId}<br />
-        Reviews Count: {reviews.length}<br />
-        Loading: {loading ? "Yes" : "No"}<br />
-        Error: {error || "None"}
-      </div> */}
     </div>
   );
 };

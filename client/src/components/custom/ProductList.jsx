@@ -191,34 +191,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
           </div>
         )}
 
-        {/* End of Results Message */}
-        {!hasMore && products.length > 0 && (
-          <div className="flex justify-center my-12">
-            <div className="text-center px-6 py-4 bg-card rounded-xl shadow-md border border-border">
-              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/30 dark:to-green-900/30 flex items-center justify-center">
-                <svg 
-                  className="w-6 h-6 text-success" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M5 13l4 4L19 7" 
-                  />
-                </svg>
-              </div>
-              <p className="text-gray-700 dark:text-gray-300 font-semibold">
-                🎉 All products loaded
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Showing {products.length} products
-              </p>
-            </div>
-          </div>
-        )}
+     
       </>
     ) : (
       /* Empty State - Card Style */
