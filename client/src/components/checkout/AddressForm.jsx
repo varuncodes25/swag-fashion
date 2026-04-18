@@ -346,7 +346,7 @@ const FormActions = React.memo(({ isModal, isSubmitting, isEditMode, onClose, ha
       </Button>
     </div>
   ) : (
-    <div className="sticky bottom-0 bg-card border-t border-border pt-4 pb-6">
+<div className="sticky bottom-0 bg-card border-t border-border pt-4 pb-[5.5rem] md:pb-4">
       <Button
         type="submit"
         disabled={isSubmitting}

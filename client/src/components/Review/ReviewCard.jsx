@@ -1,14 +1,15 @@
 // components/Review/ReviewCard.jsx
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Star, Trash2, Edit2, MoreVertical } from "lucide-react";
+import { Star, Trash2, Edit2, MoreVertical, ZoomIn } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import MobileImageZoom from "../Product/MobileImageZoom";
 
 const ReviewCard = ({
   review,
@@ -27,6 +28,9 @@ const ReviewCard = ({
   formatDate,
   getRandomAvatar,
 }) => {
+  // ✅ State for image zoom
+  const [zoomImageIndex, setZoomImageIndex] = useState(null);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
   
   // ✅ FIX: Support both 'user' and 'userId' field names
   const reviewUserData = review?.user || review?.userId;
@@ -34,7 +38,7 @@ const ReviewCard = ({
   const reviewUserName = reviewUserData?.name || "Anonymous";
   const reviewUserAvatar = reviewUserData?.avatar;
   const currentUserId = user?.id;
-  console.log("Current User Data:", currentUserId);
+  
   // ✅ Strict ownership check
   const isReviewOwner = currentUserId && reviewUserId && currentUserId === reviewUserId;
   const isAdmin = user?.role === "admin";
@@ -42,29 +46,41 @@ const ReviewCard = ({
   // ✅ Show actions only for owner or admin
   const showActions = (currentUserId && (isReviewOwner || isAdmin));
   
-  // Debug logs
-  console.log("=== Fixed ReviewCard Debug ===");
-  console.log("Review User Data:", reviewUserData);
-  console.log("Review User ID:", reviewUserId);
-  console.log("Current User ID:", currentUserId);
-  console.log("Is Owner:", isReviewOwner);
-  console.log("Is Admin:", isAdmin);
-  console.log("Show Actions:", showActions);
+  // ✅ Handle image click - open zoom
+  const handleImageClick = (index) => {
+    setZoomImageIndex(index);
+    setIsZoomOpen(true);
+  };
+  
+  // ✅ Handle zoom close
+  const handleZoomClose = () => {
+    setIsZoomOpen(false);
+    setZoomImageIndex(null);
+  };
+  
+  // ✅ Handle zoom navigation
+  const handleZoomPrev = () => {
+    if (review?.images && review.images.length > 0) {
+      setZoomImageIndex((prev) => 
+        prev === 0 ? review.images.length - 1 : prev - 1
+      );
+    }
+  };
+  
+  const handleZoomNext = () => {
+    if (review?.images && review.images.length > 0) {
+      setZoomImageIndex((prev) => 
+        prev === review.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+  
+  const handleZoomSelect = (index) => {
+    setZoomImageIndex(index);
+  };
 
   return (
     <div className="p-4 md:p-6 rounded-xl border border-border bg-card">
-      {/* Debug Visual - Remove after testing */}
-      <div className="mb-4 p-2 bg-yellow-100 dark:bg-yellow-900 rounded text-xs">
-        <strong>Debug Info:</strong><br />
-        Logged In: {user ? "Yes" : "No"}<br />
-        User ID: {currentUserId || "N/A"}<br />
-        Review User ID: {reviewUserId || "N/A"}<br />
-        Review User Name: {reviewUserName}<br />
-        Is Owner: {isReviewOwner ? "✅" : "❌"}<br />
-        Is Admin: {isAdmin ? "✅" : "❌"}<br />
-        Show Actions: {showActions ? "✅" : "❌"}
-      </div>
-      
       {/* Review Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -174,16 +190,25 @@ const ReviewCard = ({
             {review?.review || ""}
           </p>
 
-          {/* Review Images */}
+          {/* ✅ Review Images with Click to Zoom */}
           {review?.images && review.images.length > 0 && (
-            <div className="flex gap-2 mb-4 overflow-x-auto">
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
               {review.images.map((img, idx) => (
-                <img
+                <div
                   key={idx}
-                  src={img.url}
-                  alt={`Review image ${idx + 1}`}
-                  className="w-20 h-20 object-cover rounded-lg"
-                />
+                  className="relative group shrink-0 cursor-pointer"
+                  onClick={() => handleImageClick(idx)}
+                >
+                  <img
+                    src={img.url}
+                    alt={`Review image ${idx + 1}`}
+                    className="w-20 h-20 object-cover rounded-lg border border-border hover:border-primary transition-all"
+                  />
+                  {/* Zoom overlay on hover */}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                    <ZoomIn className="w-5 h-5 text-white" />
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -254,6 +279,18 @@ const ReviewCard = ({
           </div>
         )}
       </div>
+
+      {/* ✅ Mobile Image Zoom Modal */}
+      {isZoomOpen && review?.images && review.images.length > 0 && (
+        <MobileImageZoom
+          images={review.images}
+          activeIndex={zoomImageIndex}
+          onClose={handleZoomClose}
+          onPrev={handleZoomPrev}
+          onNext={handleZoomNext}
+          onSelect={handleZoomSelect}
+        />
+      )}
     </div>
   );
 };
