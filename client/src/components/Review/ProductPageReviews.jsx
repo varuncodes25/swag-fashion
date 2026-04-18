@@ -47,7 +47,10 @@ const ProductPageReviews = ({ productId, productSlug }) => {
     const reviewUserId = reviewToDelete?.user?._id || reviewToDelete?.user;
     const isOwner = user?._id === reviewUserId;
     const isAdmin = user?.role === "admin";
-    
+    console.log("Review User ID:", reviewUserId);
+    console.log("Current User ID:", user?._id);
+    console.log("Is Owner:", isOwner);
+    console.log("Is Admin:", isAdmin);
     if (!isOwner && !isAdmin) {
       toast({
         title: "Unauthorized",

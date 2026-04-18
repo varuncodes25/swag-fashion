@@ -27,20 +27,44 @@ const ReviewCard = ({
   formatDate,
   getRandomAvatar,
 }) => {
-  // ✅ Fix: Handle both cases - user as object or user as string ID
-  const reviewUserId = review?.user?._id || review?.user;
-  const reviewUserName = review?.user?.name || "Anonymous";
-  const reviewUserAvatar = review?.user?.avatar;
   
-  // ✅ Check if current user is review owner (or admin)
-  const isReviewOwner = user?._id === reviewUserId;
+  // ✅ FIX: Support both 'user' and 'userId' field names
+  const reviewUserData = review?.user || review?.userId;
+  const reviewUserId = reviewUserData?._id;
+  const reviewUserName = reviewUserData?.name || "Anonymous";
+  const reviewUserAvatar = reviewUserData?.avatar;
+  const currentUserId = user?.id;
+  console.log("Current User Data:", currentUserId);
+  // ✅ Strict ownership check
+  const isReviewOwner = currentUserId && reviewUserId && currentUserId === reviewUserId;
   const isAdmin = user?.role === "admin";
   
-  // ✅ Show dropdown for owner or admin
-  const showActions = isReviewOwner || isAdmin;
+  // ✅ Show actions only for owner or admin
+  const showActions = (currentUserId && (isReviewOwner || isAdmin));
+  
+  // Debug logs
+  console.log("=== Fixed ReviewCard Debug ===");
+  console.log("Review User Data:", reviewUserData);
+  console.log("Review User ID:", reviewUserId);
+  console.log("Current User ID:", currentUserId);
+  console.log("Is Owner:", isReviewOwner);
+  console.log("Is Admin:", isAdmin);
+  console.log("Show Actions:", showActions);
 
   return (
     <div className="p-4 md:p-6 rounded-xl border border-border bg-card">
+      {/* Debug Visual - Remove after testing */}
+      <div className="mb-4 p-2 bg-yellow-100 dark:bg-yellow-900 rounded text-xs">
+        <strong>Debug Info:</strong><br />
+        Logged In: {user ? "Yes" : "No"}<br />
+        User ID: {currentUserId || "N/A"}<br />
+        Review User ID: {reviewUserId || "N/A"}<br />
+        Review User Name: {reviewUserName}<br />
+        Is Owner: {isReviewOwner ? "✅" : "❌"}<br />
+        Is Admin: {isAdmin ? "✅" : "❌"}<br />
+        Show Actions: {showActions ? "✅" : "❌"}
+      </div>
+      
       {/* Review Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -60,11 +84,6 @@ const ReviewCard = ({
               <span className="text-xs text-gray-500">
                 {formatDate(review?.createdAt)}
               </span>
-              {isAdmin && !isReviewOwner && (
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                  Admin can edit
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-1 mt-1">
               {[...Array(5)].map((_, i) => (
@@ -81,7 +100,7 @@ const ReviewCard = ({
           </div>
         </div>
 
-        {/* Edit/Delete Dropdown - Only show for review owner or admin */}
+        {/* Edit/Delete Dropdown - Only for owner or admin */}
         {showActions && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -221,7 +240,7 @@ const ReviewCard = ({
               <div key={idx} className="pl-4 border-l-2 border-primary/25">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium text-sm">
-                    {reply.user?.name || "Admin"}
+                    {reply.userId?.name || reply.user?.name || "Admin"}
                   </span>
                   <span className="text-xs text-gray-500">
                     {formatDate(reply.createdAt)}
