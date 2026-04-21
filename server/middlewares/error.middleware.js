@@ -1,12 +1,21 @@
 // server/middlewares/error.middleware.js
 const { ApiError } = require("../utils/handlar/ApiError");
+const { logger } = require("../utils/logger");
 
 // ✅ Main Error Handler
 const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  console.log("❌ Error:", err);
+  logger.error({
+    type: "unhandled_error",
+    message: err.message,
+    stack: err.stack,
+    path: req.originalUrl,
+    method: req.method,
+    requestId: req.requestId || null,
+    timestamp: new Date().toISOString(),
+  });
 
   // 1️⃣ Mongoose Validation Errors
   if (err.name === "ValidationError") {
