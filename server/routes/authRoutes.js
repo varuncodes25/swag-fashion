@@ -54,7 +54,7 @@ router.post("/auth/google/token", authLimiter, googleOneTapLogin);
 // router.post("/reset-password/:token", resetPasword);
 
 router.post("/logout", authLimiter, logout);
-router.post("/change-password", authLimiter, verifyToken, changePassword);
+router.put("/user/change-password", authLimiter, verifyToken,decryptRequest, changePassword);
 router.get("/users/profile", authLimiter, verifyToken, getProfile);
 router.put("/users/profile", verifyToken, decryptRequest, updateProfile);
 // router.post("/admin-signup", adminSignup);

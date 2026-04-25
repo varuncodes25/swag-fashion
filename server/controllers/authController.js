@@ -472,29 +472,97 @@ const resetPassword = asyncHandler(async (req, res, next) => {
 // ============ CHANGE PASSWORD ============
 const changePassword = asyncHandler(async (req, res, next) => {
   try {
-    const { currentPassword, newPassword } = req.body;
-    const userId = req.userId;
+    console.log("📥 Request body:", req.body);
+    
+    // ✅ Support both field name formats (oldPassword OR currentPassword)
+    const currentPassword = req.body.currentPassword || req.body.oldPassword;
+    const newPassword = req.body.newPassword;
+    const confirmPassword = req.body.confirmPassword;
+    
+    const userId =  req.id; // ✅ Support both userId formats
+    console.log("👤 User ID:", userId);
 
-    if (!currentPassword || !newPassword) {
+    // ✅ Validation 1: Check required fields
+    if (!newPassword) {
       return next(
         new ValidationError({
-          currentPassword: !currentPassword
-            ? "Current password is required"
-            : undefined,
-          newPassword: !newPassword ? "New password is required" : undefined,
+          newPassword: "New password is required",
         }),
       );
     }
 
-    if (newPassword.length < 8) {
+    // ✅ Validation 2: Check if new password matches confirm password
+    if (confirmPassword && newPassword !== confirmPassword) {
       return next(
         new ValidationError({
-          newPassword: "Password must be at least 8 characters",
+          confirmPassword: "New password and confirm password do not match",
         }),
       );
     }
 
+    // ✅ Validation 3: Password length check
+    // if (newPassword.length < 8) {
+    //   return next(
+    //     new ValidationError({
+    //       newPassword: "Password must be at least 8 characters",
+    //     }),
+    //   );
+    // }
+
+    // ✅ Get user from database (include password field)
     const user = await userRepository.findById(userId, true);
+    
+    console.log("👤 User found:", {
+      id: user._id,
+      email: user.email,
+      provider: user.provider,
+      hasPassword: !!user.password
+    });
+
+    if (!user) {
+      return next(new UnauthorizedError("User not found"));
+    }
+
+    // ✅ CRITICAL: Handle Google users
+    if (user.provider === 'google' && !user.password) {
+      // Google user setting password for first time
+      if (!currentPassword) {
+        // No current password needed - first time setup
+        await userRepository.changePassword(userId, newPassword);
+        
+        // Optional: Update provider to local if needed
+        if (userRepository.updateProvider) {
+          await userRepository.updateProvider(userId, 'local');
+        }
+        
+        const response = new ApiResponse(
+          200,
+          null,
+          "Password set successfully! You can now login with password.",
+        );
+        return res.json(await encryptResponse(response));
+      } else {
+        // Google user trying to change password with old password (not applicable)
+        return next(new UnauthorizedError("Google users cannot change password. Use 'Set Password' option."));
+      }
+    }
+
+    // ✅ For local users or users with existing password
+    if (!user.password) {
+      // User has no password (edge case)
+      return next(new ValidationError({
+        currentPassword: "You don't have a password set. Please use 'Forgot Password' option."
+      }));
+    }
+
+    // ✅ Verify current password (only if provided and user has password)
+    if (!currentPassword) {
+      return next(
+        new ValidationError({
+          currentPassword: "Current password is required",
+        }),
+      );
+    }
 
     const isPasswordValid = await user.comparePassword(currentPassword);
 
@@ -502,7 +570,20 @@ const changePassword = asyncHandler(async (req, res, next) => {
       return next(new UnauthorizedError("Current password is incorrect"));
     }
 
+    // ✅ Check if new password is same as old
+    const isSamePassword = await user.comparePassword(newPassword);
+    if (isSamePassword) {
+      return next(
+        new ValidationError({
+          newPassword: "New password cannot be the same as current password",
+        }),
+      );
+    }
+
+    // ✅ Change password
     await userRepository.changePassword(userId, newPassword);
+
+    console.log("✅ Password changed successfully for user:", user.email);
 
     // ✅ Success response with encryption
     const response = new ApiResponse(
@@ -511,7 +592,9 @@ const changePassword = asyncHandler(async (req, res, next) => {
       "Password changed successfully",
     );
     return res.json(await encryptResponse(response));
+    
   } catch (error) {
+    console.error("❌ Change password error:", error);
     next(error);
   }
 });

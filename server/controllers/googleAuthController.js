@@ -6,6 +6,58 @@ const bcrypt = require("bcrypt");
 // ✅ Initialize Google OAuth Client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+// ✅ Helper function to find or create user
+const findOrCreateGoogleUser = async (payload) => {
+  const { sub: googleId, email, name, picture, email_verified } = payload;
+  
+  console.log("🔍 Finding or creating user:", { email, googleId });
+
+  // Try to find user by googleId OR email
+  let user = await User.findOne({ 
+    $or: [{ googleId }, { email }] 
+  });
+
+  if (!user) {
+    console.log("🆕 Creating new user:", email);
+    
+    // Create new user
+ user = new User({
+  name: name || email.split('@')[0],
+  email: email,
+  googleId: googleId,
+  provider: "google",
+  isEmailVerified: email_verified || true,
+  avatar: picture || null,
+  // password: null, ← COMMENT KAR DO YA DELETE
+  lastLogin: new Date()
+});
+    
+    await user.save();
+    console.log("✅ New user created:", user._id);
+  } else {
+    console.log("📝 Updating existing user:", user._id);
+    
+    // Update existing user
+    if (!user.googleId) {
+      user.googleId = googleId;
+    }
+    if (!user.avatar && picture) {
+      user.avatar = picture;
+    }
+    if (user.provider !== 'google') {
+      user.provider = 'google';
+    }
+    if (!user.isEmailVerified && email_verified) {
+      user.isEmailVerified = true;
+    }
+    user.lastLogin = new Date();
+    await user.save();
+    console.log("✅ User updated:", user._id);
+  }
+  
+  return user;
+};
+
 // ✅ 1. GOOGLE ONE TAP LOGIN (Token-based)
 const googleOneTapLogin = async (req, res) => {
   try {
@@ -21,7 +73,7 @@ const googleOneTapLogin = async (req, res) => {
       });
     }
 
-    // Verify Google token with more detailed error handling
+    // Verify Google token
     let ticket;
     try {
       ticket = await client.verifyIdToken({
@@ -30,10 +82,7 @@ const googleOneTapLogin = async (req, res) => {
       });
     } catch (verifyError) {
       console.error("❌ Google token verification failed:", verifyError);
-      console.error("❌ Error name:", verifyError.name);
-      console.error("❌ Error message:", verifyError.message);
       
-      // Check if it's an expiration error
       if (verifyError.message.includes("expired")) {
         return res.status(401).json({ 
           success: false, 
@@ -48,56 +97,10 @@ const googleOneTapLogin = async (req, res) => {
     }
 
     const payload = ticket.getPayload();
-    console.log("✅ Token verified successfully");
-    console.log("📦 Payload:", {
-      email: payload.email,
-      name: payload.name,
-      googleId: payload.sub,
-      email_verified: payload.email_verified,
-      exp: new Date(payload.exp * 1000).toISOString()
-    });
+    console.log("✅ Token verified successfully for:", payload.email);
 
-    const { sub: googleId, email, name, picture, email_verified } = payload;
-
-    // Find or create user
-    let user = await User.findOne({ 
-      $or: [{ googleId }, { email }] 
-    });
-
-    if (!user) {
-      console.log("🆕 Creating new user:", email);
-      
-      // Create new user without password
-      user = new User({
-        name,
-        email,
-        googleId,
-        provider: "google",
-        isEmailVerified: email_verified || true,
-        avatar: picture,
-      });
-      await user.save();
-      console.log("✅ New user created:", user._id);
-    } else {
-      console.log("📝 Updating existing user:", user._id);
-      
-      // Update existing user
-      if (user.phone && !/^[6-9]\d{9}$/.test(user.phone)) {
-        user.phone = null;
-      }
-      if (!user.googleId) {
-        user.googleId = googleId;
-        user.provider = "google";
-      }
-      if (!user.avatar && picture) {
-        user.avatar = picture;
-      }
-      await user.save();
-    }
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    // ✅ Find or create user using helper function
+    const user = await findOrCreateGoogleUser(payload);
 
     // Generate tokens
     const accessToken = user.generateAccessToken();
@@ -107,8 +110,7 @@ const googleOneTapLogin = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    console.log("✅ Login successful for:", email);
-    console.log("🔑 Access token generated");
+    console.log("✅ Login successful for:", user.email);
 
     // Send response
     res.json({
@@ -128,9 +130,6 @@ const googleOneTapLogin = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Google One Tap Error:", error);
-    console.error("❌ Error stack:", error.stack);
-    
-    // Send more specific error message
     res.status(401).json({ 
       success: false, 
       message: error.message || "Google login failed. Please try again." 
@@ -170,7 +169,7 @@ const getGoogleAuthUrl = async (req, res) => {
   }
 };
 
-// ✅ 3. GOOGLE CALLBACK HANDLER (for redirect flow)
+// ✅ 3. GOOGLE CALLBACK HANDLER (for redirect flow) - FIXED
 const googleCallback = async (req, res) => {
   try {
     const { code } = req.query;
@@ -180,34 +179,55 @@ const googleCallback = async (req, res) => {
     }
 
     console.log("📡 Received Google callback with code");
-    
-    // Exchange code for tokens
-    const { tokens } = await client.getToken({
-      code,
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-    });
 
-    console.log("✅ Tokens received from Google");
+    // ✅ Exchange code for tokens
+    try {
+      const response = await client.getToken({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      });
 
-    // Verify the ID token
-    const ticket = await client.verifyIdToken({
-      idToken: tokens.id_token,
-      audience: process.env.GOOGLE_CLIENT_ID
-    });
+      console.log("✅ Tokens received from Google");
+      
+      const { tokens } = response;
 
-    const payload = ticket.getPayload();
-    
-    // Here you would create/find user and generate your own JWT
-    // Similar to googleOneTapLogin but with tokens from redirect flow
-    
-    // For now, redirect to frontend with success
-    res.redirect(`${process.env.FRONTEND_URL}/login?success=true`);
+      // Verify the ID token
+      const ticket = await client.verifyIdToken({
+        idToken: tokens.id_token,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+
+      const payload = ticket.getPayload();
+      console.log("✅ Payload verified for:", payload.email);
+
+      // ✅ Find or create user using helper function
+      const user = await findOrCreateGoogleUser(payload);
+
+      // Generate JWT tokens
+      const accessToken = user.generateAccessToken();
+      const refreshToken = user.generateRefreshToken();
+
+      // Store refresh token in database
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      console.log("✅ User authenticated successfully:", user.email);
+
+      // ✅ Redirect to frontend with tokens
+      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${accessToken}&refreshToken=${refreshToken}`;
+      
+      return res.redirect(redirectUrl);
+      
+    } catch (tokenError) {
+      console.error("❌ Token exchange failed:", tokenError);
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=token_exchange_failed`);
+    }
     
   } catch (error) {
     console.error("❌ Google Callback Error:", error);
-    res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+    return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
   }
 };
 

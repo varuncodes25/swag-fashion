@@ -3,22 +3,35 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ChevronDown } from "lucide-react";
-import { 
-  User, Mail, Phone, Lock, 
-  Eye, EyeOff, Edit2, Save, X,
-  Camera
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  Edit2,
+  Save,
+  X,
+  Camera,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useState, useEffect, useRef } from "react";
 import { useDispatch } from "react-redux";
-import { getProfile, updateProfile, changePassword } from "@/redux/slices/authSlice";
+import {
+  getProfile,
+  updateProfile,
+  changePassword,
+} from "@/redux/slices/authSlice";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export default function MyProfile() {
   const { isAuthenticated } = useSelector((state) => state.auth);
-  const { profile, loading, updating, changingPassword } = useSelector((state) => state.auth);
+  const { profile, loading, updating, changingPassword } = useSelector(
+    (state) => state.auth,
+  );
   const dispatch = useDispatch();
   const { toast } = useToast();
 
@@ -28,12 +41,12 @@ export default function MyProfile() {
     phone: "",
     currentPassword: "",
     newPassword: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const [hasChanges, setHasChanges] = useState(false);
   const [passwordChanges, setPasswordChanges] = useState(false);
-  
+
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -41,28 +54,32 @@ export default function MyProfile() {
   const [uploading, setUploading] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
-  
-  const fileInputRef = useRef(null);
 
+  const fileInputRef = useRef(null);
+  useEffect(() => {
+    console.log("🟢 Current Profile:", profile);
+    console.log("🟢 Avatar URL:", profile?.avatar);
+    console.log("🟢 Avatar Preview:", avatarPreview);
+  }, [profile, avatarPreview]);
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(getProfile());
     }
-  }, [ dispatch]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (profile) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         name: profile.name || "",
         email: profile.email || "",
-        phone: profile.phone || ""
+        phone: profile.phone || "",
       }));
     }
   }, [profile]);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };
 
@@ -71,14 +88,22 @@ export default function MyProfile() {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({ title: "Invalid file type", description: "Please select an image file", variant: "destructive" });
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Image must be less than 5MB", variant: "destructive" });
+      toast({
+        title: "File too large",
+        description: "Image must be less than 5MB",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -90,47 +115,55 @@ export default function MyProfile() {
 
   const handleSaveChanges = async () => {
     if (!hasChanges && !selectedAvatar) return;
-    
+
     setUploading(true);
-    
+
     try {
       const formDataToSend = new FormData();
-      
+
       // Add text fields if changed
       if (hasChanges) {
         if (formData.name !== profile?.name) {
-          formDataToSend.append('name', formData.name);
+          formDataToSend.append("name", formData.name);
         }
         if (formData.phone !== profile?.phone) {
-          formDataToSend.append('phone', formData.phone);
+          formDataToSend.append("phone", formData.phone);
         }
       }
-      
+
       // Add avatar if selected
       if (selectedAvatar) {
-        formDataToSend.append('avatar', selectedAvatar);
+        formDataToSend.append("avatar", selectedAvatar);
       }
-      
+
       await dispatch(updateProfile(formDataToSend)).unwrap();
       await dispatch(getProfile()).unwrap();
 
-      toast({ title: "✅ Profile Updated", description: "Your information has been updated.", variant: "default" });
+      toast({
+        title: "✅ Profile Updated",
+        description: "Your information has been updated.",
+        variant: "default",
+      });
       setHasChanges(false);
       setIsEditing(false);
       setSelectedAvatar(null);
       setAvatarPreview(null);
     } catch (err) {
-      toast({ title: "Update Failed", description: err.message || "Something went wrong.", variant: "destructive" });
+      toast({
+        title: "Update Failed",
+        description: err.message || "Something went wrong.",
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }
   };
 
   const handleCancelEdit = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       name: profile?.name || "",
-      phone: profile?.phone || ""
+      phone: profile?.phone || "",
     }));
     setHasChanges(false);
     setIsEditing(false);
@@ -141,27 +174,54 @@ export default function MyProfile() {
   const handlePasswordUpdate = async () => {
     if (!passwordChanges) return;
 
-    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-      return toast({ title: "All fields required", description: "Please fill all password fields", variant: "destructive" });
+    if (
+      !formData.currentPassword ||
+      !formData.newPassword ||
+      !formData.confirmPassword
+    ) {
+      return toast({
+        title: "All fields required",
+        description: "Please fill all password fields",
+        variant: "destructive",
+      });
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      return toast({ title: "Password mismatch", description: "New password and confirm password must match", variant: "destructive" });
+      return toast({
+        title: "Password mismatch",
+        description: "New password and confirm password must match",
+        variant: "destructive",
+      });
     }
 
     try {
-      await dispatch(changePassword({
-        oldPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
-        confirmPassword: formData.confirmPassword,
-      })).unwrap();
+      await dispatch(
+        changePassword({
+          oldPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+          confirmPassword: formData.confirmPassword,
+        }),
+      ).unwrap();
 
-      toast({ title: "✅ Password Updated", description: "Your password has been changed.", variant: "default" });
+      toast({
+        title: "✅ Password Updated",
+        description: "Your password has been changed.",
+        variant: "default",
+      });
 
-      setFormData(prev => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
       setPasswordChanges(false);
     } catch (err) {
-      toast({ title: "Password Change Failed", description: err.message || "Invalid current password", variant: "destructive" });
+      toast({
+        title: "Password Change Failed",
+        description: err.message || "Invalid current password",
+        variant: "destructive",
+      });
     }
   };
 
@@ -198,7 +258,7 @@ export default function MyProfile() {
   const displayName = profile?.name || "";
   const displayEmail = profile?.email || "";
   const displayPhone = profile?.phone || "";
-  
+
   // Show preview if new avatar selected, otherwise show existing avatar
   const avatarUrl = avatarPreview || profile?.avatar;
 
@@ -209,7 +269,9 @@ export default function MyProfile() {
         <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
           Profile Settings
         </h1>
-        <p className="text-muted-foreground mt-2">Manage your personal information and account security</p>
+        <p className="text-muted-foreground mt-2">
+          Manage your personal information and account security
+        </p>
       </div>
 
       <div className="space-y-6">
@@ -223,21 +285,39 @@ export default function MyProfile() {
               <div>
                 <h2 className="text-lg font-semibold">Personal Information</h2>
                 <p className="text-sm text-muted-foreground">
-                  {isEditing ? "Edit your personal details" : "View your personal information"}
+                  {isEditing
+                    ? "Edit your personal details"
+                    : "View your personal information"}
                 </p>
               </div>
             </div>
             {!isEditing ? (
-              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                className="gap-2"
+              >
                 <Edit2 className="w-4 h-4" /> Edit Profile
               </Button>
             ) : (
               <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  className="gap-1"
+                >
                   <X className="w-4 h-4" /> Cancel
                 </Button>
-                <Button size="sm" onClick={handleSaveChanges} disabled={(!hasChanges && !selectedAvatar) || uploading} className="gap-1">
-                  <Save className="w-4 h-4" /> {uploading ? "Saving..." : "Save Changes"}
+                <Button
+                  size="sm"
+                  onClick={handleSaveChanges}
+                  disabled={(!hasChanges && !selectedAvatar) || uploading}
+                  className="gap-1"
+                >
+                  <Save className="w-4 h-4" />{" "}
+                  {uploading ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             )}
@@ -247,12 +327,20 @@ export default function MyProfile() {
           <div className="flex flex-col items-center mb-8 pb-6 border-b">
             <div className="relative group">
               <Avatar className="h-28 w-28 border-4 border-primary/20">
-                <AvatarImage src={avatarUrl} className="object-cover" />
+                <AvatarImage
+                  src={profile?.avatar}
+                  alt={displayName}
+                  referrerPolicy="no-referrer" // ← Important for Google images
+                  onError={(e) => {
+                    console.log("Avatar load error");
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
                 <AvatarFallback className="bg-primary text-white text-3xl">
-                  {displayName.charAt(0).toUpperCase()}
+                  {displayName?.charAt(0)?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              
+
               {/* Edit Avatar Button - Only show in edit mode */}
               {isEditing && (
                 <button
@@ -263,7 +351,7 @@ export default function MyProfile() {
                   <Camera className="w-4 h-4" />
                 </button>
               )}
-              
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -288,23 +376,35 @@ export default function MyProfile() {
           {!isEditing ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label className="text-muted-foreground text-xs">Full Name</Label>
+                <Label className="text-muted-foreground text-xs">
+                  Full Name
+                </Label>
                 <p className="font-medium mt-1 text-lg">{displayName}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Email Address</Label>
+                <Label className="text-muted-foreground text-xs">
+                  Email Address
+                </Label>
                 <p className="font-medium mt-1">{displayEmail}</p>
                 {profile?.isEmailVerified && (
                   <span className="text-xs text-green-600">✓ Verified</span>
                 )}
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Mobile Number</Label>
-                <p className="font-medium mt-1">{displayPhone || "Not added"}</p>
+                <Label className="text-muted-foreground text-xs">
+                  Mobile Number
+                </Label>
+                <p className="font-medium mt-1">
+                  {displayPhone || "Not added"}
+                </p>
               </div>
               <div>
-                <Label className="text-muted-foreground text-xs">Account Type</Label>
-                <p className="font-medium mt-1 capitalize">{profile?.role || "User"}</p>
+                <Label className="text-muted-foreground text-xs">
+                  Account Type
+                </Label>
+                <p className="font-medium mt-1 capitalize">
+                  {profile?.role || "User"}
+                </p>
               </div>
             </div>
           ) : (
@@ -312,37 +412,47 @@ export default function MyProfile() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <Label>Full Name *</Label>
-                  <Input 
-                    value={formData.name} 
+                  <Input
+                    value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Enter your full name"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Email Address</Label>
-                  <Input 
-                    value={formData.email} 
-                    disabled 
+                  <Input
+                    value={formData.email}
+                    disabled
                     className="bg-muted/50"
                   />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                  <p className="text-xs text-muted-foreground">
+                    Email cannot be changed
+                  </p>
                 </div>
-                
+
                 <div className="space-y-2 md:col-span-2">
                   <Label>Mobile Number</Label>
                   <div className="flex gap-3">
-                    <Button variant="outline" className="gap-2 shrink-0" type="button">
+                    <Button
+                      variant="outline"
+                      className="gap-2 shrink-0"
+                      type="button"
+                    >
                       🇮🇳 <ChevronDown size={14} />
                     </Button>
-                    <Input 
-                      value={formData.phone} 
-                      onChange={(e) => handleInputChange("phone", e.target.value)} 
+                    <Input
+                      value={formData.phone}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
                       placeholder="Enter mobile number"
                       className="flex-1"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">Add your mobile number for faster checkout</p>
+                  <p className="text-xs text-muted-foreground">
+                    Add your mobile number for faster checkout
+                  </p>
                 </div>
               </div>
             </div>
@@ -357,7 +467,9 @@ export default function MyProfile() {
             </div>
             <div>
               <h2 className="text-lg font-semibold">Change Password</h2>
-              <p className="text-sm text-muted-foreground">Update your password to keep your account secure</p>
+              <p className="text-sm text-muted-foreground">
+                Update your password to keep your account secure
+              </p>
             </div>
           </div>
 
@@ -365,21 +477,25 @@ export default function MyProfile() {
             <div className="space-y-2">
               <Label>Current Password</Label>
               <div className="relative">
-                <Input 
-                  type={showCurrentPassword ? "text" : "password"} 
-                  value={formData.currentPassword} 
-                  onChange={(e) => { 
-                    handleInputChange("currentPassword", e.target.value); 
-                    setPasswordChanges(true); 
+                <Input
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={formData.currentPassword}
+                  onChange={(e) => {
+                    handleInputChange("currentPassword", e.target.value);
+                    setPasswordChanges(true);
                   }}
                   placeholder="Enter current password"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)} 
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                 >
-                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showCurrentPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -387,18 +503,18 @@ export default function MyProfile() {
             <div className="space-y-2">
               <Label>New Password</Label>
               <div className="relative">
-                <Input 
-                  type={showNewPassword ? "text" : "password"} 
-                  value={formData.newPassword} 
-                  onChange={(e) => { 
-                    handleInputChange("newPassword", e.target.value); 
-                    setPasswordChanges(true); 
+                <Input
+                  type={showNewPassword ? "text" : "password"}
+                  value={formData.newPassword}
+                  onChange={(e) => {
+                    handleInputChange("newPassword", e.target.value);
+                    setPasswordChanges(true);
                   }}
                   placeholder="Enter new password"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowNewPassword(!showNewPassword)} 
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                 >
                   {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -409,44 +525,48 @@ export default function MyProfile() {
             <div className="space-y-2">
               <Label>Confirm New Password</Label>
               <div className="relative">
-                <Input 
-                  type={showConfirmPassword ? "text" : "password"} 
-                  value={formData.confirmPassword} 
-                  onChange={(e) => { 
-                    handleInputChange("confirmPassword", e.target.value); 
-                    setPasswordChanges(true); 
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={(e) => {
+                    handleInputChange("confirmPassword", e.target.value);
+                    setPasswordChanges(true);
                   }}
                   placeholder="Confirm new password"
                 />
-                <button 
-                  type="button" 
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2"
                 >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
             </div>
 
             {passwordChanges && (
               <div className="flex gap-3 pt-2">
-                <Button 
-                  variant="default" 
-                  onClick={handlePasswordUpdate} 
+                <Button
+                  variant="default"
+                  onClick={handlePasswordUpdate}
                   disabled={changingPassword}
                 >
                   {changingPassword ? "Updating..." : "Update Password"}
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => { 
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      currentPassword: "", 
-                      newPassword: "", 
-                      confirmPassword: "" 
-                    })); 
-                    setPasswordChanges(false); 
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      currentPassword: "",
+                      newPassword: "",
+                      confirmPassword: "",
+                    }));
+                    setPasswordChanges(false);
                   }}
                 >
                   Clear

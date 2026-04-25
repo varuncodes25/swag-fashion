@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 
 const ColorSelector = ({ 
   colors, 
-  imagesByColor, // New prop: Object containing images for each color
+  imagesByColor,
   value, 
   onChange 
 }) => {
@@ -33,13 +33,11 @@ const ColorSelector = ({
     return COLOR_MAP[colorName] || colorName;
   };
 
-  // Get first image for a color
   const getFirstImageForColor = (colorName) => {
     if (!imagesByColor || !imagesByColor[colorName]) return null;
     
     const colorImages = imagesByColor[colorName];
     if (Array.isArray(colorImages) && colorImages.length > 0) {
-      // Find main image first, otherwise first image
       const mainImage = colorImages.find(img => img.isMain);
       return mainImage || colorImages[0];
     }
@@ -55,11 +53,8 @@ const ColorSelector = ({
           const hexColor = getColorHex(color);
 
           return (
-            <div
-              key={color}
-              className="relative group"
-            >
-              {/* COLOR BUTTON WITH IMAGE OR COLOR */}
+            <div key={color} className="relative group">
+              {/* COLOR BUTTON */}
               <button
                 onClick={() => onChange(color)}
                 className={`
@@ -85,31 +80,32 @@ const ColorSelector = ({
               >
                 {/* Show image if available */}
                 {firstImage ? (
-                  <div className="w-full h-full relative">
-                    <img
-                      src={firstImage.url || firstImage.preview}
-                      alt={color}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    {/* Overlay for better text visibility */}
-                    {isSelected && (
-                      <div className="absolute inset-0 bg-warning bg-opacity-20" />
-                    )}
-                  </div>
+                  <img
+                    src={firstImage.url || firstImage.preview}
+                    alt={color}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                 ) : (
-                  // Fallback to solid color
                   <div 
-                    className="w-full h-full rounded-lg"
+                    className="w-full h-full"
                     style={{ backgroundColor: hexColor }}
                   />
                 )}
                 
-                {/* Checkmark for selected */}
+                {/* ✅ FIXED: Very light overlay + clean checkmark */}
                 {isSelected && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
-                    <Check className="w-6 h-6 text-white drop-shadow-lg" />
-                  </div>
+                  <>
+                    {/* Very light overlay - only 5% black */}
+                    <div className="absolute inset-0 bg-black/5 rounded-lg" />
+                    
+                    {/* Clean checkmark in center */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-warning rounded-full p-1 shadow-md transform transition-transform group-hover:scale-110">
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    </div>
+                  </>
                 )}
               </button>
               
@@ -125,13 +121,6 @@ const ColorSelector = ({
                   {color}
                 </span>
               </div>
-              
-              {/* Stock indicator (if available) */}
-              {/* {stockByColor && stockByColor[color] > 0 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center z-10 border border-white text-[8px] text-white font-bold">
-                  {stockByColor[color] > 9 ? '9+' : stockByColor[color]}
-                </div>
-              )} */}
             </div>
           );
         })}

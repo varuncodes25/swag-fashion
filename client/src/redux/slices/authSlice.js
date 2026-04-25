@@ -155,7 +155,7 @@ export const changePassword = createAsyncThunk(
   async (passwordData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await apiClient.put("/change-password", passwordData, {
+      const response = await apiClient.put("/user/change-password", passwordData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
