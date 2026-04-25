@@ -66,10 +66,10 @@ const handleEdit = (banner) => {
   
   
   // Validate required fields
-  if (!formData.title || (!formData.image && !selectedFile && !initialData?.image)) {
-    alert("Title and Image are required");
-    return;
-  }
+  // if (!formData.title || (!formData.image && !selectedFile && !initialData?.image)) {
+  //   alert("Title and Image are required");
+  //   return;
+  // }
 
   setLoading(true);
 
@@ -279,11 +279,10 @@ const handleEdit = (banner) => {
         {/* Title */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Title *
+            Title11 *
           </label>
           <input
             type="text"
-            required
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary dark:focus:ring-blue-400 dark:focus:border-blue-400 bg-white dark:bg-gray-700 text-foreground transition-colors"

@@ -6,6 +6,7 @@ import {
   CircleX,
   Settings,
   LogOut,
+  Home,
 } from "lucide-react";
 
 import {
@@ -25,6 +26,7 @@ import { setAdminLogout  } from "@/redux/slices/authSlice"; // ✅ Admin logout 
 
 // Menu items.
 const items = [
+     { title: "Banner", url: "/admin/banner", icon: Home },
   {
     title: "Create Products",
     url: "/admin/dashboard",

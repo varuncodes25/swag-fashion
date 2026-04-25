@@ -34,6 +34,7 @@ import AdminProductDetails from "./components/Admin/AdminProductDetails";
 import { useEffect } from "react";
 import { setUserLogout } from "./redux/slices/authSlice";
 import AccountLayout from "./layouts/AccountLayout";
+import BannerManager from "./components/Admin/banner/BannerManager";
 
 export default function App() {
   const dispatch=useDispatch()
@@ -180,6 +181,10 @@ export default function App() {
         </ProtectedRoute>
       ),
     },
+    {
+          path: "/admin/banner",
+          element: <BannerManager />, // 👉 /admin/products
+        },
     {
       path: "/admin/dashboard/edit-product/:productId",
       element: (
