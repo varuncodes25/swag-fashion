@@ -126,7 +126,8 @@ const Banner = () => {
         {/* Banner Container */}
         {/* Image with working hover effect */}
 <div className="relative w-full h-[200px] sm:h-[200px] md:h-[300px] lg:h-[400px] xl:h-[400px] overflow-hidden">
-<img
+
+    <img
   src={currentBanner?.desktop}
   alt="banner"
   className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-110"
