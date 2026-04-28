@@ -125,16 +125,16 @@ const Banner = () => {
       >
         {/* Banner Container */}
         {/* Image with working hover effect */}
-<div className="relative w-full aspect-[16/9] sm:aspect-[16/7] md:aspect-[16/6] lg:aspect-[21/9] xl:h-[500px] overflow-hidden">
-  <img
-    src={currentBanner?.desktop}
-    alt={currentBanner?.title || "banner"}
-    className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-110"
-    draggable={false}
-    onError={(e) => {
-      e.target.src = fallbackBanner1;
-    }}
-  />
+<div className="relative w-full h-[200px] sm:h-[200px] md:h-[300px] lg:h-[400px] xl:h-[400px] overflow-hidden">
+<img
+  src={currentBanner?.desktop}
+  alt="banner"
+  className="w-full h-full object-cover transition-transform duration-700 ease-out hover:scale-110"
+  draggable={false}
+  onError={(e) => {
+    e.target.src = fallbackBanner1;
+  }}
+/>
   {/* Gradient Overlay - pointer-events-none se hover block nahi karega */}
   {/* <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent pointer-events-none" /> */}
 </div>
