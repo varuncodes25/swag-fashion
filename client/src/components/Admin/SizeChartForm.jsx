@@ -11,7 +11,7 @@ const SizeChartForm = ({ color, size, sizeData, onUpdate }) => {
   const measurementFields = [
     { name: 'chest', label: 'Chest', unit: 'inches' },
     { name: 'waist', label: 'Waist', unit: 'inches' },
-    { name: 'hips', label: 'Hips', unit: 'inches' },
+    { name: 'hip', label: 'Hip', unit: 'inches' },
     { name: 'length', label: 'Length', unit: 'inches' },
     { name: 'shoulder', label: 'Shoulder', unit: 'inches' },
     { name: 'sleeve', label: 'Sleeve', unit: 'inches' },

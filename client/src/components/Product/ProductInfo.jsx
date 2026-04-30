@@ -103,22 +103,7 @@ const ProductInfo = ({
           </div>
         )}
         
-        {/* {estimatedDelivery && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Delivery in {estimatedDelivery} days</span>
-          </div>
-        )}
-        
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>{returnPolicy}</span>
-        </div>
-        
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Shield className="w-3.5 h-3.5" />
-          <span>Secure Transaction</span>
-        </div> */}
+       
       </div>
     </div>
   );
