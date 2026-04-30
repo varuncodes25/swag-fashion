@@ -134,6 +134,7 @@ const CreateProduct = () => {
     FABRICS,
     FITS,
     PATTERNS,
+    SIZE_CHART_TEMPLATES,
     SLEEVE_TYPES,
     NECK_TYPES,
     BOTTOM_STYLES,
@@ -173,9 +174,11 @@ const CreateProduct = () => {
     toggleFeature,
     toggleSeason,
     toggleOccasion,
+    applySizeChartTemplate,
   } = useProductForm();
 
   const [customSizeInput, setCustomSizeInput] = useState("");
+  const [selectedSizeChartTemplate, setSelectedSizeChartTemplate] = useState("oversizedTshirt");
 const clothingCategory = getClothingCategory(formData.clothingType);
 console.log(clothingCategory,"clothingCategory")
   // React Quill modules
@@ -739,6 +742,50 @@ console.log(clothingCategory,"clothingCategory")
                     <Plus className="h-4 w-4 mr-2" />
                     Add Color
                   </Button>
+                </div>
+
+                <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                  <div>
+                    <Label className="text-sm font-medium text-foreground">
+                      Size Chart Template
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Apply a default measurement chart, then edit any size manually below.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Select
+                      value={selectedSizeChartTemplate}
+                      onValueChange={setSelectedSizeChartTemplate}
+                    >
+                      <SelectTrigger className="bg-background border-input text-foreground sm:max-w-xs">
+                        <SelectValue placeholder="Select size chart template" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-popover border-border">
+                        {Object.entries(SIZE_CHART_TEMPLATES).map(
+                          ([templateKey, template]) => (
+                            <SelectItem
+                              key={templateKey}
+                              value={templateKey}
+                              className="text-foreground hover:bg-accent"
+                            >
+                              {template.label}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => applySizeChartTemplate(selectedSizeChartTemplate)}
+                      disabled={!colors.length || !sizes.length}
+                      className="border-input hover:bg-accent"
+                    >
+                      <Ruler className="h-4 w-4 mr-2" />
+                      Apply Template
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Color List with Images and Size Charts */}

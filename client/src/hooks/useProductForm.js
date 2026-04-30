@@ -1,36 +1,23 @@
 import { useState, useRef, useCallback } from "react";
 import { useToast } from "./use-toast";
 
-// Preset sizes (admin can also add any custom string, e.g. "32x34", "UK 9")
-const SIZE_OPTIONS = [
-  "XS",
-  "S",
-  "M",
-  "L",
-  "XL",
-  "XXL",
-  "XXXL",
-  "Free Size",
-  "One Size",
-  ...Array.from({ length: 15 }, (_, i) => String(26 + i)),
-  "28x30",
-  "30x32",
-  "32x32",
-  "34x32",
-  "UK 6",
-  "UK 7",
-  "UK 8",
-  "UK 9",
-  "UK 10",
-  "UK 11",
-  "UK 12",
-  "EU 39",
-  "EU 40",
-  "EU 41",
-  "EU 42",
-  "EU 43",
-  "EU 44",
-];
+const SIZE_OPTIONS = ["S", "M", "L", "XL","XXL"];
+
+const SIZE_CHART_TEMPLATES = {
+  oversizedTshirt: {
+    label: "Oversized T-Shirt",
+    measurements: {
+      S: { chest: 43, length: 27, shoulder: 20.5, sleeve: 9.5, waist: 22.5 },
+      M: { chest: 46, length: 27, shoulder: 21, sleeve: 10, waist: 23.5 },
+      L: { chest: 48, length: 28, shoulder: 22.5, sleeve: 10, waist: 24.5 },
+      XL: { chest: 50, length: 30, shoulder: 23.5, sleeve: 11, waist: 25.5 },
+    },
+    defaults: {
+      fitDescription: "Oversized",
+      unit: "inches",
+    },
+  },
+};
 const MAX_IMAGES_PER_COLOR = 40;
 
 const COLOR_OPTIONS = [
@@ -56,8 +43,9 @@ const COLOR_OPTIONS = [
 // Bottom Wear Specific Options (Naye add karo)
 const BOTTOM_STYLES = [
   "Regular",
-  "Slim",
+  "Slim Fit",
   "Skinny",
+  "Straight",
   "Relaxed",
   "Loose",
   "Bootcut",
@@ -936,6 +924,58 @@ export const useProductForm = (initialData = null) => {
     setSizeCharts({});
   };
 
+  const applySizeChartTemplate = (templateKey) => {
+    const template = SIZE_CHART_TEMPLATES[templateKey];
+
+    if (!template) {
+      toast({
+        title: "Error",
+        description: "Please select a valid size chart template",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (colors.length === 0 || sizes.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one color and size before applying a size chart",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    setSizeCharts((prev) => {
+      const nextCharts = { ...prev };
+
+      colors.forEach((colorName) => {
+        const colorCharts = nextCharts[colorName] || {};
+
+        sizes.forEach((size) => {
+          const templateMeasurements = template.measurements[size];
+          if (!templateMeasurements) return;
+
+          colorCharts[size] = {
+            ...colorCharts[size],
+            ...template.defaults,
+            ...templateMeasurements,
+          };
+        });
+
+        nextCharts[colorName] = colorCharts;
+      });
+
+      return nextCharts;
+    });
+
+    toast({
+      title: "Size chart applied",
+      description: `${template.label} measurements added for matching sizes`,
+    });
+
+    return true;
+  };
+
   // Helper function for selling price
   const calculateSellingPrice = (price, discount) => {
     if (discount > 0) {
@@ -1321,6 +1361,7 @@ const prepareFormData = () => {
     FABRICS,
     FITS,
     PATTERNS,
+    SIZE_CHART_TEMPLATES,
     SLEEVE_TYPES,
     NECK_TYPES,
     ALL_FEATURES,
@@ -1363,5 +1404,6 @@ const prepareFormData = () => {
     getSizeChartForColor,
     getSizeChartForVariant,
     resetSizeCharts,
+    applySizeChartTemplate,
   };
 };
