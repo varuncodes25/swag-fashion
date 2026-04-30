@@ -4,13 +4,14 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 // Desktop Images
 import banner1 from "../../assets/god mode banner.png";
 import banner2 from "../../assets/banner2.png";
-import banner3 from "../../assets/banner5.png";
+import banner3 from "../../assets/banner3.png";
 
 // Mobile Images
 import mobile1 from "../../assets/mobile1.png";
 import mobile2 from "../../assets/mobile2.png";
+import mobile3 from "../../assets/mobile3.png";
 
-// Data (with fallback)
+// Data
 const bannerData = [
   {
     id: 1,
@@ -25,10 +26,9 @@ const bannerData = [
   {
     id: 3,
     desktop: banner3,
-    mobile: banner3, // fallback
+    mobile: mobile3, // ✅ fixed
   },
 ];
-
 const Banner = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [progress, setProgress] = useState(0);
