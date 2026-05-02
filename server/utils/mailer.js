@@ -1,38 +1,108 @@
-// utils/sendMail.js
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-// ✅ Get Gmail credentials
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
+let warnedRenderWithoutBrevo = false;
+
+function brevoApiKeyReady() {
+  return Boolean(process.env.BREVO_API_KEY?.trim());
+}
+
+/** Sender must be verified in Brevo (Senders & IP → Domains / single sender). */
+function getBrevoSenderEmail() {
+  return (
+    process.env.MAIL_FROM?.trim() ||
+    process.env.BREVO_SENDER_EMAIL?.trim() ||
+    process.env.GMAIL_USER?.trim() ||
+    ""
+  );
+}
+
+/**
+ * Brevo Transactional Email over HTTPS (port 443) — works on Render free tier
+ * where SMTP 587/465 is blocked.
+ * @see https://developers.brevo.com/reference/sendtransacemail
+ */
+async function sendViaBrevoApi(toEmail, subject, htmlContent, textContent) {
+  const apiKey = process.env.BREVO_API_KEY.trim();
+  const fromEmail = getBrevoSenderEmail();
+  if (!fromEmail) {
+    const err = new Error(
+      "Brevo API: set MAIL_FROM or BREVO_SENDER_EMAIL (or GMAIL_USER) to a Brevo-verified sender address.",
+    );
+    err.code = "BREVO_SENDER_MISSING";
+    throw err;
+  }
+
+  const fromName = process.env.MAIL_FROM_NAME || "Swag Fashion";
+
+  const res = await fetch(BREVO_API_URL, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      "api-key": apiKey,
+    },
+    body: JSON.stringify({
+      sender: { name: fromName, email: fromEmail },
+      to: [{ email: toEmail }],
+      subject,
+      htmlContent,
+      textContent: textContent || undefined,
+    }),
+  });
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg =
+      typeof body.message === "string"
+        ? body.message
+        : JSON.stringify(body) || `HTTP ${res.status}`;
+    const err = new Error(msg);
+    err.code = "BREVO_API_ERROR";
+    err.status = res.status;
+    throw err;
+  }
+
+  console.log("Email sent (brevo_api):", body.messageId, "→", toEmail);
+  return { messageId: body.messageId, response: body };
+}
+
 function getGmailAuth() {
   const user = process.env.GMAIL_USER?.trim() || "";
   let pass = process.env.GMAIL_PASS?.trim() || "";
   if (pass) {
-    pass = pass.replace(/\s+/g, ""); // Remove spaces from app password
+    pass = pass.replace(/\s+/g, "");
   }
   return { user, pass };
 }
 
-// ✅ Check if configured
-function isConfigured() {
+function gmailKeysPresent() {
   const { user, pass } = getGmailAuth();
   return Boolean(user && pass);
 }
 
-// ✅ Create Gmail transporter
+function isConfigured() {
+  return brevoApiKeyReady() || gmailKeysPresent();
+}
+
+function getFromAddress() {
+  const explicit = process.env.MAIL_FROM?.trim();
+  if (explicit) return explicit;
+  return process.env.GMAIL_USER?.trim() || "noreply@example.com";
+}
+
 function createTransporter() {
   const { user, pass } = getGmailAuth();
-  
+
   if (!user || !pass) {
-    console.error("❌ Gmail credentials missing. Set GMAIL_USER and GMAIL_PASS in .env");
     return null;
   }
 
-  // Check if password length is 16 (App Password)
   if (pass.length !== 16) {
     console.warn(
-      "⚠️ Warning: GMAIL_PASS length is not 16. " +
-      "Google App Passwords are exactly 16 characters. " +
-      "Get one from: https://myaccount.google.com/apppasswords"
+      "⚠️ GMAIL_PASS length is not 16. Google App Passwords are 16 characters: https://myaccount.google.com/apppasswords",
     );
   }
 
@@ -48,28 +118,56 @@ function createTransporter() {
   });
 }
 
-// ✅ Get from address
-function getFromAddress() {
-  const explicit = process.env.MAIL_FROM?.trim();
-  if (explicit) return explicit;
-  return process.env.GMAIL_USER?.trim() || "noreply@example.com";
-}
-
-// ✅ Send email function
+/**
+ * 1) Brevo HTTPS API if BREVO_API_KEY (Render-safe)
+ * 2) Else Gmail SMTP if GMAIL_USER + GMAIL_PASS (local / paid hosts)
+ */
 const sendMail = async (toEmail, subject, htmlContent) => {
+  const textContent = htmlContent.replace(/<\/?[^>]+(>|$)/g, "");
+
+  if (
+    process.env.RENDER === "true" &&
+    gmailKeysPresent() &&
+    !brevoApiKeyReady() &&
+    !warnedRenderWithoutBrevo
+  ) {
+    warnedRenderWithoutBrevo = true;
+    console.error(
+      "[mailer] Render: set BREVO_API_KEY + MAIL_FROM (Brevo-verified). " +
+        "Free tier blocks Gmail SMTP → ETIMEDOUT until API mail is configured.",
+    );
+  }
+
+  if (brevoApiKeyReady()) {
+    try {
+      return await sendViaBrevoApi(
+        toEmail,
+        subject,
+        htmlContent,
+        textContent,
+      );
+    } catch (apiErr) {
+      if (gmailKeysPresent()) {
+        console.warn(
+          "Brevo API failed, falling back to Gmail SMTP:",
+          apiErr.message,
+        );
+      } else {
+        console.error("Brevo API send failed:", apiErr.message);
+        throw apiErr;
+      }
+    }
+  }
+
   const transporter = createTransporter();
-  
   if (!transporter) {
     const err = new Error(
-      "Gmail not configured. Set GMAIL_USER and GMAIL_PASS in .env file.\n" +
-      "Get App Password: https://myaccount.google.com/apppasswords"
+      "Mail not configured. Set BREVO_API_KEY (+ MAIL_FROM verified in Brevo) for Render, " +
+        "or GMAIL_USER + GMAIL_PASS for Gmail SMTP.",
     );
     err.code = "EMAIL_NOT_CONFIGURED";
     throw err;
   }
-
-  // Create plain text version from HTML
-  const textContent = htmlContent.replace(/<\/?[^>]+(>|$)/g, "");
 
   const fromAddr = getFromAddress();
   const fromName = process.env.MAIL_FROM_NAME || "Swag Fashion";
@@ -77,57 +175,65 @@ const sendMail = async (toEmail, subject, htmlContent) => {
   const mailOptions = {
     from: `"${fromName}" <${fromAddr}>`,
     to: toEmail,
-    subject: subject,
+    subject,
     text: textContent,
     html: htmlContent,
   };
 
   try {
-    // Verify connection first (optional)
     if (process.env.SMTP_VERIFY === "true") {
       await transporter.verify();
-      console.log("✅ SMTP connection verified");
+      console.log("SMTP verify OK (gmail)");
     }
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent to ${toEmail}:`, info.messageId);
+    console.log("Email sent (gmail_smtp):", info.messageId, "→", toEmail);
     return info;
   } catch (error) {
-    console.error("❌ sendMail failed:", error.code, error.message);
-    
+    console.error("sendMail failed (gmail_smtp):", error.code, error.message);
+
     if (error.code === "EAUTH") {
       console.error(
-        "\n🔐 Gmail Authentication Failed!\n" +
-        "1. Enable 2-Step Verification in your Google Account\n" +
-        "2. Generate App Password: https://myaccount.google.com/apppasswords\n" +
-        "3. Copy the 16-character password to .env as GMAIL_PASS\n" +
-        "4. Make sure GMAIL_USER is your full email address\n"
+        "Gmail EAUTH: use 16-char App Password with 2-Step ON, or use BREVO_API_KEY on Render.",
       );
     }
-    
     if (["ESOCKET", "ETIMEDOUT", "ECONNRESET"].includes(error.code)) {
       console.error(
-        "⚠️ Network issue - Gmail SMTP may be blocked.\n" +
-        "If on Render/Vercel, outbound SMTP ports might be blocked.\n" +
-        "Consider using Brevo or Gmail API instead."
+        "SMTP connection issue (often blocked on Render free). Prefer BREVO_API_KEY.",
       );
     }
-    
+
     throw error;
   }
 };
 
-// ✅ Test function
 const testConnection = async () => {
+  if (brevoApiKeyReady()) {
+    try {
+      const res = await fetch("https://api.brevo.com/v3/account", {
+        headers: { "api-key": process.env.BREVO_API_KEY.trim() },
+      });
+      if (res.ok) {
+        console.log("Brevo API key OK");
+        return true;
+      }
+      console.error("Brevo account check failed:", res.status);
+      return false;
+    } catch (e) {
+      console.error("Brevo API check error:", e.message);
+      return false;
+    }
+  }
+
   const transporter = createTransporter();
   if (!transporter) return false;
-  
+
   try {
     await transporter.verify();
-    console.log("✅ Gmail SMTP connection ready");
+    console.log("Gmail SMTP connection ready");
     return true;
   } catch (error) {
-    console.error("❌ Gmail SMTP connection failed:", error.message);
+    console.error("Gmail SMTP verify failed:", error.message);
     return false;
   }
 };

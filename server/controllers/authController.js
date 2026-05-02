@@ -424,7 +424,7 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
     const resetLink = `${frontendBase}/reset-password/${resetToken}`;
 
     if (!sendMail.isConfigured?.()) {
-      console.warn("forgot-password: SMTP not configured");
+      console.warn("forgot-password: mail not configured");
       return res.status(503).json(
         await encryptResponse(
           new ApiResponse(
@@ -448,7 +448,15 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
       console.error("forgot-password sendMail:", mailErr.message);
       if (mailErr.code === "EAUTH") {
         console.error(
-          "forgot-password: fix GMAIL_USER + GMAIL_PASS (16-char App Password) — see server logs / https://myaccount.google.com/apppasswords",
+          "forgot-password: Gmail — use 16-char App Password or set BREVO_API_KEY for HTTPS mail.",
+        );
+      }
+      if (
+        mailErr.code === "BREVO_API_ERROR" ||
+        mailErr.code === "BREVO_SENDER_MISSING"
+      ) {
+        console.error(
+          "forgot-password: Brevo — check BREVO_API_KEY and MAIL_FROM (verified sender in Brevo).",
         );
       }
       return res.status(503).json(

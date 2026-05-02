@@ -24,14 +24,14 @@ router.post("/send-email", async (req, res) => {
     );
     return res.status(503).json({
       error:
-        "Mail not configured. Add ADMIN_RECEIVER and GMAIL_USER / GMAIL_PASS on the server.",
+        "Mail not configured. Set ADMIN_RECEIVER (inbox) and BREVO_API_KEY or GMAIL credentials on the server.",
     });
   }
 
   if (!sendMail.isConfigured?.()) {
     return res.status(503).json({
       error:
-        "Mail not configured. Set BREVO_USER + BREVO_SMTP_KEY or GMAIL_USER + GMAIL_PASS.",
+        "Mail not configured. Set BREVO_API_KEY (HTTPS) or GMAIL_USER + GMAIL_PASS (SMTP).",
     });
   }
 
