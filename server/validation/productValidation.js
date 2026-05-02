@@ -69,7 +69,7 @@ const variantSchema = yup.object({
     .number()
     .required('Stock is required')
     .min(0, 'Stock cannot be negative')
-    .default(0),
+    .default(20),
   
   price: yup
     .number()
@@ -325,10 +325,10 @@ const createProductSchema = yup.object({
   
   // ============== DIMENSIONS ==============
   productDimensions: yup.object({
-    length: yup.number().min(0).default(0),
-    width: yup.number().min(0).default(0),
-    height: yup.number().min(0).default(0),
-    weight: yup.number().min(0).default(0.2)
+    length: yup.number().min(0).default(30),
+    width: yup.number().min(0).default(25),
+    height: yup.number().min(0).default(3),
+    weight: yup.number().min(0).default(0.3)
   }).default({}),
   
   // ============== STATUS ==============

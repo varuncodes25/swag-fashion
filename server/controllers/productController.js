@@ -170,7 +170,7 @@ const createProduct = async (req, res) => {
       ? typeof productDimensions === "string"
         ? JSON.parse(productDimensions)
         : productDimensions
-      : { length: 0, width: 0, height: 0, weight: 0.2 };
+      : { length: 30, width: 25, height: 3, weight: 0.3 };
 
     // ============ UPLOAD IMAGES ============
     const uploadedImages = await Promise.all(

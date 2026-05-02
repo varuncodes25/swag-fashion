@@ -23,7 +23,7 @@ router.post(
   "/create-product",
   // validate(createProductSchema),
   verifyToken,
-  upload.array("images", 15),
+  upload.array("images", 40),
   createProduct
 );
 

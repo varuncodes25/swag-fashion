@@ -65,7 +65,7 @@ exports.calculateOrder = async (
     const itemSubtotal = price * itemQuantity;
     const itemDiscount = discountAmountPerUnit * itemQuantity;
     const itemWeight =
-      (product.productDimensions?.weight || 0.2) * itemQuantity;
+      (product.productDimensions?.weight || 0.3) * itemQuantity;
 
     subtotal += itemSubtotal;
     discount += itemDiscount;
@@ -104,7 +104,7 @@ exports.calculateOrder = async (
       discountAmount: roundToTwo(discountAmountPerUnit),
       quantity: itemQuantity,
       lineTotal: roundToTwo(sellingPrice * itemQuantity),
-      weight: product.productDimensions?.weight || 0.2,
+      weight: product.productDimensions?.weight || 0.3,
       length: product.productDimensions?.length || 0,
       width: product.productDimensions?.width || 0,
       height: product.productDimensions?.height || 0,
@@ -347,7 +347,7 @@ exports.calculateOrderValidation = async (
     sellingSubtotal += lineSelling;
 
     const unitWeight =
-      product.productDimensions?.weight ?? product.dimensions?.weight ?? 0.2;
+      product.productDimensions?.weight ?? product.dimensions?.weight ?? 0.3;
 
     totalWeight += unitWeight * qty;
 

@@ -32,6 +32,20 @@ const ProductTabs = ({ product }) => {
 
     return true;
   };
+
+  const formatSpecValue = (value) => {
+    if (Array.isArray(value)) {
+      return value.filter(Boolean).join(", ");
+    }
+
+    if (value && typeof value === "object") {
+      return Object.entries(value)
+        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`)
+        .join(" | ");
+    }
+
+    return String(value);
+  };
   const toggleSection = (section) => {
     setOpenSections(prev => ({
       ...prev,
@@ -91,7 +105,7 @@ const ProductTabs = ({ product }) => {
                 {key}
               </span>
               <span className="font-medium text-foreground text-sm">
-                {value}
+                {formatSpecValue(value)}
               </span>
             </div>
           ))}
@@ -134,7 +148,7 @@ const ProductTabs = ({ product }) => {
                   {key}
                 </span>
                 <span className="text-foreground text-sm font-medium">
-                  {value}
+                  {formatSpecValue(value)}
                 </span>
               </div>
             ))}
@@ -162,7 +176,7 @@ const ProductTabs = ({ product }) => {
                     {key}
                   </div>
                   <div className="font-semibold text-foreground">
-                    {value}
+                    {formatSpecValue(value)}
                   </div>
                 </div>
               ))}
@@ -184,7 +198,10 @@ const ProductTabs = ({ product }) => {
                 </span>
 
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {value.split(", ").map((item, i) => (
+                  {formatSpecValue(value)
+                    .split(", ")
+                    .filter(Boolean)
+                    .map((item, i) => (
                     <span
                       key={i}
                       className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-xs border border-border"
