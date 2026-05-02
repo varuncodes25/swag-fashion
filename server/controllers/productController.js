@@ -28,6 +28,30 @@ cloudinary.config({
 // Additional: Global axios timeout (agar Cloudinary axios use karta hai)
 require("axios").defaults.timeout = 120000;
 
+function isCloudinaryConfigured() {
+  return Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME?.trim() &&
+      process.env.CLOUDINARY_API_KEY?.trim() &&
+      process.env.CLOUDINARY_API_SECRET?.trim(),
+  );
+}
+
+function respondCloudinaryMissing(res) {
+  return res.status(503).json({
+    success: false,
+    code: "CLOUDINARY_NOT_CONFIGURED",
+    message:
+      "Cloudinary is not set on this server. In Render → Environment add the same three variables as local: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET (from Cloudinary dashboard → API Keys). Then redeploy.",
+  });
+}
+
+function isLikelyCloudinaryAuthError(err) {
+  const msg = `${err?.message || ""} ${err?.http_code || ""} ${err?.error?.message || ""}`;
+  return /api key|Invalid|invalid|401|403|credentials|Unauthorized|not allowed/i.test(
+    msg,
+  );
+}
+
 // Helper function to get color code
 function getColorCode(colorName) {
   const colorMap = {
@@ -118,6 +142,10 @@ const createProduct = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Please upload at least one image." });
+    }
+
+    if (!isCloudinaryConfigured()) {
+      return respondCloudinaryMissing(res);
     }
 
     // ============ PARSING HELPER ============
@@ -303,6 +331,14 @@ const createProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error:", error);
+    if (isLikelyCloudinaryAuthError(error)) {
+      return res.status(503).json({
+        success: false,
+        code: "CLOUDINARY_AUTH_FAILED",
+        message:
+          "Cloudinary rejected the upload (wrong API key/secret or cloud name). Copy CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET from Cloudinary dashboard into Render Environment — no spaces or quotes around values.",
+      });
+    }
     res.status(500).json({
       success: false,
       message: error.message || "Failed to create product",
@@ -712,6 +748,9 @@ const updateProduct = async (req, res) => {
 
     // Upload new images
     if (req.files && req.files.length > 0) {
+      if (!isCloudinaryConfigured()) {
+        return respondCloudinaryMissing(res);
+      }
       console.log(`📸 Uploading ${req.files.length} new images...`);
 
       const newImages = await Promise.all(
@@ -805,6 +844,15 @@ const updateProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Update product error:", error);
+
+    if (isLikelyCloudinaryAuthError(error)) {
+      return res.status(503).json({
+        success: false,
+        code: "CLOUDINARY_AUTH_FAILED",
+        message:
+          "Cloudinary rejected the upload. Fix CLOUDINARY_* environment variables on Render (must match Cloudinary dashboard API Keys).",
+      });
+    }
 
     // Handle validation errors
     if (error.name === "ValidationError") {
