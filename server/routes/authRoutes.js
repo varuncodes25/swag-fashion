@@ -1,8 +1,6 @@
 const {
   signup,
   login,
-  verifyEmail,
-  resendVerificationEmail,
   forgotPassword,
   resetPassword,
   refreshToken,
@@ -43,8 +41,6 @@ const signupLimiter = buildLimiter({
 });
 
 router.post("/signup", signupLimiter, decryptRequest, signup);
-router.get("/verify-email/:token", verifyEmail);
-router.post("/resend-verification", authLimiter, decryptRequest, resendVerificationEmail);
 
 router.post("/login", loginLimiter, decryptRequest, login);
 

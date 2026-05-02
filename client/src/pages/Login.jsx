@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { loginUser, clearLoginState, resendVerificationEmail } from "@/redux/slices/authSlice";
+import { loginUser, clearLoginState } from "@/redux/slices/authSlice";
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -37,7 +37,6 @@ const Login = () => {
   });
   const [errors, setErrors] = useState({});
   const [rememberMe, setRememberMe] = useState(false);
-  const [resendLoading, setResendLoading] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -75,38 +74,6 @@ const Login = () => {
       dispatch(clearLoginState());
     };
   }, [dispatch]);
-
-  const handleResendVerification = async () => {
-    const email = formData.email.trim();
-    if (!email) {
-      toast({
-        title: "Email required",
-        description: "Enter the email you used to sign up, then tap Resend.",
-        variant: "destructive",
-      });
-      return;
-    }
-    setResendLoading(true);
-    try {
-      const data = await dispatch(resendVerificationEmail(email)).unwrap();
-      const msg =
-        data?.message ||
-        (typeof data?.data === "object" && data?.data?.message) ||
-        "Check your inbox.";
-      toast({
-        title: "Verification email",
-        description: msg,
-      });
-    } catch (err) {
-      toast({
-        title: "Could not send",
-        description: err?.message || "Try again in a few minutes.",
-        variant: "destructive",
-      });
-    } finally {
-      setResendLoading(false);
-    }
-  };
 
   // Load saved credentials if remember me was checked
   useEffect(() => {
@@ -303,22 +270,12 @@ const Login = () => {
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-300">
                   Password
                 </label>
-                <div className="flex flex-col items-end gap-1">
-                  <Link
-                    to="/forgot-password"
-                    className="text-xs text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 transition-colors duration-300"
-                  >
-                    Forgot Password?
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleResendVerification}
-                    disabled={loginLoading || resendLoading}
-                    className="text-xs text-muted-foreground hover:text-primary dark:hover:text-blue-300 underline-offset-2 hover:underline disabled:opacity-50"
-                  >
-                    {resendLoading ? "Sending…" : "Resend verification email"}
-                  </button>
-                </div>
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 transition-colors duration-300"
+                >
+                  Forgot Password?
+                </Link>
               </div>
               <div className="relative group">
                 <Input

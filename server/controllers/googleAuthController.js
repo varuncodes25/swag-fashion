@@ -4,6 +4,9 @@ const { OAuth2Client } = require("google-auth-library");
 // ✅ Initialize Google OAuth Client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const publicFrontendBase = () =>
+  (process.env.FRONTEND_URL || process.env.CLIENT_URL || "").replace(/\/$/, "");
+
 const DUPLICATE_KEY_CODE = 11000;
 
 const mapDuplicateKeyMessage = (err) => {
@@ -240,7 +243,7 @@ const googleCallback = async (req, res) => {
     const { code } = req.query;
     
     if (!code) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=no_code`);
+      return res.redirect(`${publicFrontendBase()}/login?error=no_code`);
     }
 
     console.log("📡 Received Google callback with code");
@@ -281,18 +284,18 @@ const googleCallback = async (req, res) => {
       console.log("✅ User authenticated successfully:", user.email);
 
       // ✅ Redirect to frontend with tokens
-      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${accessToken}&refreshToken=${refreshToken}`;
+      const redirectUrl = `${publicFrontendBase()}/auth/callback?token=${accessToken}&refreshToken=${refreshToken}`;
       
       return res.redirect(redirectUrl);
       
     } catch (tokenError) {
       console.error("❌ Token exchange failed:", tokenError);
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=token_exchange_failed`);
+      return res.redirect(`${publicFrontendBase()}/login?error=token_exchange_failed`);
     }
     
   } catch (error) {
     console.error("❌ Google Callback Error:", error);
-    return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+    return res.redirect(`${publicFrontendBase()}/login?error=auth_failed`);
   }
 };
 
