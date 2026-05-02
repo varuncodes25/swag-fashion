@@ -198,13 +198,22 @@ const getGoogleAuthUrl = async (req, res) => {
   try {
     console.log("📡 Backend generating Google URL");
     
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+    if (!clientId?.trim() || !redirectUri?.trim()) {
+      return res.status(500).json({
+        success: false,
+        message: "Google OAuth is not configured (GOOGLE_CLIENT_ID / GOOGLE_REDIRECT_URI).",
+      });
+    }
+
     const params = new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-      response_type: 'code',
-      scope: 'profile email',
-      access_type: 'offline',
-      prompt: 'consent'
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "offline",
+      prompt: "consent select_account",
     });
 
     const redirectUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

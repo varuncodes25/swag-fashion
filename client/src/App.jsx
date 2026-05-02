@@ -27,6 +27,7 @@ import FaqPage from "./components/FaqPage";
 import AboutPage from "./components/AboutPage";
 import ForgotPassword from "./components/ForgotPassword";
 import ResetPassword from "./components/ResetPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 import TermsAndConditions from "./components/TermsAndConditions";
 import CategoryPage from "./pages/CategoryPage";
 import OrderDetails from "./components/order/OrderDetails";
@@ -127,6 +128,14 @@ export default function App() {
       element: (
         <ProtectedRoute requireAuth={false}>
           <RootLayout children={<ResetPassword />} />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/verify-email/:token",
+      element: (
+        <ProtectedRoute requireAuth={false}>
+          <RootLayout children={<VerifyEmail />} />
         </ProtectedRoute>
       ),
     },

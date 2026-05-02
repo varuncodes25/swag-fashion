@@ -55,6 +55,23 @@ export const verifyEmail = createAsyncThunk(
   },
 );
 
+// 3b. RESEND VERIFICATION (login page)
+export const resendVerificationEmail = createAsyncThunk(
+  "auth/resendVerificationEmail",
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("/resend-verification", { email });
+      return response.data;
+    } catch (error) {
+      const errorData = error.response?.data || {};
+      return rejectWithValue({
+        message: errorData.message || "Could not resend verification email",
+        errors: errorData.errors || {},
+      });
+    }
+  },
+);
+
 // 4. REFRESH TOKEN - FIXED
 export const refreshToken = createAsyncThunk(
   "auth/refreshToken",
@@ -675,7 +692,10 @@ const authSlice = createSlice({
         state.signupLoading = false;
         state.signupSuccess = true;
         state.loading = false;
-        state.message = action.payload.message || "Registration successful!";
+        state.message =
+          action.payload?.message ||
+          action.payload?.data?.message ||
+          "Registration successful!";
         state.fieldErrors = {};
 
         if (action.payload.data?.token) {

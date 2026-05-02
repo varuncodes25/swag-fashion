@@ -1,91 +1,86 @@
-// filename: sendEmail.js
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-// Gmail transporter setup with TLS fix
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS, // Use App Password
+    pass: process.env.GMAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false, // ✅ IMPORTANT: This fixes self-signed certificate error
+    rejectUnauthorized: false,
   },
-  // Connection timeout settings
-  connectionTimeout: 60000, // 60 seconds
-  greetingTimeout: 30000,   // 30 seconds
-  socketTimeout: 60000,     // 60 seconds
+  connectionTimeout: 60000,
+  greetingTimeout: 30000,
+  socketTimeout: 60000,
 });
 
-// Send mail function
+/**
+ * Gmail SMTP. Set GMAIL_USER + GMAIL_PASS (16-char App Password, 2FA on).
+ *
+ * Pehle yahan `transporter.verify()` har email se pehle chalta tha — bahut hosting /
+ * firewall par verify fail ho jata hai aur mail "trigger hi nahi" hoti thi.
+ * Debug ke liye: .env mein SMTP_VERIFY=true (optional).
+ */
 const sendMail = async (toEmail, subject, htmlContent) => {
-  try {
-    // Verify connection first
-    await transporter.verify();
-    console.log("✅ SMTP connection verified");
-    
-    const info = await transporter.sendMail({
-      from: `"Swag Fashion" <${process.env.GMAIL_USER}>`,
-      to: toEmail,
-      subject: subject,
-      text: htmlContent.replace(/<\/?[^>]+(>|$)/g, ""), // Plain text version
-      html: htmlContent,
-    });
+  const user = process.env.GMAIL_USER?.trim();
+  const pass = process.env.GMAIL_PASS?.trim();
+  if (!user || !pass) {
+    const err = new Error(
+      "Gmail not configured: set GMAIL_USER and GMAIL_PASS (Google App Password).",
+    );
+    err.code = "EMAIL_NOT_CONFIGURED";
+    throw err;
+  }
 
-    console.log("✅ Email sent successfully!");
-    console.log("📨 Message ID:", info.messageId);
-    console.log("📬 To:", toEmail);
-    return info;
-    
-  } catch (error) {
-    console.error("❌ Failed to send email:");
-    console.error("Error Code:", error.code);
-    console.error("Error Message:", error.message);
-    
-    // Specific error handling
-    if (error.code === 'EAUTH') {
-      console.error("❌ Authentication failed - Check your GMAIL_USER and GMAIL_PASS");
-      console.error("💡 Make sure you're using App Password, not regular Gmail password");
+  const mailOptions = {
+    from: `"Swag Fashion" <${user}>`,
+    to: toEmail,
+    subject,
+    text: htmlContent.replace(/<\/?[^>]+(>|$)/g, ""),
+    html: htmlContent,
+  };
+
+  try {
+    if (process.env.SMTP_VERIFY === "true") {
+      await transporter.verify();
+      console.log("SMTP verify OK");
     }
-    
-    if (error.code === 'ESOCKET') {
-      console.error("❌ Connection error - Adding more TLS options...");
-      
-      // Retry with different TLS options
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent:", info.messageId, "to:", toEmail);
+    return info;
+  } catch (error) {
+    console.error("sendMail failed:", error.code, error.message);
+    if (error.code === "EAUTH") {
+      console.error(
+        "Gmail auth failed — use an App Password (Google Account → Security → 2-Step → App passwords), not your normal login password.",
+      );
+    }
+
+    // Fallback: explicit smtp.gmail.com (kabhi service:'gmail' verify ke bina theek chal jata hai)
+    if (
+      error.code === "ESOCKET" ||
+      error.code === "ETIMEDOUT" ||
+      error.code === "ECONNRESET"
+    ) {
       try {
-        console.log("🔄 Retrying with different TLS settings...");
-        
-        const backupTransporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.GMAIL_USER,
-            pass: process.env.GMAIL_PASS,
-          },
-          tls: {
-            rejectUnauthorized: false,
-            ciphers: 'SSLv3' // Add cipher option
-          },
-          secure: false, // Try with secure false
-          port: 587,     // Explicit port
+        const fallback = nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: { user, pass },
+          tls: { rejectUnauthorized: false },
         });
-        
-        const info = await backupTransporter.sendMail({
-          from: `"Swag Fashion" <${process.env.GMAIL_USER}>`,
-          to: toEmail,
-          subject: subject,
-          html: htmlContent,
-        });
-        
-        console.log("✅ Email sent on retry!");
+        const info = await fallback.sendMail(mailOptions);
+        console.log("Email sent (fallback 587):", info.messageId);
         return info;
-        
-      } catch (retryError) {
-        console.error("❌ Retry also failed:", retryError.message);
+      } catch (fallbackErr) {
+        console.error("sendMail fallback failed:", fallbackErr.message);
       }
     }
-    
-    throw error; // Re-throw so controller can handle it
+
+    throw error;
   }
 };
 

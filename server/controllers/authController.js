@@ -17,6 +17,13 @@ const {
 } = require("../utils/handlar/ApiError");
 const { default: mongoose } = require("mongoose");
 
+const escapeHtml = (s) =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 // ============ USER SIGNUP ============
 const signup = asyncHandler(async (req, res, next) => {
   try {
@@ -28,7 +35,6 @@ const signup = asyncHandler(async (req, res, next) => {
       return next(new DuplicateError("Email"));
     }
 
-    // ✅ FIX 1: Check if phone number already exists (if provided)
     if (phone) {
       const existingPhone = await userRepository.findByPhone(phone);
       if (existingPhone) {
@@ -36,42 +42,67 @@ const signup = asyncHandler(async (req, res, next) => {
       }
     }
 
-    // Create new user with phone (null if not provided)
-    const user = await userRepository.create({
-      name,
-      email,
-      phone: phone || null, // ✅ FIX 2: null set karo agar phone nahi diya
-      password,
-    });
+    const userPayload = { name, email, password };
+    if (phone) {
+      userPayload.phone = phone;
+    }
+    const user = await userRepository.create(userPayload);
 
-    // Generate email verification token
     const verificationToken = user.generateEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 
-    // Send verification email (uncomment when email service ready)
-    // const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-    // await sendMail(
-    //   email,
-    //   "Verify Your Email - Swag Fashion",
-    //   `<h2>Welcome to Swag Fashion! 🎉</h2>
-    //    <p>Hi ${name},</p>
-    //    <p>Please verify your email address:</p>
-    //    <a href="${verificationLink}">Verify Email</a>`
-    // );
+    const frontendBase = (process.env.FRONTEND_URL || "").replace(/\/$/, "");
+    const verificationLink = `${frontendBase}/verify-email/${verificationToken}`;
 
-    // Send welcome email (uncomment when email service ready)
-    // const userHtml = welcomeEmailTemplate(
-    //   name,
-    //   process.env.FRONTEND_URL,
-    //   process.env.SUPPORT_EMAIL
-    // );
-    // await sendMail(email, "🎉 Welcome to Swag Fashion!", userHtml);
+    let verificationEmailSent = false;
+    const hasGmail = Boolean(process.env.GMAIL_USER && process.env.GMAIL_PASS);
 
-    // ✅ Success response with encryption
+    if (hasGmail) {
+      try {
+        const safeName = escapeHtml(name);
+        await sendMail(
+          email,
+          "Verify your email — Swag Fashion",
+          `<h2>Welcome to Swag Fashion</h2>
+           <p>Hi ${safeName},</p>
+           <p>Please verify your email address (link valid 24 hours):</p>
+           <p><a href="${verificationLink}">Verify email</a></p>
+           <p>If the button does not work, copy this URL:<br/>${verificationLink}</p>`,
+        );
+        verificationEmailSent = true;
+      } catch (mailErr) {
+        console.error("Signup: verification email failed:", mailErr.message);
+      }
+
+      if (verificationEmailSent) {
+        try {
+          const support = process.env.SUPPORT_EMAIL || process.env.GMAIL_USER;
+          const userHtml = welcomeEmailTemplate(
+            name,
+            frontendBase || "https://swagfashion.in",
+            support,
+          );
+          await sendMail(email, "Welcome to Swag Fashion", userHtml);
+        } catch (welcomeErr) {
+          console.error("Signup: welcome email failed:", welcomeErr.message);
+        }
+      }
+    } else {
+      console.warn(
+        "Signup: GMAIL_USER / GMAIL_PASS not set — no verification email sent.",
+      );
+    }
+
+    const message = verificationEmailSent
+      ? "Registration successful. Check your inbox for the verification link."
+      : hasGmail
+        ? "Registration successful, but the verification email could not be sent. Try forgot-password or contact support."
+        : "Registration successful. Set GMAIL_USER and GMAIL_PASS on the server to enable verification emails.";
+
     const response = new ApiResponse(
       201,
-      { userId: user._id },
-      "Registration successful! Please verify your email.",
+      { userId: user._id, verificationEmailSent },
+      message,
     );
 
     return res.status(201).json(await encryptResponse(response));
@@ -105,6 +136,84 @@ const verifyEmail = asyncHandler(async (req, res, next) => {
       "Email verified successfully! You can now login.",
     );
     return res.json(await encryptResponse(response));
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ============ RESEND VERIFICATION EMAIL ============
+const resendVerificationEmail = asyncHandler(async (req, res, next) => {
+  try {
+    const raw = req.body?.email;
+    const email = typeof raw === "string" ? raw.toLowerCase().trim() : "";
+    if (!email) {
+      return next(new ValidationError({ email: "Email is required" }));
+    }
+
+    const generic = new ApiResponse(
+      200,
+      null,
+      "If an unverified account exists for this email, a new verification link was sent.",
+    );
+
+    const user = await userRepository.findByEmail(email);
+    if (!user || user.isEmailVerified) {
+      return res.json(await encryptResponse(generic));
+    }
+
+    if (user.provider !== "local") {
+      return res.json(await encryptResponse(generic));
+    }
+
+    const token = await userRepository.generateVerificationToken(user._id);
+    if (!token) {
+      return res.json(await encryptResponse(generic));
+    }
+
+    const frontendBase = (process.env.FRONTEND_URL || "").replace(/\/$/, "");
+    const link = `${frontendBase}/verify-email/${token}`;
+    const safeName = escapeHtml(user.name);
+
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+      console.warn("resend-verification: Gmail not configured");
+      return res.status(503).json(
+        await encryptResponse(
+          new ApiResponse(
+            503,
+            null,
+            "Email is not configured on the server. Ask the administrator to set GMAIL_USER and GMAIL_PASS.",
+          ),
+        ),
+      );
+    }
+
+    try {
+      await sendMail(
+        email,
+        "Verify your email — Swag Fashion",
+        `<h2>Email verification</h2>
+         <p>Hi ${safeName},</p>
+         <p>Use this link to verify (valid 24 hours):</p>
+         <p><a href="${link}">Verify email</a></p>
+         <p>If the link does not work, copy:<br/>${link}</p>`,
+      );
+      return res.json(
+        await encryptResponse(
+          new ApiResponse(200, null, "Verification email sent. Check your inbox."),
+        ),
+      );
+    } catch (mailErr) {
+      console.error("resend-verification sendMail:", mailErr.message);
+      return res.status(503).json(
+        await encryptResponse(
+          new ApiResponse(
+            503,
+            null,
+            "Could not send email right now. Try again in a few minutes or check server mail settings.",
+          ),
+        ),
+      );
+    }
   } catch (error) {
     next(error);
   }
@@ -177,6 +286,18 @@ const login = asyncHandler(async (req, res, next) => {
           : "Too many failed attempts. Account locked for 30 minutes.";
 
       return next(new UnauthorizedError(message));
+    }
+
+    if (
+      process.env.SKIP_EMAIL_VERIFICATION_FOR_LOGIN !== "true" &&
+      user.provider === "local" &&
+      !user.isEmailVerified
+    ) {
+      return next(
+        new UnauthorizedError(
+          'Please verify your email before signing in. Use "Resend verification email" below if you need a new link.',
+        ),
+      );
     }
 
     // Reset login attempts
@@ -397,20 +518,44 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
       return res.json(await encryptResponse(response));
     }
 
-    // Generate password reset token
     const resetToken = await userRepository.generateResetToken(user._id);
+    const frontendBase = (process.env.FRONTEND_URL || "").replace(/\/$/, "");
+    const resetLink = `${frontendBase}/reset-password/${resetToken}`;
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_PASS) {
+      console.warn("forgot-password: Gmail not configured");
+      return res.status(503).json(
+        await encryptResponse(
+          new ApiResponse(
+            503,
+            null,
+            "Password reset email is not available (mail not configured on server).",
+          ),
+        ),
+      );
+    }
 
-    await sendMail(
-      user.email,
-      "Password Reset - Swag Fashion",
-      `<p>Click below to reset your password:</p>
-       <a href="${resetLink}">Reset Password</a>
-       <p>This link expires in 15 minutes.</p>`,
-    );
+    try {
+      await sendMail(
+        user.email,
+        "Password reset — Swag Fashion",
+        `<p>Click below to reset your password (expires in 15 minutes):</p>
+         <p><a href="${resetLink}">Reset password</a></p>
+         <p>If the link does not work, copy this URL:<br/>${resetLink}</p>`,
+      );
+    } catch (mailErr) {
+      console.error("forgot-password sendMail:", mailErr.message);
+      return res.status(503).json(
+        await encryptResponse(
+          new ApiResponse(
+            503,
+            null,
+            "Could not send reset email. Try again later or contact support.",
+          ),
+        ),
+      );
+    }
 
-    // ✅ Success response with encryption
     const response = new ApiResponse(200, null, "Password reset email sent");
     return res.json(await encryptResponse(response));
   } catch (error) {
@@ -451,17 +596,20 @@ const resetPassword = asyncHandler(async (req, res, next) => {
       );
     }
 
-    // Change password
     await userRepository.changePassword(user._id, password);
 
-    // Send confirmation email
-    await sendMail(
-      user.email,
-      "Password Reset Successful",
-      "<p>Your password has been changed successfully.</p>",
-    );
+    if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
+      try {
+        await sendMail(
+          user.email,
+          "Password changed — Swag Fashion",
+          "<p>Your password was changed successfully. If you did not do this, contact support immediately.</p>",
+        );
+      } catch (mailErr) {
+        console.error("reset-password confirmation email:", mailErr.message);
+      }
+    }
 
-    // ✅ Success response with encryption
     const response = new ApiResponse(200, null, "Password reset successfully");
     return res.json(await encryptResponse(response));
   } catch (error) {
@@ -864,6 +1012,7 @@ module.exports = {
   refreshToken,
   logout,
   verifyEmail,
+  resendVerificationEmail,
   changePassword,
   getProfile,
   updateProfile,

@@ -39,13 +39,11 @@ const userSchema = mongoose.Schema(
       select: false,
     },
 
-    // ✅ FIXED: Phone field - WITHOUT unique and sparse in schema
+    // Phone: no default — explicit `phone: null` + sparse unique index = only ONE user
+    // could exist (E11000 dup key { phone: null }). Omit field until user sets a number.
     phone: {
       type: String,
       required: false,
-      // ❌ unique: true,  // HATA DIYA
-      // ❌ sparse: true,  // HATA DIYA
-      default: null,  // null use karo, undefined nahi
       validate: {
         validator: function(v) {
           // Agar value nahi hai to validation pass
@@ -54,11 +52,11 @@ const userSchema = mongoose.Schema(
         },
         message: "Please enter a valid 10-digit Indian mobile number"
       },
-      set: function(v) {
-        // Empty string ya null ko null mein convert karo
-        if (v === '' || v === null || v === undefined) return null;
+      set: function (v) {
+        // Never persist null — unique index + phone:null caused E11000 for every 2nd user
+        if (v === "" || v === null || v === undefined) return undefined;
         return v;
-      }
+      },
     },
 
     /* ========== ROLE & STATUS ========== */
@@ -277,16 +275,14 @@ const userSchema = mongoose.Schema(
 
 userSchema.index({ email: 1 });
 
-// ✅ FIXED: Phone index with partial filter (SIRF YEH EK INDEX)
+// Unique only for real strings — null/missing excluded ($type string avoids dup { phone: null })
 userSchema.index(
-  { phone: 1 }, 
-  { 
+  { phone: 1 },
+  {
     unique: true,
-    sparse: true,
-    partialFilterExpression: {
-      phone: { $ne: null }  // Sirf non-null values unique hongi
-    }
-  }
+    name: "phone_unique_string",
+    partialFilterExpression: { phone: { $type: "string" } },
+  },
 );
 
 userSchema.index({ googleId: 1 }, { sparse: true });
