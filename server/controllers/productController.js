@@ -2,13 +2,34 @@ const Product = require("../models/Product");
 const Category = require("../models/Category");
 const cloudinary = require("cloudinary").v2;
 
-// Configure Cloudinary
-// const cloudinary = require('cloudinary').v2;
+/** Support both names: CLOUDINARY_* (docs) and CLOUD_* (Render / legacy). */
+function getCloudinaryCloudName() {
+  return (
+    process.env.CLOUDINARY_CLOUD_NAME ||
+    process.env.CLOUD_NAME ||
+    ""
+  ).trim();
+}
+function getCloudinaryApiKey() {
+  return (
+    process.env.CLOUDINARY_API_KEY ||
+    process.env.CLOUD_API_KEY ||
+    ""
+  ).trim();
+}
+function getCloudinaryApiSecret() {
+  return (
+    process.env.CLOUDINARY_API_SECRET ||
+    process.env.CLOUD_API_SECRET ||
+    ""
+  ).trim();
+}
 
+// Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: getCloudinaryCloudName(),
+  api_key: getCloudinaryApiKey(),
+  api_secret: getCloudinaryApiSecret(),
 
   // Network settings
   timeout: 120000, // 2 minutes
@@ -30,9 +51,9 @@ require("axios").defaults.timeout = 120000;
 
 function isCloudinaryConfigured() {
   return Boolean(
-    process.env.CLOUDINARY_CLOUD_NAME?.trim() &&
-      process.env.CLOUDINARY_API_KEY?.trim() &&
-      process.env.CLOUDINARY_API_SECRET?.trim(),
+    getCloudinaryCloudName() &&
+      getCloudinaryApiKey() &&
+      getCloudinaryApiSecret(),
   );
 }
 
@@ -41,7 +62,7 @@ function respondCloudinaryMissing(res) {
     success: false,
     code: "CLOUDINARY_NOT_CONFIGURED",
     message:
-      "Cloudinary is not set on this server. In Render → Environment add the same three variables as local: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET (from Cloudinary dashboard → API Keys). Then redeploy.",
+      "Cloudinary is not set on this server. Add either CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET, or the same values under CLOUD_NAME + CLOUD_API_KEY + CLOUD_API_SECRET (Render), then redeploy.",
   });
 }
 
