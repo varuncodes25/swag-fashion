@@ -46,7 +46,6 @@ const orderSchema = new mongoose.Schema(
   {
     orderNumber: {
       type: String,
-      unique: true,
       required: false,
     },
 
@@ -226,7 +225,7 @@ const orderSchema = new mongoose.Schema(
 /* =========================
    INDEXES (Performance)
 ========================= */
-orderSchema.index({ orderNumber: 1 }, { unique: true });
+// orderNumber: unique index comes from field `unique: true` only (avoid duplicate with schema.index)
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ "shippingAddress.phone": 1 });

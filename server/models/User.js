@@ -273,7 +273,7 @@ const userSchema = mongoose.Schema(
    INDEXES - Performance Optimization (FIXED)
 ===================================================== */
 
-userSchema.index({ email: 1 });
+// email: unique index from field `unique: true` only — do not duplicate with schema.index()
 
 // Unique only for real strings — null/missing excluded ($type string avoids dup { phone: null })
 userSchema.index(
@@ -285,8 +285,7 @@ userSchema.index(
   },
 );
 
-userSchema.index({ googleId: 1 }, { sparse: true });
-userSchema.index({ facebookId: 1 }, { sparse: true });
+// googleId / facebookId: sparse+unique on field — no duplicate schema.index()
 userSchema.index({ createdAt: -1 });
 userSchema.index({ "deviceInfo.deviceId": 1 });
 

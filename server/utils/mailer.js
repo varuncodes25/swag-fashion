@@ -1,199 +1,138 @@
+// utils/sendMail.js
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
-/** auto | gmail | brevo — default auto = Gmail first if keys exist, else Brevo */
-function mailProvider() {
-  return (process.env.MAIL_PROVIDER || "auto").toLowerCase().trim();
-}
-
-function getBrevoAuth() {
-  const user = process.env.BREVO_USER?.trim() || "";
-  const pass = process.env.BREVO_SMTP_KEY?.trim() || "";
-  return { user, pass };
-}
-
-function brevoKeysPresent() {
-  const { user, pass } = getBrevoAuth();
-  return Boolean(user && pass);
-}
-
+// ✅ Get Gmail credentials
 function getGmailAuth() {
   const user = process.env.GMAIL_USER?.trim() || "";
   let pass = process.env.GMAIL_PASS?.trim() || "";
   if (pass) {
-    pass = pass.replace(/\s+/g, "");
+    pass = pass.replace(/\s+/g, ""); // Remove spaces from app password
   }
   return { user, pass };
 }
 
-function gmailKeysPresent() {
+// ✅ Check if configured
+function isConfigured() {
   const { user, pass } = getGmailAuth();
   return Boolean(user && pass);
 }
 
-function createBrevoBundle() {
-  const { user, pass } = getBrevoAuth();
-  return {
-    kind: "brevo",
-    transport: nodemailer.createTransport({
-      host: "smtp-relay.brevo.com",
-      port: 587,
-      secure: false,
-      auth: { user, pass },
-      connectionTimeout: 60000,
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
-    }),
-  };
-}
-
-function createGmailBundle() {
+// ✅ Create Gmail transporter
+function createTransporter() {
   const { user, pass } = getGmailAuth();
+  
   if (!user || !pass) {
+    console.error("❌ Gmail credentials missing. Set GMAIL_USER and GMAIL_PASS in .env");
     return null;
   }
-  return {
-    kind: "gmail",
-    transport: nodemailer.createTransport({
-      service: "gmail",
-      auth: { user, pass },
-      tls: { rejectUnauthorized: false },
-      connectionTimeout: 60000,
-      greetingTimeout: 30000,
-      socketTimeout: 60000,
-    }),
-  };
+
+  // Check if password length is 16 (App Password)
+  if (pass.length !== 16) {
+    console.warn(
+      "⚠️ Warning: GMAIL_PASS length is not 16. " +
+      "Google App Passwords are exactly 16 characters. " +
+      "Get one from: https://myaccount.google.com/apppasswords"
+    );
+  }
+
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
+  });
 }
 
-function createTransporter() {
-  const mode = mailProvider();
-
-  if (mode === "gmail") {
-    return createGmailBundle();
-  }
-
-  if (mode === "brevo") {
-    return brevoKeysPresent() ? createBrevoBundle() : null;
-  }
-
-  // auto: Gmail first (no MAIL_PROVIDER needed), else Brevo if configured
-  if (gmailKeysPresent()) {
-    return createGmailBundle();
-  }
-  if (brevoKeysPresent()) {
-    return createBrevoBundle();
-  }
-  return null;
-}
-
-function getFromAddress(smtpKind) {
+// ✅ Get from address
+function getFromAddress() {
   const explicit = process.env.MAIL_FROM?.trim();
-  if (explicit) {
-    return explicit;
-  }
-  const gmail = process.env.GMAIL_USER?.trim();
-  if (gmail) {
-    return gmail;
-  }
-  if (smtpKind === "brevo") {
-    return getBrevoAuth().user;
-  }
-  return gmail || "noreply@example.com";
+  if (explicit) return explicit;
+  return process.env.GMAIL_USER?.trim() || "noreply@example.com";
 }
 
-function isConfigured() {
-  const mode = mailProvider();
-  if (mode === "gmail") {
-    return gmailKeysPresent();
-  }
-  if (mode === "brevo") {
-    return brevoKeysPresent();
-  }
-  return brevoKeysPresent() || gmailKeysPresent();
-}
-
-/**
- * Transactional mail: Brevo and/or Gmail via .env.
- *
- * MAIL_PROVIDER:
- *   - auto (default): Gmail if GMAIL_* set, else Brevo — no variable needed for Gmail-only
- *   - gmail: only GMAIL_USER + GMAIL_PASS (ignores Brevo keys)
- *   - brevo: only BREVO_USER + BREVO_SMTP_KEY
- *
- * Optional: MAIL_FROM=… (Brevo verified sender)
- */
+// ✅ Send email function
 const sendMail = async (toEmail, subject, htmlContent) => {
-  const bundle = createTransporter();
-  if (!bundle) {
+  const transporter = createTransporter();
+  
+  if (!transporter) {
     const err = new Error(
-      "Mail not configured for MAIL_PROVIDER=" +
-        mailProvider() +
-        ". Set the matching SMTP vars in .env.",
+      "Gmail not configured. Set GMAIL_USER and GMAIL_PASS in .env file.\n" +
+      "Get App Password: https://myaccount.google.com/apppasswords"
     );
     err.code = "EMAIL_NOT_CONFIGURED";
     throw err;
   }
 
-  const { kind, transport } = bundle;
-  const fromAddr = getFromAddress(kind);
+  // Create plain text version from HTML
+  const textContent = htmlContent.replace(/<\/?[^>]+(>|$)/g, "");
+
+  const fromAddr = getFromAddress();
+  const fromName = process.env.MAIL_FROM_NAME || "Swag Fashion";
 
   const mailOptions = {
-    from: `"Swag Fashion" <${fromAddr}>`,
+    from: `"${fromName}" <${fromAddr}>`,
     to: toEmail,
-    subject,
-    text: htmlContent.replace(/<\/?[^>]+(>|$)/g, ""),
+    subject: subject,
+    text: textContent,
     html: htmlContent,
   };
 
   try {
+    // Verify connection first (optional)
     if (process.env.SMTP_VERIFY === "true") {
-      await transport.verify();
-      console.log("SMTP verify OK (" + kind + ")");
+      await transporter.verify();
+      console.log("✅ SMTP connection verified");
     }
 
-    const info = await transport.sendMail(mailOptions);
-    console.log("Email sent (" + kind + "):", info.messageId, "→", toEmail);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Email sent to ${toEmail}:`, info.messageId);
     return info;
   } catch (error) {
-    console.error("sendMail failed (" + kind + "):", error.code, error.message);
-    if (error.code === "EAUTH" && kind === "gmail") {
+    console.error("❌ sendMail failed:", error.code, error.message);
+    
+    if (error.code === "EAUTH") {
       console.error(
-        "Gmail EAUTH: use a 16-char App Password with 2-Step ON, or set MAIL_PROVIDER=brevo to use Brevo only.",
+        "\n🔐 Gmail Authentication Failed!\n" +
+        "1. Enable 2-Step Verification in your Google Account\n" +
+        "2. Generate App Password: https://myaccount.google.com/apppasswords\n" +
+        "3. Copy the 16-character password to .env as GMAIL_PASS\n" +
+        "4. Make sure GMAIL_USER is your full email address\n"
       );
     }
-    if (error.code === "EAUTH" && kind === "brevo") {
+    
+    if (["ESOCKET", "ETIMEDOUT", "ECONNRESET"].includes(error.code)) {
       console.error(
-        "Brevo EAUTH: check BREVO_USER and BREVO_SMTP_KEY in Brevo → SMTP & API.",
+        "⚠️ Network issue - Gmail SMTP may be blocked.\n" +
+        "If on Render/Vercel, outbound SMTP ports might be blocked.\n" +
+        "Consider using Brevo or Gmail API instead."
       );
     }
-
-    if (
-      kind === "gmail" &&
-      (error.code === "ESOCKET" ||
-        error.code === "ETIMEDOUT" ||
-        error.code === "ECONNRESET")
-    ) {
-      try {
-        const { user, pass } = getGmailAuth();
-        const fallback = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          auth: { user, pass },
-          tls: { rejectUnauthorized: false },
-        });
-        const info = await fallback.sendMail(mailOptions);
-        console.log("Email sent (gmail fallback 587):", info.messageId);
-        return info;
-      } catch (fallbackErr) {
-        console.error("sendMail gmail fallback failed:", fallbackErr.message);
-      }
-    }
-
+    
     throw error;
   }
 };
 
+// ✅ Test function
+const testConnection = async () => {
+  const transporter = createTransporter();
+  if (!transporter) return false;
+  
+  try {
+    await transporter.verify();
+    console.log("✅ Gmail SMTP connection ready");
+    return true;
+  } catch (error) {
+    console.error("❌ Gmail SMTP connection failed:", error.message);
+    return false;
+  }
+};
+
 sendMail.isConfigured = isConfigured;
+sendMail.testConnection = testConnection;
 
 module.exports = sendMail;

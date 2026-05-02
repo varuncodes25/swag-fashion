@@ -446,6 +446,11 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
       );
     } catch (mailErr) {
       console.error("forgot-password sendMail:", mailErr.message);
+      if (mailErr.code === "EAUTH") {
+        console.error(
+          "forgot-password: fix GMAIL_USER + GMAIL_PASS (16-char App Password) — see server logs / https://myaccount.google.com/apppasswords",
+        );
+      }
       return res.status(503).json(
         await encryptResponse(
           new ApiResponse(
