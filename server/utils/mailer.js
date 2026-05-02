@@ -3,10 +3,26 @@ require("dotenv").config();
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
-let warnedRenderWithoutBrevo = false;
+function isRenderHost() {
+  return process.env.RENDER === "true";
+}
+
+/** Paid Render / custom host: outbound SMTP allowed — set on Render env if Gmail SMTP works */
+function allowGmailSmtpOnRender() {
+  return process.env.ALLOW_GMAIL_SMTP_ON_RENDER === "true";
+}
+
+/** Brevo v3 transactional key (often starts with `xkeysib-`). NOT the SMTP password. */
+function getBrevoApiKey() {
+  return (
+    process.env.BREVO_API_KEY?.trim() ||
+    process.env.SENDINBLUE_API_KEY?.trim() ||
+    ""
+  );
+}
 
 function brevoApiKeyReady() {
-  return Boolean(process.env.BREVO_API_KEY?.trim());
+  return Boolean(getBrevoApiKey());
 }
 
 /** Sender must be verified in Brevo (Senders & IP → Domains / single sender). */
@@ -25,7 +41,7 @@ function getBrevoSenderEmail() {
  * @see https://developers.brevo.com/reference/sendtransacemail
  */
 async function sendViaBrevoApi(toEmail, subject, htmlContent, textContent) {
-  const apiKey = process.env.BREVO_API_KEY.trim();
+  const apiKey = getBrevoApiKey();
   const fromEmail = getBrevoSenderEmail();
   if (!fromEmail) {
     const err = new Error(
@@ -55,11 +71,19 @@ async function sendViaBrevoApi(toEmail, subject, htmlContent, textContent) {
 
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
+    console.error("[mailer] Brevo API HTTP", res.status, body);
+    const hint =
+      res.status === 401
+        ? " Wrong or SMTP password used as API key — use “Transactional” / v3 API key (xkeysib-…), Brevo → SMTP & API → API keys."
+        : res.status === 400
+          ? " Often: sender not verified — Brevo → Senders: MAIL_FROM must match a verified email/domain."
+          : "";
     const msg =
-      typeof body.message === "string"
-        ? body.message
-        : JSON.stringify(body) || `HTTP ${res.status}`;
-    const err = new Error(msg);
+      (typeof body.message === "string" ? body.message : null) ||
+      (typeof body.code === "string" ? body.code : null) ||
+      JSON.stringify(body) ||
+      `HTTP ${res.status}`;
+    const err = new Error(String(msg) + (hint ? " " + hint : ""));
     err.code = "BREVO_API_ERROR";
     err.status = res.status;
     throw err;
@@ -83,7 +107,14 @@ function gmailKeysPresent() {
   return Boolean(user && pass);
 }
 
+/**
+ * On Render (default): only Brevo API counts as configured — avoids ETIMEDOUT on blocked Gmail SMTP.
+ * Set ALLOW_GMAIL_SMTP_ON_RENDER=true if your plan allows SMTP and you use Gmail only.
+ */
 function isConfigured() {
+  if (isRenderHost() && !allowGmailSmtpOnRender()) {
+    return brevoApiKeyReady();
+  }
   return brevoApiKeyReady() || gmailKeysPresent();
 }
 
@@ -102,7 +133,7 @@ function createTransporter() {
 
   if (pass.length !== 16) {
     console.warn(
-      "⚠️ GMAIL_PASS length is not 16. Google App Passwords are 16 characters: https://myaccount.google.com/apppasswords",
+      "GMAIL_PASS length is not 16. Google App Passwords are 16 characters: https://myaccount.google.com/apppasswords",
     );
   }
 
@@ -118,25 +149,27 @@ function createTransporter() {
   });
 }
 
+function assertNotBlockedGmailSmtpOnRender() {
+  if (
+    isRenderHost() &&
+    !allowGmailSmtpOnRender() &&
+    gmailKeysPresent() &&
+    !brevoApiKeyReady()
+  ) {
+    const err = new Error(
+      "On Render add BREVO_API_KEY and MAIL_FROM (Brevo-verified). Gmail SMTP is blocked on the free web service.",
+    );
+    err.code = "RENDER_USE_BREVO_API";
+    throw err;
+  }
+}
+
 /**
- * 1) Brevo HTTPS API if BREVO_API_KEY (Render-safe)
- * 2) Else Gmail SMTP if GMAIL_USER + GMAIL_PASS (local / paid hosts)
+ * 1) Brevo HTTPS API if BREVO_API_KEY (works on Render free)
+ * 2) Else Gmail SMTP (local, or Render only if ALLOW_GMAIL_SMTP_ON_RENDER=true)
  */
 const sendMail = async (toEmail, subject, htmlContent) => {
   const textContent = htmlContent.replace(/<\/?[^>]+(>|$)/g, "");
-
-  if (
-    process.env.RENDER === "true" &&
-    gmailKeysPresent() &&
-    !brevoApiKeyReady() &&
-    !warnedRenderWithoutBrevo
-  ) {
-    warnedRenderWithoutBrevo = true;
-    console.error(
-      "[mailer] Render: set BREVO_API_KEY + MAIL_FROM (Brevo-verified). " +
-        "Free tier blocks Gmail SMTP → ETIMEDOUT until API mail is configured.",
-    );
-  }
 
   if (brevoApiKeyReady()) {
     try {
@@ -147,23 +180,32 @@ const sendMail = async (toEmail, subject, htmlContent) => {
         textContent,
       );
     } catch (apiErr) {
-      if (gmailKeysPresent()) {
+      const canFallbackGmail =
+        gmailKeysPresent() &&
+        (!isRenderHost() || allowGmailSmtpOnRender());
+      if (canFallbackGmail) {
         console.warn(
           "Brevo API failed, falling back to Gmail SMTP:",
           apiErr.message,
         );
       } else {
-        console.error("Brevo API send failed:", apiErr.message);
+        if (isRenderHost() && gmailKeysPresent()) {
+          console.error(
+            "Brevo API failed on Render; Gmail SMTP fallback disabled (blocked). Fix Brevo key/sender.",
+            apiErr.message,
+          );
+        }
         throw apiErr;
       }
     }
   }
 
+  assertNotBlockedGmailSmtpOnRender();
+
   const transporter = createTransporter();
   if (!transporter) {
     const err = new Error(
-      "Mail not configured. Set BREVO_API_KEY (+ MAIL_FROM verified in Brevo) for Render, " +
-        "or GMAIL_USER + GMAIL_PASS for Gmail SMTP.",
+      "Mail not configured. Render: BREVO_API_KEY + MAIL_FROM. Local: GMAIL_USER + GMAIL_PASS or Brevo.",
     );
     err.code = "EMAIL_NOT_CONFIGURED";
     throw err;
@@ -194,12 +236,12 @@ const sendMail = async (toEmail, subject, htmlContent) => {
 
     if (error.code === "EAUTH") {
       console.error(
-        "Gmail EAUTH: use 16-char App Password with 2-Step ON, or use BREVO_API_KEY on Render.",
+        "Gmail EAUTH: 16-char App Password + 2-Step, or use BREVO_API_KEY on Render.",
       );
     }
     if (["ESOCKET", "ETIMEDOUT", "ECONNRESET"].includes(error.code)) {
       console.error(
-        "SMTP connection issue (often blocked on Render free). Prefer BREVO_API_KEY.",
+        "SMTP blocked or unreachable (Render free → use BREVO_API_KEY).",
       );
     }
 
@@ -211,7 +253,7 @@ const testConnection = async () => {
   if (brevoApiKeyReady()) {
     try {
       const res = await fetch("https://api.brevo.com/v3/account", {
-        headers: { "api-key": process.env.BREVO_API_KEY.trim() },
+        headers: { "api-key": getBrevoApiKey() },
       });
       if (res.ok) {
         console.log("Brevo API key OK");
@@ -223,6 +265,13 @@ const testConnection = async () => {
       console.error("Brevo API check error:", e.message);
       return false;
     }
+  }
+
+  if (isRenderHost() && !allowGmailSmtpOnRender()) {
+    console.warn(
+      "testConnection: on Render set BREVO_API_KEY (Gmail SMTP verify skipped).",
+    );
+    return false;
   }
 
   const transporter = createTransporter();
@@ -238,7 +287,39 @@ const testConnection = async () => {
   }
 };
 
+/** Safe booleans for debugging (no secrets). */
+function getMailDebugInfo() {
+  const from = getBrevoSenderEmail();
+  return {
+    onRender: isRenderHost(),
+    allowGmailSmtpOnRender: allowGmailSmtpOnRender(),
+    brevoApiKeySet: brevoApiKeyReady(),
+    /** Must match a sender verified in Brevo (Senders & IP). */
+    resolvedFromEmail: from || null,
+    mailConfigured: isConfigured(),
+  };
+}
+
+function logMailStartupHint() {
+  if (!isRenderHost() || allowGmailSmtpOnRender()) return;
+  if (!brevoApiKeyReady()) {
+    console.error(
+      "[mailer] Render: set BREVO_API_KEY (v3 key from Brevo → SMTP & API → API keys, not SMTP password).",
+    );
+    return;
+  }
+  if (!getBrevoSenderEmail()) {
+    console.error(
+      "[mailer] Render: set MAIL_FROM (or BREVO_SENDER_EMAIL) to the same email you verified in Brevo → Senders.",
+    );
+    return;
+  }
+  console.log("[mailer] Brevo HTTPS mail path ready for:", getBrevoSenderEmail());
+}
+
 sendMail.isConfigured = isConfigured;
 sendMail.testConnection = testConnection;
+sendMail.getMailDebugInfo = getMailDebugInfo;
+sendMail.logMailStartupHint = logMailStartupHint;
 
 module.exports = sendMail;

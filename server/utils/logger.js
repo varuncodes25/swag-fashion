@@ -10,6 +10,7 @@ if (!fs.existsSync(logDir)) {
 
 const { combine, timestamp, json, colorize, printf, errors } = format;
 const isProduction = process.env.NODE_ENV === "production";
+const onRender = process.env.RENDER === "true";
 const loggerLevel = process.env.LOG_LEVEL || (isProduction ? "info" : "http");
 
 const jsonFormat = combine(timestamp(), errors({ stack: true }), json());
@@ -49,6 +50,13 @@ if (!isProduction) {
           return `${timestamp} ${level}: ${message}${metaText}`;
         })
       ),
+    })
+  );
+} else if (onRender) {
+  // Production file-only by default — Render log stream needs stdout
+  logger.add(
+    new transports.Console({
+      format: combine(errors({ stack: true }), timestamp(), json()),
     })
   );
 }

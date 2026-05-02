@@ -459,6 +459,9 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
           "forgot-password: Brevo — check BREVO_API_KEY and MAIL_FROM (verified sender in Brevo).",
         );
       }
+      if (mailErr.code === "RENDER_USE_BREVO_API") {
+        console.error("forgot-password:", mailErr.message);
+      }
       return res.status(503).json(
         await encryptResponse(
           new ApiResponse(

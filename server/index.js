@@ -146,6 +146,19 @@ app.get("/api/monitoring/health", (req, res) => {
   });
 });
 
+/** No secrets — use to verify Brevo env on Render (key set? MAIL_FROM resolved?). */
+app.get("/api/monitoring/mail-debug", (req, res) => {
+  try {
+    const mailer = require("./utils/mailer");
+    res.json({
+      success: true,
+      data: mailer.getMailDebugInfo ? mailer.getMailDebugInfo() : {},
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 app.get("/api/monitoring/metrics", (req, res) => {
   res.json({
     success: true,
@@ -197,6 +210,11 @@ app.use(notFound);
 app.use(errorHandler);
 // Start server
 app.listen(port, () => {
+  try {
+    require("./utils/mailer").logMailStartupHint?.();
+  } catch (_) {
+    /* ignore */
+  }
   logger.info({
     type: "server_start",
     message: `Server running on PORT ${port}`,

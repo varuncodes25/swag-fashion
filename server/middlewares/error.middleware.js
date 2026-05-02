@@ -2,6 +2,30 @@
 const { ApiError } = require("../utils/handlar/ApiError");
 const { logger } = require("../utils/logger");
 
+/** Render / dev: put error details in JSON + logs. Set HIDE_ERROR_DETAILS=true on Render to turn off response extras. */
+function exposeErrorDetails() {
+  if (process.env.HIDE_ERROR_DETAILS === "true") return false;
+  return (
+    process.env.NODE_ENV === "development" ||
+    process.env.RENDER === "true"
+  );
+}
+
+function attachDebugPayload(payload, err) {
+  if (!exposeErrorDetails()) return payload;
+  return {
+    ...payload,
+    debug: {
+      name: err.name,
+      message: err.message,
+      code: err.code != null ? err.code : undefined,
+      status: err.status != null ? err.status : undefined,
+      path: err.path,
+      stack: err.stack,
+    },
+  };
+}
+
 // ✅ Main Error Handler
 const errorHandler = (err, req, res, next) => {
   let error = { ...err };
@@ -17,6 +41,19 @@ const errorHandler = (err, req, res, next) => {
     timestamp: new Date().toISOString(),
   });
 
+  if (exposeErrorDetails()) {
+    console.error(
+      "[error]",
+      req.method,
+      req.originalUrl,
+      err.name,
+      err.message,
+      err.code || "",
+      "\n",
+      err.stack || "",
+    );
+  }
+
   // 1️⃣ Mongoose Validation Errors
   if (err.name === "ValidationError") {
     const errors = [];
@@ -27,11 +64,16 @@ const errorHandler = (err, req, res, next) => {
       });
     });
     
-    return res.status(400).json({
-      success: false,
-      message: "Validation failed",
-      errors: errors
-    });
+    return res.status(400).json(
+      attachDebugPayload(
+        {
+          success: false,
+          message: "Validation failed",
+          errors: errors,
+        },
+        err,
+      ),
+    );
   }
 
   // 2️⃣ Duplicate Key Error (11000)
@@ -49,49 +91,77 @@ const errorHandler = (err, req, res, next) => {
 
   // 3️⃣ Cast Error (Invalid ID)
   if (err.name === "CastError") {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid ID format",
-      errors: [{
-        field: err.path,
-        message: `Invalid ${err.path} format`
-      }]
-    });
+    return res.status(400).json(
+      attachDebugPayload(
+        {
+          success: false,
+          message: "Invalid ID format",
+          errors: [
+            {
+              field: err.path,
+              message: `Invalid ${err.path} format`,
+            },
+          ],
+        },
+        err,
+      ),
+    );
   }
 
   // 4️⃣ JWT Errors
   if (err.name === "JsonWebTokenError") {
-    return res.status(401).json({
-      success: false,
-      message: "Invalid token",
-      errors: [{ message: "Please login again" }]
-    });
+    return res.status(401).json(
+      attachDebugPayload(
+        {
+          success: false,
+          message: "Invalid token",
+          errors: [{ message: "Please login again" }],
+        },
+        err,
+      ),
+    );
   }
 
   if (err.name === "TokenExpiredError") {
-    return res.status(401).json({
-      success: false,
-      message: "Token expired",
-      errors: [{ message: "Please login again" }]
-    });
+    return res.status(401).json(
+      attachDebugPayload(
+        {
+          success: false,
+          message: "Token expired",
+          errors: [{ message: "Please login again" }],
+        },
+        err,
+      ),
+    );
   }
 
   // 5️⃣ Custom ApiError
   if (err instanceof ApiError) {
-    return res.status(err.statusCode).json({
-      success: false,
-      message: err.message,
-      errors: err.errors
-    });
+    return res.status(err.statusCode).json(
+      attachDebugPayload(
+        {
+          success: false,
+          message: err.message,
+          errors: err.errors,
+        },
+        err,
+      ),
+    );
   }
 
   // 6️⃣ Default Server Error
-  return res.status(500).json({
-    success: false,
-    message: "Internal server error",
-    errors: [{ message: err.message }],
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack })
-  });
+  const status = Number(err.statusCode || err.status) || 500;
+  const safeStatus = status >= 400 && status < 600 ? status : 500;
+  return res.status(safeStatus).json(
+    attachDebugPayload(
+      {
+        success: false,
+        message: exposeErrorDetails() ? err.message : "Internal server error",
+        errors: [{ message: err.message }],
+      },
+      err,
+    ),
+  );
 };
 
 // ✅ 404 Not Found Middleware
