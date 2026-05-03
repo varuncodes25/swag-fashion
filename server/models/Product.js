@@ -103,7 +103,7 @@ const variantSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
-      default: 0,
+      default: 20,
     },
     reservedStock: {
       type: Number,
@@ -878,10 +878,10 @@ const productSchema = new mongoose.Schema(
 
     // ============== DIMENSIONS ==============
     productDimensions: {
-      length: { type: Number, default: 0 },
-      width: { type: Number, default: 0 },
-      height: { type: Number, default: 0 },
-      weight: { type: Number, default: 0.2 },
+      length: { type: Number, default: 30 },
+      width: { type: Number, default: 25 },
+      height: { type: Number, default: 3 },
+      weight: { type: Number, default: 0.3 },
     },
 
     // ============== STATUS ==============

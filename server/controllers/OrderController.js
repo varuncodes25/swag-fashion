@@ -20,6 +20,11 @@ const axios = require("axios");
 const Cart = require("../models/Cart");
 const { default: mongoose } = require("mongoose");
 const shipmentSchema = require("../models/shipmentSchema");
+const {
+  notifyOrderPlaced,
+  notifyAdminCodPending,
+  notifyCodOrderConfirmed,
+} = require("../utils/orderNotificationEmails");
 
 const getOrdersByUserId = async (req, res) => {
   const userId = req.id;
@@ -608,8 +613,21 @@ const updateOrderStatus = async (req, res) => {
       });
     }
 
+    const prevStatus = order.status;
     order.status = status;
     await order.save();
+
+    const nextSt = String(status || "").toUpperCase();
+    const prevSt = String(prevStatus || "").toUpperCase();
+    if (
+      order.paymentMethod === "COD" &&
+      nextSt === "CONFIRMED" &&
+      prevSt !== "CONFIRMED"
+    ) {
+      notifyCodOrderConfirmed(order).catch((err) =>
+        console.error("COD confirm mail:", err.message),
+      );
+    }
 
     return res.status(200).json({
       success: true,
@@ -1440,6 +1458,15 @@ const orderItems = await Promise.all(orderData.items.map(async (item) => {
     await session.commitTransaction();
     session.endSession();
 
+    if (order.paymentMethod === "COD") {
+      notifyAdminCodPending(order).catch((err) =>
+        console.error("COD pending admin mail:", err.message),
+      );
+    } else {
+      notifyOrderPlaced(order).catch((err) =>
+        console.error("order notification mail:", err.message),
+      );
+    }
 
     // ============ 13. SEND RESPONSE ============
     res.status(201).json({

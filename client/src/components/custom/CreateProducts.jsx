@@ -1549,7 +1549,7 @@ console.log(clothingCategory,"clothingCategory")
                         type="number"
                         min="0"
                         step="0.1"
-                        value={formData.productDimensions?.length || ""}
+                        value={formData.productDimensions?.length ?? ""}
                         onChange={(e) =>
                           updateFormData("productDimensions", {
                             ...formData.productDimensions,
@@ -1565,7 +1565,7 @@ console.log(clothingCategory,"clothingCategory")
                         type="number"
                         min="0"
                         step="0.1"
-                        value={formData.productDimensions?.width || ""}
+                        value={formData.productDimensions?.width ?? ""}
                         onChange={(e) =>
                           updateFormData("productDimensions", {
                             ...formData.productDimensions,
@@ -1581,7 +1581,7 @@ console.log(clothingCategory,"clothingCategory")
                         type="number"
                         min="0"
                         step="0.1"
-                        value={formData.productDimensions?.height || ""}
+                        value={formData.productDimensions?.height ?? ""}
                         onChange={(e) =>
                           updateFormData("productDimensions", {
                             ...formData.productDimensions,
@@ -1597,7 +1597,7 @@ console.log(clothingCategory,"clothingCategory")
                         type="number"
                         min="0"
                         step="0.01"
-                        value={formData.productDimensions?.weight || ""}
+                        value={formData.productDimensions?.weight ?? ""}
                         onChange={(e) =>
                           updateFormData("productDimensions", {
                             ...formData.productDimensions,

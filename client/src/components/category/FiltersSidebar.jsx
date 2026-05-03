@@ -21,21 +21,23 @@ import {
 } from "lucide-react";
 
 export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
-  const { slug, subSlug } = useParams();
+  const { slug } = useParams();
   const [categories, setCategories] = useState([]);
-  const [openCategory, setOpenCategory] = useState(slug);
   const [customMinPrice, setCustomMinPrice] = useState("");
   const [customMaxPrice, setCustomMaxPrice] = useState("");
 
   /* ================= FETCH CATEGORIES ================= */
   useEffect(() => {
     const fetchCategories = async () => {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/categories`);
-      setCategories(res.data);
-      setOpenCategory(slug);
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/categories`);
+        setCategories(Array.isArray(res.data) ? res.data : []);
+      } catch {
+        setCategories([]);
+      }
     };
     fetchCategories();
-  }, [slug]);
+  }, []);
 
   /* ================= APPLY CUSTOM PRICE ================= */
   const applyCustomPrice = () => {
@@ -193,26 +195,25 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
         >
           <div className="space-y-2">
             {categories.map((cat) => {
-              const isOpen = openCategory === cat.slug;
               const isActiveCategory = slug === cat.slug;
 
               return (
-                <button
+                <Link
                   key={cat.slug}
-                  onClick={() => setOpenCategory(isOpen ? null : cat.slug)}
+                  to={`/category/${cat.slug}`}
                   className={`
-            w-full flex items-center justify-between p-3 rounded-xl border
+            flex w-full items-center justify-between rounded-xl border p-3
             transition-all duration-300 group
 
             ${isActiveCategory
                       ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-primary/25 shadow-sm dark:from-blue-900/20 dark:to-indigo-900/10 dark:border-primary/30"
-                      : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"
+                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700"
                     }
           `}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`
-              w-8 h-8 rounded-lg flex items-center justify-center
+              flex h-8 w-8 items-center justify-center rounded-lg
               ${isActiveCategory
                         ? "bg-blue-100 dark:bg-primary/20"
                         : "bg-gray-100 dark:bg-gray-700"
@@ -231,9 +232,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
                       {cat.name}
                     </span>
                   </div>
-
-                  
-                </button>
+                </Link>
               );
             })}
           </div>

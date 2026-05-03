@@ -1,60 +1,113 @@
 const User = require("../models/User");
-const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
-const bcrypt = require("bcrypt");
 
 // ✅ Initialize Google OAuth Client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-// ✅ Helper function to find or create user
-const findOrCreateGoogleUser = async (payload) => {
-  const { sub: googleId, email, name, picture, email_verified } = payload;
-  
-  console.log("🔍 Finding or creating user:", { email, googleId });
+const publicFrontendBase = () =>
+  (process.env.FRONTEND_URL || process.env.CLIENT_URL || "").replace(/\/$/, "");
 
-  // Try to find user by googleId OR email
-  let user = await User.findOne({ 
-    $or: [{ googleId }, { email }] 
-  });
+const DUPLICATE_KEY_CODE = 11000;
+
+const mapDuplicateKeyMessage = (err) => {
+  const key =
+    (err.keyPattern && Object.keys(err.keyPattern)[0]) ||
+    (err.keyValue && Object.keys(err.keyValue)[0]) ||
+    "";
+  if (key === "phone") {
+    return "This phone number is already linked to another account.";
+  }
+  if (key === "email" || key === "googleId") {
+    return "An account with this email or Google profile already exists. Try signing in.";
+  }
+  return "Account could not be created because of a duplicate record. Try signing in.";
+};
+
+// ✅ Helper: find or create (handles race double-submit + duplicate keys)
+const findOrCreateGoogleUser = async (payload) => {
+  const { sub: googleId, email, name, picture, email_verified: emailVerified } = payload;
+  const emailLower = (email || "").toLowerCase().trim();
+
+  console.log("🔍 Finding or creating user:", { email: emailLower, googleId });
+
+  let user = await User.findOne({
+    $or: [{ googleId }, { email: emailLower }],
+  }).select("+googleId +password");
 
   if (!user) {
-    console.log("🆕 Creating new user:", email);
-    
-    // Create new user
- user = new User({
-  name: name || email.split('@')[0],
-  email: email,
-  googleId: googleId,
-  provider: "google",
-  isEmailVerified: email_verified || true,
-  avatar: picture || null,
-  // password: null, ← COMMENT KAR DO YA DELETE
-  lastLogin: new Date()
-});
-    
-    await user.save();
-    console.log("✅ New user created:", user._id);
+    console.log("🆕 Creating new user:", emailLower);
+    user = new User({
+      name: name || emailLower.split("@")[0],
+      email: emailLower,
+      googleId,
+      provider: "google",
+      isEmailVerified: emailVerified ?? true,
+      avatar: picture || undefined,
+      lastLogin: new Date(),
+    });
+    try {
+      await user.save();
+      console.log("✅ New user created:", user._id);
+    } catch (err) {
+      if (err.code === DUPLICATE_KEY_CODE) {
+        user = await User.findOne({
+          $or: [{ googleId }, { email: emailLower }],
+        }).select("+googleId +password");
+        if (!user) {
+          err.message = mapDuplicateKeyMessage(err);
+          throw err;
+        }
+        console.log("✅ Resolved duplicate key race, using existing user:", user._id);
+        if (!user.googleId) {
+          user.googleId = googleId;
+        }
+        if (!user.isEmailVerified && emailVerified) {
+          user.isEmailVerified = true;
+        }
+        if (!user.password) {
+          user.provider = "google";
+        }
+        user.lastLogin = new Date();
+        await user.save();
+      } else {
+        throw err;
+      }
+    }
   } else {
     console.log("📝 Updating existing user:", user._id);
-    
-    // Update existing user
+
     if (!user.googleId) {
       user.googleId = googleId;
     }
     if (!user.avatar && picture) {
       user.avatar = picture;
     }
-    if (user.provider !== 'google') {
-      user.provider = 'google';
+    // Do not flip local+password accounts to Google-only (keeps email/password login working)
+    if (!user.password) {
+      user.provider = "google";
     }
-    if (!user.isEmailVerified && email_verified) {
+    if (!user.isEmailVerified && emailVerified) {
       user.isEmailVerified = true;
     }
     user.lastLogin = new Date();
-    await user.save();
-    console.log("✅ User updated:", user._id);
+    try {
+      await user.save();
+      console.log("✅ User updated:", user._id);
+    } catch (err) {
+      if (err.code === DUPLICATE_KEY_CODE) {
+        user = await User.findOne({
+          $or: [{ googleId }, { email: emailLower }],
+        }).select("+googleId +password");
+        if (!user) {
+          err.message = mapDuplicateKeyMessage(err);
+          throw err;
+        }
+      } else {
+        throw err;
+      }
+    }
   }
-  
+
   return user;
 };
 
@@ -130,9 +183,15 @@ const googleOneTapLogin = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Google One Tap Error:", error);
-    res.status(401).json({ 
-      success: false, 
-      message: error.message || "Google login failed. Please try again." 
+    if (error.code === DUPLICATE_KEY_CODE) {
+      return res.status(409).json({
+        success: false,
+        message: mapDuplicateKeyMessage(error),
+      });
+    }
+    res.status(401).json({
+      success: false,
+      message: error.message || "Google login failed. Please try again.",
     });
   }
 };
@@ -142,13 +201,22 @@ const getGoogleAuthUrl = async (req, res) => {
   try {
     console.log("📡 Backend generating Google URL");
     
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+    if (!clientId?.trim() || !redirectUri?.trim()) {
+      return res.status(500).json({
+        success: false,
+        message: "Google OAuth is not configured (GOOGLE_CLIENT_ID / GOOGLE_REDIRECT_URI).",
+      });
+    }
+
     const params = new URLSearchParams({
-      client_id: process.env.GOOGLE_CLIENT_ID,
-      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-      response_type: 'code',
-      scope: 'profile email',
-      access_type: 'offline',
-      prompt: 'consent'
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "offline",
+      prompt: "consent select_account",
     });
 
     const redirectUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -175,7 +243,7 @@ const googleCallback = async (req, res) => {
     const { code } = req.query;
     
     if (!code) {
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=no_code`);
+      return res.redirect(`${publicFrontendBase()}/login?error=no_code`);
     }
 
     console.log("📡 Received Google callback with code");
@@ -216,18 +284,18 @@ const googleCallback = async (req, res) => {
       console.log("✅ User authenticated successfully:", user.email);
 
       // ✅ Redirect to frontend with tokens
-      const redirectUrl = `${process.env.FRONTEND_URL}/auth/callback?token=${accessToken}&refreshToken=${refreshToken}`;
+      const redirectUrl = `${publicFrontendBase()}/auth/callback?token=${accessToken}&refreshToken=${refreshToken}`;
       
       return res.redirect(redirectUrl);
       
     } catch (tokenError) {
       console.error("❌ Token exchange failed:", tokenError);
-      return res.redirect(`${process.env.FRONTEND_URL}/login?error=token_exchange_failed`);
+      return res.redirect(`${publicFrontendBase()}/login?error=token_exchange_failed`);
     }
     
   } catch (error) {
     console.error("❌ Google Callback Error:", error);
-    return res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+    return res.redirect(`${publicFrontendBase()}/login?error=auth_failed`);
   }
 };
 

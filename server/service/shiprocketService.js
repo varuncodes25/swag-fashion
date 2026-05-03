@@ -117,8 +117,8 @@ async function createAdhocOrderOnShiprocket(order, token) {
   const firstName = parts[0];
   const lastName = parts.slice(1).join(" ") || "Customer";
 
-  const totalWeight = Math.max(0.2, order.items.reduce(
-    (sum, item) => sum + (Number(item.weight) || 0.2) * Number(item.quantity),
+  const totalWeight = Math.max(0.3, order.items.reduce(
+    (sum, item) => sum + (Number(item.weight) || 0.3) * Number(item.quantity),
     0
   ));
 

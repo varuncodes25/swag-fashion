@@ -103,6 +103,17 @@ const AdminProductDetails = () => {
     return product.imagesByColor?.[selectedColor] || [];
   };
 
+  const formatSpecValue = (value) => {
+    if (value === null || value === undefined) return "-";
+    if (Array.isArray(value)) return value.map((item) => String(item)).join(", ");
+    if (typeof value === "object") {
+      return Object.entries(value)
+        .map(([k, v]) => `${k}: ${formatSpecValue(v)}`)
+        .join(" | ");
+    }
+    return String(value);
+  };
+
   // 🔥 Loading state
   if (loading) {
     return (
@@ -609,12 +620,12 @@ const AdminProductDetails = () => {
                     <div className="space-y-1">
                       {Object.entries(value).map(([k, v]) => (
                         <p key={k} className="text-sm">
-                          <span className="text-gray-500">{k}:</span> {v}
+                          <span className="text-gray-500">{k}:</span> {formatSpecValue(v)}
                         </p>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm">{value}</p>
+                    <p className="text-sm">{formatSpecValue(value)}</p>
                   )}
                 </div>
               ))}

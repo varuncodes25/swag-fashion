@@ -1,10 +1,8 @@
 const {
   signup,
   login,
-  // adminSignup,
-  // adminLogin,
-  // resetPasword,
   forgotPassword,
+  resetPassword,
   refreshToken,
   logout,
   changePassword,
@@ -47,11 +45,11 @@ router.post("/signup", signupLimiter, decryptRequest, signup);
 router.post("/login", loginLimiter, decryptRequest, login);
 
 router.post("/forgot-password", authLimiter, forgotPassword);
+router.post("/reset-password/:token", authLimiter, decryptRequest, resetPassword);
 router.post("/auth/refresh-token", authLimiter, refreshToken);
 router.get("/auth/google/url", getGoogleAuthUrl);
 router.get("/auth/google/callback", googleCallback);
 router.post("/auth/google/token", authLimiter, googleOneTapLogin);
-// router.post("/reset-password/:token", resetPasword);
 
 router.post("/logout", authLimiter, logout);
 router.put("/user/change-password", authLimiter, verifyToken,decryptRequest, changePassword);

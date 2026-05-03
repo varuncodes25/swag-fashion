@@ -38,24 +38,7 @@ export const loginUser = createAsyncThunk(
   },
 );
 
-// 3. VERIFY EMAIL - FIXED
-export const verifyEmail = createAsyncThunk(
-  "auth/verifyEmail",
-  async (token, { rejectWithValue }) => {
-    try {
-      const response = await apiClient.get(`/verify-email/${token}`);
-      return response.data;
-    } catch (error) {
-      const errorData = error.response?.data || {};
-      return rejectWithValue({
-        message: errorData.message || "Email verification failed",
-        errors: errorData.errors || {},
-      });
-    }
-  },
-);
-
-// 4. REFRESH TOKEN - FIXED
+// 3. REFRESH TOKEN - FIXED
 export const refreshToken = createAsyncThunk(
   "auth/refreshToken",
   async (_, { rejectWithValue }) => {
@@ -675,7 +658,10 @@ const authSlice = createSlice({
         state.signupLoading = false;
         state.signupSuccess = true;
         state.loading = false;
-        state.message = action.payload.message || "Registration successful!";
+        state.message =
+          action.payload?.message ||
+          action.payload?.data?.message ||
+          "Registration successful!";
         state.fieldErrors = {};
 
         if (action.payload.data?.token) {
@@ -734,34 +720,6 @@ const authSlice = createSlice({
         state.loginError = action.payload?.message || "Login failed";
         state.fieldErrors = action.payload?.errors || {};
         state.loading = false;
-        state.error = action.payload?.message;
-      })
-
-      // ============ VERIFY EMAIL ============
-      .addCase(verifyEmail.pending, (state) => {
-        state.emailVerificationLoading = true;
-        state.emailVerificationError = null;
-        state.emailVerified = false;
-        state.fieldErrors = {};
-      })
-      .addCase(verifyEmail.fulfilled, (state, action) => {
-        state.emailVerificationLoading = false;
-        state.emailVerified = true;
-        state.message =
-          action.payload.message || "Email verified successfully!";
-        state.fieldErrors = {};
-
-        if (state.user) {
-          state.user.isEmailVerified = true;
-          localStorage.setItem("user", JSON.stringify(state.user));
-        }
-      })
-      .addCase(verifyEmail.rejected, (state, action) => {
-        state.emailVerificationLoading = false;
-        state.emailVerificationError =
-          action.payload?.message || "Email verification failed";
-        state.fieldErrors = action.payload?.errors || {};
-        state.emailVerified = false;
         state.error = action.payload?.message;
       })
 

@@ -18,14 +18,10 @@ const razorpayInstance = new Razorpay({
   key_secret: keySecret
 });
 
-// Test the instance immediately
+// Light check: `api.get('/')` is not a valid Razorpay route → false 404 "auth failed"
 async function testRazorpay() {
   try {
-  
-    
-    // Method 1: Try to fetch account details
-    const account = await razorpayInstance.api.get('/');
-
+    await razorpayInstance.orders.all({ count: 1 });
     return true;
     
   } catch (error) {

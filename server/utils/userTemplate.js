@@ -75,7 +75,7 @@ function welcomeEmailTemplate(customerName, websiteLink, supportInfo) {
       <div class="logo">
         <!-- Optional Logo Placeholder -->
       </div> 
-      <img src="https://yourdomain.com/logo.png" alt="Swag Fashion Logo" />
+      <img src="https://www.swagfashion.in/online-shopping.png" alt="Swag Fashion Logo" />
       <h1>Welcome to</h1>
       <h2>SWAG FASHION</h2>
       <p>Let’s Get Started!</p>

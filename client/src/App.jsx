@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import { ThemeProvider } from "./components/provider/theme-provider";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import AuthCallback from "./pages/AuthCallback";
 import Product from "./pages/Product";
 import Checkout from "./pages/Checkout";
 import AdminLogin from "./pages/AdminLogin";
@@ -126,6 +127,14 @@ export default function App() {
       element: (
         <ProtectedRoute requireAuth={false}>
           <RootLayout children={<ResetPassword />} />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/auth/callback",
+      element: (
+        <ProtectedRoute requireAuth={false}>
+          <RootLayout children={<AuthCallback />} />
         </ProtectedRoute>
       ),
     },

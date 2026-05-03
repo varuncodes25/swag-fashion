@@ -1,7 +1,18 @@
 require("dotenv").config();
-const { connectDb } = require("../db/connection");
+const { default: mongoose } = require("mongoose");
 const Category = require("../models/Category");
-
+const connectDB = async () => {
+  try {
+    await mongoose.connect("mongodb+srv://varuntare2:WqXPAnmVOLHauosC@cluster0.8hdzpwx.mongodb.net/", {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ MongoDB Connected');
+  } catch (error) {
+    console.error('❌ MongoDB Connection Error:', error);
+    process.exit(1);
+  }
+};
 const categories = [
   {
     name: "Men",
@@ -171,113 +182,113 @@ const categories = [
       },
     ],
   },
-  {
-  name: "Collections",
-  slug: "collections",
-  image: {
-    url: "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg",
-    id: "collections-category",
-  },
-  subCategories: [
-    {
-      name: "New Arrivals",
-      slug: "new-arrivals",
-      image: {
-        url: "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg",
-        id: "collections-new-arrivals",
-      },
-    },
-    {
-      name: "Best Sellers",
-      slug: "best-sellers",
-      image: {
-        url: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg",
-        id: "collections-best-sellers",
-      },
-    },
-    {
-      name: "Trending Now",
-      slug: "trending",
-      image: {
-        url: "https://images.pexels.com/photos/3662908/pexels-photo-3662908.jpeg",
-        id: "collections-trending",
-      },
-    },
-    {
-      name: "Limited Edition",
-      slug: "limited-edition",
-      image: {
-        url: "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg",
-        id: "collections-limited",
-      },
-    },
-    {
-      name: "Sale",
-      slug: "sale",
-      image: {
-        url: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg",
-        id: "collections-sale",
-      },
-    },
-  ],
-},
-{
-  name: "Style",
-  slug: "style",
-  image: {
-    url: "https://images.pexels.com/photos/3662908/pexels-photo-3662908.jpeg",
-    id: "style-category",
-  },
-  subCategories: [
-    {
-      name: "Streetwear",
-      slug: "streetwear",
-      image: {
-        url: "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg",
-        id: "style-streetwear",
-      },
-    },
-    {
-      name: "Minimal",
-      slug: "minimal",
-      image: {
-        url: "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg",
-        id: "style-minimal",
-      },
-    },
-    {
-      name: "Anime",
-      slug: "anime",
-      image: {
-        url: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg",
-        id: "style-anime",
-      },
-    },
-    {
-      name: "Typography",
-      slug: "typography",
-      image: {
-        url: "https://images.pexels.com/photos/3662908/pexels-photo-3662908.jpeg",
-        id: "style-typography",
-      },
-    },
-    {
-      name: "Graphic Tees",
-      slug: "graphic-tees",
-      image: {
-        url: "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg",
-        id: "style-graphic",
-      },
-    },
-  ],
-}
+//   {
+//   name: "Collections",
+//   slug: "collections",
+//   image: {
+//     url: "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg",
+//     id: "collections-category",
+//   },
+//   subCategories: [
+//     {
+//       name: "New Arrivals",
+//       slug: "new-arrivals",
+//       image: {
+//         url: "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg",
+//         id: "collections-new-arrivals",
+//       },
+//     },
+//     {
+//       name: "Best Sellers",
+//       slug: "best-sellers",
+//       image: {
+//         url: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg",
+//         id: "collections-best-sellers",
+//       },
+//     },
+//     {
+//       name: "Trending Now",
+//       slug: "trending",
+//       image: {
+//         url: "https://images.pexels.com/photos/3662908/pexels-photo-3662908.jpeg",
+//         id: "collections-trending",
+//       },
+//     },
+//     {
+//       name: "Limited Edition",
+//       slug: "limited-edition",
+//       image: {
+//         url: "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg",
+//         id: "collections-limited",
+//       },
+//     },
+//     {
+//       name: "Sale",
+//       slug: "sale",
+//       image: {
+//         url: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg",
+//         id: "collections-sale",
+//       },
+//     },
+//   ],
+// },
+// {
+//   name: "Style",
+//   slug: "style",
+//   image: {
+//     url: "https://images.pexels.com/photos/3662908/pexels-photo-3662908.jpeg",
+//     id: "style-category",
+//   },
+//   subCategories: [
+//     {
+//       name: "Streetwear",
+//       slug: "streetwear",
+//       image: {
+//         url: "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg",
+//         id: "style-streetwear",
+//       },
+//     },
+//     {
+//       name: "Minimal",
+//       slug: "minimal",
+//       image: {
+//         url: "https://images.pexels.com/photos/298863/pexels-photo-298863.jpeg",
+//         id: "style-minimal",
+//       },
+//     },
+//     {
+//       name: "Anime",
+//       slug: "anime",
+//       image: {
+//         url: "https://images.pexels.com/photos/6311387/pexels-photo-6311387.jpeg",
+//         id: "style-anime",
+//       },
+//     },
+//     {
+//       name: "Typography",
+//       slug: "typography",
+//       image: {
+//         url: "https://images.pexels.com/photos/3662908/pexels-photo-3662908.jpeg",
+//         id: "style-typography",
+//       },
+//     },
+//     {
+//       name: "Graphic Tees",
+//       slug: "graphic-tees",
+//       image: {
+//         url: "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg",
+//         id: "style-graphic",
+//       },
+//     },
+//   ],
+// }
 
 
 ];
 
 const seedCategories = async () => {
   try {
-    await connectDb();
+    await connectDB();
 
     await Category.deleteMany({});
     console.log("🗑️ Previous categories removed");

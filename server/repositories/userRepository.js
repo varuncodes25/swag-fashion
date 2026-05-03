@@ -151,14 +151,16 @@ const userRepository = {
     return token;
   },
 
-  // Verify email
+  // Verify email (clears verification token fields in DB)
   verifyEmail: async (userId) => {
-    const user = await User.findById(userId);
-    if (!user) return null;
-
-    user.verifyEmail();
-    await user.save({ validateBeforeSave: false });
-    return user;
+    return await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: { isEmailVerified: true },
+        $unset: { emailVerificationToken: "", emailVerificationExpires: "" },
+      },
+      { new: true },
+    );
   },
 
   // Generate OTP

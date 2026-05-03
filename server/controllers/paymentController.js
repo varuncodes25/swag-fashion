@@ -8,6 +8,7 @@ const Address = require("../models/address");
 const { calculateOrder } = require("../helper/createOrder");
 const mongoose = require("mongoose");
 const { createShiprocketOrder } = require("../service/shiprocketService");
+const { notifyOrderPlaced } = require("../utils/orderNotificationEmails");
 
 exports.createRazorpayOrder = async (req, res) => {
   try {
@@ -397,6 +398,10 @@ console.log("📦 SAVED ORDER:", {
     session.endSession();
 
     console.log("✅ Database transaction committed");
+
+    notifyOrderPlaced(order).catch((err) =>
+      console.error("order notification mail:", err.message),
+    );
 
     // ✅ Call Shiprocket (ab courierId milega!)
     let shiprocketCreated = false;

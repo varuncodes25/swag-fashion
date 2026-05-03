@@ -17,6 +17,13 @@ const {
 } = require("../utils/handlar/ApiError");
 const { default: mongoose } = require("mongoose");
 
+const escapeHtml = (s) =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
 // ============ USER SIGNUP ============
 const signup = asyncHandler(async (req, res, next) => {
   try {
@@ -28,7 +35,6 @@ const signup = asyncHandler(async (req, res, next) => {
       return next(new DuplicateError("Email"));
     }
 
-    // ✅ FIX 1: Check if phone number already exists (if provided)
     if (phone) {
       const existingPhone = await userRepository.findByPhone(phone);
       if (existingPhone) {
@@ -36,75 +42,87 @@ const signup = asyncHandler(async (req, res, next) => {
       }
     }
 
-    // Create new user with phone (null if not provided)
-    const user = await userRepository.create({
+    const userPayload = {
       name,
       email,
-      phone: phone || null, // ✅ FIX 2: null set karo agar phone nahi diya
       password,
-    });
+      isEmailVerified: true,
+    };
+    if (phone) {
+      userPayload.phone = phone;
+    }
+    const user = await userRepository.create(userPayload);
 
-    // Generate email verification token
-    const verificationToken = user.generateEmailVerificationToken();
-    await user.save({ validateBeforeSave: false });
+    let userEmailSent = false;
+    let adminEmailSent = false;
+    const hasSmtp = sendMail.isConfigured?.() === true;
+    const adminTo =
+      process.env.ADMIN_RECEIVER?.trim() ||
+      process.env.GMAIL_USER?.trim() ||
+      null;
 
-    // Send verification email (uncomment when email service ready)
-    // const verificationLink = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-    // await sendMail(
-    //   email,
-    //   "Verify Your Email - Swag Fashion",
-    //   `<h2>Welcome to Swag Fashion! 🎉</h2>
-    //    <p>Hi ${name},</p>
-    //    <p>Please verify your email address:</p>
-    //    <a href="${verificationLink}">Verify Email</a>`
-    // );
+    if (hasSmtp) {
+      const frontendBase =
+        (
+          process.env.FRONTEND_URL ||
+          process.env.CLIENT_URL ||
+          ""
+        ).replace(/\/$/, "") || "https://swagfashion.in";
+      const support =
+        process.env.SUPPORT_EMAIL ||
+        process.env.MAIL_FROM ||
+        process.env.GMAIL_USER ||
+        process.env.ADMIN_RECEIVER;
+      const safeName = escapeHtml(name);
+      const safeEmail = escapeHtml(email);
 
-    // Send welcome email (uncomment when email service ready)
-    // const userHtml = welcomeEmailTemplate(
-    //   name,
-    //   process.env.FRONTEND_URL,
-    //   process.env.SUPPORT_EMAIL
-    // );
-    // await sendMail(email, "🎉 Welcome to Swag Fashion!", userHtml);
+      try {
+        const userHtml = welcomeEmailTemplate(
+          safeName,
+          frontendBase,
+          support,
+        );
+        await sendMail(email, "Welcome to Swag Fashion", userHtml);
+        userEmailSent = true;
+      } catch (err) {
+        console.error("signup → user email failed:", err.message);
+      }
 
-    // ✅ Success response with encryption
-    const response = new ApiResponse(
-      201,
-      { userId: user._id },
-      "Registration successful! Please verify your email.",
-    );
-
-    return res.status(201).json(await encryptResponse(response));
-  } catch (error) {
-    next(error);
-  }
-});
-
-// ============ VERIFY EMAIL ============
-const verifyEmail = asyncHandler(async (req, res, next) => {
-  try {
-    const { token } = req.params;
-
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-    const user = await userRepository.findByVerificationToken(hashedToken);
-
-    if (!user) {
-      return next(
-        new ValidationError({
-          token: "Invalid or expired verification token",
-        }),
+      if (adminTo) {
+        try {
+          const phoneLine = phone
+            ? `<p><strong>Phone:</strong> ${escapeHtml(String(phone))}</p>`
+            : "";
+          const adminHtml = `
+            <h2>New signup — Swag Fashion</h2>
+            <p><strong>Name:</strong> ${safeName}</p>
+            <p><strong>Email:</strong> ${safeEmail}</p>
+            ${phoneLine}
+            <p><strong>User ID:</strong> ${escapeHtml(String(user._id))}</p>
+          `;
+          await sendMail(
+            adminTo,
+            `[Swag Fashion] New signup: ${String(email).slice(0, 80)}`,
+            adminHtml,
+          );
+          adminEmailSent = true;
+        } catch (err) {
+          console.error("signup → admin email failed:", err.message);
+        }
+      }
+    } else {
+      console.warn(
+        "signup: mail not configured (Brevo or Gmail) — signup emails skipped",
       );
     }
 
-    await userRepository.verifyEmail(user._id);
-
-    // ✅ Success response with encryption
     const response = new ApiResponse(
-      200,
-      null,
-      "Email verified successfully! You can now login.",
+      201,
+      { userId: user._id, userEmailSent, adminEmailSent },
+      "Registration successful!",
     );
-    return res.json(await encryptResponse(response));
+
+    return res.status(201).json(await encryptResponse(response));
   } catch (error) {
     next(error);
   }
@@ -397,20 +415,64 @@ const forgotPassword = asyncHandler(async (req, res, next) => {
       return res.json(await encryptResponse(response));
     }
 
-    // Generate password reset token
     const resetToken = await userRepository.generateResetToken(user._id);
+    const frontendBase = (
+      process.env.FRONTEND_URL ||
+      process.env.CLIENT_URL ||
+      ""
+    ).replace(/\/$/, "");
+    const resetLink = `${frontendBase}/reset-password/${resetToken}`;
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+    if (!sendMail.isConfigured?.()) {
+      console.warn("forgot-password: mail not configured");
+      return res.status(503).json(
+        await encryptResponse(
+          new ApiResponse(
+            503,
+            null,
+            "Password reset email is not available (mail not configured on server).",
+          ),
+        ),
+      );
+    }
 
-    await sendMail(
-      user.email,
-      "Password Reset - Swag Fashion",
-      `<p>Click below to reset your password:</p>
-       <a href="${resetLink}">Reset Password</a>
-       <p>This link expires in 15 minutes.</p>`,
-    );
+    try {
+      await sendMail(
+        user.email,
+        "Password reset — Swag Fashion",
+        `<p>Click below to reset your password (expires in 15 minutes):</p>
+         <p><a href="${resetLink}">Reset password</a></p>
+         <p>If the link does not work, copy this URL:<br/>${resetLink}</p>`,
+      );
+    } catch (mailErr) {
+      console.error("forgot-password sendMail:", mailErr.message);
+      if (mailErr.code === "EAUTH") {
+        console.error(
+          "forgot-password: Gmail — use 16-char App Password or set BREVO_API_KEY for HTTPS mail.",
+        );
+      }
+      if (
+        mailErr.code === "BREVO_API_ERROR" ||
+        mailErr.code === "BREVO_SENDER_MISSING"
+      ) {
+        console.error(
+          "forgot-password: Brevo — check BREVO_API_KEY and MAIL_FROM (verified sender in Brevo).",
+        );
+      }
+      if (mailErr.code === "RENDER_USE_BREVO_API") {
+        console.error("forgot-password:", mailErr.message);
+      }
+      return res.status(503).json(
+        await encryptResponse(
+          new ApiResponse(
+            503,
+            null,
+            "Could not send reset email. Try again later or contact support.",
+          ),
+        ),
+      );
+    }
 
-    // ✅ Success response with encryption
     const response = new ApiResponse(200, null, "Password reset email sent");
     return res.json(await encryptResponse(response));
   } catch (error) {
@@ -451,17 +513,20 @@ const resetPassword = asyncHandler(async (req, res, next) => {
       );
     }
 
-    // Change password
     await userRepository.changePassword(user._id, password);
 
-    // Send confirmation email
-    await sendMail(
-      user.email,
-      "Password Reset Successful",
-      "<p>Your password has been changed successfully.</p>",
-    );
+    if (sendMail.isConfigured?.()) {
+      try {
+        await sendMail(
+          user.email,
+          "Password changed — Swag Fashion",
+          "<p>Your password was changed successfully. If you did not do this, contact support immediately.</p>",
+        );
+      } catch (mailErr) {
+        console.error("reset-password confirmation email:", mailErr.message);
+      }
+    }
 
-    // ✅ Success response with encryption
     const response = new ApiResponse(200, null, "Password reset successfully");
     return res.json(await encryptResponse(response));
   } catch (error) {
@@ -863,7 +928,6 @@ module.exports = {
   resetPassword,
   refreshToken,
   logout,
-  verifyEmail,
   changePassword,
   getProfile,
   updateProfile,

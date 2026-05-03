@@ -19,6 +19,13 @@ const SIZE_CHART_TEMPLATES = {
   },
 };
 const MAX_IMAGES_PER_COLOR = 40;
+const DEFAULT_VARIANT_STOCK = 20;
+const DEFAULT_PRODUCT_DIMENSIONS = {
+  length: 30,
+  width: 25,
+  height: 3,
+  weight: 0.3,
+};
 
 const COLOR_OPTIONS = [
   { name: "Red", code: "#FF0000" },
@@ -461,12 +468,7 @@ export const useProductForm = (initialData = null) => {
     warranty: "No Warranty",
     returnPolicy: "7 Days Return Available",
     returnWindow: 7,
-    productDimensions: {
-      length: 0,
-      width: 0,
-      height: 0,
-      weight: 0.2,
-    },
+    productDimensions: { ...DEFAULT_PRODUCT_DIMENSIONS },
   });
 
   const [colors, setColors] = useState([]);
@@ -539,11 +541,9 @@ export const useProductForm = (initialData = null) => {
       warranty: product.warranty || "No Warranty",
       returnPolicy: product.returnPolicy || "7 Days Return Available",
       returnWindow: product.returnWindow || 7,
-      productDimensions: product.productDimensions || {
-        length: 0,
-        width: 0,
-        height: 0,
-        weight: 0.2,
+      productDimensions: {
+        ...DEFAULT_PRODUCT_DIMENSIONS,
+        ...(product.productDimensions || {}),
       },
     });
 
@@ -581,7 +581,8 @@ export const useProductForm = (initialData = null) => {
       if (!matrix[variant.color]) {
         matrix[variant.color] = {};
       }
-      matrix[variant.color][variant.size] = variant.stock || 0;
+      matrix[variant.color][variant.size] =
+        variant.stock ?? DEFAULT_VARIANT_STOCK;
     });
     setStockMatrix(matrix);
 
@@ -737,8 +738,8 @@ export const useProductForm = (initialData = null) => {
           if (!updated[color]) {
             updated[color] = {};
           }
-          if (!updated[color][sizeToAdd]) {
-            updated[color][sizeToAdd] = 0;
+          if (updated[color][sizeToAdd] === undefined) {
+            updated[color][sizeToAdd] = DEFAULT_VARIANT_STOCK;
           }
         });
         return updated;
@@ -782,7 +783,7 @@ export const useProductForm = (initialData = null) => {
         if (!updated[colorObj.name]) {
           updated[colorObj.name] = {};
           sizes.forEach((size) => {
-            updated[colorObj.name][size] = 0;
+            updated[colorObj.name][size] = DEFAULT_VARIANT_STOCK;
           });
         }
         return updated;
@@ -1095,7 +1096,10 @@ const prepareFormData = () => {
           color: colorName,
           colorCode: COLOR_OPTIONS.find((c) => c.name === colorName)?.code || "#000000",
           size: sizeName,
-          stock: (stock !== undefined && !isNaN(stock)) ? parseInt(stock) : 0,
+          stock:
+            stock !== undefined && !isNaN(stock)
+              ? parseInt(stock)
+              : DEFAULT_VARIANT_STOCK,
           price: parseFloat(formData.basePrice) || 0,
           sellingPrice: calculateSellingPrice(
             parseFloat(formData.basePrice) || 0,
@@ -1216,7 +1220,7 @@ const prepareFormData = () => {
       warranty: "No Warranty",
       returnPolicy: "7 Days Return Available",
       returnWindow: 7,
-      productDimensions: { length: 0, width: 0, height: 0, weight: 0.2 },
+      productDimensions: { ...DEFAULT_PRODUCT_DIMENSIONS },
     });
     setColors([]);
     setSizes([]);

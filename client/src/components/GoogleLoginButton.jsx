@@ -1,8 +1,41 @@
-import React, { useEffect } from "react";
+import React from "react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setUserLogin } from "@/redux/slices/authSlice";
 import { useToast } from "@/hooks/use-toast";
+
+const jsonHeaders = {
+  Accept: "application/json",
+  "Content-Type": "application/json",
+};
+
+/** When the API returns HTML (wrong URL / proxy) or a Blob body, axios error text looks like "[object Blob]". */
+async function getGoogleAuthErrorMessage(error) {
+  const data = error.response?.data;
+  if (data?.message && typeof data.message === "string") {
+    return data.message;
+  }
+  if (data instanceof Blob) {
+    try {
+      const text = await data.text();
+      try {
+        const parsed = JSON.parse(text);
+        return parsed.message || text.slice(0, 200);
+      } catch {
+        return text.slice(0, 200) || "Invalid server response (not JSON). Check VITE_API_URL.";
+      }
+    } catch {
+      return "Could not read server error. Check API URL and CORS.";
+    }
+  }
+  if (typeof data === "string") {
+    return data.slice(0, 200);
+  }
+  if (!error.response) {
+    return "Network error — check API is reachable and CORS allows your site.";
+  }
+  return error.message || "Google authentication failed";
+}
 
 const GoogleLoginButton = ({ type = "redirect" }) => {
   const dispatch = useDispatch();
@@ -18,6 +51,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
     try {
       const res = await axios.get(
         `${import.meta.env.VITE_API_URL}/auth/google/url`,
+        { headers: jsonHeaders },
       );
       
       window.location.href = res.data.url;
@@ -27,7 +61,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
       console.error("❌ Error message:", error.message);
       toast({
         title: "Login Failed",
-        description: error.response?.data?.message || "Could not connect to Google",
+        description: await getGoogleAuthErrorMessage(error),
         variant: "destructive",
       });
     }
@@ -141,6 +175,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/google/token`,
         { token: response.credential },
+        { headers: jsonHeaders },
       );
 
       
@@ -167,7 +202,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
       
       toast({
         title: "Login Failed",
-        description: error.response?.data?.message || "Google authentication failed",
+        description: await getGoogleAuthErrorMessage(error),
         variant: "destructive",
       });
     }
