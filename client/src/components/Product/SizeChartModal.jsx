@@ -1,12 +1,88 @@
 // components/Product/SizeChartModal.jsx
-import React, { useState } from 'react';
-import { X, Ruler, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { X, Ruler, ChevronDown, ChevronUp } from 'lucide-react';
 
-const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType }) => {
+const INCH_TO_CM = 2.54;
+
+const CONVERTIBLE_NUMERIC_KEYS = new Set([
+  'chest', 'shoulder', 'sleeve', 'length', 'waist', 'hips', 'hip', 'inseam',
+  'band', 'footLength', 'neck', 'thigh', 'legOpening', 'headCircumference',
+  'modelHeight',
+]);
+
+function toFiniteNumber(raw) {
+  if (raw == null || raw === '') return null;
+  if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
+  if (typeof raw === 'string') {
+    const n = parseFloat(String(raw).replace(/,/g, ''));
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function formatMeasurementNumber(num) {
+  if (!Number.isFinite(num)) return '-';
+  const rounded = Math.abs(num - Math.round(num)) < 1e-6 ? Math.round(num) : Math.round(num * 10) / 10;
+  return String(rounded);
+}
+
+function convertLinearMeasurement(value, storedUnit, displayUnit) {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null;
+  if (storedUnit === displayUnit) return value;
+  if (storedUnit === 'inches' && displayUnit === 'cm') return value * INCH_TO_CM;
+  if (storedUnit === 'cm' && displayUnit === 'inches') return value / INCH_TO_CM;
+  return value;
+}
+
+function resolveMeasurementRaw(measurements, headerKey) {
+  if (headerKey === 'hips') return measurements.hips ?? measurements.hip;
+  return measurements[headerKey];
+}
+
+function formatCellDisplay(headerKey, measurements, displayUnit) {
+  if (headerKey === 'size') return null;
+  const raw = resolveMeasurementRaw(measurements, headerKey);
+  if (raw === undefined || raw === null || raw === '') return '-';
+  if (headerKey === 'cup') return String(raw);
+
+  const storedUnit =
+    measurements.unit != null && String(measurements.unit).trim().toLowerCase() === 'cm'
+      ? 'cm'
+      : 'inches';
+
+  if (!CONVERTIBLE_NUMERIC_KEYS.has(headerKey)) return String(raw);
+
+  const n = toFiniteNumber(raw);
+  if (n === null) return String(raw);
+
+  const converted = convertLinearMeasurement(n, storedUnit, displayUnit);
+  return formatMeasurementNumber(converted);
+}
+
+const SizeChartModal = ({
+  isOpen,
+  onClose,
+  variant,
+  productName,
+  clothingType,
+  variantsForSizeChart = [],
+  sizesOrder = [],
+}) => {
   const [unit, setUnit] = useState('inches');
   const [showGuide, setShowGuide] = useState(true);
-  
-  if (!isOpen || !variant?.sizeDetails) return null;
+  const wasOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && !wasOpenRef.current && variant?.sizeDetails) {
+      const u =
+        variant.sizeDetails.unit != null &&
+        String(variant.sizeDetails.unit).trim().toLowerCase() === 'cm'
+          ? 'cm'
+          : 'inches';
+      setUnit(u);
+    }
+    wasOpenRef.current = isOpen;
+  }, [isOpen, variant?._id, variant?.size, variant?.sizeDetails?.unit]);
 
   // ============ CLOTHING TYPE CATEGORIES ============
   const categories = {
@@ -37,9 +113,10 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
       return [
         { key: 'size', label: 'Size' },
         { key: 'chest', label: `Chest (${unit})` },
+        { key: 'waist', label: `Waist (${unit})` },
         { key: 'shoulder', label: `Across Shoulder (${unit})` },
         { key: 'sleeve', label: `Sleeve Length (${unit})` },
-        { key: 'length', label: `Front Length (${unit})` }
+        { key: 'length', label: `Front Length (${unit})` },
       ];
     }
     
@@ -100,10 +177,10 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
 
     if (categories.topWear.includes(clothingType)) {
       return {
-        "S": { chest: 38, shoulder: 18, sleeve: 22, length: 25 },
-        "M": { chest: 40, shoulder: 19, sleeve: 22.5, length: 26 },
-        "L": { chest: 42, shoulder: 18, sleeve: 23, length: 27 },
-        "XL": { chest: 44, shoulder: 19, sleeve: 23.5, length: 28 }
+        S: { chest: 38, waist: 32, shoulder: 18, sleeve: 22, length: 25, unit: 'inches' },
+        M: { chest: 40, waist: 34, shoulder: 19, sleeve: 22.5, length: 26, unit: 'inches' },
+        L: { chest: 42, waist: 36, shoulder: 18, sleeve: 23, length: 27, unit: 'inches' },
+        XL: { chest: 44, waist: 38, shoulder: 19, sleeve: 23.5, length: 28, unit: 'inches' },
       };
     }
     
@@ -137,8 +214,46 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
     return baseData;
   };
 
-  const headers = getHeaders();
-  const sizeChartData = getSampleData();
+  const sizeChartData = useMemo(() => {
+    const fromVariants = {};
+    for (const v of variantsForSizeChart || []) {
+      if (!v?.size || !v?.sizeDetails) continue;
+      const hasMeasurements = Object.keys(v.sizeDetails).some(
+        (k) =>
+          k !== '_id' &&
+          k !== 'unit' &&
+          v.sizeDetails[k] !== undefined &&
+          v.sizeDetails[k] !== null &&
+          v.sizeDetails[k] !== ''
+      );
+      if (!hasMeasurements) continue;
+      fromVariants[v.size] = v.sizeDetails;
+    }
+    if (Object.keys(fromVariants).length > 0) return fromVariants;
+
+    if (variant?.size && variant?.sizeDetails) {
+      const hasMeasurements = Object.keys(variant.sizeDetails).some(
+        (k) =>
+          k !== '_id' &&
+          k !== 'unit' &&
+          variant.sizeDetails[k] !== undefined &&
+          variant.sizeDetails[k] !== null &&
+          variant.sizeDetails[k] !== ''
+      );
+      if (hasMeasurements) return { [variant.size]: variant.sizeDetails };
+    }
+
+    if (!variantsForSizeChart?.length) return getSampleData();
+    return {};
+  }, [variantsForSizeChart, clothingType, variant?.size, variant?.sizeDetails]);
+
+  const rowSizes = useMemo(() => {
+    const keys = Object.keys(sizeChartData);
+    if (!sizesOrder?.length) return keys;
+    const ordered = sizesOrder.filter((s) => keys.includes(s));
+    const rest = keys.filter((s) => !ordered.includes(s));
+    return [...ordered, ...rest];
+  }, [sizeChartData, sizesOrder]);
 
   // ============ DYNAMIC DIAGRAM BASED ON CLOTHING TYPE ============
   const DynamicDiagram = () => {
@@ -349,9 +464,10 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
     if (categories.topWear.includes(clothingType)) {
       return [
         { name: 'Chest', desc: 'Measure around the fullest part of your chest', color: 'blue' },
+        { name: 'Waist', desc: 'Measure around the narrowest part of your torso', color: 'purple' },
         { name: 'Shoulder', desc: 'From one shoulder seam to the other', color: 'red' },
         { name: 'Sleeve', desc: 'From shoulder seam to wrist', color: 'orange' },
-        { name: 'Length', desc: 'From shoulder to bottom hem', color: 'green' }
+        { name: 'Length', desc: 'From shoulder to bottom hem', color: 'green' },
       ];
     }
     
@@ -379,12 +495,21 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
   const headersList = getHeaders();
   const measurementTips = getMeasurementTips();
 
+  if (!isOpen || !variant?.sizeDetails) return null;
+
+  /* No dimmed overlay — only the panel; transparent layer catches outside click to close. Navbar clear via top offset. */
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-card rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        
-        {/* Header */}
-        <div className="sticky top-0 bg-card border-b border-border p-4 flex justify-between items-center">
+    <div
+      className="fixed inset-x-0 bottom-0 left-0 right-0 top-14 z-50 flex cursor-default items-center justify-center bg-transparent p-3 sm:top-16 sm:p-4"
+      onClick={onClose}
+      role="presentation"
+    >
+      <div
+        className="flex max-h-[min(90dvh,calc(100dvh-4rem))] w-full max-w-4xl cursor-auto flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl ring-1 ring-black/5 dark:ring-white/10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header — outside scroll area so it never moves under page scroll / overlap content */}
+        <div className="relative z-20 flex shrink-0 justify-between border-b border-border bg-card p-4">
           <div className="flex items-center gap-2">
             <Ruler className="w-5 h-5 text-pink-500" />
             <div>
@@ -400,6 +525,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
             {/* Unit Toggle */}
             <div className="flex bg-muted rounded-lg p-1">
               <button
+                type="button"
                 onClick={() => setUnit('inches')}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
                   unit === 'inches' 
@@ -410,6 +536,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
                 IN
               </button>
               <button
+                type="button"
                 onClick={() => setUnit('cm')}
                 className={`px-3 py-1 text-xs rounded-md transition-colors ${
                   unit === 'cm' 
@@ -420,14 +547,14 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
                 CM
               </button>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+            <button type="button" onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="p-6">
+        {/* Scrollable body only — fixes mobile content sliding over header */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 [-webkit-overflow-scrolling:touch]">
           
           {/* Title */}
           <div className="mb-6">
@@ -472,30 +599,35 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(sizeChartData).map(([size, measurements], index) => (
-                      <tr key={size} className={`${
-                        index % 2 === 0 ? 'bg-card' : 'bg-muted/40/50'
-                      } hover:bg-primary/10 dark:hover:bg-pink-900/20 ${
-                        variant?.size === size ? 'bg-primary/10 dark:bg-primary/15' : ''
-                      }`}>
-                        {headersList.map((header) => {
-                          if (header.key === 'size') {
+                    {rowSizes.map((size, index) => {
+                      const measurements = sizeChartData[size] || {};
+                      return (
+                        <tr
+                          key={size}
+                          className={`${
+                            index % 2 === 0 ? 'bg-card' : 'bg-muted/40/50'
+                          } hover:bg-primary/10 dark:hover:bg-pink-900/20 ${
+                            variant?.size === size ? 'bg-primary/10 dark:bg-primary/15' : ''
+                          }`}
+                        >
+                          {headersList.map((header) => {
+                            if (header.key === 'size') {
+                              return (
+                                <td key={header.key} className="px-3 py-2 text-xs font-medium border-b">
+                                  {size}
+                                  {variant?.size === size && <span className="ml-1 text-pink-500">✓</span>}
+                                </td>
+                              );
+                            }
                             return (
-                              <td key={header.key} className="px-3 py-2 text-xs font-medium border-b">
-                                {size}
-                                {variant?.size === size && <span className="ml-1 text-pink-500">✓</span>}
+                              <td key={header.key} className="px-3 py-2 text-xs border-b tabular-nums">
+                                {formatCellDisplay(header.key, measurements, unit)}
                               </td>
                             );
-                          }
-                          const value = measurements[header.key];
-                          return (
-                            <td key={header.key} className="px-3 py-2 text-xs border-b">
-                              {value || '-'}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
+                          })}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -509,7 +641,7 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
           <div className="mb-6">
             <h3 className="text-xl font-semibold text-foreground mb-4">How to measure</h3>
             
-            <button onClick={() => setShowGuide(!showGuide)} className="flex items-center justify-between w-full text-left mb-4 p-3 bg-muted/40 rounded-lg">
+            <button type="button" onClick={() => setShowGuide(!showGuide)} className="flex items-center justify-between w-full text-left mb-4 p-3 bg-muted/40 rounded-lg">
               <span className="text-base font-medium">Measurement Guide</span>
               {showGuide ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </button>
@@ -530,9 +662,8 @@ const SizeChartModal = ({ isOpen, onClose, variant, productName, clothingType })
           </div>
         </div>
 
-        {/* Close Button */}
-        <div className="sticky bottom-0 bg-card border-t p-4">
-          <button onClick={onClose} className="w-full bg-primary/100 text-white py-3 rounded-lg hover:bg-primary">
+        <div className="relative z-20 shrink-0 border-t border-border bg-card p-4">
+          <button type="button" onClick={onClose} className="w-full rounded-lg bg-primary/100 py-3 text-white hover:bg-primary">
             Close
           </button>
         </div>

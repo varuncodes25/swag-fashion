@@ -1,4 +1,5 @@
 const sendMail = require("./mailer");
+const { notifyAdminOrderWhatsApp } = require("./orderWhatsApp");
 
 const escapeHtml = (s) =>
   String(s ?? "")
@@ -92,13 +93,19 @@ function adminNewOrderHtml(order) {
  * @param {import("mongoose").Document} order — saved Order doc
  */
 async function notifyOrderPlaced(order) {
+  const plain = order.toObject ? order.toObject() : order;
+  try {
+    await notifyAdminOrderWhatsApp(order, "New order (prepaid / online)");
+  } catch (e) {
+    console.error("order WhatsApp:", e.message);
+  }
+
   try {
     if (!sendMail.isConfigured?.()) {
       console.warn("orderNotificationEmails: mail not configured, skip");
       return;
     }
 
-    const plain = order.toObject ? order.toObject() : order;
     const orderNumber = plain.orderNumber || String(plain._id);
     const customerEmail = (plain.shippingAddress?.email || "").trim();
 
@@ -142,6 +149,12 @@ async function notifyOrderPlaced(order) {
 /** COD placed (PENDING): admin only — customer gets mail after admin confirms. */
 async function notifyAdminCodPending(order) {
   try {
+    await notifyAdminOrderWhatsApp(order, "COD pending — confirm in admin panel");
+  } catch (e) {
+    console.error("order WhatsApp (COD pending):", e.message);
+  }
+
+  try {
     if (!sendMail.isConfigured?.()) {
       console.warn("orderNotificationEmails: mail not configured, skip COD admin");
       return;
@@ -167,6 +180,12 @@ async function notifyAdminCodPending(order) {
 
 /** After admin sets COD order to CONFIRMED: customer + admin. */
 async function notifyCodOrderConfirmed(order) {
+  try {
+    await notifyAdminOrderWhatsApp(order, "COD order confirmed");
+  } catch (e) {
+    console.error("order WhatsApp (COD confirm):", e.message);
+  }
+
   try {
     if (!sendMail.isConfigured?.()) {
       console.warn("orderNotificationEmails: mail not configured, skip COD confirm");

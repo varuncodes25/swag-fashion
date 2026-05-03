@@ -149,6 +149,11 @@ const Product = () => {
   const displayImages =
     variantImages.length > 0 ? variantImages : product.allImages || [];
 
+  const norm = (s) => String(s ?? '').trim().toLowerCase();
+  const variantsForSelectedColor = (product?.variants || []).filter(
+    (v) => norm(v.color) === norm(color) && norm(v.color).length > 0
+  );
+
   return (
     <div className="min-h-screen bg-background dark:bg-black  ">
       {/* Breadcrumb */}
@@ -203,6 +208,8 @@ const Product = () => {
                   onQuantityChange={setQuantity}
                   variant={selectedVariant}
                   clothingType={product.clothingType}
+                  variantsForSizeChart={variantsForSelectedColor}
+                  sizesOrder={sizes}
                 />
               )}
 <DeliveryChecker/>

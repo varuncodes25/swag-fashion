@@ -18,14 +18,23 @@ const ProductVariants = ({
   stock,
   quantity,
   onQuantityChange,
-  variant,           // ✅ NEW: Current selected variant with sizeDetails
-  clothingType       // ✅ NEW: To show relevant measurements
+  variant,
+  clothingType,
+  variantsForSizeChart = [],
+  sizesOrder = [],
 }) => {
   const [showSizeChart, setShowSizeChart] = useState(false);
-  
-  // ✅ Check if current variant has size details
-  const hasSizeChart = variant?.sizeDetails && 
-    Object.keys(variant.sizeDetails).length > 2; // More than just unit field
+
+  const sizeDetailsMeaningful = (sd) => {
+    if (!sd || typeof sd !== 'object') return false;
+    return Object.keys(sd).some(
+      (k) => k !== '_id' && sd[k] !== undefined && sd[k] !== null && sd[k] !== ''
+    );
+  };
+
+  const hasSizeChart = (variantsForSizeChart.length > 0 ? variantsForSizeChart : [variant]).some((v) =>
+    sizeDetailsMeaningful(v?.sizeDetails)
+  );
 
   return (
     <div className="space-y-8">
@@ -170,6 +179,8 @@ const ProductVariants = ({
         variant={variant}
         productName={variant?.color}
         clothingType={clothingType}
+        variantsForSizeChart={variantsForSizeChart}
+        sizesOrder={sizesOrder}
       />
     </div>
   );
