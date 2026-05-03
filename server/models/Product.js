@@ -689,6 +689,7 @@ const productSchema = new mongoose.Schema(
         "Tie-Dye",
         "Camouflage",
         "Animal Print",
+         "Graphic",
         "Paisley",
         "Houndstooth",
         "Not Applicable",

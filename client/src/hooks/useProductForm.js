@@ -313,6 +313,7 @@ const PATTERNS = [
   "Camouflage",
   "Animal Print",
   "Paisley",
+  "Graphic",
   "Houndstooth",
   "Not Applicable",
 ];
