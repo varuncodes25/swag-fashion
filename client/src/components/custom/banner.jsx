@@ -8,7 +8,7 @@ import banner3 from "../../assets/banner3.png";
 
 // Mobile Images
 import mobile1 from "../../assets/mobile1.png";
-import mobile2 from "../../assets/mobile2.png";
+
 import mobile3 from "../../assets/mobile3.png";
 
 // Data
@@ -18,11 +18,7 @@ const bannerData = [
     desktop: banner1,
     mobile: mobile1,
   },
-  {
-    id: 2,
-    desktop: banner2,
-    mobile: mobile2,
-  },
+
   {
     id: 3,
     desktop: banner3,
