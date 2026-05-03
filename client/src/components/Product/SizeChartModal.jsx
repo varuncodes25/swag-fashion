@@ -39,6 +39,9 @@ function resolveMeasurementRaw(measurements, headerKey) {
   return measurements[headerKey];
 }
 
+/** Replace `client/public/tshirt_model.png` with your own diagram, or pass `topWearGuideImageUrl` */
+const DEFAULT_TOP_WEAR_GUIDE_IMAGE = '/tshirt_model.png';
+
 function formatCellDisplay(headerKey, measurements, displayUnit) {
   if (headerKey === 'size') return null;
   const raw = resolveMeasurementRaw(measurements, headerKey);
@@ -67,7 +70,10 @@ const SizeChartModal = ({
   clothingType,
   variantsForSizeChart = [],
   sizesOrder = [],
+  /** Optional full URL or path (e.g. Cloudinary) — overrides default T-shirt guide image */
+  topWearGuideImageUrl,
 }) => {
+  const topWearGuideSrc = topWearGuideImageUrl?.trim() || DEFAULT_TOP_WEAR_GUIDE_IMAGE;
   const [unit, setUnit] = useState('inches');
   const [showGuide, setShowGuide] = useState(true);
   const wasOpenRef = useRef(false);
@@ -257,85 +263,17 @@ const SizeChartModal = ({
 
   // ============ DYNAMIC DIAGRAM BASED ON CLOTHING TYPE ============
   const DynamicDiagram = () => {
-    // Top Wear Diagram
+    // Top Wear — branded measurement diagram (image in `public/tshirt_model.png` or `topWearGuideImageUrl`)
     if (categories.topWear.includes(clothingType)) {
       return (
-        <div className="relative w-full h-64 bg-muted/40 rounded-lg overflow-hidden">
-          <svg viewBox="0 0 300 300" className="w-full h-full">
-            {/* T-Shirt Body */}
-            <path 
-              d="M100 50 L200 50 L220 90 L220 200 L150 230 L80 200 L80 90 L100 50" 
-              fill="none" 
-              stroke="#333" 
-              strokeWidth="2"
-              className="dark:stroke-gray-400"
-            />
-            
-            {/* Neck/Collar */}
-            <path 
-              d="M135 50 Q150 35,165 50" 
-              fill="none" 
-              stroke="#333" 
-              strokeWidth="2"
-              className="dark:stroke-gray-400"
-            />
-            
-            {/* Sleeves */}
-            <path 
-              d="M100 50 L70 90" 
-              fill="none" 
-              stroke="#333" 
-              strokeWidth="2"
-              className="dark:stroke-gray-400"
-            />
-            <path 
-              d="M200 50 L230 90" 
-              fill="none" 
-              stroke="#333" 
-              strokeWidth="2"
-              className="dark:stroke-gray-400"
-            />
-
-            {/* Shoulder Line */}
-            <line 
-              x1="100" y1="50" 
-              x2="200" y2="50" 
-              stroke="#ef4444" 
-              strokeWidth="2" 
-              strokeDasharray="5,5"
-            />
-            <text x="150" y="40" fontSize="12" fill="#ef4444" textAnchor="middle">Shoulder</text>
-
-            {/* Chest Line */}
-            <line 
-              x1="80" y1="100" 
-              x2="220" y2="100" 
-              stroke="#3b82f6" 
-              strokeWidth="2" 
-              strokeDasharray="5,5"
-            />
-            <text x="150" y="90" fontSize="12" fill="#3b82f6" textAnchor="middle">Chest</text>
-
-            {/* Length Line */}
-            <line 
-              x1="230" y1="50" 
-              x2="230" y2="220" 
-              stroke="#22c55e" 
-              strokeWidth="2" 
-              strokeDasharray="5,5"
-            />
-            <text x="245" y="135" fontSize="12" fill="#22c55e" transform="rotate(90, 245, 135)">Length</text>
-
-            {/* Sleeve Line */}
-            <line 
-              x1="220" y1="90" 
-              x2="250" y2="120" 
-              stroke="#f97316" 
-              strokeWidth="2" 
-              strokeDasharray="5,5"
-            />
-            <text x="260" y="100" fontSize="12" fill="#f97316">Sleeve</text>
-          </svg>
+        <div className="relative w-full overflow-hidden rounded-lg border border-border bg-muted/30">
+          <img
+            src={topWearGuideSrc}
+            alt="T-shirt measurement guide — shoulder, chest, waist, sleeve, length"
+            className="mx-auto h-auto max-h-[min(280px,45vh)] w-full object-contain object-center"
+            loading="lazy"
+            decoding="async"
+          />
         </div>
       );
     }
