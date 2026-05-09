@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "../components/custom/Sidebar";
+import RoutePageFallback from "../components/RoutePageFallback";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -66,7 +68,9 @@ export default function AccountLayout() {
             shadow-sm
             p-4 sm:p-6 md:p-8
           ">
-            <Outlet />
+            <Suspense fallback={<RoutePageFallback />}>
+              <Outlet />
+            </Suspense>
           </div>
         </main>
       </div>

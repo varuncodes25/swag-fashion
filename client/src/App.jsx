@@ -187,7 +187,11 @@ export default function App() {
     },
     {
       path: "/admin/banner",
-      element: <BannerManager />,
+      element: (
+        <Suspense fallback={<RoutePageFallback />}>
+          <BannerManager />
+        </Suspense>
+      ),
     },
     {
       path: "/admin/dashboard/edit-product/:productId",
@@ -239,7 +243,11 @@ export default function App() {
     },
     {
       path: "/*",
-      element: <Error />,
+      element: (
+        <Suspense fallback={<RoutePageFallback />}>
+          <Error />
+        </Suspense>
+      ),
     },
   ]);
 
@@ -247,9 +255,7 @@ export default function App() {
     <ThemeProvider>
       <Provider store={store}>
         <Toaster />
-        <Suspense fallback={<RoutePageFallback />}>
-          <RouterProvider router={router} />
-        </Suspense>
+        <RouterProvider router={router} />
       </Provider>
     </ThemeProvider>
   );
