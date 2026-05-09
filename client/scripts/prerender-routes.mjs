@@ -61,8 +61,24 @@ const PRODUCT_SLUGS = (process.env.PRERENDER_PRODUCT_SLUGS || "")
 const stripOldCanonical = (html) =>
   html.replace(/<link\s+rel="canonical"[^>]*>\s*/gi, "");
 
-const injectHeadTags = (html, { title, description, canonical }) => {
+const injectHeadTags = (html, { title, description, canonical, route }) => {
   let next = stripOldCanonical(html);
+
+  const homeHeroPreloads =
+    route === "/"
+      ? [
+          '    <link rel="preload" as="image" href="/images/banner-slide-1-mobile.png" media="(max-width: 639px)" fetchpriority="high" />',
+          '    <link rel="preload" as="image" href="/images/banner-slide-1-desktop.png" media="(min-width: 640px)" fetchpriority="high" />',
+          "",
+        ].join("\n")
+      : "";
+
+  if (homeHeroPreloads) {
+    next = next.replace(
+      /<meta\s+charset="UTF-8"\s*\/?>/i,
+      `<meta charset="UTF-8" />\n${homeHeroPreloads}`
+    );
+  }
 
   next = next.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
   next = next.replace(
@@ -90,6 +106,7 @@ const ensureRouteHtml = async (baseHtml, routeConfig) => {
     title: routeConfig.title,
     description: routeConfig.description,
     canonical,
+    route: routeConfig.route,
   });
   await fs.writeFile(outputPath, content, "utf8");
 };

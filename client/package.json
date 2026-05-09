@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/prepare-public-hero-assets.mjs",
     "dev": "vite",
-    "build": "vite build && node scripts/prerender-routes.mjs",
+    "build": "node scripts/prepare-public-hero-assets.mjs && vite build && node scripts/prerender-routes.mjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },

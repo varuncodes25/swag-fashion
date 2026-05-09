@@ -58,14 +58,30 @@ const Footer = () => {
 
             {/* Social Icons */}
             <div className="flex gap-3">
-              <a href="#" className="bg-[#1877F2] text-white p-2 rounded-full hover:scale-110">
-                <Facebook size={18} />
+              <a
+                href="#"
+                aria-label="Swag Fashion on Facebook"
+                className="bg-[#1877F2] text-white p-2 rounded-full hover:scale-110"
+              >
+                <Facebook size={18} aria-hidden />
               </a>
-              <a href="https://www.youtube.com/@Swagfashion-h8d" target="_blank" className="bg-[#FF0000] text-white p-2 rounded-full hover:scale-110">
-                <Youtube size={18} />
+              <a
+                href="https://www.youtube.com/@Swagfashion-h8d"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Swag Fashion on YouTube"
+                className="bg-[#FF0000] text-white p-2 rounded-full hover:scale-110"
+              >
+                <Youtube size={18} aria-hidden />
               </a>
-              <a  href="https://www.instagram.com/swagfashion.in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" className="bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white p-2 rounded-full hover:scale-110">
-                <Instagram size={18} />
+              <a
+                href="https://www.instagram.com/swagfashion.in?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Swag Fashion on Instagram"
+                className="bg-gradient-to-tr from-[#F58529] via-[#DD2A7B] to-[#8134AF] text-white p-2 rounded-full hover:scale-110"
+              >
+                <Instagram size={18} aria-hidden />
               </a>
             </div>
           </div>

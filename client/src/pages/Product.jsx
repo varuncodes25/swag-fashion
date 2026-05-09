@@ -111,45 +111,27 @@ const Product = () => {
     }
   };
 
-  // ✅ Loading state
-  if (productLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const variantImages = product
+    ? getVariantImages
+      ? getVariantImages(color)
+      : images || []
+    : [];
 
-  // ✅ Product not found
-  if (!product) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
-        <button
-          onClick={() => navigate("/")}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-        >
-          Back to Home
-        </button>
-      </div>
-    );
-  }
-
-  // ✅ Get variant images
-  const variantImages = getVariantImages
-    ? getVariantImages(color)
-    : images || [];
-
-  // ✅ Get variant stock
-  const getVariantStock = () => {
-    return selectedVariant?.stock || stock || 0;
-  };
-
-  // ✅ Display images
   const displayImages =
-    variantImages.length > 0 ? variantImages : product.allImages || [];
+    product && variantImages.length > 0
+      ? variantImages
+      : product?.allImages || [];
+
+  const getVariantStock = () => selectedVariant?.stock || stock || 0;
+
+  const norm = (s) => String(s ?? "").trim().toLowerCase();
+  const variantsForSelectedColor = (product?.variants || []).filter(
+    (v) => norm(v.color) === norm(color) && norm(v.color).length > 0
+  );
 
   useEffect(() => {
+    if (!product || productLoading) return;
+
     const productName = product?.name || "Product";
     const brand = product?.brand || "Swag Fashion";
     const title = `${productName} | ${brand} | Swag Fashion`;
@@ -229,12 +211,40 @@ const Product = () => {
 
     applyJsonLd("product", productSchema);
     applyJsonLd("product-breadcrumb", breadcrumbSchema);
-  }, [product, productId, displayImages, displayPrice, selectedVariant, stock]);
+  }, [
+    product,
+    productId,
+    displayImages,
+    displayPrice,
+    selectedVariant,
+    stock,
+    productLoading,
+    color,
+  ]);
 
-  const norm = (s) => String(s ?? '').trim().toLowerCase();
-  const variantsForSelectedColor = (product?.variants || []).filter(
-    (v) => norm(v.color) === norm(color) && norm(v.color).length > 0
-  );
+  // ✅ Loading state
+  if (productLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // ✅ Product not found
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background dark:bg-black  ">

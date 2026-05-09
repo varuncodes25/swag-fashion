@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchBanners } from "@/redux/slices/bannerSlice";
+import { cloudinaryOptimize } from "@/utils/cloudinaryOptimize";
 
 
 const HeaderDisplay = () => {
@@ -40,11 +41,11 @@ const HeaderDisplay = () => {
     }
   };
 
-  // Loading state
+  // Loading state — match loaded carousel heights to avoid CLS vs. Lighthouse
   if (loading) {
     return (
       <div className="w-full">
-        <div className="relative h-[400px] md:h-[500px] overflow-hidden rounded-xl md:rounded-2xl bg-gray-200 animate-pulse"></div>
+        <div className="relative h-[260px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden rounded-xl md:rounded-2xl bg-gray-200 animate-pulse" />
       </div>
     );
   }
@@ -53,10 +54,11 @@ const HeaderDisplay = () => {
   if (error) {
     return (
       <div className="w-full">
-        <div className="relative h-[400px] md:h-[500px] overflow-hidden rounded-xl md:rounded-2xl bg-red-50 flex items-center justify-center">
+        <div className="relative h-[260px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden rounded-xl md:rounded-2xl bg-red-50 flex items-center justify-center">
           <div className="text-center">
             <p className="text-red-600 mb-2">Failed to load banners</p>
-            <button 
+            <button
+              type="button"
               onClick={() => dispatch(fetchBanners())}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
             >
@@ -72,7 +74,7 @@ const HeaderDisplay = () => {
   if (!banners || banners.length === 0) {
     return (
       <div className="w-full">
-        <div className="relative h-[400px] md:h-[500px] overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="relative h-[260px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-700 mb-2">No Banners Available</h2>
             <p className="text-gray-600">Check back later for amazing offers!</p>
@@ -84,6 +86,8 @@ const HeaderDisplay = () => {
 
   // Safe access to current slide
   const currentSlide = banners[index] || banners[0];
+  const heroImg = cloudinaryOptimize(currentSlide.image, { maxWidth: 1600 });
+  const heroFetchPriority = index === 0 ? "high" : "low";
 
   // Agar currentSlide undefined ho to first banner use karo
   if (!currentSlide) {
@@ -101,9 +105,12 @@ const HeaderDisplay = () => {
   */}
     {/* Background Image */}
         <img
-          src={currentSlide.image}
+          src={heroImg}
           alt={currentSlide.title || "Banner"}
           className="absolute inset-0 w-full h-full object-cover"
+          decoding="async"
+          fetchPriority={heroFetchPriority}
+          sizes="100vw"
         />
 
         {/* Dark Overlay */}
@@ -134,9 +141,12 @@ const HeaderDisplay = () => {
             )}
 
             {/* CTA Button */}
-            <button 
+            <button
+              type="button"
               className="px-8 py-3 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-colors duration-300"
-              onClick={() => window.location.href = currentSlide.link || '#'}
+              onClick={() =>
+                (window.location.href = currentSlide.link || "#")
+              }
             >
               Shop Now →
             </button>
@@ -147,6 +157,8 @@ const HeaderDisplay = () => {
         {banners.length > 1 && (
           <>
             <button
+              type="button"
+              aria-label="Previous banner"
               onClick={prev}
               className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
             >
@@ -154,6 +166,8 @@ const HeaderDisplay = () => {
             </button>
 
             <button
+              type="button"
+              aria-label="Next banner"
               onClick={next}
               className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-white/10 backdrop-blur-sm rounded-full text-white hover:bg-white/20 transition-colors"
             >
@@ -167,7 +181,9 @@ const HeaderDisplay = () => {
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
             {banners.map((_, i) => (
               <button
+                type="button"
                 key={i}
+                aria-label={`Go to banner ${i + 1}`}
                 onClick={() => setIndex(i)}
                 className={`w-2 h-2 rounded-full transition-all ${
                   i === index ? "bg-white w-6" : "bg-white/40"

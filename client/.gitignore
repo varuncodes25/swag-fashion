@@ -23,3 +23,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated from src/assets at build / predev (see scripts/prepare-public-hero-assets.mjs)
+public/images/banner-slide-*.png

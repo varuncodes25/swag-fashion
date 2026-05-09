@@ -1,30 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-// Desktop Images
-import banner1 from "../../assets/god mode banner.png";
-import banner2 from "../../assets/banner2.png";
-import banner3 from "../../assets/banner3.png";
+const bannerHeights =
+  "relative bg-black aspect-[16/9] sm:aspect-[16/7] md:aspect-[16/6] lg:aspect-auto lg:h-[550px]";
 
-// Mobile Images
-import mobile1 from "../../assets/mobile1.png";
-
-import mobile3 from "../../assets/mobile3.png";
-
-// Data
+/** Stable /public URLs so the first hero can be preloaded from HTML after prerender */
 const bannerData = [
   {
     id: 1,
-    desktop: banner1,
-    mobile: mobile1,
+    desktop: "/images/banner-slide-1-desktop.png",
+    mobile: "/images/banner-slide-1-mobile.png",
   },
-
   {
     id: 3,
-    desktop: banner3,
-    mobile: mobile3, // ✅ fixed
+    desktop: "/images/banner-slide-2-desktop.png",
+    mobile: "/images/banner-slide-2-mobile.png",
   },
 ];
+
 const Banner = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -86,42 +79,37 @@ const Banner = () => {
     return () => stopAutoSlide();
   }, []);
 
+  const isLcpHero = activeIndex === 0;
+  const heroFetchPriority = isLcpHero ? "high" : "low";
+
   return (
     <div className="w-full px-2 sm:px-4">
       <div className="w-full overflow-hidden rounded-xl sm:rounded-2xl shadow-lg">
-
         <div className="relative">
-
-          {/* Banner */}
-          <div
-            className="
-              relative bg-black
-              aspect-[16/9]
-              sm:aspect-[16/7]
-              md:aspect-[16/6]
-              lg:aspect-auto lg:h-[550px]
-            "
-          >
-
+          <div className={bannerHeights}>
             {/* Mobile */}
             <img
               src={currentBanner.mobile}
-              alt="banner"
-              className="w-full h-full object-cover block sm:hidden"
+              alt="Swag Fashion — seasonal collection banner"
+              className="absolute inset-0 w-full h-full object-cover block sm:hidden"
               draggable={false}
+              decoding="async"
+              fetchPriority={heroFetchPriority}
+              sizes="100vw"
             />
 
             {/* Desktop */}
             <img
               src={currentBanner.desktop}
-              alt="banner"
-              className="w-full h-full object-cover hidden sm:block"
+              alt="Swag Fashion — seasonal collection banner"
+              className="absolute inset-0 w-full h-full object-cover hidden sm:block"
               draggable={false}
+              decoding="async"
+              fetchPriority={heroFetchPriority}
+              sizes="(min-width: 640px) 100vw, 100vw"
             />
-
           </div>
 
-          {/* Progress Bar */}
           <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/20">
             <div
               className="h-full bg-yellow-400 transition-all duration-100"
@@ -129,19 +117,24 @@ const Banner = () => {
             />
           </div>
 
-          {/* Controls */}
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
-
-            {/* Left */}
-            <button onClick={goToPrev}>
+            <button
+              type="button"
+              aria-label="Previous banner"
+              onClick={goToPrev}
+              className="p-2 rounded-full bg-black/35 hover:bg-black/55 focus-visible:outline focus-visible:ring-2 focus-visible:ring-white/80"
+            >
               <ChevronLeft className="text-white w-4 h-4 sm:w-5 sm:h-5" />
             </button>
 
-            {/* Dots */}
-            <div className="flex items-center gap-1.5">
-              {bannerData.map((_, index) => (
+            <div className="flex items-center gap-1.5" role="tablist" aria-label="Banner slides">
+              {bannerData.map((slide, index) => (
                 <button
-                  key={index}
+                  key={slide.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={index === activeIndex}
+                  aria-label={`Go to banner ${index + 1}`}
                   onClick={() => goToSlide(index)}
                   className={`transition-all duration-300 rounded-full ${
                     index === activeIndex
@@ -152,13 +145,15 @@ const Banner = () => {
               ))}
             </div>
 
-            {/* Right */}
-            <button onClick={goToNext}>
+            <button
+              type="button"
+              aria-label="Next banner"
+              onClick={goToNext}
+              className="p-2 rounded-full bg-black/35 hover:bg-black/55 focus-visible:outline focus-visible:ring-2 focus-visible:ring-white/80"
+            >
               <ChevronRight className="text-white w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-
           </div>
-
         </div>
       </div>
     </div>
