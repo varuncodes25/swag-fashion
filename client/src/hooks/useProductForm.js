@@ -124,6 +124,53 @@ const BOTTOM_CLOSURES = [
   "Pull On",
   "Not Applicable",
 ];
+
+const TOP_WEAR_TYPES = [
+  "T-Shirt",
+  "Polo Shirt",
+  "Shirt",
+  "Formal Shirt",
+  "Casual Shirt",
+  "Tank Top",
+  "Crop Top",
+  "Blouse",
+  "Tunic",
+  "Top",
+  "Camisole",
+  "Sweater",
+  "Cardigan",
+  "Pullover",
+  "Hoodie",
+  "Sweatshirt",
+  "Jacket",
+  "Blazer",
+  "Coat",
+  "Raincoat",
+  "Windcheater",
+  "Bomber Jacket",
+  "Denim Jacket",
+  "Shrug",
+  "Waistcoat",
+  "Gilet",
+  "Vest",
+  "Kurta",
+  "Nehru Jacket",
+];
+
+const BOTTOM_WEAR_TYPES = [
+  "Jeans",
+  "Trousers",
+  "Chinos",
+  "Cargo Pants",
+  "Joggers",
+  "Track Pants",
+  "Leggings",
+  "Palazzo",
+  "Skirt",
+  "Shorts",
+  "Dhoti",
+  "Lungi",
+];
 // Clothing Types (must match server/models/Product.js)
 const CLOTHING_TYPES = [
   "T-Shirt",
@@ -408,6 +455,23 @@ const OCCASIONS = [
   "Festive",
   "Loungewear",
   "Sleepwear",
+];
+
+const CARE_INSTRUCTIONS = [
+  "Machine Wash",
+  "Machine Wash Cold",
+  "Machine Wash Gentle",
+  "Hand Wash",
+  "Dry Clean Only",
+  "Spot Clean",
+  "Do Not Bleach",
+  "Tumble Dry Low",
+  "Line Dry",
+  "Dry Flat",
+  "Iron Low Heat",
+  "Iron Medium Heat",
+  "Do Not Iron",
+  "Steam Only",
 ];
 
 const AGE_GROUPS = [
@@ -1031,11 +1095,8 @@ const prepareFormData = () => {
     }
 
     // ✅ CLOTHING CATEGORY DETECT KARO
-    const bottomWear = ['Jeans', 'Trousers', 'Shorts', 'Leggings', 'Skirt', 'Palazzo', 'Cargo Pants', 'Joggers', 'Track Pants'];
-    const topWear = ['T-Shirt', 'Shirt', 'Jacket', 'Hoodie', 'Sweater', 'Blazer', 'Polo Shirt', 'Casual Shirt', 'Formal Shirt'];
-    
-    const isBottomWear = bottomWear.includes(formData.clothingType);
-    const isTopWear = topWear.includes(formData.clothingType);
+    const isBottomWear = BOTTOM_WEAR_TYPES.includes(formData.clothingType);
+    const isTopWear = TOP_WEAR_TYPES.includes(formData.clothingType);
 
     // Add basic fields
     Object.keys(formData).forEach((key) => {
@@ -1402,7 +1463,10 @@ const prepareFormData = () => {
     ALL_FEATURES,
     SEASONS,
     OCCASIONS,
+    CARE_INSTRUCTIONS,
     MAX_IMAGES_PER_COLOR,
+    TOP_WEAR_TYPES,
+    BOTTOM_WEAR_TYPES,
     BOTTOM_STYLES,
     WAIST_TYPES,
     BOTTOM_LENGTHS,

@@ -50,59 +50,6 @@ const CreateProduct = () => {
     clearProduct,
   } = useProducts();
   const { categories, getCategories } = useCategories();
-  // Simple version - Sirf Top aur Bottom identify karna hai toh
-  const getClothingCategory = (clothingType) => {
-    const topWear = [
-      "T-Shirt",
-      "Polo Shirt",
-      "Shirt",
-      "Formal Shirt",
-      "Casual Shirt",
-      "Tank Top",
-      "Crop Top",
-      "Blouse",
-      "Tunic",
-      "Top",
-      "Camisole",
-      "Sweater",
-      "Cardigan",
-      "Pullover",
-      "Hoodie",
-      "Sweatshirt",
-      "Jacket",
-      "Blazer",
-      "Coat",
-      "Raincoat",
-      "Windcheater",
-      "Bomber Jacket",
-      "Denim Jacket",
-      "Shrug",
-      "Waistcoat",
-      "Gilet",
-      "Vest",
-      "Kurta",
-      "Nehru Jacket",
-    ];
-
-    const bottomWear = [
-      "Jeans",
-      "Trousers",
-      "Chinos",
-      "Cargo Pants",
-      "Joggers",
-      "Track Pants",
-      "Leggings",
-      "Palazzo",
-      "Skirt",
-      "Shorts",
-      "Dhoti",
-      "Lungi",
-    ];
-
-    if (topWear.includes(clothingType)) return "top";
-    if (bottomWear.includes(clothingType)) return "bottom";
-    return "other";
-  };
   const {
     formData,
     updateFormData,
@@ -146,7 +93,10 @@ const CreateProduct = () => {
     ALL_FEATURES,
     SEASONS,
     OCCASIONS,
+    CARE_INSTRUCTIONS,
     MAX_IMAGES_PER_COLOR,
+    TOP_WEAR_TYPES,
+    BOTTOM_WEAR_TYPES,
     stockMatrix, // ✅ Changed from colorStocks
     updateStock, // ✅ Changed from updateColorStock
     getTotalStockForColor, // ✅ New helper function
@@ -179,8 +129,11 @@ const CreateProduct = () => {
 
   const [customSizeInput, setCustomSizeInput] = useState("");
   const [selectedSizeChartTemplate, setSelectedSizeChartTemplate] = useState("oversizedTshirt");
-const clothingCategory = getClothingCategory(formData.clothingType);
-console.log(clothingCategory,"clothingCategory")
+  const clothingCategory = TOP_WEAR_TYPES.includes(formData.clothingType)
+    ? "top"
+    : BOTTOM_WEAR_TYPES.includes(formData.clothingType)
+      ? "bottom"
+      : "other";
   // React Quill modules
   const quillModules = {
     toolbar: [
@@ -1196,10 +1149,7 @@ console.log(clothingCategory,"clothingCategory")
       <div className="space-y-2">
         <Label>Care Instructions</Label>
         <div className="grid grid-cols-2 gap-2">
-          {[
-            "Machine Wash", "Hand Wash", "Dry Clean Only", "Do Not Bleach",
-            "Tumble Dry Low", "Line Dry", "Iron Low Heat", "Do Not Iron", "Dry Flat"
-          ].map((instruction) => (
+          {CARE_INSTRUCTIONS.map((instruction) => (
             <div key={instruction} className="flex items-center space-x-2">
               <Checkbox
                 id={`care-${instruction}`}

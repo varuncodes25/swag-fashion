@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,11 +20,42 @@ import {
   X,
 } from "lucide-react";
 
-export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
+const TSHIRT_FILTER_FALLBACKS = {
+  fit: ["Oversized", "Regular", "Slim", "Relaxed", "Athletic"],
+  pattern: ["Solid", "Printed", "Graphic", "Striped", "Checked", "Plain"],
+  sleeveType: ["Half Sleeve", "Full Sleeve", "Short Sleeve", "Sleeveless"],
+  neckType: ["Round Neck", "V-Neck", "Polo Neck", "Collared"],
+  fabric: ["Cotton", "Organic Cotton", "Polyester", "Blended", "Lycra", "Elastane"],
+};
+
+export default function FiltersSidebar({
+  selectedFilters = {},
+  updateFilter,
+  availableFilters = {},
+}) {
   const { slug } = useParams();
   const [categories, setCategories] = useState([]);
   const [customMinPrice, setCustomMinPrice] = useState("");
   const [customMaxPrice, setCustomMaxPrice] = useState("");
+  const tShirtSections = useMemo(() => {
+    const buildOptions = (key) => {
+      const apiValues = Array.isArray(availableFilters?.[key])
+        ? availableFilters[key]
+            .filter((v) => typeof v === "string" && v.trim())
+            .map((v) => v.trim())
+        : [];
+      const merged = [...apiValues, ...(TSHIRT_FILTER_FALLBACKS[key] || [])];
+      return [...new Set(merged)];
+    };
+
+    return [
+      { title: "Fit", key: "fit", options: buildOptions("fit") },
+      { title: "Pattern", key: "pattern", options: buildOptions("pattern") },
+      { title: "Sleeve Type", key: "sleeveType", options: buildOptions("sleeveType") },
+      { title: "Neck Type", key: "neckType", options: buildOptions("neckType") },
+      { title: "Fabric", key: "fabric", options: buildOptions("fabric") },
+    ];
+  }, [availableFilters]);
 
   /* ================= FETCH CATEGORIES ================= */
   useEffect(() => {
@@ -157,7 +188,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
 
   return (
     <div className="
-      w-full lg:w-72 rounded-2xl shadow-lg lg:sticky lg:top-5 h-full lg:h-[85vh] flex flex-col min-h-0
+      w-full lg:w-72 rounded-2xl shadow-lg lg:sticky lg:top-5 lg:h-[85vh] lg:flex lg:flex-col lg:min-h-0
       bg-gradient-to-b from-white to-gray-50 border border-gray-200
       dark:bg-gradient-to-b dark:from-gray-900 dark:to-gray-800 dark:border-gray-700
       transition-colors duration-300
@@ -185,7 +216,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
       </div>
 
       {/* ================= SCROLLABLE FILTERS CONTENT ================= */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-5 text-gray-800 dark:text-gray-200">
+      <div className="p-5 space-y-5 text-gray-800 dark:text-gray-200 lg:flex-1 lg:overflow-y-auto">
       
         {/* ================= CATEGORIES ================= */}
         <FilterSection
@@ -246,33 +277,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
         >
           <div className="space-y-5">
 
-            {[
-              {
-                title: "Fit",
-                key: "fit",
-                options: ["Oversized", "Regular", "Slim"],
-              },
-              {
-                title: "Pattern",
-                key: "pattern",
-                options: ["Solid", "Printed", "Graphic"],
-              },
-              {
-                title: "Sleeve Type",
-                key: "sleeveType",
-                options: ["Half Sleeve", "Full Sleeve"],
-              },
-              {
-                title: "Neck Type",
-                key: "neckType",
-                options: ["Round Neck", "V-Neck", "Polo"],
-              },
-              {
-                title: "Fabric",
-                key: "fabric",
-                options: ["Cotton", "Polyester", "Blend"],
-              },
-            ].map((section) => (
+            {tShirtSections.map((section) => (
               <div key={section.key}>
 
                 {/* SECTION TITLE */}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Filter, X, ChevronRight, Check, SlidersHorizontal } from "lucide-react";
 import FiltersSidebar from "./FiltersSidebar";
 
@@ -10,9 +10,6 @@ export default function MobileFilterButton({
   className = "",
 }) {
   const [open, setOpen] = useState(false);
-  const headerRef = useRef(null);
-  const footerRef = useRef(null);
-  const contentRef = useRef(null);
 
   const appliedFilterCount = Object.values(selectedFilters)
     .flat()
@@ -21,33 +18,6 @@ export default function MobileFilterButton({
   const handleApplyFilters = () => {
     setOpen(false);
   };
-
-  // ✅ Dynamic height calculation
-  useEffect(() => {
-    if (open) {
-      const calculateHeight = () => {
-        if (headerRef.current && footerRef.current && contentRef.current) {
-          const headerHeight = headerRef.current.offsetHeight;
-          const footerHeight = footerRef.current.offsetHeight;
-          const windowHeight = window.innerHeight;
-          const availableHeight = windowHeight - headerHeight - footerHeight;
-          
-          contentRef.current.style.maxHeight = `${availableHeight}px`;
-          contentRef.current.style.overflowY = "auto";
-        }
-      };
-      
-      // Thoda delay do taaki DOM render ho jaye
-      setTimeout(calculateHeight, 50);
-      
-      // Window resize par bhi adjust karo
-      window.addEventListener('resize', calculateHeight);
-      
-      return () => {
-        window.removeEventListener('resize', calculateHeight);
-      };
-    }
-  }, [open]);
 
   return (
     <>
@@ -99,14 +69,11 @@ export default function MobileFilterButton({
           
           <div
             onClick={(e) => e.stopPropagation()}
-            className="absolute inset-y-0 right-0 w-full max-w-xs sm:max-w-sm bg-gradient-to-b from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-950 shadow-2xl shadow-black/30 transform transition-transform duration-500 ease-out flex flex-col"
+            className="absolute inset-y-0 right-0 w-full max-w-xs sm:max-w-sm h-dvh max-h-dvh bg-gradient-to-b from-white to-gray-50 dark:from-zinc-900 dark:to-zinc-950 shadow-2xl shadow-black/30 transform transition-transform duration-500 ease-out flex flex-col"
             style={{ animation: 'slideInRight 0.3s ease-out forwards' }}
           >
-            {/* Header with ref */}
-            <div
-              ref={headerRef}
-              className="sticky top-0 z-10 px-6 py-5 bg-gradient-to-r from-primary to-primary/90 dark:from-blue-600 dark:to-indigo-700 text-white shadow-lg"
-            >
+            {/* Header */}
+            <div className="shrink-0 px-6 py-5 bg-gradient-to-r from-primary to-primary/90 dark:from-blue-600 dark:to-indigo-700 text-white shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
@@ -146,22 +113,16 @@ export default function MobileFilterButton({
               )}
             </div>
 
-            {/* Content with ref - Dynamic height */}
-            <div
-              ref={contentRef}
-              className="flex-1 p-6"
-            >
+            {/* Content */}
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
               <FiltersSidebar 
                 selectedFilters={selectedFilters}
                 updateFilter={updateFilter}
               />
             </div>
 
-            {/* Footer with ref */}
-            <div
-              ref={footerRef}
-              className="sticky bottom-0 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg"
-            >
+            {/* Footer */}
+            <div className="shrink-0 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg">
               <div className="flex gap-3 p-4">
                 <button
                   onClick={clearAllFilters}
