@@ -129,7 +129,7 @@ const ProductGallery = ({
           </div>
         )}
 
-        {/* MAIN IMAGE — object-cover fills the frame (no side letterboxing); detail in zoom / tap */}
+        {/* MAIN IMAGE — cover fills frame; object-top keeps head/print visible (less top crop) */}
         <div
           className={`
             relative
@@ -156,7 +156,7 @@ const ProductGallery = ({
             <img
               src={activeImage}
               alt="product"
-              className="absolute inset-0 z-[1] h-full w-full object-cover object-center transition-transform duration-300"
+              className="absolute inset-0 z-[1] h-full w-full object-cover object-top transition-transform duration-300"
               loading="lazy"
               decoding="async"
             />
@@ -238,7 +238,7 @@ const ProductGallery = ({
           <img
             src={activeImage}
             alt="product"
-            className="absolute inset-0 z-[1] h-full w-full object-cover object-center"
+            className="absolute inset-0 z-[1] h-full w-full object-cover object-top"
             loading="lazy"
             decoding="async"
           />
