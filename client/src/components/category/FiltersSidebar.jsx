@@ -620,115 +620,89 @@ export default function FiltersSidebar({
           icon={<Palette size={18} />}
           defaultOpen={true}
         >
-          <div className="space-y-4">
-            {/* Color Grid */}
-            <div className="grid grid-cols-6 gap-2 sm:gap-3">
+          <div className="space-y-3">
+            <div className="space-y-1.5">
               {[
                 { name: "Red", value: "red", code: "#ef4444" },
                 { name: "Blue", value: "blue", code: "#3b82f6" },
                 { name: "Green", value: "green", code: "#22c55e" },
-                { name: "Black", value: "black", code: "#1f2937" },
-                { name: "White", value: "white", code: "#f3f4f6" },
+                { name: "Black", value: "black", code: "#111827" },
+                { name: "White", value: "white", code: "#f8fafc" },
                 { name: "Yellow", value: "yellow", code: "#eab308" },
                 { name: "Purple", value: "purple", code: "#a855f7" },
                 { name: "Pink", value: "pink", code: "#ec4899" },
                 { name: "Orange", value: "orange", code: "#f97316" },
                 { name: "Gray", value: "gray", code: "#6b7280" },
                 { name: "Brown", value: "brown", code: "#78350f" },
-                { name: "Multi", value: "multi", code: "linear-gradient(135deg, #ef4444, #3b82f6, #22c55e)" },
+                {
+                  name: "Multi",
+                  value: "multi",
+                  code: "linear-gradient(135deg, #ef4444, #3b82f6, #22c55e)",
+                },
               ].map((color) => {
                 const isSelected = selectedFilters.colors?.includes(color.value);
                 const isWhite = color.value === "white";
-
                 return (
-                  <button
+                  <label
                     key={color.value}
-                    onClick={() => updateFilter("colors", color.value)}
-                    className="group relative flex flex-col items-center gap-1.5"
+                    className={`flex cursor-pointer items-center justify-between rounded-md px-2.5 py-2 text-sm transition ${
+                      isSelected
+                        ? "bg-blue-50 text-primary dark:bg-blue-900/20 dark:text-blue-300"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-800/80"
+                    }`}
                   >
-                    {/* Color Circle with Ring Effect */}
-                    <div className="relative">
-                      {/* Outer Ring Animation */}
-                      <div className={`
-                absolute -inset-0.5 rounded-full 
-                ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}
-                transition-all duration-300
-                bg-gradient-to-r from-blue-500 to-purple-500
-              `}></div>
-
-                      {/* Main Color Circle */}
-                      <div
-                        className={`
-                  relative w-8 h-8 sm:w-9 sm:h-9 rounded-full 
-                  transition-all duration-300 cursor-pointer
-                  shadow-md hover:shadow-lg
-                  ${isSelected ? 'ring-2 ring-offset-2 ring-primary dark:ring-offset-gray-900 scale-110' : 'ring-1 ring-gray-200 dark:ring-gray-700'}
-                  ${isWhite ? 'border border-gray-300' : ''}
-                `}
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`h-4 w-4 rounded-full ${isWhite ? "border border-gray-300" : ""}`}
                         style={{
-                          background: color.value === "multi"
-                            ? color.code
-                            : `linear-gradient(135deg, ${color.code}, ${color.code}dd)`
+                          background:
+                            color.value === "multi"
+                              ? color.code
+                              : color.code,
                         }}
-                      >
-                        {/* Selected Checkmark */}
-                        {isSelected && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white/90 dark:bg-gray-800/90 flex items-center justify-center shadow-sm">
-                              <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Hover Tooltip */}
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                          <div className="bg-gray-900 dark:bg-gray-700 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                            {color.name}
-                          </div>
-                        </div>
-                      </div>
+                      />
+                      <span className="text-sm font-medium">{color.name}</span>
                     </div>
-
-                    {/* Color Name */}
-                    <span className={`
-              text-[10px] sm:text-xs font-medium transition-colors duration-200
-              ${isSelected
-                        ? 'text-primary dark:text-primary'
-                        : 'text-muted-foreground group-hover:text-gray-900 dark:group-hover:text-gray-200'
-                      }
-            `}>
-                      {color.name}
-                    </span>
-                  </button>
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => updateFilter("colors", color.value)}
+                    />
+                  </label>
                 );
               })}
             </div>
 
             {/* Selected Colors Summary */}
             {selectedFilters.colors?.length > 0 && (
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                <span className="text-xs text-muted-foreground">Selected:</span>
+              <div className="flex flex-wrap items-center gap-1.5 border-t border-gray-200 pt-2 dark:border-gray-700">
                 <div className="flex flex-wrap gap-1.5">
                   {selectedFilters.colors.map(colorValue => {
                     const color = [
                       { name: "Red", value: "red" },
                       { name: "Blue", value: "blue" },
-                      // ... all colors
+                      { name: "Green", value: "green" },
+                      { name: "Black", value: "black" },
+                      { name: "White", value: "white" },
+                      { name: "Yellow", value: "yellow" },
+                      { name: "Purple", value: "purple" },
+                      { name: "Pink", value: "pink" },
+                      { name: "Orange", value: "orange" },
+                      { name: "Gray", value: "gray" },
+                      { name: "Brown", value: "brown" },
+                      { name: "Multi", value: "multi" },
                     ].find(c => c.value === colorValue);
 
                     return (
                       <button
                         key={colorValue}
                         onClick={() => updateFilter("colors", colorValue)}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted rounded-full text-xs group hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                       >
                         <span
                           className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: color?.code || "#000" }}
+                          style={{ backgroundColor: colorValue === "multi" ? "#7c3aed" : colorValue }}
                         ></span>
-                        <span className="text-gray-700 dark:text-gray-300">{color?.name}</span>
+                        <span>{color?.name}</span>
                         <svg className="w-2.5 h-2.5 text-gray-400 group-hover:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -736,9 +710,17 @@ export default function FiltersSidebar({
                     );
                   })}
                 </div>
+                {selectedFilters.colors.map((colorValue) => (
+                  <span key={`clear-${colorValue}`} className="hidden" />
+                ))}
                 <button
-                  onClick={() => updateFilter("colors", null)}
-                  className="text-xs text-blue-500 hover:text-primary ml-auto"
+                  type="button"
+                  onClick={() =>
+                    (selectedFilters.colors || []).forEach((value) =>
+                      updateFilter("colors", value),
+                    )
+                  }
+                  className="ml-auto text-xs font-semibold text-primary hover:underline"
                 >
                   Clear all
                 </button>

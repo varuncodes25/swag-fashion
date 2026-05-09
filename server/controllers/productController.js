@@ -1460,6 +1460,45 @@ const getProductsByCategory = async (req, res) => {
       },
     };
 
+    if (queryParams.includeFilters === "true") {
+      const [
+        fits,
+        patterns,
+        sleeveTypes,
+        neckTypes,
+        fabrics,
+        brands,
+        colors,
+        sizes,
+      ] = await Promise.all([
+        Product.distinct("fit", query),
+        Product.distinct("pattern", query),
+        Product.distinct("sleeveType", query),
+        Product.distinct("neckType", query),
+        Product.distinct("fabric", query),
+        Product.distinct("brand", query),
+        Product.distinct("colors", query),
+        Product.distinct("sizes", query),
+      ]);
+
+      const cleanValues = (arr) =>
+        (arr || [])
+          .filter((v) => typeof v === "string" && v.trim().length > 0)
+          .map((v) => v.trim())
+          .sort((a, b) => a.localeCompare(b));
+
+      response.data.filters = {
+        fit: cleanValues(fits),
+        pattern: cleanValues(patterns),
+        sleeveType: cleanValues(sleeveTypes),
+        neckType: cleanValues(neckTypes),
+        fabric: cleanValues(fabrics),
+        brands: cleanValues(brands),
+        colors: cleanValues(colors),
+        sizes: cleanValues(sizes),
+      };
+    }
+
     // Add debug info in development
     if (process.env.NODE_ENV === "development") {
       response.debug = {
