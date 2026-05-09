@@ -1,36 +1,37 @@
-// Product.jsx - CORRECTED VERSION
 import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import useBuyNow from "@/hooks/useBuyNow";
-import useAddToCart from "@/hooks/useAddToCart"; // ✅ Single import
+import useAddToCart from "@/hooks/useAddToCart";
 import useProductDetails from "@/hooks/useProductDetails";
 
 import Breadcrumb from "@/components/Product/Breadcrumb";
 import ProductImages from "@/components/Product/ProductImages";
 import ProductInfo from "@/components/Product/ProductInfo";
-// import ProductServices from "@/components/Product/ProductServices";
 import ProductVariants from "@/components/Product/ProductVariants";
 import ProductActions from "@/components/Product/ProductActions";
 import ProductTabs from "@/components/Product/ProductTabs";
 import MobileStickyCTA from "@/components/Product/MobileStickyCTA";
 import ReviewsComponent from "@/components/custom/ReviewsComponent";
 import SimilarProducts from "@/components/Product/SimilarProducts";
-import { useEffect, useState } from "react";
 import DeliveryChecker from "@/components/Product/DeliveryChecker";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
-const Product = () => {
-  const { productId } = useParams();
-  const navigate = useNavigate();
-
-  // ✅ Custom hooks
-  const { addToCart, loading: cartLoading } = useAddToCart(); // ✅ Rename loading
-  const { buyNow } = useBuyNow();
-
-  // ✅ Product details hook
+/**
+ * Heavy UI + SEO effect only mount after product is resolved.
+ * Avoids hook-order mismatches across loading / not-found transitions on the shell.
+ */
+function ProductLoaded({
+  productId,
+  detail,
+  addToCart,
+  cartLoading,
+  buyNow,
+  isMobileZoomOpen,
+  onMobileZoomChange,
+}) {
   const {
     product,
     imagebycolor,
-    loading: productLoading, // ✅ Rename loading
     quantity,
     setQuantity,
     selectedImageIndex,
@@ -47,80 +48,13 @@ const Product = () => {
     sizes,
     selectedVariant,
     getVariantImages,
-  } = useProductDetails();
-  const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
+  } = detail;
 
-  // ✅ Handle mobile zoom
-  const handleMobileZoomChange = (isOpen) => {
-
-    setIsMobileZoomOpen(isOpen);
-  };
-
-  // ✅ Add to Cart Function
-  const handleAddToCartClick = async () => {
-    if (!selectedVariant) {
-      alert("Please select color and size");
-      return;
-    }
-
-    try {
-      const result = await addToCart({
-        productId: product._id,
-        variantId: selectedVariant._id,
-        quantity: quantity,
-        productName: product.name,
-        variantColor: selectedVariant.color,
-      });
-
-      if (result.success) {
-        console.log("Added successfully!");
-      }
-    } catch (error) {
-      console.error("Add to cart error:", error);
-    }
-  };
-
-  // ✅ Buy Now Function
-  const handleBuyNowClick = () => {
-    if (!selectedVariant) {
-      alert("Please select color and size");
-      return;
-    }
-
-    buyNow({
-      productId: product._id,
-      variantId: selectedVariant._id, // ✅ CORRECT!
-      quantity,
-      color: selectedVariant.color, // ✅ Add color
-      size: selectedVariant.size,   // ✅ Add size
-    });
-
-  };
-
-  // ✅ Handle color change
-  const handleColorChange = (newColor) => {
-    setColor(newColor);
-
-    if (getVariantImages) {
-      const newColorImages = getVariantImages(newColor);
-
-      if (newColorImages && newColorImages.length > 0) {
-        // Reset to first image of new color
-        setSelectedImageIndex(0);
-      }
-    }
-  };
-
-  const variantImages = product
-    ? getVariantImages
-      ? getVariantImages(color)
-      : images || []
-    : [];
+  const variantImages =
+    product && getVariantImages ? getVariantImages(color) : images || [];
 
   const displayImages =
-    product && variantImages.length > 0
-      ? variantImages
-      : product?.allImages || [];
+    variantImages.length > 0 ? variantImages : product?.allImages || [];
 
   const getVariantStock = () => selectedVariant?.stock || stock || 0;
 
@@ -130,8 +64,6 @@ const Product = () => {
   );
 
   useEffect(() => {
-    if (!product || productLoading) return;
-
     const productName = product?.name || "Product";
     const brand = product?.brand || "Swag Fashion";
     const title = `${productName} | ${brand} | Swag Fashion`;
@@ -198,7 +130,9 @@ const Product = () => {
           "@type": "ListItem",
           position: 2,
           name: product?.gender || "Category",
-          item: getCanonicalFromPath(`/category/${(product?.gender || "all").toLowerCase()}`),
+          item: getCanonicalFromPath(
+            `/category/${(product?.gender || "all").toLowerCase()}`
+          ),
         },
         {
           "@type": "ListItem",
@@ -218,60 +152,80 @@ const Product = () => {
     displayPrice,
     selectedVariant,
     stock,
-    productLoading,
     color,
   ]);
 
-  // ✅ Loading state
-  if (productLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const handleAddToCartClick = async () => {
+    if (!selectedVariant) {
+      alert("Please select color and size");
+      return;
+    }
 
-  // ✅ Product not found
-  if (!product) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
-        <button
-          onClick={() => navigate("/")}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-        >
-          Back to Home
-        </button>
-      </div>
-    );
-  }
+    try {
+      const result = await addToCart({
+        productId: product._id,
+        variantId: selectedVariant._id,
+        quantity,
+        productName: product.name,
+        variantColor: selectedVariant.color,
+      });
+
+      if (result.success) {
+        console.log("Added successfully!");
+      }
+    } catch (error) {
+      console.error("Add to cart error:", error);
+    }
+  };
+
+  const handleBuyNowClick = () => {
+    if (!selectedVariant) {
+      alert("Please select color and size");
+      return;
+    }
+
+    buyNow({
+      productId: product._id,
+      variantId: selectedVariant._id,
+      quantity,
+      color: selectedVariant.color,
+      size: selectedVariant.size,
+    });
+  };
+
+  const handleColorChange = (newColor) => {
+    setColor(newColor);
+
+    if (getVariantImages) {
+      const newColorImages = getVariantImages(newColor);
+
+      if (newColorImages && newColorImages.length > 0) {
+        setSelectedImageIndex(0);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background dark:bg-black  ">
-      {/* Breadcrumb */}
       <Breadcrumb
         category={product.clothingType}
         subcategory={product.gender}
         productName={product.name}
       />
 
-      {/* Main Product Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-background dark:bg-background rounded-xl shadow-sm p-4 sm:p-6 lg:p-8 mb-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-            {/* Left Column - Images */}
             <ProductImages
               images={variantImages}
               selectedImage={selectedImageIndex}
               onSelect={setSelectedImageIndex}
               productName={product.name}
               id={productId}
-              onMobileZoomChange={handleMobileZoomChange}
+              onMobileZoomChange={onMobileZoomChange}
             />
 
-            {/* Right Column - Product Info */}
             <div className="space-y-6">
-              {/* Basic Info */}
               <ProductInfo
                 name={product.name}
                 rating={product.rating}
@@ -284,7 +238,6 @@ const Product = () => {
                 isOfferActive={isOfferActive}
               />
 
-              {/* Color Selection */}
               {colors && colors.length > 0 && (
                 <ProductVariants
                   colors={colors}
@@ -304,19 +257,8 @@ const Product = () => {
                   sizesOrder={sizes}
                 />
               )}
-<DeliveryChecker/>
-              {/* Services */}
-              {/* <ProductServices
-                freeDelivery={product.freeShipping}
-                deliveryCharge={product.deliveryCharge}
-                warranty={product.warranty}
-                warrantyType={product.warrantyType}
-                returnPolicy={product.returnPolicy}
-                returnable={product.returnable}
-                stock={getVariantStock()}
-              /> */}
+              <DeliveryChecker />
 
-              {/* CTA Buttons */}
               <div className="hidden lg:block">
                 <ProductActions
                   stock={getVariantStock()}
@@ -325,21 +267,18 @@ const Product = () => {
                   paymentOptions={product.paymentOptions}
                   highlights={product.features}
                   isVariantSelected={!!selectedVariant}
-                  loading={cartLoading} // ✅ Pass loading state
+                  loading={cartLoading}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Tabs Section */}
         <ProductTabs product={product} />
 
-        {/* Reviews Section */}
         <ReviewsComponent productId={product._id} product={product} />
       </main>
 
-      {/* Mobile Sticky CTA */}
       {!isMobileZoomOpen && (
         <MobileStickyCTA
           product={product}
@@ -349,12 +288,61 @@ const Product = () => {
           onBuyNow={handleBuyNowClick}
           isVariantSelected={!!selectedVariant}
           stock={getVariantStock()}
-          loading={cartLoading} // ✅ Pass loading state
+          loading={cartLoading}
         />
       )}
 
       <SimilarProducts productId={product._id} />
     </div>
+  );
+}
+
+const Product = () => {
+  const { productId } = useParams();
+  const navigate = useNavigate();
+
+  const { addToCart, loading: cartLoading } = useAddToCart();
+  const { buyNow } = useBuyNow();
+  const detail = useProductDetails();
+  const { product, loading: productLoading } = detail;
+
+  const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
+
+  const handleMobileZoomChange = (isOpen) => setIsMobileZoomOpen(isOpen);
+
+  if (productLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
+        <button
+          onClick={() => navigate("/")}
+          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <ProductLoaded
+      key={product._id || productId}
+      productId={productId}
+      detail={detail}
+      addToCart={addToCart}
+      cartLoading={cartLoading}
+      buyNow={buyNow}
+      isMobileZoomOpen={isMobileZoomOpen}
+      onMobileZoomChange={handleMobileZoomChange}
+    />
   );
 };
 
