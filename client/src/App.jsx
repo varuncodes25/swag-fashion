@@ -1,69 +1,74 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Home from "./pages/Home";
+import { lazy, Suspense, useEffect } from "react";
 import { ThemeProvider } from "./components/provider/theme-provider";
-import Signup from "./pages/Signup";
-import Login from "./pages/Login";
-import AuthCallback from "./pages/AuthCallback";
-import Product from "./pages/Product";
-import Checkout from "./pages/Checkout";
-import AdminLogin from "./pages/AdminLogin";
-import Error from "./pages/Error";
-import Success from "./pages/Success";
 import RootLayout from "./layouts/RootLayout";
 import AdminLayout from "./layouts/AdminLayout";
-import MyProfile from "./components/custom/MyProfile";
-import CreateProducts from "./components/custom/CreateProducts";
-import AllProducts from "./components/custom/AllProducts";
-import Analytics from "./components/custom/Analytics";
-import Orders from "./components/custom/Orders";
-import Settings from "./components/custom/Settings";
 import { Provider, useDispatch } from "react-redux";
 import { store } from "./redux/store";
-import MyOrders from "./pages/MyOrders";
 import { Toaster } from "./components/ui/toaster";
 import ProtectedRoute from "./components/custom/ProtectedRoute";
-import Contact from "./components/custom/Contact";
-import FaqPage from "./components/FaqPage";
-import AboutPage from "./components/AboutPage";
-import ForgotPassword from "./components/ForgotPassword";
-import ResetPassword from "./components/ResetPassword";
-import TermsAndConditions from "./components/TermsAndConditions";
-import CategoryPage from "./pages/CategoryPage";
-import OrderDetails from "./components/order/OrderDetails";
-import WishlistPage from "./pages/Wishlist";
-import AdminProductDetails from "./components/Admin/AdminProductDetails";
-import { useEffect } from "react";
 import { setUserLogout } from "./redux/slices/authSlice";
 import AccountLayout from "./layouts/AccountLayout";
-import BannerManager from "./components/Admin/banner/BannerManager";
+import RoutePageFallback from "./components/RoutePageFallback";
+
+const Home = lazy(() => import("./pages/Home"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Login = lazy(() => import("./pages/Login"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const Product = lazy(() => import("./pages/Product"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const Error = lazy(() => import("./pages/Error"));
+const Success = lazy(() => import("./pages/Success"));
+const MyProfile = lazy(() => import("./components/custom/MyProfile"));
+const CreateProducts = lazy(() => import("./components/custom/CreateProducts"));
+const AllProducts = lazy(() => import("./components/custom/AllProducts"));
+const Analytics = lazy(() => import("./components/custom/Analytics"));
+const Orders = lazy(() => import("./components/custom/Orders"));
+const Settings = lazy(() => import("./components/custom/Settings"));
+const MyOrders = lazy(() => import("./pages/MyOrders"));
+const Contact = lazy(() => import("./components/custom/Contact"));
+const FaqPage = lazy(() => import("./components/FaqPage"));
+const AboutPage = lazy(() => import("./components/AboutPage"));
+const ForgotPassword = lazy(() => import("./components/ForgotPassword"));
+const ResetPassword = lazy(() => import("./components/ResetPassword"));
+const TermsAndConditions = lazy(() =>
+  import("./components/TermsAndConditions")
+);
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const OrderDetails = lazy(() => import("./components/order/OrderDetails"));
+const WishlistPage = lazy(() => import("./pages/Wishlist"));
+const AdminProductDetails = lazy(() =>
+  import("./components/Admin/AdminProductDetails")
+);
+const BannerManager = lazy(() =>
+  import("./components/Admin/banner/BannerManager")
+);
 
 export default function App() {
-  const dispatch=useDispatch()
+  const dispatch = useDispatch();
   useEffect(() => {
-    // ✅ Event listener lagao
     const handleLogout = () => {
       dispatch(setUserLogout());
     };
 
     window.addEventListener("auth:logout", handleLogout);
 
-    // Cleanup
     return () => {
       window.removeEventListener("auth:logout", handleLogout);
     };
   }, [dispatch]);
 
   const router = createBrowserRouter([
-    // ============ PUBLIC ROUTES ============
     {
       path: "/",
       element: <RootLayout children={<Home />} />,
     },
     {
-              path: "account",
-              element: <AccountLayout />,
-              children: [{ index: true, element: <MyProfile /> }],
-            },
+      path: "account",
+      element: <AccountLayout />,
+      children: [{ index: true, element: <MyProfile /> }],
+    },
     {
       path: "/product/:productId",
       element: <RootLayout children={<Product />} />,
@@ -96,8 +101,6 @@ export default function App() {
       path: "/success",
       element: <RootLayout children={<Success />} />,
     },
-
-    // ============ AUTH ROUTES (redirect if logged in) ============
     {
       path: "/login",
       element: (
@@ -138,8 +141,6 @@ export default function App() {
         </ProtectedRoute>
       ),
     },
-
-    // ============ USER PROTECTED ROUTES ============
     {
       path: "/checkout",
       element: (
@@ -172,15 +173,9 @@ export default function App() {
         </ProtectedRoute>
       ),
     },
-
-    // ============ ADMIN ROUTES ============
     {
       path: "/admin/login",
-      element: (
-        // <ProtectedRoute requireAdmin={false}>
-        <RootLayout children={<AdminLogin />} />
-        // </ProtectedRoute>
-      ),
+      element: <RootLayout children={<AdminLogin />} />,
     },
     {
       path: "/admin/dashboard",
@@ -191,9 +186,9 @@ export default function App() {
       ),
     },
     {
-          path: "/admin/banner",
-          element: <BannerManager />, // 👉 /admin/products
-        },
+      path: "/admin/banner",
+      element: <BannerManager />,
+    },
     {
       path: "/admin/dashboard/edit-product/:productId",
       element: (
@@ -242,8 +237,6 @@ export default function App() {
         </ProtectedRoute>
       ),
     },
-
-    // ============ 404 ROUTE ============
     {
       path: "/*",
       element: <Error />,
@@ -254,7 +247,9 @@ export default function App() {
     <ThemeProvider>
       <Provider store={store}>
         <Toaster />
-        <RouterProvider router={router} />
+        <Suspense fallback={<RoutePageFallback />}>
+          <RouterProvider router={router} />
+        </Suspense>
       </Provider>
     </ThemeProvider>
   );
