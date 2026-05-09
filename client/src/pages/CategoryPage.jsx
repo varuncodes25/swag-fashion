@@ -6,6 +6,7 @@ import TopBar from "@/components/category/TopBar";
 import ProductGrid from "@/components/category/ProductGrid";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import MobileFilterButton from "@/components/category/MobileFilterButton";
+import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
 const INITIAL_FILTERS = {
   priceRange: [],
@@ -169,6 +170,42 @@ export default function CategoryPage() {
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const categoryName = (subSlug || slug || "all")
+      .replace(/-/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const searchSuffix = searchTerm ? ` for "${searchTerm}"` : "";
+    const title = `${categoryName} Collection${searchSuffix} | Swag Fashion`;
+    const description = `Shop ${categoryName} fashion${searchSuffix} at Swag Fashion. Explore latest styles, filters by size/color, and great prices.`;
+    const canonical = getCanonicalFromPath(window.location.pathname);
+
+    applySeoMeta({
+      title,
+      description,
+      canonical,
+    });
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: getCanonicalFromPath("/"),
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: categoryName,
+          item: canonical,
+        },
+      ],
+    };
+    applyJsonLd("category-breadcrumb", breadcrumbSchema);
+  }, [slug, subSlug, searchTerm]);
 
   // Calculate applied filters count
   const appliedFilterCount = Object.values(selectedFilters)

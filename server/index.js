@@ -10,6 +10,8 @@ const securityLogger = require("./middlewares/securityLogger");
 const { logger, morganStream } = require("./utils/logger");
 const { requestMetrics, getMetricsSnapshot } = require("./middlewares/requestMetrics");
 const { buildLimiter, toNumber, isProduction } = require("./utils/rateLimitConfig");
+const Product = require("./models/Product");
+const Category = require("./models/Category");
 
 dotenv.config();
 const app = express();
@@ -178,6 +180,61 @@ app.get("/api/monitoring/request-context", (req, res) => {
       origin: req.headers.origin || null,
     },
   });
+});
+
+app.get("/sitemap.xml", async (req, res) => {
+  try {
+    const siteUrl = (process.env.SITE_URL || "https://www.swagfashion.in").replace(
+      /\/$/,
+      ""
+    );
+    const staticRoutes = ["/", "/about", "/contact", "/faq", "/category/men", "/category/women", "/category/kids"];
+
+    const [categories, products] = await Promise.all([
+      Category.find({}, "slug updatedAt").lean(),
+      Product.find(
+        { status: "published", blacklisted: false },
+        "slug updatedAt"
+      ).lean(),
+    ]);
+
+    const buildUrlNode = (path, lastmod, priority = "0.7", changefreq = "weekly") => `
+  <url>
+    <loc>${siteUrl}${path}</loc>
+    <lastmod>${new Date(lastmod || Date.now()).toISOString()}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`;
+
+    const categoryNodes = categories
+      .filter((c) => c?.slug)
+      .map((c) => buildUrlNode(`/category/${c.slug}`, c.updatedAt, "0.8", "daily"))
+      .join("");
+
+    const productNodes = products
+      .filter((p) => p?.slug)
+      .map((p) => buildUrlNode(`/product/${p.slug}`, p.updatedAt, "0.7", "weekly"))
+      .join("");
+
+    const staticNodes = staticRoutes
+      .map((path) => buildUrlNode(path, Date.now(), path === "/" ? "1.0" : "0.6", path === "/" ? "daily" : "monthly"))
+      .join("");
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${staticNodes}${categoryNodes}${productNodes}
+</urlset>`;
+
+    res.setHeader("Content-Type", "application/xml");
+    res.status(200).send(xml);
+  } catch (error) {
+    logger.error({
+      type: "sitemap_generation_error",
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
+    res.status(500).json({ success: false, message: "Failed to generate sitemap" });
+  }
 });
 
 app.post(

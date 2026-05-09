@@ -14,8 +14,9 @@ import ProductTabs from "@/components/Product/ProductTabs";
 import MobileStickyCTA from "@/components/Product/MobileStickyCTA";
 import ReviewsComponent from "@/components/custom/ReviewsComponent";
 import SimilarProducts from "@/components/Product/SimilarProducts";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DeliveryChecker from "@/components/Product/DeliveryChecker";
+import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
 const Product = () => {
   const { productId } = useParams();
@@ -147,6 +148,88 @@ const Product = () => {
   // ✅ Display images
   const displayImages =
     variantImages.length > 0 ? variantImages : product.allImages || [];
+
+  useEffect(() => {
+    const productName = product?.name || "Product";
+    const brand = product?.brand || "Swag Fashion";
+    const title = `${productName} | ${brand} | Swag Fashion`;
+    const description =
+      (product?.description || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 155) || `${productName} by ${brand} at Swag Fashion.`;
+    const ogImage =
+      displayImages?.[0]?.url ||
+      product?.image?.url ||
+      product?.allImages?.[0]?.url;
+
+    applySeoMeta({
+      title,
+      description,
+      canonical: getCanonicalFromPath(`/product/${productId}`),
+      ogImage,
+    });
+
+    const canonicalUrl = getCanonicalFromPath(`/product/${productId}`);
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: productName,
+      image: displayImages?.map((img) => img?.url).filter(Boolean) || [],
+      description,
+      brand: {
+        "@type": "Brand",
+        name: brand,
+      },
+      sku: product?._id || productId,
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "INR",
+        price: String(displayPrice || product?.price || 0),
+        availability:
+          (selectedVariant?.stock || stock || 0) > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+        url: canonicalUrl,
+      },
+      aggregateRating:
+        product?.rating && product?.reviewCount
+          ? {
+              "@type": "AggregateRating",
+              ratingValue: String(product.rating),
+              reviewCount: String(product.reviewCount),
+            }
+          : undefined,
+    };
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: getCanonicalFromPath("/"),
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: product?.gender || "Category",
+          item: getCanonicalFromPath(`/category/${(product?.gender || "all").toLowerCase()}`),
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: productName,
+          item: canonicalUrl,
+        },
+      ],
+    };
+
+    applyJsonLd("product", productSchema);
+    applyJsonLd("product-breadcrumb", breadcrumbSchema);
+  }, [product, productId, displayImages, displayPrice, selectedVariant, stock]);
 
   const norm = (s) => String(s ?? '').trim().toLowerCase();
   const variantsForSelectedColor = (product?.variants || []).filter(

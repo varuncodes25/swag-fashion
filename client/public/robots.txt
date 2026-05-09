@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+# Block sensitive/private areas
+Disallow: /admin
+Disallow: /checkout
+Disallow: /account
+Disallow: /cart
+
+Sitemap: https://www.swagfashion.in/sitemap.xml
