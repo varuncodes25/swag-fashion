@@ -96,7 +96,6 @@ export default function CategoryPage() {
     error,
     pagination,
     availableFilters,
-    fetchProducts,
     loadMore,
     hasMore
   } = useCategoryProducts(slug, subSlug, queryFilters);
@@ -137,8 +136,7 @@ export default function CategoryPage() {
   // ✅ Apply filters and close drawer
   const applyFilters = useCallback(() => {
     setIsFilterDrawerOpen(false);
-    fetchProducts(1, false);
-  }, [fetchProducts]);
+  }, []);
 
   // Debounced search so API isn't called every key stroke.
   useEffect(() => {
@@ -156,11 +154,6 @@ export default function CategoryPage() {
     setSearchTerm(paramSearch);
     setSortBy(paramSort);
   }, [searchParams]);
-
-  // ✅ Filter update effect
-  useEffect(() => {
-    fetchProducts(1, false);
-  }, [queryFilters, slug, subSlug, fetchProducts]);
 
   // ✅ Handle mount to avoid hydration mismatch
   useEffect(() => {

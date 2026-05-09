@@ -1,21 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../ui/input";
 import { Search, X } from "lucide-react";
 
-const FilterMenu = ({ onSearch }) => {
+const FilterMenu = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-
-  // Debounced search
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (onSearch) onSearch(search);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [search, onSearch]);
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -23,7 +14,6 @@ const FilterMenu = ({ onSearch }) => {
 
   const handleClearSearch = () => {
     setSearch("");
-    if (onSearch) onSearch("");
   };
 
   const handleSubmitSearch = (e) => {

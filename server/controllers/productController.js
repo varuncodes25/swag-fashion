@@ -391,6 +391,9 @@ const getProducts = async (req, res) => {
       sortBy = { sellingPrice: 1 };
     if (sort === "priceHighToLow" || sort === "price_high")
       sortBy = { sellingPrice: -1 };
+    if (sort === "rating") sortBy = { rating: -1, createdAt: -1 };
+    if (sort === "best_seller") sortBy = { soldCount: -1, createdAt: -1 };
+    if (sort === "discount") sortBy = { discount: -1, createdAt: -1 };
 
     const skip = (page - 1) * limit;
 
