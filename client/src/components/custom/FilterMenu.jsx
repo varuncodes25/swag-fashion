@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "../ui/input";
 import { Search, X } from "lucide-react";
 
 const FilterMenu = ({ onSearch }) => {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
@@ -24,6 +26,13 @@ const FilterMenu = ({ onSearch }) => {
     if (onSearch) onSearch("");
   };
 
+  const handleSubmitSearch = (e) => {
+    e?.preventDefault();
+    const q = search.trim();
+    if (!q) return;
+    navigate(`/category/all?search=${encodeURIComponent(q)}`);
+  };
+
   return (
     <div className="w-full px-3 sm:px-4 lg:px-6 pt-4 sm:py-6 bg-background dark:bg-background bg-gray-100">
       {/* Modern Search Container - Mobile Optimized */}
@@ -32,18 +41,25 @@ const FilterMenu = ({ onSearch }) => {
         <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl blur-sm opacity-10 group-hover:opacity-15 transition-opacity duration-300"></div>
         
         {/* Main Search Card - Responsive */}
-        <div className="relative bg-white dark:bg-zinc-900/95 backdrop-blur-sm border border-gray-100 dark:border-zinc-800/80 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-lg p-0.5 sm:p-1">
+        <form
+          onSubmit={handleSubmitSearch}
+          className="relative bg-white dark:bg-zinc-900/95 backdrop-blur-sm border border-gray-100 dark:border-zinc-800/80 rounded-xl sm:rounded-2xl shadow-sm sm:shadow-lg p-0.5 sm:p-1"
+        >
           
           {/* Search Input Container */}
           <div className="relative">
             {/* Search Icon - Responsive */}
-            <div className={`
+            <button
+              type="submit"
+              className={`
               absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2
               transition-all duration-200
               ${isFocused || search ? 'text-blue-500' : 'text-gray-400 dark:text-zinc-500'}
-            `}>
+            `}
+              aria-label="Search products"
+            >
               <Search className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
+            </button>
 
             {/* Input Field - Responsive */}
             <Input
@@ -69,6 +85,7 @@ const FilterMenu = ({ onSearch }) => {
             {/* Clear Button - Responsive */}
             {search && (
               <button
+                type="button"
                 onClick={handleClearSearch}
                 className={`
                   absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2
@@ -140,7 +157,7 @@ const FilterMenu = ({ onSearch }) => {
               </div> */}
             </div>
           )}
-        </div>
+        </form>
 
         {/* Search Status - Responsive */}
         {search && (

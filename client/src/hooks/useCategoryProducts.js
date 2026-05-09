@@ -25,11 +25,22 @@ export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialP
         return;
       }
 
+      const isAllCategory = String(slug).toLowerCase() === "all";
+      const normalizedFilters = { ...filters };
+      if (isAllCategory && normalizedFilters.sort) {
+        const sortMap = {
+          newest: "newest",
+          price_low: "priceLowToHigh",
+          price_high: "priceHighToLow",
+        };
+        normalizedFilters.sort = sortMap[normalizedFilters.sort] || "newest";
+      }
+
       // Build query params
       const queryParams = new URLSearchParams({
         page: page.toString(),
         limit: initialPageSize.toString(),
-        ...filters
+        ...normalizedFilters
       });
 
       // Add includeFilters for first load
@@ -37,14 +48,27 @@ export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialP
         queryParams.append('includeFilters', 'true');
       }
 
-      const url = subSlug 
+      const url = isAllCategory
+        ? `${import.meta.env.VITE_API_URL}/get-products?${queryParams}`
+        : subSlug
         ? `${import.meta.env.VITE_API_URL}/products/category/${slug}/${subSlug}?${queryParams}`
         : `${import.meta.env.VITE_API_URL}/products/category/${slug}?${queryParams}`;
 
      
 
       const response = await axios.get(url);
-      const { data } = response.data;
+      const payload = response.data;
+      const data = isAllCategory
+        ? {
+            products: payload?.data || [],
+            pagination: payload?.pagination || {
+              totalProducts: 0,
+              totalPages: 1,
+              currentPage: 1,
+            },
+            filters: {},
+          }
+        : payload.data;
      
       // Update products
       if (shouldAppend) {

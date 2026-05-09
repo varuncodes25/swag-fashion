@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Search, ArrowUpDown } from "lucide-react";
 import FiltersSidebar from "@/components/category/FiltersSidebar";
@@ -23,10 +23,13 @@ const INITIAL_FILTERS = {
 
 export default function CategoryPage() {
   const { slug, subSlug } = useParams();
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  const initialSort = searchParams.get("sort") || "newest";
   const [mounted, setMounted] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("newest");
+  const [searchInput, setSearchInput] = useState(initialSearch);
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [sortBy, setSortBy] = useState(initialSort);
   const [isMobileHeaderCompact, setIsMobileHeaderCompact] = useState(false);
 
   // ✅ MOBILE FILTER DRAWER STATE
@@ -145,6 +148,14 @@ export default function CategoryPage() {
 
     return () => clearTimeout(id);
   }, [searchInput]);
+
+  useEffect(() => {
+    const paramSearch = searchParams.get("search") || "";
+    const paramSort = searchParams.get("sort") || "newest";
+    setSearchInput(paramSearch);
+    setSearchTerm(paramSearch);
+    setSortBy(paramSort);
+  }, [searchParams]);
 
   // ✅ Filter update effect
   useEffect(() => {
