@@ -41,6 +41,14 @@ function resolveMeasurementRaw(measurements, headerKey) {
 
 /** Replace `client/public/tshirt_model.png` with your own diagram, or pass `topWearGuideImageUrl` */
 const DEFAULT_TOP_WEAR_GUIDE_IMAGE = '/tshirt_model.png';
+const TIP_DOT_CLASS = {
+  blue: 'bg-blue-500',
+  red: 'bg-red-500',
+  orange: 'bg-orange-500',
+  green: 'bg-green-500',
+  purple: 'bg-purple-500',
+  pink: 'bg-pink-500',
+};
 
 function formatCellDisplay(headerKey, measurements, displayUnit) {
   if (headerKey === 'size') return null;
@@ -513,7 +521,7 @@ const SizeChartModal = ({
               <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                 {measurementTips.map((tip, idx) => (
                   <div key={idx} className="flex items-center gap-1">
-                    <div className={`w-3 h-3 rounded-full bg-${tip.color}-500`}></div>
+                    <div className={`w-3 h-3 rounded-full ${TIP_DOT_CLASS[tip.color] || 'bg-gray-400'}`}></div>
                     <span>{tip.name}</span>
                   </div>
                 ))}
@@ -588,7 +596,7 @@ const SizeChartModal = ({
               <div className="grid grid-cols-2 gap-4">
                 {measurementTips.map((tip, index) => (
                   <div key={index} className="flex items-start gap-2">
-                    <div className={`w-2 h-2 mt-1.5 rounded-full bg-${tip.color}-500`}></div>
+                    <div className={`w-2 h-2 mt-1.5 rounded-full ${TIP_DOT_CLASS[tip.color] || 'bg-gray-400'}`}></div>
                     <div>
                       <span className="font-medium text-sm">{tip.name}</span>
                       <p className="text-xs text-muted-foreground mt-1">{tip.desc}</p>

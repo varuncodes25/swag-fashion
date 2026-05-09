@@ -81,19 +81,18 @@ const Product = () => {
 
   // ✅ Buy Now Function
   const handleBuyNowClick = () => {
-    console.log("inside")
-    // if (!selectedVariant) {
-    //   alert("Please select color and size");
-    //   return;
-    // }
+    if (!selectedVariant) {
+      alert("Please select color and size");
+      return;
+    }
 
-      buyNow({
-    productId: product._id,
-    variantId: selectedVariant._id, // ✅ CORRECT!
-    quantity,
-    color: selectedVariant.color, // ✅ Add color
-    size: selectedVariant.size,   // ✅ Add size
-  });
+    buyNow({
+      productId: product._id,
+      variantId: selectedVariant._id, // ✅ CORRECT!
+      quantity,
+      color: selectedVariant.color, // ✅ Add color
+      size: selectedVariant.size,   // ✅ Add size
+    });
 
   };
 

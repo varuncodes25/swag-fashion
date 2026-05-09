@@ -37,10 +37,7 @@ exports.getAllCategories = async (req, res) => {
 // GET CATEGORY BY SLUG
 exports.getCategoryBySlug = async (req, res) => {
   try {
-    const category = await Category.findOne({
-      slug: req.params.slug,
-      isActive: true,
-    });
+    const category = await Category.findOne({ slug: req.params.slug });
 
     if (!category) {
       return res.status(404).json({ message: "Category not found" });

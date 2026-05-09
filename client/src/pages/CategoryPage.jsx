@@ -6,6 +6,20 @@ import ProductGrid from "@/components/category/ProductGrid";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import MobileFilterButton from "@/components/category/MobileFilterButton";
 
+const INITIAL_FILTERS = {
+  priceRange: [],
+  discount: [],
+  rating: [],
+  colors: [],
+  sizes: [],
+  brands: [],
+  fit: [],
+  pattern: [],
+  sleeveType: [],
+  neckType: [],
+  fabric: [],
+};
+
 export default function CategoryPage() {
   const { slug, subSlug } = useParams();
   const [mounted, setMounted] = useState(false);
@@ -14,20 +28,7 @@ export default function CategoryPage() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
   // ✅ FILTER STATE
-  const [selectedFilters, setSelectedFilters] = useState({
-    priceRange: [],
-    discount: [],
-    rating: [],
-    colors: [],
-    sizes: [],
-    brands: [],
-
-    fit: [],
-    pattern: [],
-    sleeveType: [],
-    neckType: [],
-    fabric: []
-  });
+  const [selectedFilters, setSelectedFilters] = useState(INITIAL_FILTERS);
 
   // ✅ Convert filters to query params format
   const queryFilters = useMemo(() => {
@@ -108,14 +109,7 @@ export default function CategoryPage() {
 
   // ✅ Clear all filters
   const clearAllFilters = useCallback(() => {
-    setSelectedFilters({
-      priceRange: [],
-      discount: [],
-      rating: [],
-      colors: [],
-      sizes: [],
-      brands: []
-    });
+    setSelectedFilters(INITIAL_FILTERS);
   }, []);
 
   // ✅ Clear specific filter

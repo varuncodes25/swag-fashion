@@ -424,6 +424,36 @@ const AGE_GROUPS = [
   "Adult",
 ];
 
+const FORMATTED_SPEC_SECTION_KEYS = new Set([
+  "Product Details",
+  "Care Instructions",
+  "Package Details",
+  "Dimensions & Weight",
+  "Season & Occasion",
+  "Features",
+]);
+
+const normalizeSpecificationsForEdit = (specifications) => {
+  if (!specifications || typeof specifications !== "object") return new Map();
+
+  let source = specifications;
+  // Unwrap recursive "Additional Specifications" nesting from formatted payloads.
+  for (let depth = 0; depth < 5; depth += 1) {
+    const nested = source?.["Additional Specifications"];
+    if (!nested || typeof nested !== "object" || Array.isArray(nested)) break;
+    source = nested;
+  }
+
+  const entries = Object.entries(source).filter(([key, value]) => {
+    if (key === "Additional Specifications") return false;
+    if (FORMATTED_SPEC_SECTION_KEYS.has(key)) return false;
+    if (value === undefined || value === null || value === "") return false;
+    return true;
+  });
+
+  return new Map(entries);
+};
+
 export const useProductForm = (initialData = null) => {
   const [formData, setFormData] = useState({
     name: "",
@@ -532,7 +562,7 @@ export const useProductForm = (initialData = null) => {
       packageContent: product.packageContent || "1 Piece",
       countryOfOrigin: product.countryOfOrigin || "India",
       keyFeatures: product.keyFeatures || [],
-      specifications: new Map(Object.entries(product.specifications || {})),
+      specifications: normalizeSpecificationsForEdit(product.specifications),
       careInstructions: product.careInstructions || ["Machine Wash"],
       isFeatured: product.isFeatured || false,
       isNewArrival:

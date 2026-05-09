@@ -82,7 +82,7 @@ const useProductDetails = () => {
     if (!product || !colorName) return [];
 
     // Option 1: Use imagesByColor if available (from API)
-    if (product.allImages && product.imagesByColor[colorName]) {
+    if (product.allImages && product.imagesByColor?.[colorName]) {
       return product.imagesByColor[colorName];
     }
 
