@@ -157,7 +157,7 @@ export default function FiltersSidebar({ selectedFilters = {}, updateFilter }) {
 
   return (
     <div className="
-      w-72 rounded-2xl shadow-lg sticky top-5 h-[85vh] flex flex-col
+      w-full lg:w-72 rounded-2xl shadow-lg lg:sticky lg:top-5 h-full lg:h-[85vh] flex flex-col min-h-0
       bg-gradient-to-b from-white to-gray-50 border border-gray-200
       dark:bg-gradient-to-b dark:from-gray-900 dark:to-gray-800 dark:border-gray-700
       transition-colors duration-300

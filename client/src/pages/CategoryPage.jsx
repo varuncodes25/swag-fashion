@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { Search, ArrowUpDown } from "lucide-react";
 import FiltersSidebar from "@/components/category/FiltersSidebar";
 import TopBar from "@/components/category/TopBar";
 import ProductGrid from "@/components/category/ProductGrid";
@@ -23,6 +24,10 @@ const INITIAL_FILTERS = {
 export default function CategoryPage() {
   const { slug, subSlug } = useParams();
   const [mounted, setMounted] = useState(false);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [isMobileHeaderCompact, setIsMobileHeaderCompact] = useState(false);
 
   // ✅ MOBILE FILTER DRAWER STATE
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -71,9 +76,15 @@ export default function CategoryPage() {
     if (selectedFilters.brands.length > 0) {
       filters.brands = selectedFilters.brands.join(',');
     }
+    if (searchTerm.trim()) {
+      filters.search = searchTerm.trim();
+    }
+    if (sortBy) {
+      filters.sort = sortBy;
+    }
 
     return filters;
-  }, [selectedFilters]);
+  }, [selectedFilters, searchTerm, sortBy]);
 
   // ✅ Use the custom hook
   const {
@@ -126,6 +137,15 @@ export default function CategoryPage() {
     fetchProducts(1, false);
   }, [fetchProducts]);
 
+  // Debounced search so API isn't called every key stroke.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setSearchTerm(searchInput.trim());
+    }, 300);
+
+    return () => clearTimeout(id);
+  }, [searchInput]);
+
   // ✅ Filter update effect
   useEffect(() => {
     fetchProducts(1, false);
@@ -134,6 +154,16 @@ export default function CategoryPage() {
   // ✅ Handle mount to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Shrink sticky mobile controls after small scroll.
+  useEffect(() => {
+    const onScroll = () => {
+      setIsMobileHeaderCompact(window.scrollY > 40);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   // Calculate applied filters count
@@ -149,36 +179,94 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen">
       <div className=" px-4 sm:px-6 lg:px-8">
-        {/* Mobile Header with Filter Button */}
-        <div className="lg:hidden py-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className=" hidden text-xl font-bold text-foreground">
-                {subSlug
-                  ? `${slug?.replace(/-/g, " ")} / ${subSlug?.replace(/-/g, " ")}`
-                  : `${slug?.replace(/-/g, " ")}`
-                }
-              </h1>
-              <p className="hidden text-sm text-muted-foreground mt-1">
-                {pagination.totalProducts || 0} products
-              </p>
+        {/* Mobile Header: premium sticky controls */}
+        <div className="sticky top-14 z-30 -mx-1 mb-2 border-b border-gray-200/70 bg-white/80 px-1 py-2 backdrop-blur-md dark:border-zinc-800/70 dark:bg-zinc-950/80 lg:hidden">
+          <div
+            className={`rounded-2xl border border-gray-200/80 bg-white shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-900 ${
+              isMobileHeaderCompact ? "p-2.5" : "p-3.5"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold capitalize text-gray-900 dark:text-zinc-100">
+                  {slug?.replace(/-/g, " ")}
+                </p>
+                <p
+                  className={`text-xs text-muted-foreground transition-all duration-300 ${
+                    isMobileHeaderCompact ? "max-h-0 opacity-0 overflow-hidden" : "max-h-8 opacity-100"
+                  }`}
+                >
+                  {pagination.totalProducts || 0} products found
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {appliedFilterCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 hover:bg-gray-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                  >
+                    Clear
+                  </button>
+                )}
+                <MobileFilterButton
+                  selectedFilters={selectedFilters}
+                  updateFilter={updateFilter}
+                  clearAllFilters={clearAllFilters}
+                  compact
+                  className="shrink-0"
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <span className=" hidden text-sm font-medium text-gray-900 dark:text-gray-300">
-                  {appliedFilterCount} filter{appliedFilterCount !== 1 ? 's' : ''}
+
+            <div className={`${isMobileHeaderCompact ? "mt-2.5" : "mt-3.5"} relative transition-all duration-300`}>
+              <Search
+                size={16}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500"
+              />
+              <input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search by name, brand, type..."
+                className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-3 text-sm text-gray-700 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-primary dark:focus:bg-zinc-900"
+              />
+            </div>
+
+            <div className={`${isMobileHeaderCompact ? "mt-2.5" : "mt-3"} transition-all duration-300`}>
+              <div className={`mb-2 flex items-center justify-between gap-2 transition-all duration-300 ${isMobileHeaderCompact ? "opacity-0 h-0 overflow-hidden mb-0" : "opacity-100 h-auto"}`}>
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                  <ArrowUpDown size={14} />
+                  Sort by
+                </div>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold capitalize text-primary dark:bg-primary/20">
+                  {sortBy.replace("_", " ")}
                 </span>
               </div>
-              {/* CategoryPage में - Mobile Filter Button */}
-              <MobileFilterButton
-                isOpen={isFilterDrawerOpen}
-                selectedFilters={selectedFilters}  // ✅ ये add करें
-                updateFilter={updateFilter}        // ✅ ये add करें
-                clearAllFilters={clearAllFilters}  // ✅ ये पहले से है
-                onOpen={() => setIsFilterDrawerOpen(true)}
-                onClose={() => setIsFilterDrawerOpen(false)}
-                appliedFilterCount={appliedFilterCount}
-              />
+              <div className="-mx-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex w-max gap-2 px-1 pb-1">
+                  {[
+                    { value: "newest", label: "Newest" },
+                    { value: "price_low", label: "Price Low" },
+                    { value: "price_high", label: "Price High" },
+                    { value: "rating", label: "Top Rated" },
+                    { value: "best_seller", label: "Best Seller" },
+                    { value: "discount", label: "Discount" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setSortBy(opt.value)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition ${
+                        sortBy === opt.value
+                          ? "border-primary bg-primary text-white shadow"
+                          : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -208,6 +296,10 @@ export default function CategoryPage() {
                     : `${slug?.replace(/-/g, " ")}`
                 }
                 productsCount={pagination.totalProducts || 0}
+                searchTerm={searchInput}
+                onSearchChange={setSearchInput}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
                 activeFilters={selectedFilters}
                 clearAllFilters={clearAllFilters}
               />

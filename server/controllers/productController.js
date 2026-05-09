@@ -1237,6 +1237,16 @@ const getProductsByCategory = async (req, res) => {
     // ============ 3. APPLY FILTERS ============
     console.log("Applying filters from query params:", queryParams);
 
+    // SEARCH FILTER (name + brand + clothing type)
+    if (queryParams.search && queryParams.search.trim() !== "") {
+      const keyword = queryParams.search.trim();
+      query.$or = [
+        { name: { $regex: keyword, $options: "i" } },
+        { brand: { $regex: keyword, $options: "i" } },
+        { clothingType: { $regex: keyword, $options: "i" } },
+      ];
+    }
+
     // PRICE RANGE FILTER - CORRECTED
     if (queryParams.priceRange) {
       const priceRanges = queryParams.priceRange.split(",");

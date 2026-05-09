@@ -5,7 +5,9 @@ import FiltersSidebar from "./FiltersSidebar";
 export default function MobileFilterButton({ 
   selectedFilters = {},
   updateFilter = () => {},
-  clearAllFilters = () => {}
+  clearAllFilters = () => {},
+  compact = false,
+  className = "",
 }) {
   const [open, setOpen] = useState(false);
   const headerRef = useRef(null);
@@ -49,29 +51,43 @@ export default function MobileFilterButton({
 
   return (
     <>
-      {/* FILTER BUTTON - Same as before */}
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-8 right-8 z-50 lg:hidden p-3.5 bg-gradient-to-br from-primary to-primary/90 dark:from-blue-600 dark:to-indigo-700 text-white rounded-2xl shadow-lg hover:shadow-xl active:scale-95 transition-all duration-300 group overflow-visible border border-white/20"
-      >
-        {appliedFilterCount > 0 && (
-          <div className="absolute -top-2 -right-2 z-20 w-7 h-7 bg-white border-2 border-primary text-primary dark:text-primary font-bold text-sm rounded-full flex items-center justify-center transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
-            {appliedFilterCount}
+      {compact ? (
+        <button
+          onClick={() => setOpen(true)}
+          className={`relative inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 px-3 py-2 text-sm font-medium text-primary shadow-sm transition hover:from-primary/15 hover:to-primary/10 dark:border-primary/30 dark:bg-primary/10 dark:text-primary ${className}`}
+        >
+          <SlidersHorizontal size={16} className="text-primary" />
+          <span>Filters</span>
+          {appliedFilterCount > 0 && (
+            <span className="inline-flex min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-xs font-semibold text-white shadow-sm">
+              {appliedFilterCount}
+            </span>
+          )}
+        </button>
+      ) : (
+        <button
+          onClick={() => setOpen(true)}
+          className="fixed bottom-8 right-8 z-50 lg:hidden p-3.5 bg-gradient-to-br from-primary to-primary/90 dark:from-blue-600 dark:to-indigo-700 text-white rounded-2xl shadow-lg hover:shadow-xl active:scale-95 transition-all duration-300 group overflow-visible border border-white/20"
+        >
+          {appliedFilterCount > 0 && (
+            <div className="absolute -top-2 -right-2 z-20 w-7 h-7 bg-white border-2 border-primary text-primary dark:text-primary font-bold text-sm rounded-full flex items-center justify-center transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
+              {appliedFilterCount}
+            </div>
+          )}
+          <div className="relative z-10 transform group-hover:scale-110 group-active:scale-95 transition-transform duration-300">
+            <SlidersHorizontal size={26} className="text-white drop-shadow-lg" />
           </div>
-        )}
-        <div className="relative z-10 transform group-hover:scale-110 group-active:scale-95 transition-transform duration-300">
-          <SlidersHorizontal size={26} className="text-white drop-shadow-lg" />
-        </div>
-        <div className="absolute bottom-full right-0 mb-3 px-4 py-3 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white text-sm font-medium rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-2xl transform translate-y-2 group-hover:translate-y-0 pointer-events-none border border-gray-700 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <Filter size={16} className="text-blue-300" />
-            {appliedFilterCount > 0 
-              ? `${appliedFilterCount} filter${appliedFilterCount > 1 ? 's' : ''} applied`
-              : 'Open filters'}
+          <div className="absolute bottom-full right-0 mb-3 px-4 py-3 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 text-white text-sm font-medium rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-300 whitespace-nowrap shadow-2xl transform translate-y-2 group-hover:translate-y-0 pointer-events-none border border-gray-700 backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <Filter size={16} className="text-blue-300" />
+              {appliedFilterCount > 0
+                ? `${appliedFilterCount} filter${appliedFilterCount > 1 ? 's' : ''} applied`
+                : 'Open filters'}
+            </div>
+            <div className="absolute top-full right-3 -mt-1 w-3 h-3 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 transform rotate-45 border-r border-b border-gray-700"></div>
           </div>
-          <div className="absolute top-full right-3 -mt-1 w-3 h-3 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-900 transform rotate-45 border-r border-b border-gray-700"></div>
-        </div>
-      </button>
+        </button>
+      )}
 
       {/* DRAWER OVERLAY */}
       {open && (
