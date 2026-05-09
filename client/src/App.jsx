@@ -1,5 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { lazy, Suspense, useEffect } from "react";
+import { Suspense, useEffect } from "react";
+import { lazyRoute } from "./utils/lazyRoute";
 import { ThemeProvider } from "./components/provider/theme-provider";
 import RootLayout from "./layouts/RootLayout";
 import AdminLayout from "./layouts/AdminLayout";
@@ -11,37 +12,43 @@ import { setUserLogout } from "./redux/slices/authSlice";
 import AccountLayout from "./layouts/AccountLayout";
 import RoutePageFallback from "./components/RoutePageFallback";
 
-const Home = lazy(() => import("./pages/Home"));
-const Signup = lazy(() => import("./pages/Signup"));
-const Login = lazy(() => import("./pages/Login"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-const Product = lazy(() => import("./pages/Product"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
-const Error = lazy(() => import("./pages/Error"));
-const Success = lazy(() => import("./pages/Success"));
-const MyProfile = lazy(() => import("./components/custom/MyProfile"));
-const CreateProducts = lazy(() => import("./components/custom/CreateProducts"));
-const AllProducts = lazy(() => import("./components/custom/AllProducts"));
-const Analytics = lazy(() => import("./components/custom/Analytics"));
-const Orders = lazy(() => import("./components/custom/Orders"));
-const Settings = lazy(() => import("./components/custom/Settings"));
-const MyOrders = lazy(() => import("./pages/MyOrders"));
-const Contact = lazy(() => import("./components/custom/Contact"));
-const FaqPage = lazy(() => import("./components/FaqPage"));
-const AboutPage = lazy(() => import("./components/AboutPage"));
-const ForgotPassword = lazy(() => import("./components/ForgotPassword"));
-const ResetPassword = lazy(() => import("./components/ResetPassword"));
-const TermsAndConditions = lazy(() =>
+const Home = lazyRoute(() => import("./pages/Home"));
+const Signup = lazyRoute(() => import("./pages/Signup"));
+const Login = lazyRoute(() => import("./pages/Login"));
+const AuthCallback = lazyRoute(() => import("./pages/AuthCallback"));
+const Product = lazyRoute(() => import("./pages/Product"));
+const Checkout = lazyRoute(() => import("./pages/Checkout"));
+const AdminLogin = lazyRoute(() => import("./pages/AdminLogin"));
+const Error = lazyRoute(() => import("./pages/Error"));
+const Success = lazyRoute(() => import("./pages/Success"));
+const MyProfile = lazyRoute(() => import("./components/custom/MyProfile"));
+const CreateProducts = lazyRoute(() =>
+  import("./components/custom/CreateProducts")
+);
+const AllProducts = lazyRoute(() => import("./components/custom/AllProducts"));
+const Analytics = lazyRoute(() => import("./components/custom/Analytics"));
+const Orders = lazyRoute(() => import("./components/custom/Orders"));
+const Settings = lazyRoute(() => import("./components/custom/Settings"));
+const MyOrders = lazyRoute(() => import("./pages/MyOrders"));
+const Contact = lazyRoute(() => import("./components/custom/Contact"));
+const FaqPage = lazyRoute(() => import("./components/FaqPage"));
+const AboutPage = lazyRoute(() => import("./components/AboutPage"));
+const ForgotPassword = lazyRoute(() =>
+  import("./components/ForgotPassword")
+);
+const ResetPassword = lazyRoute(() =>
+  import("./components/ResetPassword")
+);
+const TermsAndConditions = lazyRoute(() =>
   import("./components/TermsAndConditions")
 );
-const CategoryPage = lazy(() => import("./pages/CategoryPage"));
-const OrderDetails = lazy(() => import("./components/order/OrderDetails"));
-const WishlistPage = lazy(() => import("./pages/Wishlist"));
-const AdminProductDetails = lazy(() =>
+const CategoryPage = lazyRoute(() => import("./pages/CategoryPage"));
+const OrderDetails = lazyRoute(() => import("./components/order/OrderDetails"));
+const WishlistPage = lazyRoute(() => import("./pages/Wishlist"));
+const AdminProductDetails = lazyRoute(() =>
   import("./components/Admin/AdminProductDetails")
 );
-const BannerManager = lazy(() =>
+const BannerManager = lazyRoute(() =>
   import("./components/Admin/banner/BannerManager")
 );
 
