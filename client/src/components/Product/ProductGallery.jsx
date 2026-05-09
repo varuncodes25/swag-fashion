@@ -113,7 +113,7 @@ const ProductGallery = ({
                   if (isZoomed) setIsZoomed(false);
                   setShowZoom(false);
                 }}
-                className={`w-14 h-14 rounded-md border transition-all ${
+                className={`w-14 h-14 rounded-md border overflow-hidden transition-all ${
                   selectedImage === i
                     ? "border-warning border-2 scale-105"
                     : "border-gray-300 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/30"
@@ -122,14 +122,14 @@ const ProductGallery = ({
                 <img
                   src={img.url}
                   alt=""
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-cover"
                 />
               </button>
             ))}
           </div>
         )}
 
-        {/* MAIN IMAGE CONTAINER */}
+        {/* MAIN IMAGE — object-cover fills the frame (no side letterboxing); detail in zoom / tap */}
         <div
           className={`
             relative
@@ -137,7 +137,7 @@ const ProductGallery = ({
             rounded-xl
             border
             border-gray-300 dark:border-white/10
-            bg-gray-100 dark:bg-neutral-900
+            bg-neutral-100 dark:bg-neutral-900
             overflow-hidden
             cursor-crosshair
             transition-all duration-300
@@ -152,19 +152,20 @@ const ProductGallery = ({
           onMouseMove={handleMouseMove}
           onClick={handleContainerClick}
         >
-          {/* NORMAL IMAGE */}
           {!showZoom && !isZoomed && (
             <img
               src={activeImage}
               alt="product"
-              className="h-full w-full object-contain transition-transform duration-300"
+              className="absolute inset-0 z-[1] h-full w-full object-cover object-center transition-transform duration-300"
+              loading="lazy"
+              decoding="async"
             />
           )}
 
           {/* ZOOMED IMAGE */}
           {(showZoom || isZoomed) && (
             <div
-              className="absolute inset-0 bg-no-repeat"
+              className="absolute inset-0 z-[2] bg-no-repeat"
               style={{
                 backgroundImage: `url(${activeImage})`,
                 backgroundSize: isZoomed ? "260%" : "200%",
@@ -227,22 +228,23 @@ const ProductGallery = ({
             rounded-xl
             border
             border-gray-300 dark:border-white/10
-            bg-gray-100 dark:bg-neutral-900
-            flex items-center justify-center
+            bg-neutral-100 dark:bg-neutral-900
             mb-4
             relative
+            overflow-hidden
           "
           onClick={handleMobileZoomOpen}
-          // onClick={() => setIsMobileZoomOpen(true)}
         >
           <img
             src={activeImage}
             alt="product"
-            className="max-h-full w-auto object-contain"
+            className="absolute inset-0 z-[1] h-full w-full object-cover object-center"
+            loading="lazy"
+            decoding="async"
           />
 
           {/* TAP TO ZOOM HINT */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/70 text-white text-sm rounded-full backdrop-blur-sm pointer-events-none">
+          <div className="absolute bottom-4 left-1/2 z-[2] -translate-x-1/2 px-4 py-2 bg-black/70 text-white text-sm rounded-full backdrop-blur-sm pointer-events-none">
             Tap to zoom
           </div>
 
@@ -254,7 +256,7 @@ const ProductGallery = ({
                   e.stopPropagation();
                   handlePrev();
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 z-10 pointer-events-auto"
+                className="absolute left-2 top-1/2 z-[2] -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 pointer-events-auto"
                 aria-label="Previous image"
               >
                 <ChevronLeft size={18} />
@@ -264,7 +266,7 @@ const ProductGallery = ({
                   e.stopPropagation();
                   handleNext();
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 z-10 pointer-events-auto"
+                className="absolute right-2 top-1/2 z-[2] -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 pointer-events-auto"
                 aria-label="Next image"
               >
                 <ChevronRight size={18} />
@@ -283,7 +285,7 @@ const ProductGallery = ({
                   onSelect(i);
                   setShowZoom(false);
                 }}
-                className={`shrink-0 w-16 h-16 rounded-md border transition-all ${
+                className={`shrink-0 w-16 h-16 overflow-hidden rounded-md border transition-all ${
                   selectedImage === i
                     ? "border-warning border-2"
                     : "border-gray-300 dark:border-white/10"
@@ -292,7 +294,7 @@ const ProductGallery = ({
                 <img
                   src={img.url}
                   alt=""
-                  className="h-full w-full object-contain"
+                  className="h-full w-full object-cover"
                 />
               </button>
             ))}
