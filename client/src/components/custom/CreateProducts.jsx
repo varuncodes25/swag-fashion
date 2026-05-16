@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -157,8 +157,11 @@ const CreateProduct = () => {
     getCategories();
   }, []);
 
+  const formInitializedForId = useRef(null);
+
   // Load product data if editing
   useEffect(() => {
+    formInitializedForId.current = null;
     if (productId) {
       getProduct(productId);
     } else {
@@ -166,12 +169,18 @@ const CreateProduct = () => {
     }
   }, [productId]);
 
-  // Initialize form with product data
+  // Initialize form once per product — avoid resetting user's deleted/new images
   useEffect(() => {
-    if (currentProduct && productId) {
+    if (
+      currentProduct?._id &&
+      productId &&
+      String(currentProduct._id) === String(productId) &&
+      formInitializedForId.current !== productId
+    ) {
       initializeForm(currentProduct);
+      formInitializedForId.current = productId;
     }
-  }, [currentProduct, productId]);
+  }, [currentProduct, productId, initializeForm]);
 
   // Handle form submission
   const handleSubmit = async (e) => {

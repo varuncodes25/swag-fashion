@@ -577,13 +577,24 @@ export const useProductForm = (initialData = null) => {
   const [tempSpecKey, setTempSpecKey] = useState("");
   const [tempSpecValue, setTempSpecValue] = useState("");
   const [sizeCharts, setSizeCharts] = useState({});
+  const [editingProductId, setEditingProductId] = useState(null);
 
   const fileInputRefs = useRef({});
   const { toast } = useToast();
 
+  const mapExistingImageForEdit = (img) => ({
+    file: null,
+    preview: img.url,
+    id: img.id || img.public_id || null,
+    isMain: img.isMain || false,
+    isExisting: true,
+  });
+
   // Initialize form with product data if editing
   const initializeForm = useCallback((product) => {
     if (!product) return;
+
+    setEditingProductId(product._id || null);
 
     // ✅ FIX 1: Base price properly calculate karo
     let basePrice = product.basePrice || "";
@@ -696,39 +707,34 @@ export const useProductForm = (initialData = null) => {
     }
     setColorImageMap(imageMap);
 
-    // Set variant images for preview
+    // Set variant images for preview (dedupe imagesByColor + allImages)
     const images = {};
-    if (product.imagesByColor) {
-      Object.keys(product.imagesByColor).forEach((color) => {
-        images[color] = product.imagesByColor[color].map((img) => ({
-          file: null,
-          preview: img.url,
-          id: img.id,
-          isMain: img.isMain || false,
-          isExisting: true,
-        }));
-      });
-    } else if (product.allImages) {
-      const imagesByColor = {};
-      product.allImages.forEach((img) => {
-        if (img.color) {
-          if (!imagesByColor[img.color]) {
-            imagesByColor[img.color] = [];
-          }
-          imagesByColor[img.color].push(img);
-        }
-      });
+    const seenImageIds = new Set();
 
-      Object.keys(imagesByColor).forEach((color) => {
-        images[color] = imagesByColor[color].map((img) => ({
-          file: null,
-          preview: img.url,
-          id: img.id,
-          isMain: img.isMain || false,
-          isExisting: true,
-        }));
+    const assignToColor = (img, colorName) => {
+      if (!colorName) return;
+      const mapped = mapExistingImageForEdit(img);
+      if (mapped.id) {
+        if (seenImageIds.has(mapped.id)) return;
+        seenImageIds.add(mapped.id);
+      }
+      if (!images[colorName]) images[colorName] = [];
+      images[colorName].push(mapped);
+    };
+
+    if (product.imagesByColor && Object.keys(product.imagesByColor).length > 0) {
+      Object.keys(product.imagesByColor).forEach((color) => {
+        product.imagesByColor[color].forEach((img) => assignToColor(img, color));
       });
     }
+
+    if (product.allImages?.length) {
+      const fallbackColor = productColors[0];
+      product.allImages.forEach((img) => {
+        assignToColor(img, img.color || fallbackColor);
+      });
+    }
+
     setVariantImages(images);
   }, []);
 
@@ -1091,10 +1097,7 @@ const prepareFormData = () => {
 
     const formDataObj = new FormData();
 
-    // ✅ Edit mode ke liye productId add karo
-    if (initialData?._id) {
-      formDataObj.append("productId", initialData._id);
-    }
+    const isEdit = Boolean(editingProductId);
 
     // ✅ CLOTHING CATEGORY DETECT KARO
     const isBottomWear = BOTTOM_WEAR_TYPES.includes(formData.clothingType);
@@ -1219,9 +1222,9 @@ const prepareFormData = () => {
     });
     formDataObj.append("colorCodes", JSON.stringify(colorCodesArray));
 
-    // Handle images
+    // Handle images — preserve UI order for edit (existing + new interleaved)
     const allImageFiles = [];
-    const existingImageIds = [];
+    const imageOrder = [];
     const finalColorImageMap = {};
     let globalIndex = 0;
 
@@ -1236,13 +1239,14 @@ const prepareFormData = () => {
       const indices = [];
 
       images.forEach((imgObj) => {
-        if (imgObj && imgObj.file) {
+        if (imgObj?.file) {
+          indices.push(globalIndex);
+          imageOrder.push({ type: "new", fileIndex: allImageFiles.length });
           allImageFiles.push(imgObj.file);
-          indices.push(globalIndex);
           globalIndex++;
-        } else if (imgObj && imgObj.id) {
-          existingImageIds.push(imgObj.id);
+        } else if (imgObj?.id) {
           indices.push(globalIndex);
+          imageOrder.push({ type: "existing", id: imgObj.id });
           globalIndex++;
         }
       });
@@ -1252,8 +1256,12 @@ const prepareFormData = () => {
       }
     });
 
-    if (existingImageIds.length > 0) {
+    if (isEdit) {
+      const existingImageIds = imageOrder
+        .filter((entry) => entry.type === "existing")
+        .map((entry) => entry.id);
       formDataObj.append("existingImages", JSON.stringify(existingImageIds));
+      formDataObj.append("imageOrder", JSON.stringify(imageOrder));
     }
 
     allImageFiles.forEach((file) => {
@@ -1327,6 +1335,7 @@ const prepareFormData = () => {
     setCurrentColor("");
     setTempSpecKey("");
     setTempSpecValue("");
+    setEditingProductId(null);
   };
 
   // Validation

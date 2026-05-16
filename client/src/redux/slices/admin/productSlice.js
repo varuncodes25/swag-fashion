@@ -49,10 +49,9 @@ export const createProduct = createAsyncThunk(
         formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -65,11 +64,14 @@ export const updateProduct = createAsyncThunk(
   'products/updateProduct',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      // Using your route: /update-product/:id
       const response = await axios.put(
         `${API_URL}/update-product/${id}`,
         data,
-        getAuthHeaders()
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        },
       );
       return response.data;
     } catch (error) {

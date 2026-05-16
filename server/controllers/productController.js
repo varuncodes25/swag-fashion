@@ -738,6 +738,8 @@ const updateProduct = async (req, res) => {
       "sizes",
       "colorCodes",
       "colorImageMap",
+      "existingImages",
+      "imageOrder",
       "specifications",
       "features",
       "season",
@@ -795,33 +797,30 @@ const updateProduct = async (req, res) => {
     let allImages = [...(product.allImages || [])];
     let existingImageIds = [];
 
-    // Parse existing images from request
-    if (data.existingImages) {
+    if (data.existingImages !== undefined) {
       try {
         existingImageIds = Array.isArray(data.existingImages)
           ? data.existingImages
           : JSON.parse(data.existingImages);
       } catch (e) {
         console.error("Failed to parse existingImages:", e);
+        existingImageIds = [];
       }
     }
 
-    // Filter to keep only existing images
-    if (existingImageIds.length > 0) {
-      allImages = allImages.filter((img) => existingImageIds.includes(img.id));
-    } else if (data.existingImages === null || data.existingImages === "[]") {
-      // No existing images - clear all
-      allImages = [];
-    }
+    const imageOrder = Array.isArray(data.imageOrder) ? data.imageOrder : null;
+    const oldImagesById = new Map(
+      (product.allImages || []).map((img) => [img.id, img]),
+    );
 
-    // Upload new images
+    let newUploadedImages = [];
     if (req.files && req.files.length > 0) {
       if (!isCloudinaryConfigured()) {
         return respondCloudinaryMissing(res);
       }
       console.log(`📸 Uploading ${req.files.length} new images...`);
 
-      const newImages = await Promise.all(
+      newUploadedImages = await Promise.all(
         req.files.map(async (file, index) => {
           const result = await new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
@@ -838,12 +837,71 @@ const updateProduct = async (req, res) => {
             url: result.secure_url,
             id: result.public_id,
             isMain: false,
-            sortOrder: allImages.length + index,
+            sortOrder: index,
           };
         }),
       );
+    }
 
-      allImages = [...allImages, ...newImages];
+    const expectsNewUploads =
+      imageOrder?.some((entry) => entry.type === "new") ?? false;
+
+    if (imageOrder && imageOrder.length > 0) {
+      allImages = [];
+      imageOrder.forEach((entry, index) => {
+        if (entry.type === "existing" && entry.id && oldImagesById.has(entry.id)) {
+          allImages.push({
+            ...oldImagesById.get(entry.id),
+            sortOrder: index,
+          });
+        } else if (
+          entry.type === "new" &&
+          typeof entry.fileIndex === "number" &&
+          newUploadedImages[entry.fileIndex]
+        ) {
+          allImages.push({
+            ...newUploadedImages[entry.fileIndex],
+            sortOrder: index,
+          });
+        }
+      });
+
+      if (expectsNewUploads && newUploadedImages.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "New images were not uploaded. Please try again or check Cloudinary settings on the server.",
+        });
+      }
+
+      if (allImages.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "No images could be saved. Remove old images, upload new ones, and try again.",
+        });
+      }
+    } else {
+      if (data.existingImages !== undefined) {
+        if (existingImageIds.length > 0) {
+          allImages = allImages.filter((img) =>
+            existingImageIds.includes(img.id),
+          );
+        } else {
+          allImages = [];
+        }
+      }
+
+      if (newUploadedImages.length > 0) {
+        const startIndex = allImages.length;
+        allImages = [
+          ...allImages,
+          ...newUploadedImages.map((img, index) => ({
+            ...img,
+            sortOrder: startIndex + index,
+          })),
+        ];
+      }
     }
 
     // Apply color-image mapping
@@ -884,6 +942,16 @@ const updateProduct = async (req, res) => {
       allImages[0].isMain = true;
     }
 
+    const previousImageIds = new Set(
+      (product.allImages || []).map((img) => img.id).filter(Boolean),
+    );
+    const nextImageIds = new Set(
+      allImages.map((img) => img.id).filter(Boolean),
+    );
+    const removedImageIds = [...previousImageIds].filter(
+      (id) => !nextImageIds.has(id),
+    );
+
     data.allImages = allImages;
 
     // ============ REMOVE FIELDS THAT SHOULDN'T BE UPDATED DIRECTLY ============
@@ -899,6 +967,17 @@ const updateProduct = async (req, res) => {
     // ============ SAVE PRODUCT (TRIGGERS MIDDLEWARE) ============
     console.log("💾 Saving product with middleware...");
     await product.save();
+
+    if (removedImageIds.length > 0) {
+      for (const imageId of removedImageIds) {
+        try {
+          await cloudinary.uploader.destroy(imageId);
+          console.log(`🗑️ Removed old image from Cloudinary: ${imageId}`);
+        } catch (err) {
+          console.error(`Failed to delete removed image ${imageId}:`, err);
+        }
+      }
+    }
 
     console.log("✅ Product updated successfully");
     console.log(`📊 Total variants: ${product.variants.length}`);
