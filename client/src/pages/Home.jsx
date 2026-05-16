@@ -30,10 +30,10 @@ const Home = () => {
   return (
     <div>
       <Banner />
-      <PremiumSection />
       <HomeCollections />
       <FilterMenu onSearch={setSearch} />
-      <ProductList search={search} />
+      <PremiumSection />
+      <ProductList search={search} excludePremium />
     </div>
   );
 };

@@ -416,6 +416,9 @@ const getProducts = async (req, res) => {
     }
 
     if (req.query.isPremium === "true") query.isPremium = true;
+    if (req.query.excludePremium === "true") {
+      query.isPremium = { $ne: true };
+    }
     if (req.query.isFeatured === "true") query.isFeatured = true;
     if (req.query.isBestSeller === "true") query.isBestSeller = true;
     if (req.query.isNewArrival === "true") query.isNewArrival = true;
@@ -1430,6 +1433,9 @@ const getProductsByCategory = async (req, res) => {
     if (queryParams.isBestSeller === "true") query.isBestSeller = true;
     if (queryParams.isNewArrival === "true") query.isNewArrival = true;
     if (queryParams.isPremium === "true") query.isPremium = true;
+    if (queryParams.excludePremium === "true") {
+      query.isPremium = { $ne: true };
+    }
 
     // STOCK AVAILABILITY - FIXED
     if (queryParams.inStock === "true") {

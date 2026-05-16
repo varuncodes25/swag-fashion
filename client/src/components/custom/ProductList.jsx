@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
+import { Sparkles } from "lucide-react";
 import ProductCard from "./ProductCard";
 import { useDispatch } from "react-redux";
 import { setProducts as setReduxProducts } from "@/redux/slices/productSlice";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
+import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
+import {
+  HOME_SECTION_CLASS,
+  HOME_SECTION_CONTAINER,
+  HOME_SECTION_TOP_DIVIDER,
+} from "@/components/Home/homeSectionStyles";
 
-const ProductList = ({ category = "All", price = "", search = "" }) => {
+const ProductList = ({
+  category = "All",
+  price = "",
+  search = "",
+  excludePremium = false,
+}) => {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -37,6 +49,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
             category: category !== "All" ? category : "",
             price: price || "",
             search: search || "",
+            ...(excludePremium ? { excludePremium: true } : {}),
           },
         }
       );
@@ -65,7 +78,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
     } finally {
       setLoading(false);
     }
-  }, [category, price, search, limit, dispatch]);
+  }, [category, price, search, excludePremium, limit, dispatch]);
 
   // Initial fetch or when filters change
   useEffect(() => {
@@ -96,11 +109,22 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
+  const sectionHeader = !search && (
+    <HomeSectionHeader
+      badge="Collection"
+      badgeIcon={Sparkles}
+      title="Shop All Styles"
+      subtitle="Fresh drops, everyday tees, and latest streetwear."
+      viewAllHref="/category/all"
+    />
+  );
+
   // Loading skeleton
   if (loading && products.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50/50 via-white/50 to-gray-100/50 dark:from-gray-900/50 dark:via-gray-900/50 dark:to-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 py-10">
+      <section className={`${HOME_SECTION_CLASS} ${HOME_SECTION_TOP_DIVIDER}`}>
+        <div className={HOME_SECTION_CONTAINER}>
+          {sectionHeader}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="animate-pulse">
@@ -114,14 +138,15 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
             ))}
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100/70 via-gray-50/70 to-gray-100/70 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-  {/* Main Content */}
-  <div className="max-w-7xl mx-auto px-4 py-8">
+    <section className={`${HOME_SECTION_CLASS} ${HOME_SECTION_TOP_DIVIDER}`}>
+  <div className={HOME_SECTION_CONTAINER}>
+    {sectionHeader}
+
     {/* Search Results Header */}
     {search && (
       <div className="mb-6 animate-slideDown">
@@ -156,10 +181,6 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
     {products.length > 0 ? (
       <>
         <div className="relative">
-          {/* Subtle Background Pattern - Very Dull */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-200/20 via-transparent to-transparent dark:from-white/5 dark:via-transparent dark:to-transparent -z-10" />
-          
-          {/* Grid Container */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
             {products.map((p, index) => {
               const isLastElement = index === products.length - 1;
@@ -279,7 +300,7 @@ const ProductList = ({ category = "All", price = "", search = "" }) => {
       </svg>
     </button>
   )}
-</div>
+</section>
   );
 };
 
