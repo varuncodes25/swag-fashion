@@ -208,8 +208,9 @@ function ProductLoaded({
   return (
     <div className="min-h-screen bg-background dark:bg-black  ">
       <Breadcrumb
-        category={product.clothingType}
-        subcategory={product.gender}
+        category={product.category}
+        clothingType={product.clothingType}
+        gender={product.gender}
         productName={product.name}
       />
 

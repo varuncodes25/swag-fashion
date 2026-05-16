@@ -1380,7 +1380,14 @@ productSchema.methods.getProductDetailData = function () {
     keyFeatures: this.keyFeatures,
     specifications: this.getFormattedSpecifications(),
     offerDetails: this.getOfferDetails(),
-    category: this.category,
+    category:
+      this.category && typeof this.category === "object" && this.category.slug
+        ? {
+            _id: this.category._id,
+            name: this.category.name,
+            slug: this.category.slug,
+          }
+        : this.category,
     // Variants WITHOUT duplicate images in each
     variants: this.variants.map((v) => ({
       _id: v._id,

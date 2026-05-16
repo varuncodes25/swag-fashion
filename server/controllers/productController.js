@@ -376,14 +376,35 @@ const getProducts = async (req, res) => {
     limit = parseInt(limit) || 9;
 
     // Base query
-    const query = {};
+    const query = {
+      status: "published",
+      blacklisted: false,
+    };
 
     // Filters
-    if (category && category.toLowerCase() !== "all")
-      query.category = category.trim();
+    if (category && category.toLowerCase() !== "all") {
+      const categoryDoc = await Category.findOne({
+        $or: [
+          { slug: category.trim().toLowerCase() },
+          { name: { $regex: new RegExp(`^${category.trim()}$`, "i") } },
+        ],
+      });
+      if (categoryDoc) query.category = categoryDoc._id;
+    }
     if (search && search.trim() !== "")
       query.name = { $regex: search.trim(), $options: "i" };
     if (price && !isNaN(price)) query.price = { $lte: Number(price) };
+
+    if (req.query.clothingType) {
+      const types = req.query.clothingType.split(",").map((t) => t.trim());
+      query.clothingType = { $in: types.map((t) => new RegExp(t, "i")) };
+    }
+    if (req.query.gender) {
+      const genders = req.query.gender
+        .split(",")
+        .map((g) => g.trim().toLowerCase());
+      query.gender = { $in: genders.map((g) => new RegExp(`^${g}$`, "i")) };
+    }
 
     // Sorting
     let sortBy = { createdAt: -1 }; // default
@@ -442,7 +463,7 @@ const getProducts = async (req, res) => {
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate("category", "name")
+      .populate("category", "name slug")
       .populate("reviews");
 
     if (!product) {
@@ -1184,25 +1205,41 @@ const getProductsByCategory = async (req, res) => {
     const queryParams = req.query;
     console.log("Incoming queryParams:", queryParams);
 
-    // ============ 1. FIND CATEGORY ============
-    const category = await Category.findOne({ slug });
-    if (!category) {
+    // ============ 1. FIND CATEGORY (men/women/kids) or legacy path slug ============
+    const MAIN_SLUGS = ["men", "women", "kids"];
+    const normalizedSlug = (slug || "").toLowerCase().trim();
+    const category = MAIN_SLUGS.includes(normalizedSlug)
+      ? await Category.findOne({ slug: normalizedSlug })
+      : null;
+
+    const query = {
+      status: "published",
+      blacklisted: false,
+    };
+
+    if (category) {
+      query.category = category._id;
+    } else if (slug && !MAIN_SLUGS.includes(normalizedSlug)) {
+      // Legacy URLs: /category/T-Shirt/Unisex — slug is clothing type, not category
+      const fromPath = decodeURIComponent(slug).trim();
+      query.clothingType = {
+        $regex: fromPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        $options: "i",
+      };
+      if (subSlug) {
+        const g = decodeURIComponent(subSlug).trim().toLowerCase();
+        query.gender = { $regex: new RegExp(`^${g}$`, "i") };
+      }
+    } else {
       return res.status(404).json({
         success: false,
         message: "Category not found",
       });
     }
 
-    // ============ 2. BUILD BASE QUERY ============
-    const query = {
-      category: category._id,
-      status: "published",
-      blacklisted: false,
-    };
-
-    // Add subcategory if exists
+    // Add subcategory when main category exists
     let subCategory = null;
-    if (subSlug) {
+    if (category && subSlug) {
       subCategory = category.subCategories?.find(
         (sub) => sub.slug === subSlug && sub.isActive !== false,
       );

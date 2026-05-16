@@ -7,6 +7,7 @@ import ProductGrid from "@/components/category/ProductGrid";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import MobileFilterButton from "@/components/category/MobileFilterButton";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
+import { resolveCategoryRoute } from "@/utils/categoryNav";
 
 const INITIAL_FILTERS = {
   priceRange: [],
@@ -24,6 +25,10 @@ const INITIAL_FILTERS = {
 
 export default function CategoryPage() {
   const { slug, subSlug } = useParams();
+  const { effectiveSlug, effectiveSubSlug, legacyFilters } = resolveCategoryRoute(
+    slug,
+    subSlug
+  );
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
   const initialSort = searchParams.get("sort") || "newest";
@@ -87,8 +92,18 @@ export default function CategoryPage() {
       filters.sort = sortBy;
     }
 
+    const clothingTypeParam =
+      searchParams.get("clothingType") || legacyFilters.clothingType;
+    const genderParam = searchParams.get("gender") || legacyFilters.gender;
+    if (clothingTypeParam?.trim()) {
+      filters.clothingType = clothingTypeParam.trim();
+    }
+    if (genderParam?.trim()) {
+      filters.gender = genderParam.trim().toLowerCase();
+    }
+
     return filters;
-  }, [selectedFilters, searchTerm, sortBy]);
+  }, [selectedFilters, searchTerm, sortBy, searchParams, legacyFilters]);
 
   // ✅ Use the custom hook
   const {
@@ -99,7 +114,7 @@ export default function CategoryPage() {
     availableFilters,
     loadMore,
     hasMore
-  } = useCategoryProducts(slug, subSlug, queryFilters);
+  } = useCategoryProducts(effectiveSlug, effectiveSubSlug, queryFilters);
 
   // ✅ updateFilter FUNCTION
   const updateFilter = useCallback((filterKey, value) => {
