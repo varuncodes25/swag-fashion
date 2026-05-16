@@ -60,10 +60,11 @@ export function useTouchImageSlide({
         if (direction === "next") onNext?.();
         else onPrev?.();
 
+        // Instant reset (no animate-back); ImageSlideTrack skips transition when offset is 0
         slideOffsetRef.current = 0;
         setSlideOffset(0);
-        setIsAnimating(false);
         isHorizontalRef.current = false;
+        setIsAnimating(false);
         commitTimerRef.current = null;
       }, SLIDE_DURATION_MS);
     },

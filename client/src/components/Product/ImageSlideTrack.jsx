@@ -31,10 +31,13 @@ const ImageSlideTrack = ({
   const nextIdx = (activeIndex + 1) % len;
   const panels = [prevIdx, activeIndex, nextIdx];
 
+  // Animate only while sliding out; instant reset when offset returns to 0 (avoids flash to prev image)
   const transition =
-    isSlideDragging && !isAnimating
-      ? "none"
-      : "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+    isSlideDragging || (isAnimating && slideOffset !== 0)
+      ? isSlideDragging
+        ? "none"
+        : "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+      : "none";
 
   const imgFit =
     fit === "contain"

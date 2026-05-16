@@ -34,14 +34,14 @@ const ProductGallery = ({
 
   const handlePrev = () => {
     if (!images || images.length === 0) return;
-    onSelect((selectedImage - 1 + images.length) % images.length);
+    onSelect((prev) => (prev - 1 + images.length) % images.length);
     if (isZoomed) setIsZoomed(false);
     setShowZoom(false);
   };
 
   const handleNext = () => {
     if (!images || images.length === 0) return;
-    onSelect((selectedImage + 1) % images.length);
+    onSelect((prev) => (prev + 1) % images.length);
     if (isZoomed) setIsZoomed(false);
     setShowZoom(false);
   };
