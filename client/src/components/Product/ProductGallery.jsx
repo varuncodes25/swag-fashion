@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MobileImageZoom from "./MobileImageZoom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
+import ImageSlideTrack from "./ImageSlideTrack";
 
 const ProductGallery = ({
   images = [],
@@ -14,6 +15,7 @@ const ProductGallery = ({
   const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const [bgPos, setBgPos] = useState("50% 50%");
+  const mobileSlideContainerRef = useRef(null);
 
   const activeImage = images[selectedImage]?.url;
   
@@ -47,12 +49,16 @@ const ProductGallery = ({
   const {
     slideOffset: mobileSlideOffset,
     isSlideDragging: isMobileSlideDragging,
+    isAnimating: isMobileSlideAnimating,
     didSwipeRef: mobileDidSwipeRef,
+    goNextAnimated: mobileGoNext,
+    goPrevAnimated: mobileGoPrev,
     handlers: mobileSlideHandlers,
   } = useTouchImageSlide({
     onPrev: handlePrev,
     onNext: handleNext,
     enabled: images.length > 1,
+    containerRef: mobileSlideContainerRef,
   });
 
   const handleContainerClick = () => {
@@ -82,7 +88,7 @@ const ProductGallery = ({
   };
 
   const handleMobileImageClick = () => {
-    if (mobileDidSwipeRef.current) {
+    if (mobileDidSwipeRef.current || isMobileSlideAnimating) {
       mobileDidSwipeRef.current = false;
       return;
     }
@@ -240,6 +246,7 @@ const ProductGallery = ({
       <div className="lg:hidden">
         {/* MAIN IMAGE */}
         <div
+          ref={mobileSlideContainerRef}
           className="
             w-full
             h-[320px] sm:h-[360px]
@@ -257,19 +264,14 @@ const ProductGallery = ({
           onTouchMove={mobileSlideHandlers.onTouchMove}
           onTouchEnd={mobileSlideHandlers.onTouchEnd}
         >
-          <img
-            src={activeImage}
-            alt="product"
-            className="absolute inset-0 z-[1] h-full w-full object-cover object-top select-none"
-            loading="lazy"
-            decoding="async"
-            draggable={false}
-            style={{
-              transform: `translateX(${mobileSlideOffset}px)`,
-              transition: isMobileSlideDragging
-                ? "none"
-                : "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
+          <ImageSlideTrack
+            images={images}
+            activeIndex={selectedImage}
+            slideOffset={mobileSlideOffset}
+            isSlideDragging={isMobileSlideDragging}
+            isAnimating={isMobileSlideAnimating}
+            fit="cover"
+            className="absolute inset-0 z-[1]"
           />
 
           {/* MOBILE NAVIGATION */}
@@ -278,7 +280,7 @@ const ProductGallery = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handlePrev();
+                  mobileGoPrev();
                 }}
                 className="absolute left-2 top-1/2 z-[2] -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 pointer-events-auto"
                 aria-label="Previous image"
@@ -288,7 +290,7 @@ const ProductGallery = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleNext();
+                  mobileGoNext();
                 }}
                 className="absolute right-2 top-1/2 z-[2] -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 pointer-events-auto"
                 aria-label="Next image"

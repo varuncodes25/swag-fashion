@@ -1,6 +1,7 @@
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
+import ImageSlideTrack from "./ImageSlideTrack";
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
@@ -19,18 +20,27 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   const containerRef = useRef(null);
+  const slideContainerRef = useRef(null);
   const pinchRef = useRef({ startDistance: 0, startScale: 1 });
   const touchStartForTapRef = useRef({ x: 0, y: 0 });
   const gestureRef = useRef(null);
 
   const canSlide = images.length > 1 && scale === 1;
 
-  const { slideOffset, isSlideDragging, didSwipeRef, handlers: slideHandlers } =
-    useTouchImageSlide({
-      onPrev,
-      onNext,
-      enabled: canSlide,
-    });
+  const {
+    slideOffset,
+    isSlideDragging,
+    isAnimating,
+    didSwipeRef,
+    goNextAnimated,
+    goPrevAnimated,
+    handlers: slideHandlers,
+  } = useTouchImageSlide({
+    onPrev,
+    onNext,
+    enabled: canSlide,
+    containerRef: slideContainerRef,
+  });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -166,9 +176,9 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
 
   if (!images?.length) return null;
 
-  const isTransforming = isSlideDragging || isPanning;
-  const translateX = scale === 1 ? slideOffset : position.x;
-  const translateY = scale === 1 ? 0 : position.y;
+  const isTransforming = isPanning || (scale > 1);
+  const translateX = scale > 1 ? position.x : 0;
+  const translateY = scale > 1 ? position.y : 0;
 
   return (
     <div
@@ -222,27 +232,44 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center overflow-hidden relative">
-        <div
-          className="relative will-change-transform"
-          style={{
-            transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-            transition: isTransforming ? "none" : "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
-          }}
-        >
-          <img
-            src={images[activeIndex]?.url}
-            alt="Zoomed product view"
-            className="max-w-[100vw] max-h-[70vh] object-contain select-none pointer-events-none"
-            draggable={false}
+      <div
+        ref={slideContainerRef}
+        className="flex-1 flex items-center justify-center overflow-hidden relative w-full"
+      >
+        {scale === 1 && images.length > 1 ? (
+          <ImageSlideTrack
+            images={images}
+            activeIndex={activeIndex}
+            slideOffset={slideOffset}
+            isSlideDragging={isSlideDragging}
+            isAnimating={isAnimating}
+            fit="contain"
+            className="w-full"
           />
-        </div>
+        ) : (
+          <div
+            className="relative will-change-transform"
+            style={{
+              transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
+              transition: isTransforming
+                ? "none"
+                : "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
+          >
+            <img
+              src={images[activeIndex]?.url}
+              alt="Zoomed product view"
+              className="max-w-[100vw] max-h-[70vh] object-contain select-none pointer-events-none"
+              draggable={false}
+            />
+          </div>
+        )}
 
         {images.length > 1 && scale === 1 && (
           <div className="absolute inset-0 flex items-center justify-between p-4 pointer-events-none">
             <button
               type="button"
-              onClick={onPrev}
+              onClick={goPrevAnimated}
               className="p-4 rounded-full bg-black/60 text-white shadow-xl pointer-events-auto backdrop-blur-sm"
               aria-label="Previous image"
             >
@@ -250,7 +277,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
             </button>
             <button
               type="button"
-              onClick={onNext}
+              onClick={goNextAnimated}
               className="p-4 rounded-full bg-black/60 text-white shadow-xl pointer-events-auto backdrop-blur-sm"
               aria-label="Next image"
             >
