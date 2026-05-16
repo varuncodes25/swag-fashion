@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import MobileImageZoom from "./MobileImageZoom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
 
 const ProductGallery = ({
   images = [],
@@ -13,9 +14,7 @@ const ProductGallery = ({
   const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const [bgPos, setBgPos] = useState("50% 50%");
-  
-  
-  
+
   const activeImage = images[selectedImage]?.url;
   
   // ❌ WRONG: Early return before useEffect
@@ -45,6 +44,17 @@ const ProductGallery = ({
     setShowZoom(false);
   };
 
+  const {
+    slideOffset: mobileSlideOffset,
+    isSlideDragging: isMobileSlideDragging,
+    didSwipeRef: mobileDidSwipeRef,
+    handlers: mobileSlideHandlers,
+  } = useTouchImageSlide({
+    onPrev: handlePrev,
+    onNext: handleNext,
+    enabled: images.length > 1,
+  });
+
   const handleContainerClick = () => {
     if (isZoomed) {
       setIsZoomed(false);
@@ -69,6 +79,14 @@ const ProductGallery = ({
     if (onMobileZoomChange) {
       onMobileZoomChange(false); // ✅ Parent ko bataye ki mobile zoom close hai
     }
+  };
+
+  const handleMobileImageClick = () => {
+    if (mobileDidSwipeRef.current) {
+      mobileDidSwipeRef.current = false;
+      return;
+    }
+    handleMobileZoomOpen();
   };
   // ✅ CORRECT: useEffect should come before any conditional returns
   useEffect(() => {
@@ -232,21 +250,27 @@ const ProductGallery = ({
             mb-4
             relative
             overflow-hidden
+            touch-none
           "
-          onClick={handleMobileZoomOpen}
+          onClick={handleMobileImageClick}
+          onTouchStart={mobileSlideHandlers.onTouchStart}
+          onTouchMove={mobileSlideHandlers.onTouchMove}
+          onTouchEnd={mobileSlideHandlers.onTouchEnd}
         >
           <img
             src={activeImage}
             alt="product"
-            className="absolute inset-0 z-[1] h-full w-full object-cover object-top"
+            className="absolute inset-0 z-[1] h-full w-full object-cover object-top select-none"
             loading="lazy"
             decoding="async"
+            draggable={false}
+            style={{
+              transform: `translateX(${mobileSlideOffset}px)`,
+              transition: isMobileSlideDragging
+                ? "none"
+                : "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+            }}
           />
-
-          {/* TAP TO ZOOM HINT */}
-          <div className="absolute bottom-4 left-1/2 z-[2] -translate-x-1/2 px-4 py-2 bg-black/70 text-white text-sm rounded-full backdrop-blur-sm pointer-events-none">
-            Tap to zoom
-          </div>
 
           {/* MOBILE NAVIGATION */}
           {images.length > 1 && (

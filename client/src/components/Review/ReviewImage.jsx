@@ -1,11 +1,14 @@
 // components/Review/ReviewImage.jsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { ZoomIn, Loader, ChevronRight, ChevronLeft } from "lucide-react";
+
+const SWIPE_THRESHOLD = 50;
 
 const ReviewImage = ({ reviewImages }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
   const hasImages = reviewImages && reviewImages.length > 0;
   
@@ -27,12 +30,35 @@ const ReviewImage = ({ reviewImages }) => {
   const nextImage = () => {
     if (reviewImages.length > 1) {
       setCurrentImageIndex((prev) => (prev + 1) % reviewImages.length);
+      setSelectedImage(null);
     }
   };
 
   const prevImage = () => {
     if (reviewImages.length > 1) {
       setCurrentImageIndex((prev) => (prev - 1 + reviewImages.length) % reviewImages.length);
+      setSelectedImage(null);
+    }
+  };
+
+  const handleModalTouchStart = (e) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleModalTouchEnd = (e) => {
+    if (reviewImages.length <= 1) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+
+    if (
+      Math.abs(deltaX) > Math.abs(deltaY) &&
+      Math.abs(deltaX) > SWIPE_THRESHOLD
+    ) {
+      if (deltaX < 0) nextImage();
+      else prevImage();
     }
   };
 
@@ -110,7 +136,11 @@ const ReviewImage = ({ reviewImages }) => {
             </button>
             
             {/* Main Image */}
-            <div className="relative">
+            <div
+              className="relative touch-pan-y"
+              onTouchStart={handleModalTouchStart}
+              onTouchEnd={handleModalTouchEnd}
+            >
               <img
                 src={selectedImage || reviewImages[currentImageIndex]?.url}
                 alt="Review"
