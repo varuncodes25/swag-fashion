@@ -25,9 +25,9 @@ const INITIAL_FILTERS = {
 
 export default function CategoryPage() {
   const { slug, subSlug } = useParams();
-  const { effectiveSlug, effectiveSubSlug, legacyFilters } = resolveCategoryRoute(
-    slug,
-    subSlug
+  const { effectiveSlug, effectiveSubSlug, legacyFilters } = useMemo(
+    () => resolveCategoryRoute(slug, subSlug),
+    [slug, subSlug]
   );
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
@@ -93,8 +93,8 @@ export default function CategoryPage() {
     }
 
     const clothingTypeParam =
-      searchParams.get("clothingType") || legacyFilters.clothingType;
-    const genderParam = searchParams.get("gender") || legacyFilters.gender;
+      searchParams.get("clothingType") || legacyFilters?.clothingType;
+    const genderParam = searchParams.get("gender") || legacyFilters?.gender;
     if (clothingTypeParam?.trim()) {
       filters.clothingType = clothingTypeParam.trim();
     }
@@ -102,8 +102,19 @@ export default function CategoryPage() {
       filters.gender = genderParam.trim().toLowerCase();
     }
 
+    if (searchParams.get("isPremium") === "true") {
+      filters.isPremium = "true";
+    }
+
     return filters;
-  }, [selectedFilters, searchTerm, sortBy, searchParams, legacyFilters]);
+  }, [
+    selectedFilters,
+    searchTerm,
+    sortBy,
+    searchParams,
+    legacyFilters?.clothingType,
+    legacyFilters?.gender,
+  ]);
 
   // ✅ Use the custom hook
   const {
@@ -187,12 +198,19 @@ export default function CategoryPage() {
   }, []);
 
   useEffect(() => {
-    const categoryName = (subSlug || slug || "all")
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const isPremiumPage = searchParams.get("isPremium") === "true";
+    const categoryName = isPremiumPage
+      ? "Premium Designs"
+      : (subSlug || slug || "all")
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
     const searchSuffix = searchTerm ? ` for "${searchTerm}"` : "";
-    const title = `${categoryName} Collection${searchSuffix} | Swag Fashion`;
-    const description = `Shop ${categoryName} fashion${searchSuffix} at Swag Fashion. Explore latest styles, filters by size/color, and great prices.`;
+    const title = isPremiumPage
+      ? `Premium Designs${searchSuffix} | Swag Fashion`
+      : `${categoryName} Collection${searchSuffix} | Swag Fashion`;
+    const description = isPremiumPage
+      ? `Explore curated premium t-shirts and streetwear${searchSuffix} at Swag Fashion.`
+      : `Shop ${categoryName} fashion${searchSuffix} at Swag Fashion. Explore latest styles, filters by size/color, and great prices.`;
     const canonical = getCanonicalFromPath(window.location.pathname);
 
     applySeoMeta({
@@ -220,7 +238,7 @@ export default function CategoryPage() {
       ],
     };
     applyJsonLd("category-breadcrumb", breadcrumbSchema);
-  }, [slug, subSlug, searchTerm]);
+  }, [slug, subSlug, searchTerm, searchParams]);
 
   // Calculate applied filters count
   const appliedFilterCount = Object.values(selectedFilters)
@@ -245,7 +263,9 @@ export default function CategoryPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold capitalize text-gray-900 dark:text-zinc-100">
-                  {slug?.replace(/-/g, " ")}
+                  {searchParams.get("isPremium") === "true"
+                    ? "Premium Designs"
+                    : slug?.replace(/-/g, " ")}
                 </p>
                 <p
                   className={`text-xs text-muted-foreground transition-all duration-300 ${

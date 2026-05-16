@@ -25,6 +25,7 @@ const ProductCard = ({
   reviewCount = 0,
   isNewArrival = false,
   isBestSeller = false,
+  isPremium = false,
   colors = [],
   sizes = []
 }) => {
@@ -138,6 +139,11 @@ const ProductCard = ({
 
             {/* Badges - Left Side */}
             <div className="absolute top-2 left-2 flex flex-col gap-1">
+              {isPremium && (
+                <span className="px-2 py-1 bg-gradient-to-r from-amber-600 to-yellow-500 text-white text-xs font-bold rounded-md shadow-lg">
+                  ✦ Premium
+                </span>
+              )}
               {isBestSeller && (
                 <span className="px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-md shadow-lg">
                   🔥 Bestseller

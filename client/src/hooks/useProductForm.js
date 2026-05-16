@@ -559,6 +559,7 @@ export const useProductForm = (initialData = null) => {
     isFeatured: false,
     isNewArrival: true,
     isBestSeller: false,
+    isPremium: false,
     warranty: "No Warranty",
     returnPolicy: "7 Days Return Available",
     returnWindow: 7,
@@ -632,6 +633,7 @@ export const useProductForm = (initialData = null) => {
       isNewArrival:
         product.isNewArrival !== undefined ? product.isNewArrival : true,
       isBestSeller: product.isBestSeller || false,
+      isPremium: product.isPremium || false,
       warranty: product.warranty || "No Warranty",
       returnPolicy: product.returnPolicy || "7 Days Return Available",
       returnWindow: product.returnWindow || 7,
@@ -1144,6 +1146,7 @@ const prepareFormData = () => {
           "isFeatured",
           "isNewArrival",
           "isBestSeller",
+          "isPremium",
         ].includes(key)
       ) {
         formDataObj.append(key, value.toString());
@@ -1308,6 +1311,7 @@ const prepareFormData = () => {
       isFeatured: false,
       isNewArrival: true,
       isBestSeller: false,
+      isPremium: false,
       warranty: "No Warranty",
       returnPolicy: "7 Days Return Available",
       returnWindow: 7,

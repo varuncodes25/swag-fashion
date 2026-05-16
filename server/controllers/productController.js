@@ -306,6 +306,15 @@ const createProduct = async (req, res) => {
       offerValidFrom: offerValidFrom ? new Date(offerValidFrom) : null,
       offerValidTill: offerValidTill ? new Date(offerValidTill) : null,
       freeShipping: freeShipping === "true" || freeShipping === true,
+      isFeatured:
+        req.body.isFeatured === "true" || req.body.isFeatured === true,
+      isNewArrival:
+        req.body.isNewArrival === undefined ||
+        req.body.isNewArrival === "true" ||
+        req.body.isNewArrival === true,
+      isBestSeller:
+        req.body.isBestSeller === "true" || req.body.isBestSeller === true,
+      isPremium: req.body.isPremium === "true" || req.body.isPremium === true,
 
       // Other
       warranty,
@@ -404,6 +413,14 @@ const getProducts = async (req, res) => {
         .split(",")
         .map((g) => g.trim().toLowerCase());
       query.gender = { $in: genders.map((g) => new RegExp(`^${g}$`, "i")) };
+    }
+
+    if (req.query.isPremium === "true") query.isPremium = true;
+    if (req.query.isFeatured === "true") query.isFeatured = true;
+    if (req.query.isBestSeller === "true") query.isBestSeller = true;
+    if (req.query.isNewArrival === "true") query.isNewArrival = true;
+    if (req.query.inStock === "true") {
+      query["variants.stock"] = { $gt: 0 };
     }
 
     // Sorting
@@ -748,6 +765,7 @@ const updateProduct = async (req, res) => {
       "isFeatured",
       "isNewArrival",
       "isBestSeller",
+      "isPremium",
     ];
     booleanFields.forEach((field) => {
       if (data[field] !== undefined) {
@@ -1407,10 +1425,11 @@ const getProductsByCategory = async (req, res) => {
       };
     }
 
-    // FEATURED/BESTSELLER/NEW ARRIVAL FILTERS
+    // FEATURED/BESTSELLER/NEW ARRIVAL/PREMIUM FILTERS
     if (queryParams.isFeatured === "true") query.isFeatured = true;
     if (queryParams.isBestSeller === "true") query.isBestSeller = true;
     if (queryParams.isNewArrival === "true") query.isNewArrival = true;
+    if (queryParams.isPremium === "true") query.isPremium = true;
 
     // STOCK AVAILABILITY - FIXED
     if (queryParams.inStock === "true") {

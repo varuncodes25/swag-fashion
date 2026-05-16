@@ -2,6 +2,7 @@ import FilterMenu from "@/components/custom/FilterMenu";
 import Banner from "@/components/custom/banner";
 import ProductList from "@/components/custom/ProductList";
 import HomeCollections from "@/components/Home/HomeCollection";
+import PremiumSection from "@/components/Home/PremiumSection";
 import { useEffect, useState } from "react";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
@@ -29,6 +30,7 @@ const Home = () => {
   return (
     <div>
       <Banner />
+      <PremiumSection />
       <HomeCollections />
       <FilterMenu onSearch={setSearch} />
       <ProductList search={search} />

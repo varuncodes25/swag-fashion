@@ -1466,6 +1466,18 @@ const CreateProduct = () => {
                         Best Seller
                       </Label>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="isPremium"
+                        checked={formData.isPremium}
+                        onCheckedChange={(checked) =>
+                          updateFormData("isPremium", checked)
+                        }
+                      />
+                      <Label htmlFor="isPremium" className="cursor-pointer">
+                        Premium Design
+                      </Label>
+                    </div>
                   </div>
                 </div>
               </CardContent>

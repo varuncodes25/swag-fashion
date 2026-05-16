@@ -1,6 +1,9 @@
 /** Main shop categories (MongoDB Category.slug values) */
 export const MAIN_CATEGORY_SLUGS = ["men", "women", "kids"];
 
+/** Stable empty object — avoids new `{}` every render (infinite fetch loops) */
+const EMPTY_LEGACY_FILTERS = Object.freeze({});
+
 export const isMainCategorySlug = (slug) =>
   slug && MAIN_CATEGORY_SLUGS.includes(String(slug).toLowerCase());
 
@@ -23,7 +26,7 @@ export const resolveCategoryRoute = (slug, subSlug) => {
     return {
       effectiveSlug: lower || "all",
       effectiveSubSlug: subSlug || null,
-      legacyFilters: {},
+      legacyFilters: EMPTY_LEGACY_FILTERS,
     };
   }
 

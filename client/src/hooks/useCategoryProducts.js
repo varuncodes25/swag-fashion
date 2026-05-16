@@ -1,8 +1,9 @@
 // hooks/useCategoryProducts.js (Updated)
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
 export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialPageSize = 12) => {
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -102,14 +103,14 @@ export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialP
     } finally {
       setLoading(false);
     }
-  }, [slug, subSlug, filters, initialPageSize]);
+  }, [slug, subSlug, filtersKey, initialPageSize]);
 
   // Load products when filters or slug changes
   useEffect(() => {
    
     setProducts([]);
     fetchProducts(1, false);
-  }, [slug, subSlug, filters, fetchProducts]);
+  }, [slug, subSlug, filtersKey, fetchProducts]);
 
   // Load more products
   const loadMore = useCallback(() => {

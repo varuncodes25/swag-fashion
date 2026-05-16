@@ -822,6 +822,10 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isPremium: {
+      type: Boolean,
+      default: false,
+    },
     isTrending: {
       type: Boolean,
       default: false,
@@ -964,6 +968,7 @@ productSchema.index({ brand: 1 });
 productSchema.index({ rating: -1 });
 productSchema.index({ isFeatured: 1 });
 productSchema.index({ isBestSeller: 1 });
+productSchema.index({ isPremium: 1 });
 productSchema.index({ blacklisted: 1 });
 productSchema.index({ ageGroup: 1 });
 productSchema.index({ offerValidTill: 1 });
@@ -1300,6 +1305,7 @@ productSchema.methods.getProductCardData = function () {
     isFeatured: this.isFeatured,
     isNewArrival: this.isNewArrival,
     isBestSeller: this.isBestSeller,
+    isPremium: this.isPremium,
     freeShipping: this.freeShipping,
     slug: this.slug,
   };
@@ -1489,6 +1495,7 @@ productSchema.methods.getAdminProductData = function () {
     isFeatured: this.isFeatured,
     isNewArrival: this.isNewArrival,
     isBestSeller: this.isBestSeller,
+    isPremium: this.isPremium,
     isTrending: this.isTrending,
 
     // Pricing

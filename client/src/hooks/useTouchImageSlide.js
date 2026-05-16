@@ -183,6 +183,7 @@ export function useTouchImageSlide({
     isSlideDragging,
     isAnimating,
     didSwipeRef,
+    resetSlide,
     goNextAnimated,
     goPrevAnimated,
     handlers: { onTouchStart, onTouchMove, onTouchEnd },

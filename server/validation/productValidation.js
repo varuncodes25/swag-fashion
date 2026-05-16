@@ -348,6 +348,7 @@ const createProductSchema = yup.object({
   isFeatured: yup.boolean().default(false),
   isNewArrival: yup.boolean().default(true),
   isBestSeller: yup.boolean().default(false),
+  isPremium: yup.boolean().default(false),
   isTrending: yup.boolean().default(false),
   freeShipping: yup.boolean().default(false),
   blacklisted: yup.boolean().default(false)

@@ -568,10 +568,11 @@ const AdminProductDetails = () => {
                 {product.isFeatured && <Badge>Featured</Badge>}
                 {product.isNewArrival && <Badge>New Arrival</Badge>}
                 {product.isBestSeller && <Badge>Best Seller</Badge>}
+                {product.isPremium && <Badge>Premium</Badge>}
                 {product.isTrending && <Badge>Trending</Badge>}
                 {product.freeShipping && <Badge>Free Shipping</Badge>}
-                {!product.isFeatured && !product.isNewArrival && !product.isBestSeller && 
-                 !product.isTrending && !product.freeShipping && (
+                {!product.isFeatured && !product.isNewArrival && !product.isBestSeller &&
+                 !product.isPremium && !product.isTrending && !product.freeShipping && (
                   <span className="text-sm text-gray-500">No flags set</span>
                 )}
               </div>
