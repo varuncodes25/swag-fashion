@@ -1,7 +1,6 @@
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
-import ImageSlideTrack from "./ImageSlideTrack";
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
@@ -16,7 +15,6 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [isPinching, setIsPinching] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   const containerRef = useRef(null);
@@ -25,15 +23,20 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const pinchRef = useRef({ startDistance: 0, startScale: 1 });
   const gestureRef = useRef(null);
 
-  const canSlide = images.length > 1 && scale === 1 && !isPinching;
+  const canSlide = images.length > 1 && scale <= 1;
 
-  const { slideOffset, isSlideDragging, isAnimating, handlers: slideHandlers } =
-    useTouchImageSlide({
-      onPrev,
-      onNext,
-      enabled: canSlide,
-      containerRef: slideContainerRef,
-    });
+  const {
+    slideOffset,
+    isSlideDragging,
+    isAnimating,
+    resetSlide,
+    handlers: slideHandlers,
+  } = useTouchImageSlide({
+    onPrev,
+    onNext,
+    enabled: canSlide,
+    containerRef: slideContainerRef,
+  });
 
   useEffect(() => {
     scaleRef.current = scale;
@@ -49,9 +52,9 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
-    setIsPinching(false);
     scaleRef.current = 1;
-  }, [activeIndex]);
+    resetSlide();
+  }, [activeIndex, resetSlide]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -80,7 +83,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
       gestureRef.current = "pinch";
-      setIsPinching(true);
+      resetSlide();
       pinchRef.current = {
         startDistance: getTouchDistance(e.touches[0], e.touches[1]),
         startScale: scaleRef.current,
@@ -109,7 +112,6 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
     if (e.touches.length === 2) {
       e.preventDefault();
       gestureRef.current = "pinch";
-      setIsPinching(true);
 
       const dist = getTouchDistance(e.touches[0], e.touches[1]);
       if (pinchRef.current.startDistance > 0) {
@@ -130,7 +132,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
       return;
     }
 
-    if (scaleRef.current === 1 && !isPinching && images.length > 1) {
+    if (gestureRef.current !== "pinch" && scaleRef.current <= 1 && images.length > 1) {
       slideHandlers.onTouchMove(e);
     }
   };
@@ -143,28 +145,26 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
 
     if (gestureRef.current === "pinch" && e.touches.length < 2) {
       gestureRef.current = null;
-      setIsPinching(false);
       if (scaleRef.current <= 1) {
         setScale(1);
         setPosition({ x: 0, y: 0 });
       }
     }
 
-    if (
-      gestureRef.current !== "pinch" &&
-      scaleRef.current === 1 &&
-      images.length > 1
-    ) {
+    if (gestureRef.current !== "pinch" && scaleRef.current <= 1 && images.length > 1) {
       slideHandlers.onTouchEnd(e);
     }
   };
 
   if (!images?.length) return null;
 
-  const showCarousel = scale === 1 && !isPinching && images.length > 1;
-  const isTransforming = isPanning || isPinching;
-  const translateX = scale > 1 ? position.x : 0;
-  const translateY = scale > 1 ? position.y : 0;
+  const isZoomed = scale > 1;
+  const translateX = isZoomed ? position.x : slideOffset;
+  const translateY = isZoomed ? position.y : 0;
+  const isPinching = gestureRef.current === "pinch";
+  const isTransforming = isPanning || isSlideDragging || isPinching || isAnimating;
+
+  const activeUrl = images[activeIndex]?.url;
 
   return (
     <div
@@ -174,7 +174,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/90 via-black/70 to-transparent">
+      <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/90 via-black/70 to-transparent shrink-0">
         <div className="text-white text-sm font-medium px-3 py-1.5 bg-black/50 rounded-full">
           {activeIndex + 1} / {images.length}
         </div>
@@ -211,38 +211,26 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
 
       <div
         ref={slideContainerRef}
-        className="flex-1 flex items-center justify-center overflow-hidden relative w-full"
+        className="flex-1 flex items-center justify-center overflow-hidden relative w-full min-h-0"
       >
-        {showCarousel ? (
-          <ImageSlideTrack
-            images={images}
-            activeIndex={activeIndex}
-            slideOffset={slideOffset}
-            isSlideDragging={isSlideDragging}
-            isAnimating={isAnimating}
-            fit="contain"
-            className="w-full"
+        <div
+          className="relative will-change-transform origin-center"
+          style={{
+            transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
+            transition: isTransforming ? "none" : "transform 0.2s ease-out",
+          }}
+        >
+          <img
+            src={activeUrl}
+            alt="Zoomed product view"
+            className="block max-w-[100vw] max-h-[70vh] w-auto h-auto object-contain select-none pointer-events-none"
+            draggable={false}
           />
-        ) : (
-          <div
-            className="relative will-change-transform"
-            style={{
-              transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-              transition: isTransforming ? "none" : "transform 0.2s ease-out",
-            }}
-          >
-            <img
-              src={images[activeIndex]?.url}
-              alt="Zoomed product view"
-              className="max-w-[100vw] max-h-[70vh] object-contain select-none pointer-events-none"
-              draggable={false}
-            />
-          </div>
-        )}
+        </div>
       </div>
 
-      {images.length > 1 && scale === 1 && !isPinching && (
-        <div className="p-4 pt-6 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
+      {images.length > 1 && !isZoomed && (
+        <div className="shrink-0 p-4 pt-6 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {images.map((img, i) => (
               <button
