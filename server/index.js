@@ -16,7 +16,9 @@ const Category = require("./models/Category");
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 5000;
-const cspReportOnly = process.env.CSP_REPORT_ONLY !== "false";
+/** Enforce CSP by default. Set CSP_REPORT_ONLY=true only to test without blocking. */
+const cspReportOnly = process.env.CSP_REPORT_ONLY === "true";
+const { helmetDirectives } = require("./utils/cspPolicy");
 const parseTrustProxy = (value) => {
   if (value == null || value === "") return isProduction ? 1 : false;
   if (value === "true") return true;
@@ -47,37 +49,8 @@ app.use(
 app.use(
   helmet.contentSecurityPolicy({
     reportOnly: cspReportOnly,
-    useDefaults: true,
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://checkout.razorpay.com"],
-      connectSrc: [
-        "'self'",
-        "https://api.razorpay.com",
-        "https://apiv2.shiprocket.in",
-        "https://res.cloudinary.com",
-        "https://*.vercel.app",
-        "https://accounts.google.com",
-        "https://oauth2.googleapis.com",
-      ],
-      imgSrc: [
-        "'self'",
-        "data:",
-        "blob:",
-        "https://res.cloudinary.com",
-        "https://lh3.googleusercontent.com",
-      ],
-      frameSrc: [
-        "'self'",
-        "https://checkout.razorpay.com",
-        "https://api.razorpay.com",
-        "https://accounts.google.com",
-      ],
-      styleSrc: ["'self'", "https:", "'unsafe-inline'"],
-      fontSrc: ["'self'", "https:", "data:"],
-      upgradeInsecureRequests: isProduction ? [] : null,
-      reportUri: ["/api/security/csp-report"],
-    },
+    useDefaults: false,
+    directives: helmetDirectives(),
   })
 );
 app.use(express.json({ limit: "15mb" }));
@@ -236,23 +209,6 @@ app.get("/sitemap.xml", async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to generate sitemap" });
   }
 });
-
-app.post(
-  "/api/security/csp-report",
-  express.json({
-    type: ["application/csp-report", "application/reports+json", "application/json"],
-  }),
-  (req, res) => {
-    if (!cspReportOnly && !isProduction) return res.status(204).end();
-    logger.warn({
-      type: "csp_violation",
-      body: req.body || null,
-      requestId: req.requestId || null,
-      timestamp: new Date().toISOString(),
-    });
-    return res.status(204).end();
-  }
-);
 
 // Load routes dynamically
 app.use("/api", apiLimiter);
