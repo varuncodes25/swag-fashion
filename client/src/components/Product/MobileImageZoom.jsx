@@ -1,11 +1,10 @@
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { X, ZoomIn, ZoomOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
 import ImageSlideTrack from "./ImageSlideTrack";
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
-const TAP_MOVE_THRESHOLD = 12;
 
 const getTouchDistance = (t1, t2) => {
   const dx = t1.clientX - t2.clientX;
@@ -17,30 +16,28 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isPinching, setIsPinching] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   const containerRef = useRef(null);
   const slideContainerRef = useRef(null);
+  const scaleRef = useRef(1);
   const pinchRef = useRef({ startDistance: 0, startScale: 1 });
-  const touchStartForTapRef = useRef({ x: 0, y: 0 });
   const gestureRef = useRef(null);
 
-  const canSlide = images.length > 1 && scale === 1;
+  const canSlide = images.length > 1 && scale === 1 && !isPinching;
 
-  const {
-    slideOffset,
-    isSlideDragging,
-    isAnimating,
-    didSwipeRef,
-    goNextAnimated,
-    goPrevAnimated,
-    handlers: slideHandlers,
-  } = useTouchImageSlide({
-    onPrev,
-    onNext,
-    enabled: canSlide,
-    containerRef: slideContainerRef,
-  });
+  const { slideOffset, isSlideDragging, isAnimating, handlers: slideHandlers } =
+    useTouchImageSlide({
+      onPrev,
+      onNext,
+      enabled: canSlide,
+      containerRef: slideContainerRef,
+    });
+
+  useEffect(() => {
+    scaleRef.current = scale;
+  }, [scale]);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -52,6 +49,8 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   useEffect(() => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
+    setIsPinching(false);
+    scaleRef.current = 1;
   }, [activeIndex]);
 
   useEffect(() => {
@@ -68,44 +67,33 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
 
   const clampScale = (s) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, s));
 
-  const zoomIn = () => setScale((s) => clampScale(s + 0.5));
+  const zoomIn = () => setScale((s) => clampScale(s + 0.25));
 
   const zoomOut = () => {
     setScale((s) => {
-      const next = Math.max(MIN_SCALE, s - 0.5);
+      const next = Math.max(MIN_SCALE, s - 0.25);
       if (next <= 1) setPosition({ x: 0, y: 0 });
       return next;
     });
   };
 
-  const toggleTapZoom = useCallback(() => {
-    setScale((s) => {
-      if (s > 1) {
-        setPosition({ x: 0, y: 0 });
-        return 1;
-      }
-      return 2;
-    });
-  }, []);
-
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
       gestureRef.current = "pinch";
+      setIsPinching(true);
       pinchRef.current = {
         startDistance: getTouchDistance(e.touches[0], e.touches[1]),
-        startScale: scale,
+        startScale: scaleRef.current,
       };
       return;
     }
 
     if (e.touches.length !== 1) return;
 
-    const touch = e.touches[0];
-    touchStartForTapRef.current = { x: touch.clientX, y: touch.clientY };
-
-    if (scale > 1) {
+    if (scaleRef.current > 1) {
       gestureRef.current = "pan";
       setIsPanning(true);
+      const touch = e.touches[0];
       setPanStart({
         x: touch.clientX - position.x,
         y: touch.clientY - position.y,
@@ -118,13 +106,18 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   };
 
   const handleTouchMove = (e) => {
-    if (e.touches.length === 2 && gestureRef.current === "pinch") {
+    if (e.touches.length === 2) {
       e.preventDefault();
+      gestureRef.current = "pinch";
+      setIsPinching(true);
+
       const dist = getTouchDistance(e.touches[0], e.touches[1]);
-      const ratio = dist / pinchRef.current.startDistance;
-      const next = clampScale(pinchRef.current.startScale * ratio);
-      setScale(next);
-      if (next <= 1) setPosition({ x: 0, y: 0 });
+      if (pinchRef.current.startDistance > 0) {
+        const ratio = dist / pinchRef.current.startDistance;
+        const next = clampScale(pinchRef.current.startScale * ratio);
+        setScale(next);
+        if (next <= 1) setPosition({ x: 0, y: 0 });
+      }
       return;
     }
 
@@ -137,46 +130,39 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
       return;
     }
 
-    if (scale === 1 && canSlide) {
+    if (scaleRef.current === 1 && !isPinching && images.length > 1) {
       slideHandlers.onTouchMove(e);
     }
   };
 
   const handleTouchEnd = (e) => {
-    if (gestureRef.current === "pinch" || gestureRef.current === "pan") {
+    if (gestureRef.current === "pan") {
       gestureRef.current = null;
       setIsPanning(false);
     }
 
-    if (scale === 1 && canSlide) {
-      const touch = e.changedTouches[0];
-      const moveX = Math.abs(touch.clientX - touchStartForTapRef.current.x);
-      const moveY = Math.abs(touch.clientY - touchStartForTapRef.current.y);
-      const totalMove = Math.max(moveX, moveY, Math.abs(slideOffset));
-
-      slideHandlers.onTouchEnd(e);
-
-      if (!didSwipeRef.current && totalMove < TAP_MOVE_THRESHOLD) {
-        toggleTapZoom();
+    if (gestureRef.current === "pinch" && e.touches.length < 2) {
+      gestureRef.current = null;
+      setIsPinching(false);
+      if (scaleRef.current <= 1) {
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
       }
-      return;
     }
 
-    if (scale > 1 && e.changedTouches.length === 1) {
-      const touch = e.changedTouches[0];
-      const move = Math.hypot(
-        touch.clientX - touchStartForTapRef.current.x,
-        touch.clientY - touchStartForTapRef.current.y
-      );
-      if (move < TAP_MOVE_THRESHOLD) {
-        toggleTapZoom();
-      }
+    if (
+      gestureRef.current !== "pinch" &&
+      scaleRef.current === 1 &&
+      images.length > 1
+    ) {
+      slideHandlers.onTouchEnd(e);
     }
   };
 
   if (!images?.length) return null;
 
-  const isTransforming = isPanning || (scale > 1);
+  const showCarousel = scale === 1 && !isPinching && images.length > 1;
+  const isTransforming = isPanning || isPinching;
   const translateX = scale > 1 ? position.x : 0;
   const translateY = scale > 1 ? position.y : 0;
 
@@ -189,17 +175,8 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
       onTouchEnd={handleTouchEnd}
     >
       <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/90 via-black/70 to-transparent">
-        <div className="flex items-center gap-3">
-          <div className="text-white text-sm font-medium px-3 py-1.5 bg-black/50 rounded-full">
-            {activeIndex + 1} / {images.length}
-          </div>
-
-          {scale > 1 && (
-            <div className="text-white text-sm px-3 py-1.5 bg-warning/90 rounded-full flex items-center gap-1">
-              <ZoomIn size={14} />
-              {scale.toFixed(1)}x
-            </div>
-          )}
+        <div className="text-white text-sm font-medium px-3 py-1.5 bg-black/50 rounded-full">
+          {activeIndex + 1} / {images.length}
         </div>
 
         <div className="flex items-center gap-1">
@@ -236,7 +213,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
         ref={slideContainerRef}
         className="flex-1 flex items-center justify-center overflow-hidden relative w-full"
       >
-        {scale === 1 && images.length > 1 ? (
+        {showCarousel ? (
           <ImageSlideTrack
             images={images}
             activeIndex={activeIndex}
@@ -251,9 +228,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
             className="relative will-change-transform"
             style={{
               transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-              transition: isTransforming
-                ? "none"
-                : "transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+              transition: isTransforming ? "none" : "transform 0.2s ease-out",
             }}
           >
             <img
@@ -264,34 +239,10 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
             />
           </div>
         )}
-
-        {images.length > 1 && scale === 1 && (
-          <div className="absolute inset-0 flex items-center justify-between p-4 pointer-events-none">
-            <button
-              type="button"
-              onClick={goPrevAnimated}
-              className="p-4 rounded-full bg-black/60 text-white shadow-xl pointer-events-auto backdrop-blur-sm"
-              aria-label="Previous image"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              type="button"
-              onClick={goNextAnimated}
-              className="p-4 rounded-full bg-black/60 text-white shadow-xl pointer-events-auto backdrop-blur-sm"
-              aria-label="Next image"
-            >
-              <ChevronRight size={24} />
-            </button>
-          </div>
-        )}
       </div>
 
-      {images.length > 1 && scale === 1 && (
+      {images.length > 1 && scale === 1 && !isPinching && (
         <div className="p-4 pt-6 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
-          <div className="mb-2 px-2">
-            <div className="text-white/80 text-xs font-medium">All Photos</div>
-          </div>
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {images.map((img, i) => (
               <button

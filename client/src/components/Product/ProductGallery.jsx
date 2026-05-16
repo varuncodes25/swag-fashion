@@ -51,8 +51,6 @@ const ProductGallery = ({
     isSlideDragging: isMobileSlideDragging,
     isAnimating: isMobileSlideAnimating,
     didSwipeRef: mobileDidSwipeRef,
-    goNextAnimated: mobileGoNext,
-    goPrevAnimated: mobileGoPrev,
     handlers: mobileSlideHandlers,
   } = useTouchImageSlide({
     onPrev: handlePrev,
@@ -273,32 +271,6 @@ const ProductGallery = ({
             fit="cover"
             className="absolute inset-0 z-[1]"
           />
-
-          {/* MOBILE NAVIGATION */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  mobileGoPrev();
-                }}
-                className="absolute left-2 top-1/2 z-[2] -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 pointer-events-auto"
-                aria-label="Previous image"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  mobileGoNext();
-                }}
-                className="absolute right-2 top-1/2 z-[2] -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300 dark:border-white/10 pointer-events-auto"
-                aria-label="Next image"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </>
-          )}
         </div>
 
         {/* THUMBNAILS */}
