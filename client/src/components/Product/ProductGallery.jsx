@@ -273,7 +273,7 @@ const ProductGallery = ({
             isSlideDragging={isMobileSlideDragging}
             isAnimating={isMobileSlideAnimating}
             fit="contain"
-            className="absolute inset-0 z-[1]"
+            className="absolute inset-0 z-[1] flex items-center justify-center"
           />
         </div>
 
