@@ -151,11 +151,13 @@ const ProductGallery = ({
           </div>
         )}
 
-        {/* MAIN IMAGE — cover fills frame; object-top keeps head/print visible (less top crop) */}
+        {/* MAIN IMAGE — taller frame + contain so full product is visible */}
         <div
           className={`
             relative
-            h-[450px]
+            flex items-center justify-center
+            h-[min(72vh,620px)]
+            min-h-[520px]
             rounded-xl
             border
             border-gray-300 dark:border-white/10
@@ -163,7 +165,7 @@ const ProductGallery = ({
             overflow-hidden
             cursor-crosshair
             transition-all duration-300
-            ${isZoomed ? "w-[520px]" : "w-[400px]"}
+            ${isZoomed ? "w-full max-w-[480px]" : "w-full max-w-[420px]"}
           `}
           onMouseEnter={() => setShowZoom(true)}
           onMouseLeave={() => {
@@ -178,7 +180,7 @@ const ProductGallery = ({
             <img
               src={activeImage}
               alt="product"
-              className="absolute inset-0 z-[1] h-full w-full object-cover object-top transition-transform duration-300"
+              className="absolute inset-0 z-[1] h-full w-full object-contain object-center p-2 transition-transform duration-300"
               loading="lazy"
               decoding="async"
             />
@@ -247,7 +249,9 @@ const ProductGallery = ({
           ref={mobileSlideContainerRef}
           className="
             w-full
-            h-[320px] sm:h-[360px]
+            h-[min(68vh,520px)]
+            min-h-[400px]
+            sm:min-h-[460px]
             rounded-xl
             border
             border-gray-300 dark:border-white/10
@@ -268,7 +272,7 @@ const ProductGallery = ({
             slideOffset={mobileSlideOffset}
             isSlideDragging={isMobileSlideDragging}
             isAnimating={isMobileSlideAnimating}
-            fit="cover"
+            fit="contain"
             className="absolute inset-0 z-[1]"
           />
         </div>

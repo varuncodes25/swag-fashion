@@ -17,11 +17,15 @@ const ImageSlideTrack = ({
   if (!len) return null;
 
   if (len === 1) {
+    const singleFit =
+      fit === "contain"
+        ? "h-full w-full object-contain object-center"
+        : "h-full w-full object-cover object-top";
     return (
       <img
         src={url(0)}
         alt=""
-        className={`select-none pointer-events-none ${imgClassName}`}
+        className={`select-none pointer-events-none ${singleFit} ${imgClassName}`}
         draggable={false}
       />
     );
@@ -41,7 +45,7 @@ const ImageSlideTrack = ({
 
   const imgFit =
     fit === "contain"
-      ? "max-w-full max-h-[70vh] w-auto h-auto object-contain"
+      ? "h-full w-full object-contain object-center"
       : "h-full w-full object-cover object-top";
 
   return (
