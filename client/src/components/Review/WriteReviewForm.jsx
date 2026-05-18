@@ -94,22 +94,22 @@ const WriteReviewForm = ({
   };
 
   return (
-    <div className="bg-card rounded-2xl p-6 md:p-8 shadow-lg border border-border">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-blue-100 dark:bg-primary/20 rounded-lg">
-          <User className="h-6 w-6 text-primary dark:text-primary" />
+    <div className="w-full max-w-none rounded-xl border border-border bg-card p-4 shadow-sm sm:rounded-2xl sm:p-6 sm:shadow-lg md:p-8">
+      <div className="mb-5 flex items-start gap-3 sm:mb-6">
+        <div className="shrink-0 rounded-lg bg-primary/10 p-2 dark:bg-primary/20">
+          <User className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
         </div>
-        <div>
-          <h4 className="font-bold text-xl text-foreground">
+        <div className="min-w-0 flex-1">
+          <h4 className="text-lg font-bold text-foreground sm:text-xl">
             Write Your Review
           </h4>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             Your feedback helps others make better decisions
           </p>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
         {/* Rating */}
         <div>
           <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -136,7 +136,7 @@ const WriteReviewForm = ({
           </Label>
           <Textarea
             placeholder="What did you like or dislike? What should others know about this product?"
-            className="min-h-[120px] resize-none"
+            className="min-h-[120px] w-full resize-none"
             value={newReview.review}
             onChange={(e) =>
               setNewReview({ ...newReview, review: e.target.value })
@@ -198,13 +198,13 @@ const WriteReviewForm = ({
         </div>
 
         {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex w-full flex-col gap-3 sm:flex-row">
           <Button
             onClick={handleSubmit}
             disabled={
               loading || !newReview.review.trim() || !newReview.rating
             }
-            className="flex-1 px-8 py-3 text-base bg-primary hover:bg-primary/90 text-white font-semibold"
+            className="w-full flex-1 px-6 py-3 text-base font-semibold sm:px-8"
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -221,7 +221,7 @@ const WriteReviewForm = ({
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="flex-1 px-8 py-3 text-base"
+              className="w-full flex-1 px-6 py-3 text-base sm:px-8"
             >
               Cancel
             </Button>

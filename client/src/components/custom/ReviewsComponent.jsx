@@ -197,20 +197,15 @@ const ReviewsComponent = ({ productId }) => {
         </div>
 
         {/* Content Area */}
-        <div className="p-4 sm:p-6">
-          {/* Review Form */}
+        <div className={showReviewForm ? "px-3 py-4 sm:p-6" : "p-4 sm:p-6"}>
+          {/* Review Form — full width on mobile (no extra nested card padding) */}
           {showReviewForm && (
-            <div className="mb-8">
-              <div className="bg-muted/40/50 rounded-lg p-6">
-                <h3 className="text-base font-medium text-foreground mb-4">
-                  Share Your Experience
-                </h3>
-                <WriteReviewForm
-                  productId={productId}
-                  onCancel={handleReviewToggle}
-                  onSuccess={handleReviewSuccess}
-                />
-              </div>
+            <div className="mb-6 w-full max-w-none sm:mb-8">
+              <WriteReviewForm
+                productId={productId}
+                onCancel={handleReviewToggle}
+                onSuccess={handleReviewSuccess}
+              />
             </div>
           )}
 
