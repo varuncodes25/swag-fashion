@@ -109,11 +109,11 @@ const ReviewsComponent = ({ productId }) => {
   }
 
   return (
-    <div className="my-10 sm:my-16 max-w-6xl mx-auto sm:px-4">
-      <div className="bg-white dark:bg-background rounded-xl border border-border overflow-hidden">
+    <div className="my-8 sm:my-16 w-full max-w-6xl mx-auto -mx-4 sm:mx-auto px-0 sm:px-4">
+      <div className="w-full bg-white dark:bg-background rounded-none sm:rounded-xl border-y sm:border border-border overflow-hidden">
         
         {/* Header Section */}
-        <div className="px-6 py-5 border-b border-border">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-border">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             
             {/* Title and Rating */}
@@ -197,7 +197,7 @@ const ReviewsComponent = ({ productId }) => {
         </div>
 
         {/* Content Area */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* Review Form */}
           {showReviewForm && (
             <div className="mb-8">

@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import MobileImageZoom from "../Product/MobileImageZoom";
+import ReviewUserAvatar from "./ReviewUserAvatar";
 
 const ReviewCard = ({
   review,
@@ -26,7 +27,6 @@ const ReviewCard = ({
   handleEditReview,
   handleDeleteReview,
   formatDate,
-  getRandomAvatar,
 }) => {
   // ✅ State for image zoom
   const [zoomImageIndex, setZoomImageIndex] = useState(null);
@@ -36,7 +36,6 @@ const ReviewCard = ({
   const reviewUserData = review?.user || review?.userId;
   const reviewUserId = reviewUserData?._id;
   const reviewUserName = reviewUserData?.name || "Anonymous";
-  const reviewUserAvatar = reviewUserData?.avatar;
   const currentUserId = user?.id;
   
   // ✅ Strict ownership check
@@ -80,18 +79,11 @@ const ReviewCard = ({
   };
 
   return (
-    <div className="p-4 md:p-6 rounded-xl border border-border bg-card">
+    <div className="w-full p-4 md:p-5 rounded-xl border border-border bg-card">
       {/* Review Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <img
-            src={reviewUserAvatar || getRandomAvatar()}
-            alt={reviewUserName}
-            className="w-10 h-10 rounded-full object-cover"
-            onError={(e) => {
-              e.target.src = getRandomAvatar();
-            }}
-          />
+          <ReviewUserAvatar name={reviewUserName} size="md" />
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="font-semibold text-foreground">

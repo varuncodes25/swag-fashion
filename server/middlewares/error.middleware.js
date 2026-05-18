@@ -135,6 +135,21 @@ const errorHandler = (err, req, res, next) => {
     );
   }
 
+  // Multer upload limits (file size, file count)
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({
+      success: false,
+      message: "One or more images exceed the 30MB size limit. Please compress them and try again.",
+    });
+  }
+
+  if (err.code === "LIMIT_FILE_COUNT" || err.code === "LIMIT_UNEXPECTED_FILE") {
+    return res.status(400).json({
+      success: false,
+      message: err.message || "Too many files uploaded",
+    });
+  }
+
   // 5️⃣ Custom ApiError
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json(

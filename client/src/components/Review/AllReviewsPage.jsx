@@ -9,7 +9,7 @@ import { useSelector } from "react-redux";
 
 // Import ReviewCard and related components
 import ReviewCard from "../Review/ReviewCard";
-import { getRandomAvatar, formatDate } from "../Review/reviewUtils";
+import { formatDate } from "../Review/reviewUtils";
 
 const AllReviewsPage = () => {
   const { slug, productId: paramProductId } = useParams();
@@ -368,7 +368,6 @@ const AllReviewsPage = () => {
                     handleEditReview={handleEditReview}
                     handleDeleteReview={handleDeleteReview}
                     formatDate={formatDate}
-                    getRandomAvatar={getRandomAvatar}
                   />
                 ))}
               </div>

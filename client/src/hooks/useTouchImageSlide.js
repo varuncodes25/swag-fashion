@@ -20,6 +20,7 @@ export function useTouchImageSlide({
   const slideOffsetRef = useRef(0);
   const didSwipeRef = useRef(false);
   const isHorizontalRef = useRef(false);
+  const isVerticalRef = useRef(false);
   const isSlideDraggingRef = useRef(false);
   const commitTimerRef = useRef(null);
 
@@ -40,6 +41,7 @@ export function useTouchImageSlide({
     setIsSlideDragging(false);
     isSlideDraggingRef.current = false;
     isHorizontalRef.current = false;
+    isVerticalRef.current = false;
   }, []);
 
   const commitSlide = useCallback(
@@ -64,6 +66,7 @@ export function useTouchImageSlide({
         slideOffsetRef.current = 0;
         setSlideOffset(0);
         isHorizontalRef.current = false;
+        isVerticalRef.current = false;
         setIsAnimating(false);
         commitTimerRef.current = null;
       }, SLIDE_DURATION_MS);
@@ -82,6 +85,7 @@ export function useTouchImageSlide({
     commitTimerRef.current = window.setTimeout(() => {
       setIsAnimating(false);
       isHorizontalRef.current = false;
+      isVerticalRef.current = false;
       commitTimerRef.current = null;
     }, SLIDE_DURATION_MS);
   }, []);
@@ -95,31 +99,36 @@ export function useTouchImageSlide({
       touchStartRef.current = { x: touch.clientX, y: touch.clientY };
       didSwipeRef.current = false;
       isHorizontalRef.current = false;
-      isSlideDraggingRef.current = true;
-      setIsSlideDragging(true);
+      isVerticalRef.current = false;
+      isSlideDraggingRef.current = false;
+      setIsSlideDragging(false);
     },
     [enabled, isAnimating]
   );
 
   const onTouchMove = useCallback(
     (e) => {
-      if (!enabled || !isSlideDraggingRef.current || isAnimating || e.touches.length > 1) {
-        return;
-      }
+      if (!enabled || isAnimating || e.touches.length > 1) return;
 
       const touch = e.touches[0];
       const deltaX = touch.clientX - touchStartRef.current.x;
       const deltaY = touch.clientY - touchStartRef.current.y;
 
-      if (!isHorizontalRef.current) {
-        if (Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
-        isHorizontalRef.current = Math.abs(deltaX) > Math.abs(deltaY);
+      if (!isHorizontalRef.current && !isVerticalRef.current) {
+        if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) return;
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+          isVerticalRef.current = true;
+          return;
+        }
+        isHorizontalRef.current = true;
+        isSlideDraggingRef.current = true;
+        setIsSlideDragging(true);
       }
 
-      if (isHorizontalRef.current) {
-        slideOffsetRef.current = deltaX;
-        setSlideOffset(deltaX);
-      }
+      if (isVerticalRef.current || !isHorizontalRef.current) return;
+
+      slideOffsetRef.current = deltaX;
+      setSlideOffset(deltaX);
     },
     [enabled, isAnimating]
   );
@@ -127,6 +136,11 @@ export function useTouchImageSlide({
   const onTouchEnd = useCallback(
     (e) => {
       if (!enabled) return;
+
+      if (isVerticalRef.current) {
+        resetSlide();
+        return;
+      }
 
       isSlideDraggingRef.current = false;
       setIsSlideDragging(false);

@@ -259,7 +259,7 @@ const ProductGallery = ({
             mb-4
             relative
             overflow-hidden
-            touch-none
+            touch-pan-y
           "
           onClick={handleMobileImageClick}
           onTouchStart={mobileSlideHandlers.onTouchStart}

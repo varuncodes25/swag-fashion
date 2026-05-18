@@ -36,6 +36,7 @@ import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
 import SizeChartForm from "../Admin/SizeChartForm";
 import { Ruler } from "lucide-react";
+import { MAX_IMAGE_SIZE_MB } from "@/constants/uploadLimits";
 
 const CreateProduct = () => {
   const { productId } = useParams();
@@ -902,6 +903,9 @@ const CreateProduct = () => {
                         ref={(el) => (fileInputRefs.current[colorName] = el)}
                         onChange={handleImageUpload(colorName)}
                       />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        JPG, PNG, WebP, GIF — up to {MAX_IMAGE_SIZE_MB}MB per image
+                      </p>
 
                       {/* ============ SIZE CHART SECTION ============ */}
                       <div className="mt-4 pt-4 border-t border-border">

@@ -7,11 +7,7 @@ import { MessageCircle, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import ReviewCard from "./ReviewCard";
-import {
-  getRandomAvatar,
-  formatDate,
-  calculateAverageRating,
-} from "./reviewUtils";
+import { formatDate, calculateAverageRating } from "./reviewUtils";
 
 import { 
   fetchReviews, 
@@ -241,7 +237,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
         </div>
       ) : (
         <>
-          <div className="space-y-4 md:space-y-6">
+          <div className="w-full space-y-4 md:space-y-6">
             {displayedReviews.map((review) => (
               <ReviewCard
                 key={review._id}
@@ -259,7 +255,6 @@ const ProductPageReviews = ({ productId, productSlug }) => {
                 handleEditReview={() => handleEditReview(review._id)}
                 handleDeleteReview={() => handleDeleteReview(review._id)}
                 formatDate={formatDate}
-                getRandomAvatar={getRandomAvatar}
               />
             ))}
           </div>

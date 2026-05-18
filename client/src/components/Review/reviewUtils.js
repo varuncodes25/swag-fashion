@@ -1,37 +1,18 @@
 // reviewUtils.js
 
-// Default avatar images array
-const DEFAULT_AVATARS = [
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Taylor",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Jordan",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Casey",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Riley",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Skyler",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Blake",
-  "https://api.dicebear.com/7.x/avataaars/svg?seed=Quinn"
-];
-
 /**
- * Get a consistent random avatar based on user ID
- * @param {string|number} userId - User identifier
- * @returns {string} Avatar URL
+ * First letter of first name + first letter of last name (e.g. "Rahul Kumar" → "RK")
  */
-export const getRandomAvatar = (userId) => {
-  if (!userId) return DEFAULT_AVATARS[0];
-  
-  try {
-    // Create a consistent hash from userId
-    const hash = userId.toString()
-      .split('')
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    
-    const index = hash % DEFAULT_AVATARS.length;
-    return DEFAULT_AVATARS[index];
-  } catch (error) {
-    console.error("Error generating avatar:", error);
-    return DEFAULT_AVATARS[0];
-  }
+export const getUserInitials = (name) => {
+  if (!name || typeof name !== "string") return "?";
+
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+
+  return (
+    parts[0].charAt(0) + parts[parts.length - 1].charAt(0)
+  ).toUpperCase();
 };
 
 /**
@@ -196,12 +177,11 @@ export const getRelativeTime = (dateString) => {
 
 // Export all utilities
 export default {
-  getRandomAvatar,
+  getUserInitials,
   formatDate,
   calculateAverageRating,
   getRatingDistribution,
   calculateRatingPercentage,
   generateStars,
   getRelativeTime,
-  DEFAULT_AVATARS
 };

@@ -1,5 +1,9 @@
 import { useState, useRef, useCallback } from "react";
 import { useToast } from "./use-toast";
+import {
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
+} from "@/constants/uploadLimits";
 
 const SIZE_OPTIONS = ["S", "M", "L", "XL","XXL"];
 
@@ -951,6 +955,17 @@ export const useProductForm = (initialData = null) => {
     }
 
     const allowedFiles = files.slice(0, MAX_IMAGES_PER_COLOR - currentCount);
+
+    const oversized = allowedFiles.filter((file) => file.size > MAX_IMAGE_SIZE_BYTES);
+    if (oversized.length > 0) {
+      toast({
+        title: "File too large",
+        description: `${oversized.length} image(s) exceed ${MAX_IMAGE_SIZE_MB}MB. Compress or choose smaller files.`,
+        variant: "destructive",
+      });
+      e.target.value = "";
+      return;
+    }
 
     const newFiles = allowedFiles.map((file, index) => ({
       file,

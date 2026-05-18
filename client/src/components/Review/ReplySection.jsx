@@ -1,8 +1,9 @@
 // components/Review/ReplySection.js
 import React, { useState } from 'react';
 import { MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import ReviewUserAvatar from './ReviewUserAvatar';
 
-const ReplySection = ({ review, getRandomAvatar, formatDate }) => {
+const ReplySection = ({ review, formatDate }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   return (
@@ -28,14 +29,13 @@ const ReplySection = ({ review, getRandomAvatar, formatDate }) => {
               className="bg-muted/40/30 rounded-lg p-3 md:p-4"
             >
               <div className="flex items-center gap-2 md:gap-3 mb-1.5 md:mb-2">
-                <img
-                  src={getRandomAvatar(reply.userId?._id)}
-                  alt={reply.userId?.name}
-                  className="w-6 h-6 md:w-8 md:h-8 rounded-full"
+                <ReviewUserAvatar
+                  name={reply.userId?.name || reply.user?.name}
+                  size="sm"
                 />
                 <div>
                   <h6 className="font-medium text-foreground text-xs md:text-sm">
-                    {reply.userId?.name}
+                    {reply.userId?.name || reply.user?.name}
                   </h6>
                   <p className="text-xs text-muted-foreground">
                     {new Date(reply.createdAt).toLocaleDateString("en-US", {
