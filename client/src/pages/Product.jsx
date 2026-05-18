@@ -293,7 +293,12 @@ function ProductLoaded({
         />
       )}
 
-      <SimilarProducts productId={product._id} />
+      <SimilarProducts
+        productId={product._id}
+        category={product.category}
+        gender={product.gender}
+        clothingType={product.clothingType}
+      />
     </div>
   );
 }

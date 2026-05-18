@@ -16,6 +16,20 @@ export const getBreadcrumbCategorySlug = (category) => {
   return "all";
 };
 
+/** Product page "View all similar" → category listing with same filters */
+export const buildCategoryListingUrl = ({
+  category,
+  gender,
+  clothingType,
+} = {}) => {
+  const baseSlug = getBreadcrumbCategorySlug(category);
+  const params = new URLSearchParams();
+  if (clothingType?.trim()) params.set("clothingType", clothingType.trim());
+  if (gender?.trim()) params.set("gender", String(gender).trim().toLowerCase());
+  const qs = params.toString();
+  return `/category/${baseSlug}${qs ? `?${qs}` : ""}`;
+};
+
 /**
  * Old URLs used /category/T-Shirt/Unisex — map those to /category/all + filters.
  */

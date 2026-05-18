@@ -1729,14 +1729,22 @@ const getSimilarProducts = async (req, res) => {
     // 3. Build query for similar products
     // यहाँ similarity logic डालो - category, tags, price range, etc.
     const query = {
-      _id: { $ne: productId }, // Exclude current product
+      _id: { $ne: productId },
+      status: "published",
+      blacklisted: false,
     };
 
-    // Similarity criteria (choose based on your business logic)
-
-    // Option 1: Same category
     if (currentProduct.category) {
       query.category = currentProduct.category;
+    }
+    if (currentProduct.gender) {
+      query.gender = new RegExp(`^${String(currentProduct.gender).trim()}$`, "i");
+    }
+    if (currentProduct.clothingType) {
+      query.clothingType = new RegExp(
+        `^${String(currentProduct.clothingType).trim()}$`,
+        "i",
+      );
     }
 
     // Option 2: Same tags (at least one matching tag)
