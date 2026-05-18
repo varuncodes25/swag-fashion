@@ -1,5 +1,6 @@
 import {
   FilePlus2Icon,
+  Zap,
   GalleryVerticalEnd,
   PackageSearch,
   ChartBar,
@@ -27,6 +28,11 @@ import { setAdminLogout  } from "@/redux/slices/authSlice"; // ✅ Admin logout 
 // Menu items.
 const items = [
      { title: "Banner", url: "/admin/banner", icon: Home },
+  {
+    title: "Quick Add",
+    url: "/admin/dashboard/quick-add",
+    icon: Zap,
+  },
   {
     title: "Create Products",
     url: "/admin/dashboard",

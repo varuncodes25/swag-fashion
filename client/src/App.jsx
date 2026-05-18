@@ -25,6 +25,9 @@ const MyProfile = lazyRoute(() => import("./components/custom/MyProfile"));
 const CreateProducts = lazyRoute(() =>
   import("./components/custom/CreateProducts")
 );
+const QuickAddProduct = lazyRoute(() =>
+  import("./components/Admin/QuickAddProduct")
+);
 const AllProducts = lazyRoute(() => import("./components/custom/AllProducts"));
 const Analytics = lazyRoute(() => import("./components/custom/Analytics"));
 const Orders = lazyRoute(() => import("./components/custom/Orders"));
@@ -183,6 +186,14 @@ export default function App() {
     {
       path: "/admin/login",
       element: <RootLayout children={<AdminLogin />} />,
+    },
+    {
+      path: "/admin/dashboard/quick-add",
+      element: (
+        <ProtectedRoute requireAdmin={true}>
+          <AdminLayout children={<QuickAddProduct />} />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/admin/dashboard",

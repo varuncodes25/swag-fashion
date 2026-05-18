@@ -80,6 +80,22 @@ export const updateProduct = createAsyncThunk(
   }
 );
 
+export const duplicateProduct = createAsyncThunk(
+  'products/duplicateProduct',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        `${API_URL}/duplicate-product/${id}`,
+        {},
+        getAuthHeaders(),
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  },
+);
+
 export const deleteProduct = createAsyncThunk(
   'products/deleteProduct',
   async (id, { rejectWithValue }) => {

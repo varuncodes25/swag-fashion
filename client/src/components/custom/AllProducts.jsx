@@ -9,7 +9,8 @@ import {
   X,
   Package,
   Star,
-  MoreHorizontal
+  MoreHorizontal,
+  Copy,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useToast } from "@/hooks/use-toast";
@@ -59,7 +60,8 @@ import Pagination from "../Pagination";
 // Import Redux actions
 import {
   fetchProducts,
-  deleteProduct,  // ✅ ADD THIS
+  deleteProduct,
+  duplicateProduct,
 } from "@/redux/slices/admin/productSlice";
 
 const AllProducts = () => {
@@ -170,6 +172,33 @@ const AllProducts = () => {
     navigate(`/admin/dashboard/edit-product/${productId}`);
   };
 
+  const handleDuplicateProduct = async (productId) => {
+    setActionLoading(true);
+    try {
+      const result = await dispatch(duplicateProduct(productId)).unwrap();
+      const newId = result?.data?._id;
+      toast({
+        title: "Duplicated",
+        description:
+          result?.message ||
+          "Copy created — update name and photos, then save.",
+      });
+      if (newId) {
+        navigate(`/admin/dashboard/edit-product/${newId}`);
+      } else {
+        dispatch(fetchProducts({ page: filters.page, limit: filters.limit }));
+      }
+    } catch (err) {
+      toast({
+        title: "Duplicate failed",
+        description: err?.message || String(err) || "Could not duplicate product",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // ✅ HANDLE DELETE PRODUCT - FIXED
   const handleDeleteProduct = async () => {
     if (!selectedProduct?._id) return;
@@ -271,14 +300,23 @@ const AllProducts = () => {
             Total {pagination?.totalProducts || 0} products
           </p>
         </div>
-        <Button 
-          onClick={() => navigate("/admin/dashboard")}
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-md"
-          size="sm"
-        >
-          <Package className="w-4 h-4 mr-2" />
-          Add Product
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => navigate("/admin/dashboard/quick-add")}
+            variant="default"
+            size="sm"
+          >
+            Quick Add
+          </Button>
+          <Button
+            onClick={() => navigate("/admin/dashboard")}
+            variant="outline"
+            size="sm"
+          >
+            <Package className="w-4 h-4 mr-2" />
+            Full form
+          </Button>
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -577,6 +615,16 @@ const AllProducts = () => {
                           title="View"
                         >
                           <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950"
+                          onClick={() => handleDuplicateProduct(product?._id)}
+                          disabled={actionLoading}
+                          title="Duplicate (fast copy)"
+                        >
+                          <Copy className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"

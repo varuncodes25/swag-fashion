@@ -1095,6 +1095,61 @@ export const useProductForm = (initialData = null) => {
     return true;
   };
 
+  /** Fast listing: Black + S–XL, default stock, oversized size chart, common copy */
+  const applyQuickListingPreset = useCallback(() => {
+    const presetSizes = ["S", "M", "L", "XL"];
+    const presetColor = "Black";
+    const template = SIZE_CHART_TEMPLATES.oversizedTshirt;
+
+    setFormData((prev) => ({
+      ...prev,
+      brand: prev.brand || "swag fashion",
+      clothingType: "T-Shirt",
+      gender: "Men",
+      fabric: "Cotton",
+      ageGroup: "Adult",
+      productFamily: "Upper Body",
+      fit: "Oversized",
+      pattern: "Solid",
+      fabricComposition: "100% Cotton",
+      packageContent: "1 Piece",
+      countryOfOrigin: "India",
+      careInstructions: ["Machine Wash"],
+      season: ["All Season"],
+      occasion: ["Casual"],
+      description:
+        prev.description?.trim() ||
+        "Premium cotton oversized tee with bold graphic print. Soft fabric, relaxed fit, ideal for everyday street style.",
+      shortDescription:
+        prev.shortDescription?.trim() ||
+        "Premium oversized graphic tee — soft cotton, street-ready fit.",
+    }));
+
+    setSizes(presetSizes);
+    setColors([presetColor]);
+
+    const stock = { [presetColor]: {} };
+    presetSizes.forEach((size) => {
+      stock[presetColor][size] = DEFAULT_VARIANT_STOCK;
+    });
+    setStockMatrix(stock);
+
+    if (template) {
+      const charts = {
+        [presetColor]: {},
+      };
+      presetSizes.forEach((size) => {
+        const m = template.measurements[size];
+        if (!m) return;
+        charts[presetColor][size] = {
+          ...template.defaults,
+          ...m,
+        };
+      });
+      setSizeCharts(charts);
+    }
+  }, []);
+
   // Helper function for selling price
   const calculateSellingPrice = (price, discount) => {
     if (discount > 0) {
@@ -1532,5 +1587,6 @@ const prepareFormData = () => {
     getSizeChartForVariant,
     resetSizeCharts,
     applySizeChartTemplate,
+    applyQuickListingPreset,
   };
 };

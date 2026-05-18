@@ -1794,6 +1794,56 @@ const getSimilarProducts = async (req, res) => {
     });
   }
 };
+
+/** Clone product with same images/variants — change name & photos on edit page */
+const duplicateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const source = await Product.findById(id);
+
+    if (!source) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    const doc = source.toObject();
+    delete doc._id;
+    delete doc.slug;
+    delete doc.__v;
+    delete doc.createdAt;
+    delete doc.updatedAt;
+
+    doc.name = `${String(source.name).trim()} (Copy)`;
+    doc.status = "published";
+    doc.soldCount = 0;
+    doc.reviewCount = 0;
+    doc.rating = 0;
+    doc.isNewArrival = true;
+
+    const newProduct = new Product(doc);
+    await newProduct.save();
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "Product duplicated. Update the name and swap images if needed, then save.",
+      data: {
+        _id: newProduct._id,
+        name: newProduct.name,
+        slug: newProduct.slug,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Duplicate product error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to duplicate product",
+    });
+  }
+};
+
 module.exports = {
   createProduct,
   updateProduct,
@@ -1810,4 +1860,5 @@ module.exports = {
   getProductBySlug,
   getSimilarProducts,
   getProductByIdForAdmin,
+  duplicateProduct,
 };

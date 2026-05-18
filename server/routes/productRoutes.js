@@ -11,7 +11,8 @@ const {
   getProductsforadmin,
   getProductsByCategory ,
   getSimilarProducts, // ✅ Ensure this is imported
-  getProductByIdForAdmin
+  getProductByIdForAdmin,
+  duplicateProduct,
 } = require("../controllers/productController");
 const verifyToken = require("../middlewares/verifyToken");
 const upload = require("../middlewares/multer");
@@ -28,6 +29,7 @@ router.post(
 );
 
 router.put("/update-product/:id", verifyToken,upload.array("images", 15), updateProduct);
+router.post("/duplicate-product/:id", verifyToken, duplicateProduct);
 router.delete("/delete-product/:id", verifyToken, deleteProduct);
 
 // ============ GET PRODUCT ROUTES ============
