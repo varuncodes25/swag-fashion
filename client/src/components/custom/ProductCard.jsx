@@ -3,7 +3,7 @@ import { starsGenerator } from "@/constants/helper";
 import { toast } from "@/hooks/use-toast";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { Heart, Eye, ShoppingBag, Star, TrendingUp, Clock } from "lucide-react";
+import { Heart, Star, Clock, Crown } from "lucide-react";
 import {
   optimisticToggle,
   revertOptimisticToggle,
@@ -42,7 +42,6 @@ const ProductCard = ({
   const safePrice = Number(price) || 0;
   const safeSellingPrice = Number(sellingPrice) || safePrice;
   const safeRating = Number(rating) || 0;
-  console.log(safeRating,"safeRating")
   const safeDiscount = Number(discount) || 0;
 
   // Discount calculation
@@ -137,26 +136,28 @@ const ProductCard = ({
               } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             />
 
-            {/* Badges - Left Side */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1">
-              {isPremium && (
-                <span className="px-2 py-1 bg-gradient-to-r from-amber-600 to-yellow-500 text-white text-xs font-bold rounded-md shadow-lg">
-                  ✦ Premium
-                </span>
-              )}
-              {isBestSeller && (
-                <span className="px-2 py-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-xs font-bold rounded-md shadow-lg">
-                  🔥 Bestseller
-                </span>
-              )}
-            </div>
-
-            {/* Discount Badge - Right Side with Rose Gradient */}
-            {hasRealDiscount && (
-              <div className="absolute top-2 right-2">
-                <span className="px-2 py-1 bg-gradient-to-r from-primary to-primary/80 text-white text-xs font-bold rounded-md shadow-lg animate-pulse">
-                  {discountPercentage}% OFF
-                </span>
+            {/* Badges — spaced row so Premium & discount don't stick together */}
+            {(isPremium || isBestSeller || hasRealDiscount) && (
+              <div className="absolute top-2 left-2 right-2 z-10 flex max-w-[calc(100%-1rem)] flex-wrap items-start gap-1.5">
+                {isPremium && (
+                  <span
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-400/80 bg-black/55 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-50 shadow-lg backdrop-blur-md sm:text-[11px]"
+                    title="Premium design"
+                  >
+                    <Crown size={11} className="shrink-0 text-amber-400" strokeWidth={2.25} />
+                    Premium
+                  </span>
+                )}
+                {hasRealDiscount && (
+                  <span className="inline-flex shrink-0 items-center rounded-md bg-primary px-2 py-0.5 text-[10px] font-bold text-white shadow-md sm:text-xs">
+                    {discountPercentage}% OFF
+                  </span>
+                )}
+                {isBestSeller && (
+                  <span className="inline-flex shrink-0 items-center rounded-md bg-gradient-to-r from-amber-500 to-orange-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-md sm:text-xs">
+                    Bestseller
+                  </span>
+                )}
               </div>
             )}
 

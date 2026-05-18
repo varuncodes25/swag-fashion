@@ -51,7 +51,7 @@ export default function PremiumSection() {
           badgeIcon={Crown}
           title="Premium Designs"
           subtitle="Curated prints and standout styles, hand-picked for you."
-          viewAllHref="/category/all?isPremium=true"
+          viewAllHref="/premium"
         />
 
         {loading ? (
@@ -77,7 +77,7 @@ export default function PremiumSection() {
         )}
 
         <Link
-          to="/category/all?isPremium=true"
+          to="/premium"
           className="mt-6 flex w-full items-center justify-center gap-1 rounded-full border border-primary/30 bg-primary/10 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/15 sm:hidden"
         >
           View all premium
