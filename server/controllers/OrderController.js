@@ -26,6 +26,57 @@ const {
   notifyCodOrderConfirmed,
 } = require("../utils/orderNotificationEmails");
 
+const normalizePhone = (phone) => {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (digits.length >= 10) return digits.slice(-10);
+  return digits;
+};
+
+const escapeRegex = (str) =>
+  String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const buildGuestOrderTimeline = (order, awb, courierName) => {
+  const timeline = [];
+  if (order.createdAt) {
+    timeline.push({
+      status: "ORDER_PLACED",
+      date: order.createdAt,
+      description: "Order placed successfully",
+    });
+  }
+  if (order.confirmedAt) {
+    timeline.push({
+      status: "CONFIRMED",
+      date: order.confirmedAt,
+      description: "Order confirmed",
+    });
+  }
+  if (order.shippedAt) {
+    timeline.push({
+      status: "SHIPPED",
+      date: order.shippedAt,
+      description: awb
+        ? `Shipped via ${courierName || "courier"} (AWB: ${awb})`
+        : "Shipped",
+    });
+  }
+  if (order.deliveredAt) {
+    timeline.push({
+      status: "DELIVERED",
+      date: order.deliveredAt,
+      description: "Delivered successfully",
+    });
+  }
+  if (order.cancelledAt) {
+    timeline.push({
+      status: "CANCELLED",
+      date: order.cancelledAt,
+      description: `Cancelled${order.cancelReason ? `: ${order.cancelReason}` : ""}`,
+    });
+  }
+  return timeline.sort((a, b) => new Date(a.date) - new Date(b.date));
+};
+
 const getOrdersByUserId = async (req, res) => {
   const userId = req.id;
   const page = parseInt(req.query.page) || 1;
@@ -1819,6 +1870,110 @@ const exchangeOrder = async (req, res) => {
   res.json({ success: true, message: "Order exchanged", order });
 };
 
+/** Public guest tracking — order number + phone (no login) */
+const trackGuestOrder = async (req, res) => {
+  try {
+    const orderNumber = String(req.body?.orderNumber || "").trim();
+    const phoneInput = normalizePhone(req.body?.phone);
+
+    if (!orderNumber || orderNumber.length < 4) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid order number.",
+      });
+    }
+
+    if (!phoneInput || phoneInput.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid 10-digit mobile number.",
+      });
+    }
+
+    const order = await Order.findOne({
+      orderNumber: {
+        $regex: new RegExp(`^${escapeRegex(orderNumber)}$`, "i"),
+      },
+    }).lean();
+
+    const notFoundMessage =
+      "Order not found. Please check your order number and mobile number.";
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: notFoundMessage });
+    }
+
+    const orderPhone = normalizePhone(order.shippingAddress?.phone);
+    if (!orderPhone || orderPhone !== phoneInput) {
+      return res.status(404).json({ success: false, message: notFoundMessage });
+    }
+
+    let shipment = null;
+    if (order.currentShipmentId) {
+      shipment = await shipmentSchema
+        .findById(order.currentShipmentId)
+        .lean();
+    }
+
+    const awb = order.shiprocket?.awb || shipment?.awb || null;
+    const courierName =
+      order.shippingMeta?.courierName ||
+      shipment?.courier ||
+      null;
+    let trackingUrl =
+      order.shiprocket?.trackingUrl || shipment?.trackingUrl || null;
+
+    if (awb && !trackingUrl && !String(awb).startsWith("MOCK")) {
+      trackingUrl = `https://shiprocket.co/tracking/${awb}`;
+    }
+
+    const orderItems = Array.isArray(order.items) ? order.items : [];
+    const timeline = buildGuestOrderTimeline(order, awb, courierName);
+
+    return res.json({
+      success: true,
+      data: {
+        orderNumber: order.orderNumber,
+        status: order.status || "PENDING",
+        paymentStatus: order.paymentStatus,
+        createdAt: order.createdAt,
+        totalAmount: order.totalAmount,
+        itemCount: orderItems.reduce(
+          (sum, item) => sum + (item.quantity || 1),
+          0,
+        ),
+        items: orderItems.map((item) => ({
+          name: item.name,
+          quantity: item.quantity,
+          image: item.image,
+          color: item.color,
+          size: item.size,
+        })),
+        shippingCity: order.shippingAddress?.city || null,
+        tracking: {
+          awb,
+          courierName,
+          trackingUrl,
+          isShipped: Boolean(awb),
+          shiprocketStatus:
+            order.shiprocket?.status || shipment?.shippingStatus || null,
+        },
+        timeline: timeline.map((step) => ({
+          status: step.status,
+          description: step.description,
+          updated_at: step.date,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error("Guest track order error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch tracking. Please try again later.",
+    });
+  }
+};
+
 const trackShipment = async (req, res) => {
   const order = await Order.findById(req.params.id);
   if (!order || !order.shiprocketId)
@@ -1849,5 +2004,6 @@ module.exports = {
   cancelOrder,
   exchangeOrder,
   trackShipment,
-  createShipmentForOrder
+  trackGuestOrder,
+  createShipmentForOrder,
 };

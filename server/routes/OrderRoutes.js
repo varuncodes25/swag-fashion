@@ -9,6 +9,7 @@ const {
   getOrderDetails,
   cancelOrder,
   createShipmentForOrder,
+  trackGuestOrder,
 } = require("../controllers/OrderController");
 const verifyToken = require("../middlewares/verifyToken");
 const decryptRequest = require("../utils/decryptResponse");
@@ -27,6 +28,18 @@ const ordersMutationLimiter = buildLimiter({
   max: toNumber(process.env.ORDERS_MUTATION_LIMIT_MAX, 30),
   message: { message: "Too many order updates. Please retry shortly." },
 });
+
+const guestTrackLimiter = buildLimiter({
+  envPrefix: "GUEST_TRACK",
+  windowMs: toNumber(process.env.GUEST_TRACK_LIMIT_WINDOW_MS, 60 * 1000),
+  max: toNumber(process.env.GUEST_TRACK_LIMIT_MAX, 20),
+  message: {
+    success: false,
+    message: "Too many tracking attempts. Please try again in a minute.",
+  },
+});
+
+router.post("/orders/track-guest", guestTrackLimiter, trackGuestOrder);
 
 router.get("/get-orders-by-user-id", ordersReadLimiter, verifyToken, getOrdersByUserId);
 

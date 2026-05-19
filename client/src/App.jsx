@@ -54,6 +54,7 @@ const AdminProductDetails = lazyRoute(() =>
 const BannerManager = lazyRoute(() =>
   import("./components/Admin/banner/BannerManager")
 );
+const TrackOrder = lazyRoute(() => import("./pages/TrackOrder"));
 
 export default function App() {
   const dispatch = useDispatch();
@@ -94,6 +95,10 @@ export default function App() {
     {
       path: "/contact",
       element: <RootLayout children={<Contact />} />,
+    },
+    {
+      path: "/track-order",
+      element: <RootLayout children={<TrackOrder />} />,
     },
     {
       path: "/faq",
