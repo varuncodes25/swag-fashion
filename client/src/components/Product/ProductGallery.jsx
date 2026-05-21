@@ -244,19 +244,17 @@ const ProductGallery = ({
 
       {/* MOBILE VIEW */}
       <div className="lg:hidden">
-        {/* MAIN IMAGE */}
+        {/* MAIN IMAGE — square frame, image fills (no empty band below) */}
         <div
           ref={mobileSlideContainerRef}
           className="
             w-full
-            h-[min(68vh,520px)]
-            min-h-[400px]
-            sm:min-h-[460px]
+            aspect-square
             rounded-xl
             border
             border-gray-300 dark:border-white/10
-            bg-neutral-100 dark:bg-neutral-900
-            mb-4
+            bg-neutral-50 dark:bg-neutral-900
+            mb-3
             relative
             overflow-hidden
             touch-pan-y
@@ -272,8 +270,8 @@ const ProductGallery = ({
             slideOffset={mobileSlideOffset}
             isSlideDragging={isMobileSlideDragging}
             isAnimating={isMobileSlideAnimating}
-            fit="contain"
-            className="absolute inset-0 z-[1] flex items-center justify-center"
+            fit="cover"
+            className="absolute inset-0 z-[1]"
           />
         </div>
 

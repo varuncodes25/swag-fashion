@@ -215,7 +215,7 @@ function ProductLoaded({
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-background dark:bg-background rounded-xl shadow-sm p-4 sm:p-6 lg:p-8 mb-6">
+        <div className="bg-background dark:bg-background rounded-xl lg:shadow-sm px-4 py-3 sm:px-6 lg:p-8 mb-4 lg:mb-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             <ProductImages
               images={variantImages}
