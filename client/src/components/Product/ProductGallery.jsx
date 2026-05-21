@@ -244,12 +244,12 @@ const ProductGallery = ({
 
       {/* MOBILE VIEW */}
       <div className="lg:hidden">
-        {/* MAIN IMAGE — square frame, image fills (no empty band below) */}
+        {/* MAIN IMAGE — portrait frame (3:4), image fills container */}
         <div
           ref={mobileSlideContainerRef}
           className="
             w-full
-            aspect-square
+            aspect-[3/4]
             rounded-xl
             border
             border-gray-300 dark:border-white/10
