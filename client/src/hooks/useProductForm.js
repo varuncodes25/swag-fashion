@@ -1107,7 +1107,7 @@ export const useProductForm = (initialData = null) => {
     return true;
   };
 
-  /** Fast listing: Black + S–XL, default stock, oversized size chart, common copy */
+  /** Fast listing: Black + S–XL, default stock, common copy */
   const applyQuickListingPreset = useCallback(() => {
     const presetSizes = ["S", "M", "L", "XL"];
     const presetColor = "Black";
@@ -1121,7 +1121,7 @@ export const useProductForm = (initialData = null) => {
       fabric: "Cotton",
       ageGroup: "Adult",
       productFamily: "Upper Body",
-      fit: "Oversized",
+      fit: prev.fit || "Regular",
       pattern: "Solid",
       washType: "Not Applicable",
       fabricComposition: "100% Cotton",
@@ -1132,10 +1132,10 @@ export const useProductForm = (initialData = null) => {
       occasion: ["Casual"],
       description:
         prev.description?.trim() ||
-        "Premium cotton oversized tee with bold graphic print. Soft fabric, relaxed fit, ideal for everyday street style.",
+        "Premium cotton tee with bold graphic print. Soft fabric and comfortable fit, ideal for everyday street style.",
       shortDescription:
         prev.shortDescription?.trim() ||
-        "Premium oversized graphic tee — soft cotton, street-ready fit.",
+        "Premium graphic tee - soft cotton, street-ready fit.",
     }));
 
     setSizes(presetSizes);

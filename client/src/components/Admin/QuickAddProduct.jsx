@@ -40,6 +40,7 @@ export default function QuickAddProduct() {
     COLOR_OPTIONS,
     GENDERS,
     CLOTHING_TYPES,
+    FITS,
     addSize,
     removeSize,
     sizes,
@@ -222,6 +223,22 @@ export default function QuickAddProduct() {
                 {CLOTHING_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>
                     {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Fit *</Label>
+            <Select value={formData.fit} onValueChange={(v) => updateFormData("fit", v)}>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FITS.map((fit) => (
+                  <SelectItem key={fit} value={fit}>
+                    {fit}
                   </SelectItem>
                 ))}
               </SelectContent>
