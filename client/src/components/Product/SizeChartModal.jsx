@@ -101,7 +101,7 @@ const SizeChartModal = ({
   // ============ CLOTHING TYPE CATEGORIES ============
   const categories = {
     topWear: [
-      'T-Shirt', 'Polo Shirt', 'Shirt', 'Formal Shirt', 'Casual Shirt', 'Tank Top', 'Crop Top',
+      'T-Shirt', 'Polo T-Shirt', 'Shirt', 'Formal Shirt', 'Casual Shirt', 'Tank Top', 'Crop Top',
       'Jacket', 'Sweater', 'Cardigan', 'Pullover', 'Hoodie', 'Sweatshirt', 'Blazer', 'Coat',
       'Raincoat', 'Windcheater', 'Bomber Jacket', 'Denim Jacket', 'Shrug', 'Waistcoat', 'Gilet', 'Vest',
       'Top', 'Tunic', 'Camisole', 'Kurta', 'Blouse', 'Sherwani', 'Nehru Jacket'

@@ -127,7 +127,7 @@ const createProductSchema = yup.object({
     .string()
     .required('Clothing type is required')
     .oneOf([
-      "T-Shirt", "Polo Shirt", "Shirt", "Formal Shirt", "Casual Shirt",
+      "T-Shirt", "Polo T-Shirt", "Shirt", "Formal Shirt", "Casual Shirt",
       "Tank Top", "Crop Top", "Blouse", "Tunic", "Top", "Camisole",
       "Sweater", "Cardigan", "Pullover", "Hoodie", "Sweatshirt",
       "Jacket", "Blazer", "Coat", "Raincoat", "Windcheater", "Bomber Jacket",

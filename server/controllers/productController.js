@@ -205,9 +205,24 @@ function applyProductFilters(query, queryParams) {
   }
 
   if (queryParams.clothingType) {
-    const clothingTypes = parseCsvParam(queryParams.clothingType);
+    const CLOTHING_TYPE_ALIASES = {
+      "polo shirt": "Polo T-Shirt",
+      "polo t shirt": "Polo T-Shirt",
+      "polo tee": "Polo T-Shirt",
+    };
+    const clothingTypes = parseCsvParam(queryParams.clothingType).map((t) => {
+      const key = t.trim().toLowerCase();
+      return CLOTHING_TYPE_ALIASES[key] || t.trim();
+    });
+    const clothingTypePatterns = new Set();
+    clothingTypes.forEach((t) => {
+      clothingTypePatterns.add(t);
+      if (t === "Polo T-Shirt") clothingTypePatterns.add("Polo Shirt");
+    });
     query.clothingType = {
-      $in: clothingTypes.map((t) => new RegExp(escapeRegex(t), "i")),
+      $in: [...clothingTypePatterns].map(
+        (t) => new RegExp(`^${escapeRegex(t)}$`, "i"),
+      ),
     };
   }
 

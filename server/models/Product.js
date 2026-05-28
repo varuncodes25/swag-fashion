@@ -250,7 +250,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: [
         "T-Shirt",
-        "Polo Shirt",
+        "Polo T-Shirt",
         "Shirt",
         "Formal Shirt",
         "Casual Shirt",

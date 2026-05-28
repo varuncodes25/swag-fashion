@@ -79,7 +79,7 @@ export default function CategoryPage() {
   // ✅ MOBILE FILTER DRAWER STATE
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
-  // ✅ FILTER STATE (init from URL e.g. ?clothingType=Polo Shirt)
+  // ✅ FILTER STATE (init from URL e.g. ?clothingType=Polo T-Shirt)
   const [selectedFilters, setSelectedFilters] = useState(() =>
     parseFiltersFromSearchParams(searchParams),
   );

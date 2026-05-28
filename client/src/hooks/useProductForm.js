@@ -37,7 +37,7 @@ const SIZE_CHART_TEMPLATES = {
     },
   },
   poloShirt: {
-    label: "Polo Shirt (Regular fit)",
+    label: "Polo T-Shirt (Regular fit)",
     productFit: "Regular",
     measurements: {
       S: { chest: 39, length: 27, shoulder: 17.5, sleeve: 8.5, waist: 19 },
@@ -176,7 +176,7 @@ const BOTTOM_CLOSURES = [
 
 const TOP_WEAR_TYPES = [
   "T-Shirt",
-  "Polo Shirt",
+  "Polo T-Shirt",
   "Shirt",
   "Formal Shirt",
   "Casual Shirt",
@@ -223,7 +223,7 @@ const BOTTOM_WEAR_TYPES = [
 // Clothing Types (must match server/models/Product.js)
 const CLOTHING_TYPES = [
   "T-Shirt",
-  "Polo Shirt",
+  "Polo T-Shirt",
   "Shirt",
   "Formal Shirt",
   "Casual Shirt",
