@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { 
   Search, 
   Eye, 
+  EyeOff,
   Edit, 
   Trash2, 
   Filter,
@@ -62,6 +63,7 @@ import {
   fetchProducts,
   deleteProduct,
   duplicateProduct,
+  toggleProductVisibility,
 } from "@/redux/slices/admin/productSlice";
 
 const AllProducts = () => {
@@ -199,6 +201,32 @@ const AllProducts = () => {
     }
   };
 
+  const handleToggleVisibility = async (product) => {
+    if (!product?._id) return;
+    setActionLoading(true);
+    try {
+      const nextVisibility = !product.isVisible;
+      const result = await dispatch(
+        toggleProductVisibility({ id: product._id, isVisible: nextVisibility }),
+      ).unwrap();
+
+      toast({
+        title: "Success",
+        description:
+          result?.message ||
+          `Product ${nextVisibility ? "shown" : "hidden"} successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to update product visibility",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // ✅ HANDLE DELETE PRODUCT - FIXED
   const handleDeleteProduct = async () => {
     if (!selectedProduct?._id) return;
@@ -270,6 +298,9 @@ const AllProducts = () => {
     
     if (product.isBlacklisted) {
       return <Badge variant="destructive" className="text-xs">Blocked</Badge>;
+    }
+    if (product.isVisible === false) {
+      return <Badge variant="secondary" className="text-xs">Hidden</Badge>;
     }
     if (!product.isInStock && product.availableStock === 0) {
       return <Badge variant="destructive" className="text-xs bg-warning">Out Stock</Badge>;
@@ -649,6 +680,18 @@ const AllProducts = () => {
                           <DropdownMenuContent align="end" className="w-40">
                             <DropdownMenuLabel className="text-xs text-foreground">Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => handleToggleVisibility(product)}
+                            >
+                              {product?.isVisible === false ? (
+                                <Eye className="w-3 h-3 mr-2" />
+                              ) : (
+                                <EyeOff className="w-3 h-3 mr-2" />
+                              )}
+                              <span className="text-xs">
+                                {product?.isVisible === false ? "Show" : "Hide"}
+                              </span>
+                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteClick(product)}
                               className="text-red-600"

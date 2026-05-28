@@ -211,6 +211,22 @@ export const fetchSimilarProducts = createAsyncThunk(
   }
 );
 
+export const toggleProductVisibility = createAsyncThunk(
+  'products/toggleProductVisibility',
+  async ({ id, isVisible }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(
+        `${API_URL}/toggle-visibility/${id}`,
+        { isVisible },
+        getAuthHeaders()
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 // Initial State
 const initialState = {
   products: [],
@@ -382,6 +398,17 @@ const productSlice = createSlice({
         }
         if (state.currentProduct?._id === product._id) {
           state.currentProduct.isBlacklisted = false;
+        }
+      })
+
+      .addCase(toggleProductVisibility.fulfilled, (state, action) => {
+        const product = action.payload.product || action.payload.data;
+        const index = state.products.findIndex(p => p._id === product._id);
+        if (index !== -1) {
+          state.products[index].isVisible = product.isVisible;
+        }
+        if (state.currentProduct?._id === product._id) {
+          state.currentProduct.isVisible = product.isVisible;
         }
       })
 

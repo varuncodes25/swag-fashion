@@ -390,6 +390,7 @@ const getProducts = async (req, res) => {
     const query = {
       status: "published",
       blacklisted: false,
+      isVisible: { $ne: false },
     };
 
     // Filters
@@ -513,6 +514,13 @@ const getProductById = async (req, res) => {
       });
     }
 
+    if (product.blacklisted || product.status !== "published" || product.isVisible === false) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
     // Use the model method to get product details
     const productData = product.getProductDetailData();
 
@@ -539,6 +547,13 @@ const getProductByIdForAdmin = async (req, res) => {
       .populate("updatedBy", "name email");
 
     if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    if (product.blacklisted || product.status !== "published" || product.isVisible === false) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
@@ -807,6 +822,13 @@ const updateProduct = async (req, res) => {
     // ============ GET EXISTING PRODUCT ============
     const product = await Product.findById(id);
     if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    if (product.blacklisted || product.status !== "published" || product.isVisible === false) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
@@ -1335,6 +1357,7 @@ const getProductsByCategory = async (req, res) => {
     const query = {
       status: "published",
       blacklisted: false,
+      isVisible: { $ne: false },
     };
 
     if (category) {
@@ -1765,6 +1788,7 @@ const getSimilarProducts = async (req, res) => {
       _id: { $ne: productId },
       status: "published",
       blacklisted: false,
+      isVisible: { $ne: false },
     };
 
     if (currentProduct.category) {
@@ -1877,6 +1901,47 @@ const duplicateProduct = async (req, res) => {
   }
 };
 
+const toggleProductVisibility = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isVisible } = req.body;
+
+    if (typeof isVisible !== "boolean") {
+      return res.status(400).json({
+        success: false,
+        message: "isVisible must be a boolean value",
+      });
+    }
+
+    const product = await Product.findByIdAndUpdate(
+      id,
+      { isVisible, updatedBy: req.userId },
+      { new: true },
+    );
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Product ${isVisible ? "shown" : "hidden"} successfully`,
+      data: product.getAdminProductData
+        ? product.getAdminProductData()
+        : product,
+    });
+  } catch (error) {
+    console.error("Toggle product visibility error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Failed to update visibility",
+    });
+  }
+};
+
 module.exports = {
   createProduct,
   updateProduct,
@@ -1894,4 +1959,5 @@ module.exports = {
   getSimilarProducts,
   getProductByIdForAdmin,
   duplicateProduct,
+  toggleProductVisibility,
 };
