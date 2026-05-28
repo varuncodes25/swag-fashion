@@ -376,6 +376,16 @@ const PATTERNS = [
   "Not Applicable",
 ];
 
+const WASH_TYPES = [
+  "Normal Wash",
+  "Acid Wash",
+  "Stone Wash",
+  "Enzyme Wash",
+  "Bio Wash",
+  "Distressed Wash",
+  "Not Applicable",
+];
+
 // Sleeve types
 const SLEEVE_TYPES = [
   "Full Sleeve",
@@ -538,6 +548,7 @@ export const useProductForm = (initialData = null) => {
     fabricComposition: "100% Cotton",
     fit: "Regular",
     pattern: "Solid",
+    washType: "Not Applicable",
     sleeveType: "Full Sleeve",
     neckType: "Round Neck",
     bottomStyle: "Regular",
@@ -622,6 +633,7 @@ export const useProductForm = (initialData = null) => {
       fabricComposition: product.fabricComposition || "100% Cotton",
       fit: product.fit || "Regular",
       pattern: product.pattern || "Solid",
+      washType: product.washType || "Not Applicable",
       sleeveType: product.sleeveType || "Full Sleeve",
       neckType: product.neckType || "Round Neck",
       bottomStyle: product.bottomStyle || "Regular",
@@ -1095,7 +1107,7 @@ export const useProductForm = (initialData = null) => {
     return true;
   };
 
-  /** Fast listing: Black + S–XL, default stock, oversized size chart, common copy */
+  /** Fast listing: Black + S–XL, default stock, common copy */
   const applyQuickListingPreset = useCallback(() => {
     const presetSizes = ["S", "M", "L", "XL"];
     const presetColor = "Black";
@@ -1109,8 +1121,9 @@ export const useProductForm = (initialData = null) => {
       fabric: "Cotton",
       ageGroup: "Adult",
       productFamily: "Upper Body",
-      fit: "Oversized",
+      fit: prev.fit || "Regular",
       pattern: "Solid",
+      washType: "Not Applicable",
       fabricComposition: "100% Cotton",
       packageContent: "1 Piece",
       countryOfOrigin: "India",
@@ -1119,10 +1132,10 @@ export const useProductForm = (initialData = null) => {
       occasion: ["Casual"],
       description:
         prev.description?.trim() ||
-        "Premium cotton oversized tee with bold graphic print. Soft fabric, relaxed fit, ideal for everyday street style.",
+        "Premium cotton tee with bold graphic print. Soft fabric and comfortable fit, ideal for everyday street style.",
       shortDescription:
         prev.shortDescription?.trim() ||
-        "Premium oversized graphic tee — soft cotton, street-ready fit.",
+        "Premium graphic tee - soft cotton, street-ready fit.",
     }));
 
     setSizes(presetSizes);
@@ -1364,6 +1377,7 @@ const prepareFormData = () => {
       fabricComposition: "100% Cotton",
       fit: "Regular",
       pattern: "Solid",
+      washType: "Not Applicable",
       sleeveType: "Full Sleeve",
       neckType: "Round Neck",
       bottomStyle: "Regular",
@@ -1540,6 +1554,7 @@ const prepareFormData = () => {
     FABRICS,
     FITS,
     PATTERNS,
+    WASH_TYPES,
     SIZE_CHART_TEMPLATES,
     SLEEVE_TYPES,
     NECK_TYPES,

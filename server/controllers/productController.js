@@ -122,6 +122,7 @@ const createProduct = async (req, res) => {
       fabricComposition = "100% Cotton",
       fit = "Regular",
       pattern = "Solid",
+      washType = "Not Applicable",
       discount = 0,
       offerTitle,
       offerDescription,
@@ -260,6 +261,7 @@ const createProduct = async (req, res) => {
       // ✅ TOP WEAR FIELDS
       fit,
       pattern,
+      washType,
       sleeveType,
       neckType,
 
@@ -413,6 +415,24 @@ const getProducts = async (req, res) => {
         .split(",")
         .map((g) => g.trim().toLowerCase());
       query.gender = { $in: genders.map((g) => new RegExp(`^${g}$`, "i")) };
+    }
+    if (req.query.washType) {
+      const washTypes = req.query.washType
+        .split(",")
+        .map((w) => w.trim())
+        .filter(Boolean);
+      if (washTypes.length > 0) {
+        query.washType = { $in: washTypes.map((w) => new RegExp(`^${w}$`, "i")) };
+      }
+    }
+    if (req.query.season) {
+      const seasons = req.query.season
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (seasons.length > 0) {
+        query.season = { $in: seasons };
+      }
     }
 
     if (req.query.isPremium === "true") query.isPremium = true;
@@ -1358,6 +1378,10 @@ const getProductsByCategory = async (req, res) => {
       const patterns = queryParams.pattern.split(",").map(p => p.trim());
       query.pattern = { $in: patterns.map(p => new RegExp(`^${p}$`, "i")) };
     }
+    if (queryParams.washType) {
+      const washTypes = queryParams.washType.split(",").map((w) => w.trim());
+      query.washType = { $in: washTypes.map((w) => new RegExp(`^${w}$`, "i")) };
+    }
 
     // SLEEVE TYPE
     if (queryParams.sleeveType) {
@@ -1505,6 +1529,15 @@ const getProductsByCategory = async (req, res) => {
       query.clothingType = {
         $in: clothingTypes.map((t) => new RegExp(t, "i")),
       };
+    }
+    if (queryParams.season) {
+      const seasons = queryParams.season
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (seasons.length > 0) {
+        query.season = { $in: seasons };
+      }
     }
 
     // FEATURED/BESTSELLER/NEW ARRIVAL/PREMIUM FILTERS

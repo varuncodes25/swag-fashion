@@ -25,6 +25,7 @@ const Footer = () => {
               <li><Link to="/about" className="text-muted-foreground hover:text-primary text-sm">About Us</Link></li>
               <li><Link to="/faq" className="text-muted-foreground hover:text-primary text-sm">FAQs</Link></li>
               <li><Link to="/contact" className="text-muted-foreground hover:text-primary text-sm">Contact</Link></li>
+              <li><Link to="/track-order" className="text-muted-foreground hover:text-primary text-sm">Track Order</Link></li>
             </ul>
           </div>
 

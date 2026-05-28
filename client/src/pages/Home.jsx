@@ -3,6 +3,8 @@ import Banner from "@/components/custom/banner";
 import ProductList from "@/components/custom/ProductList";
 import HomeCollections from "@/components/Home/HomeCollection";
 import PremiumSection from "@/components/Home/PremiumSection";
+import SummerSection from "@/components/Home/SummerSection";
+import HomeShowcaseSection from "@/components/Home/HomeShowcaseSection";
 import { useEffect, useState } from "react";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
@@ -30,8 +32,10 @@ const Home = () => {
   return (
     <div>
       <Banner />
+      <HomeShowcaseSection />
       <HomeCollections />
       <FilterMenu onSearch={setSearch} />
+      <SummerSection />
       <PremiumSection />
       <ProductList search={search} excludePremium />
     </div>

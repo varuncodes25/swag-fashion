@@ -95,11 +95,19 @@ export default function CategoryPage() {
     const clothingTypeParam =
       searchParams.get("clothingType") || legacyFilters?.clothingType;
     const genderParam = searchParams.get("gender") || legacyFilters?.gender;
+    const seasonParam = searchParams.get("season");
+    const washTypeParam = searchParams.get("washType");
     if (clothingTypeParam?.trim()) {
       filters.clothingType = clothingTypeParam.trim();
     }
     if (genderParam?.trim()) {
       filters.gender = genderParam.trim().toLowerCase();
+    }
+    if (seasonParam?.trim()) {
+      filters.season = seasonParam.trim();
+    }
+    if (washTypeParam?.trim()) {
+      filters.washType = washTypeParam.trim();
     }
 
     if (searchParams.get("isPremium") === "true") {

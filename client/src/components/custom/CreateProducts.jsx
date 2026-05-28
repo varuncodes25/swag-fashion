@@ -82,6 +82,7 @@ const CreateProduct = () => {
     FABRICS,
     FITS,
     PATTERNS,
+    WASH_TYPES,
     SIZE_CHART_TEMPLATES,
     SLEEVE_TYPES,
     NECK_TYPES,
@@ -542,6 +543,24 @@ const CreateProduct = () => {
                       {PATTERNS.map((pattern) => (
                         <SelectItem key={pattern} value={pattern}>
                           {pattern}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="washType">Wash Type</Label>
+                  <Select
+                    value={formData.washType}
+                    onValueChange={(value) => updateFormData("washType", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select wash type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {WASH_TYPES.map((washType) => (
+                        <SelectItem key={washType} value={washType}>
+                          {washType}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -1153,6 +1172,25 @@ const CreateProduct = () => {
           <SelectContent>
             {PATTERNS.map((pattern) => (
               <SelectItem key={pattern} value={pattern}>{pattern}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="washType">Wash Type</Label>
+        <Select
+          value={formData.washType}
+          onValueChange={(value) => updateFormData("washType", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select wash type" />
+          </SelectTrigger>
+          <SelectContent>
+            {WASH_TYPES.map((washType) => (
+              <SelectItem key={washType} value={washType}>
+                {washType}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>

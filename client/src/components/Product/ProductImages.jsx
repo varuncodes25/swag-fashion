@@ -85,7 +85,7 @@ const wishlistState = useSelector((state) => state.wishlist);
   };
 
   return (
-    <div className="bg-background dark:bg-background rounded-xl p-4 md:p-6 shadow-sm border border-gray-100 dark:border-gray-800">
+    <div className="lg:bg-background lg:dark:bg-background lg:rounded-xl lg:p-6 lg:shadow-sm lg:border lg:border-gray-100 lg:dark:border-gray-800">
       {/* Product Gallery */}
       <ProductGallery
         images={images}
@@ -96,7 +96,7 @@ const wishlistState = useSelector((state) => state.wishlist);
       />
 
       {/* Quick Actions */}
-      <div className="flex items-center gap-3 pt-6 mt-6 border-t border-gray-100 dark:border-gray-800">
+      <div className="flex items-center gap-3 pt-4 mt-4 lg:pt-6 lg:mt-6 border-t border-gray-100 dark:border-gray-800">
   
   {/* Wishlist Button - Mobile pe sirf icon, desktop pe icon+text */}
   <button
