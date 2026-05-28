@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 const TSHIRT_FILTER_FALLBACKS = {
+  clothingType: ["T-Shirt", "Polo T-Shirt", "Hoodie", "Sweatshirt", "Shirt"],
   fit: ["Oversized", "Regular", "Slim", "Relaxed", "Athletic"],
   pattern: ["Solid", "Printed", "Graphic", "Striped", "Checked", "Plain"],
   sleeveType: ["Half Sleeve", "Full Sleeve", "Short Sleeve", "Sleeveless"],
@@ -49,6 +50,11 @@ export default function FiltersSidebar({
     };
 
     return [
+      {
+        title: "Product Type",
+        key: "clothingType",
+        options: buildOptions("clothingType"),
+      },
       { title: "Fit", key: "fit", options: buildOptions("fit") },
       { title: "Pattern", key: "pattern", options: buildOptions("pattern") },
       { title: "Sleeve Type", key: "sleeveType", options: buildOptions("sleeveType") },
@@ -269,9 +275,9 @@ export default function FiltersSidebar({
           </div>
         </FilterSection>
 
-        {/* ================= T-SHIRT FILTERS ================= */}
+        {/* ================= STYLE FILTERS ================= */}
         <FilterSection
-          title="T-Shirt Filters"
+          title="Style Filters"
           icon={<Shirt size={18} className="text-blue-500 dark:text-primary" />}
           defaultOpen={true}
         >

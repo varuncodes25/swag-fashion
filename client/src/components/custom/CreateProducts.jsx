@@ -511,7 +511,10 @@ const CreateProduct = () => {
 
                 {/* Fit */}
                 <div className="space-y-2">
-                  <Label htmlFor="fit">Fit</Label>
+                  <Label htmlFor="fit">Fit (store filter)</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Category page Oversized / Regular filter uses this field. Size chart template syncs it automatically.
+                  </p>
                   <Select
                     value={formData.fit}
                     onValueChange={(value) => updateFormData("fit", value)}
@@ -1144,7 +1147,10 @@ const CreateProduct = () => {
 
       {/* ===== COMMON FIELDS ===== */}
       <div className="space-y-2">
-        <Label htmlFor="fit">Fit</Label>
+        <Label htmlFor="fit">Fit (store filter)</Label>
+        <p className="text-xs text-muted-foreground">
+          Category page Oversized / Regular filter uses this field.
+        </p>
         <Select
           value={formData.fit}
           onValueChange={(value) => updateFormData("fit", value)}

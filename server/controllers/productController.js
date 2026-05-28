@@ -99,6 +99,131 @@ function getColorCode(colorName) {
   return colorMap[colorName] || "#000000";
 }
 
+function escapeRegex(str) {
+  return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parseCsvParam(value) {
+  if (!value) return [];
+  return String(value)
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function applyExactEnumFilter(query, field, paramValue) {
+  const values = parseCsvParam(paramValue);
+  if (values.length === 0) return;
+  query[field] = {
+    $in: values.map((v) => new RegExp(`^${escapeRegex(v)}$`, "i")),
+  };
+}
+
+function applyProductFilters(query, queryParams) {
+  applyExactEnumFilter(query, "fit", queryParams.fit);
+  applyExactEnumFilter(query, "pattern", queryParams.pattern);
+  applyExactEnumFilter(query, "sleeveType", queryParams.sleeveType);
+  applyExactEnumFilter(query, "neckType", queryParams.neckType);
+  applyExactEnumFilter(query, "fabric", queryParams.fabric);
+  applyExactEnumFilter(query, "washType", queryParams.washType);
+
+  if (queryParams.search && queryParams.search.trim() !== "") {
+    const keyword = queryParams.search.trim();
+    query.$or = [
+      { name: { $regex: keyword, $options: "i" } },
+      { brand: { $regex: keyword, $options: "i" } },
+      { clothingType: { $regex: keyword, $options: "i" } },
+    ];
+  }
+
+  if (queryParams.priceRange) {
+    const priceRanges = queryParams.priceRange.split(",");
+    const priceConditions = [];
+    priceRanges.forEach((range) => {
+      const [min, max] = range.split("-").map(Number);
+      if (!isNaN(min) && !isNaN(max)) {
+        priceConditions.push({
+          "variants.sellingPrice": { $gte: min, $lte: max },
+        });
+      }
+    });
+    if (priceConditions.length === 1) {
+      Object.assign(query, priceConditions[0]);
+    } else if (priceConditions.length > 1) {
+      query.$or = query.$or || [];
+      query.$or.push(...priceConditions);
+    }
+  }
+
+  if (queryParams.discount) {
+    const discounts = queryParams.discount
+      .split(",")
+      .map(Number)
+      .filter((n) => !isNaN(n));
+    if (discounts.length > 0) query.discount = { $in: discounts };
+  }
+
+  if (queryParams.rating) {
+    const ratings = queryParams.rating
+      .split(",")
+      .map(Number)
+      .filter((n) => !isNaN(n));
+    if (ratings.length > 0) query.rating = { $in: ratings };
+  }
+
+  if (queryParams.colors) {
+    const colors = queryParams.colors
+      .split(",")
+      .map((c) => c.trim().toLowerCase());
+    query.colors = {
+      $in: colors.map((c) => new RegExp(`^${escapeRegex(c)}$`, "i")),
+    };
+  }
+
+  const sizeParam = queryParams.size || queryParams.sizes;
+  if (sizeParam) {
+    const sizes = sizeParam.split(",").map((s) => s.toUpperCase().trim());
+    query.sizes = { $in: sizes };
+  }
+
+  const brandParam = queryParams.brand || queryParams.brands;
+  if (brandParam) {
+    const brands = parseCsvParam(brandParam);
+    query.brand = { $in: brands.map((b) => new RegExp(escapeRegex(b), "i")) };
+  }
+
+  if (queryParams.gender) {
+    const genders = queryParams.gender
+      .split(",")
+      .map((g) => g.trim().toLowerCase());
+    query.gender = { $in: genders.map((g) => new RegExp(`^${escapeRegex(g)}$`, "i")) };
+  }
+
+  if (queryParams.ageGroup) {
+    const ageGroups = parseCsvParam(queryParams.ageGroup);
+    query.ageGroup = { $in: ageGroups.map((a) => new RegExp(escapeRegex(a), "i")) };
+  }
+
+  if (queryParams.clothingType) {
+    const clothingTypes = parseCsvParam(queryParams.clothingType);
+    query.clothingType = {
+      $in: clothingTypes.map((t) => new RegExp(escapeRegex(t), "i")),
+    };
+  }
+
+  if (queryParams.season) {
+    const seasons = parseCsvParam(queryParams.season);
+    if (seasons.length > 0) query.season = { $in: seasons };
+  }
+
+  if (queryParams.isFeatured === "true") query.isFeatured = true;
+  if (queryParams.isBestSeller === "true") query.isBestSeller = true;
+  if (queryParams.isNewArrival === "true") query.isNewArrival = true;
+  if (queryParams.isPremium === "true") query.isPremium = true;
+  if (queryParams.excludePremium === "true") query.isPremium = { $ne: true };
+  if (queryParams.inStock === "true") query["variants.stock"] = { $gt: 0 };
+}
+
 const createProduct = async (req, res) => {
   try {
     console.log("🚀 ============ CREATE PRODUCT STARTED ============");
@@ -244,6 +369,9 @@ const createProduct = async (req, res) => {
       }),
     );
 
+    // Fit from form (default Regular only if missing)
+    const productFit = (req.body.fit || fit || "Regular").trim();
+
     // ============ CREATE PRODUCT ============
     const product = new Product({
       // Basic Info
@@ -259,7 +387,7 @@ const createProduct = async (req, res) => {
       fabricComposition,
 
       // ✅ TOP WEAR FIELDS
-      fit,
+      fit: productFit,
       pattern,
       washType,
       sleeveType,
@@ -447,6 +575,8 @@ const getProducts = async (req, res) => {
       query["variants.stock"] = { $gt: 0 };
     }
 
+    applyProductFilters(query, req.query);
+
     // Sorting
     let sortBy = { createdAt: -1 }; // default
     if (sort === "priceLowToHigh" || sort === "price_low")
@@ -547,13 +677,6 @@ const getProductByIdForAdmin = async (req, res) => {
       .populate("updatedBy", "name email");
 
     if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
-    if (product.blacklisted || product.status !== "published" || product.isVisible === false) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
@@ -828,13 +951,6 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    if (product.blacklisted || product.status !== "published" || product.isVisible === false) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-
     // ============ HANDLE IMAGES ============
     let allImages = [...(product.allImages || [])];
     let existingImageIds = [];
@@ -1006,8 +1122,18 @@ const updateProduct = async (req, res) => {
     // ============ MERGE DATA INTO EXISTING PRODUCT ============
     Object.assign(product, data);
 
+    const updateFit =
+      data.fit != null && String(data.fit).trim()
+        ? String(data.fit).trim()
+        : req.body.fit != null && String(req.body.fit).trim()
+          ? String(req.body.fit).trim()
+          : null;
+    if (updateFit) {
+      product.fit = updateFit;
+    }
+
     // ============ SAVE PRODUCT (TRIGGERS MIDDLEWARE) ============
-    console.log("💾 Saving product with middleware...");
+    console.log("💾 Saving product with middleware...", { fit: product.fit });
     await product.save();
 
     if (removedImageIds.length > 0) {
@@ -1390,192 +1516,7 @@ const getProductsByCategory = async (req, res) => {
         query.subCategory = subCategory._id;
       }
     }
-    // FIT
-    if (queryParams.fit) {
-      const fits = queryParams.fit.split(",").map(f => f.trim());
-      query.fit = { $in: fits };
-    }
-
-    // PATTERN
-    if (queryParams.pattern) {
-      const patterns = queryParams.pattern.split(",").map(p => p.trim());
-      query.pattern = { $in: patterns.map(p => new RegExp(`^${p}$`, "i")) };
-    }
-    if (queryParams.washType) {
-      const washTypes = queryParams.washType.split(",").map((w) => w.trim());
-      query.washType = { $in: washTypes.map((w) => new RegExp(`^${w}$`, "i")) };
-    }
-
-    // SLEEVE TYPE
-    if (queryParams.sleeveType) {
-      const sleeves = queryParams.sleeveType.split(",").map(s => s.trim());
-      query.sleeveType = { $in: sleeves.map(s => new RegExp(`^${s}$`, "i")) };
-    }
-
-    // NECK TYPE
-    if (queryParams.neckType) {
-      const necks = queryParams.neckType.split(",").map(n => n.trim());
-      query.neckType = { $in: necks.map(n => new RegExp(`^${n}$`, "i")) };
-    }
-
-    // FABRIC
-    if (queryParams.fabric) {
-      const fabrics = queryParams.fabric.split(",").map(f => f.trim());
-      query.fabric = { $in: fabrics.map(f => new RegExp(`^${f}$`, "i")) };
-    }
-    // ============ 3. APPLY FILTERS ============
-    console.log("Applying filters from query params:", queryParams);
-
-    // SEARCH FILTER (name + brand + clothing type)
-    if (queryParams.search && queryParams.search.trim() !== "") {
-      const keyword = queryParams.search.trim();
-      query.$or = [
-        { name: { $regex: keyword, $options: "i" } },
-        { brand: { $regex: keyword, $options: "i" } },
-        { clothingType: { $regex: keyword, $options: "i" } },
-      ];
-    }
-
-    // PRICE RANGE FILTER - CORRECTED
-    if (queryParams.priceRange) {
-      const priceRanges = queryParams.priceRange.split(",");
-      console.log("Price ranges:", priceRanges);
-
-      const priceConditions = [];
-
-      priceRanges.forEach((range) => {
-        const [min, max] = range.split("-").map(Number);
-        if (!isNaN(min) && !isNaN(max)) {
-          priceConditions.push({
-            "variants.price": { $gte: min, $lte: max },
-          });
-        }
-      });
-
-      if (priceConditions.length > 0) {
-        if (priceConditions.length === 1) {
-          Object.assign(query, priceConditions[0]);
-        } else {
-          query.$or = query.$or || [];
-          query.$or.push(...priceConditions);
-        }
-      }
-    }
-
-    // DISCOUNT FILTER - CORRECTED
-    if (queryParams.discount) {
-      const discounts = queryParams.discount
-        .split(",")
-        .map(Number)
-        .filter((n) => !isNaN(n));
-      if (discounts.length > 0) {
-        query.discount = { $in: discounts };
-      }
-      console.log("Discount query:", discounts);
-    }
-
-    // RATING FILTER - CORRECTED
-    if (queryParams.rating) {
-      const ratings = queryParams.rating
-        .split(",")
-        .map(Number)
-        .filter((n) => !isNaN(n));
-      if (ratings.length > 0) {
-        query.rating = { $in: ratings };
-      }
-      console.log("Rating query:", query.rating);
-    }
-
-    // ✅ COLOR FILTER - FIXED
-    if (queryParams.colors) {
-      console.log("col");
-      const colors = queryParams.colors
-        .split(",")
-        .map((c) => c.trim().toLowerCase());
-      // Aapke schema mein field ka naam "colors" hai (array)
-      query.colors = { $in: colors.map((c) => new RegExp(`^${c}$`, "i")) };
-      console.log("✅ Color filter applied:", query.colors);
-    }
-
-    // ✅ SIZE FILTER - FIXED
-    // ✅ SIZE FILTER - UPDATED VERSION
-    if (queryParams.size || queryParams.sizes) {
-      // Dono check karo
-      const sizeParam = queryParams.size || queryParams.sizes; // Pehle size, phir sizes
-      const sizes = sizeParam.split(",").map((s) => s.toUpperCase().trim());
-
-      query.sizes = { $in: sizes };
-
-      console.log("✅ Size filter applied for:", sizes);
-      console.log("🔍 Using query.sizes:", query.sizes);
-    }
-
-    // BRAND FILTER - CORRECTED
-    if (queryParams.brand) {
-      const brands = queryParams.brand.split(",").map((b) => b.trim());
-      query.brand = { $in: brands.map((b) => new RegExp(b, "i")) };
-      console.log("Brand query:", brands);
-    }
-
-    // GENDER FILTER - CORRECTED
-    if (queryParams.gender) {
-      const genders = queryParams.gender
-        .split(",")
-        .map((g) => g.trim().toLowerCase());
-      query.gender = { $in: genders.map((g) => new RegExp(`^${g}$`, "i")) };
-      console.log("Gender query:", genders);
-    }
-
-    // AGE GROUP FILTER
-    if (queryParams.ageGroup) {
-      const ageGroups = queryParams.ageGroup.split(",").map((a) => a.trim());
-      query.ageGroup = { $in: ageGroups.map((a) => new RegExp(a, "i")) };
-    }
-
-    // FABRIC FILTER
-    if (queryParams.fabric) {
-      const fabrics = queryParams.fabric.split(",").map((f) => f.trim());
-      query.fabric = { $in: fabrics.map((f) => new RegExp(f, "i")) };
-    }
-
-    // FIT FILTER
-    if (queryParams.fit) {
-      const fits = queryParams.fit.split(",").map((f) => f.trim());
-      query.fit = { $in: fits };
-    }
-
-    // CLOTHING TYPE FILTER
-    if (queryParams.clothingType) {
-      const clothingTypes = queryParams.clothingType
-        .split(",")
-        .map((t) => t.trim());
-      query.clothingType = {
-        $in: clothingTypes.map((t) => new RegExp(t, "i")),
-      };
-    }
-    if (queryParams.season) {
-      const seasons = queryParams.season
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      if (seasons.length > 0) {
-        query.season = { $in: seasons };
-      }
-    }
-
-    // FEATURED/BESTSELLER/NEW ARRIVAL/PREMIUM FILTERS
-    if (queryParams.isFeatured === "true") query.isFeatured = true;
-    if (queryParams.isBestSeller === "true") query.isBestSeller = true;
-    if (queryParams.isNewArrival === "true") query.isNewArrival = true;
-    if (queryParams.isPremium === "true") query.isPremium = true;
-    if (queryParams.excludePremium === "true") {
-      query.isPremium = { $ne: true };
-    }
-
-    // STOCK AVAILABILITY - FIXED
-    if (queryParams.inStock === "true") {
-      query["variants.stock"] = { $gt: 0 };
-    }
+    applyProductFilters(query, queryParams);
 
     // ============ 4. DEBUG: LOG FINAL QUERY ============
     console.log("Final MongoDB Query:", JSON.stringify(query, null, 2));
@@ -1659,6 +1600,7 @@ const getProductsByCategory = async (req, res) => {
 
     if (queryParams.includeFilters === "true") {
       const [
+        clothingTypes,
         fits,
         patterns,
         sleeveTypes,
@@ -1668,6 +1610,7 @@ const getProductsByCategory = async (req, res) => {
         colors,
         sizes,
       ] = await Promise.all([
+        Product.distinct("clothingType", query),
         Product.distinct("fit", query),
         Product.distinct("pattern", query),
         Product.distinct("sleeveType", query),
@@ -1685,6 +1628,7 @@ const getProductsByCategory = async (req, res) => {
           .sort((a, b) => a.localeCompare(b));
 
       response.data.filters = {
+        clothingType: cleanValues(clothingTypes),
         fit: cleanValues(fits),
         pattern: cleanValues(patterns),
         sleeveType: cleanValues(sleeveTypes),

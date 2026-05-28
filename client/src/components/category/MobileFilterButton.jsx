@@ -6,6 +6,8 @@ export default function MobileFilterButton({
   selectedFilters = {},
   updateFilter = () => {},
   clearAllFilters = () => {},
+  clearFilter = () => {},
+  availableFilters = {},
   compact = false,
   className = "",
 }) {
@@ -118,6 +120,8 @@ export default function MobileFilterButton({
               <FiltersSidebar 
                 selectedFilters={selectedFilters}
                 updateFilter={updateFilter}
+                clearFilter={clearFilter}
+                availableFilters={availableFilters}
               />
             </div>
 

@@ -8,8 +8,23 @@ import {
 const SIZE_OPTIONS = ["S", "M", "L", "XL","XXL"];
 
 const SIZE_CHART_TEMPLATES = {
+  regularTshirt: {
+    label: "Regular T-Shirt",
+    productFit: "Regular",
+    measurements: {
+      S: { chest: 38, length: 26, shoulder: 17, sleeve: 8, waist: 18 },
+      M: { chest: 40, length: 27, shoulder: 18, sleeve: 8.5, waist: 19 },
+      L: { chest: 42, length: 28, shoulder: 19, sleeve: 9, waist: 20 },
+      XL: { chest: 44, length: 29, shoulder: 20, sleeve: 9.5, waist: 21 },
+    },
+    defaults: {
+      fitDescription: "True to size",
+      unit: "inches",
+    },
+  },
   oversizedTshirt: {
     label: "Oversized T-Shirt",
+    productFit: "Oversized",
     measurements: {
       S: { chest: 43, length: 27, shoulder: 20.5, sleeve: 9.5, waist: 22.5 },
       M: { chest: 46, length: 27, shoulder: 21, sleeve: 10, waist: 23.5 },
@@ -18,6 +33,20 @@ const SIZE_CHART_TEMPLATES = {
     },
     defaults: {
       fitDescription: "Oversized",
+      unit: "inches",
+    },
+  },
+  poloShirt: {
+    label: "Polo Shirt (Regular fit)",
+    productFit: "Regular",
+    measurements: {
+      S: { chest: 39, length: 27, shoulder: 17.5, sleeve: 8.5, waist: 19 },
+      M: { chest: 41, length: 28, shoulder: 18.5, sleeve: 9, waist: 20 },
+      L: { chest: 43, length: 29, shoulder: 19.5, sleeve: 9.5, waist: 21 },
+      XL: { chest: 45, length: 30, shoulder: 20.5, sleeve: 10, waist: 22 },
+    },
+    defaults: {
+      fitDescription: "True to size",
       unit: "inches",
     },
   },
@@ -352,6 +381,54 @@ const FITS = [
   "Not Applicable",
 ];
 
+/** Size chart fitDescription → Specifications Fit (storefront filter) */
+const FIT_DESCRIPTION_TO_PRODUCT_FIT = {
+  Oversized: "Oversized",
+  "Relaxed fit": "Relaxed",
+  "Slim fit": "Slim",
+};
+
+/** Specifications Fit → default size chart fitDescription */
+const PRODUCT_FIT_TO_FIT_DESCRIPTION = {
+  Oversized: "Oversized",
+  Regular: "True to size",
+  Slim: "Slim fit",
+  Relaxed: "Relaxed fit",
+};
+
+const productFitToFitDescription = (fit) =>
+  PRODUCT_FIT_TO_FIT_DESCRIPTION[fit] || null;
+
+const fitDescriptionToProductFit = (fitDescription) =>
+  FIT_DESCRIPTION_TO_PRODUCT_FIT[fitDescription] || null;
+
+const inferFitFromSizeCharts = (charts) => {
+  for (const colorCharts of Object.values(charts || {})) {
+    for (const sizeChart of Object.values(colorCharts || {})) {
+      const mapped = fitDescriptionToProductFit(sizeChart?.fitDescription);
+      if (mapped) return mapped;
+    }
+  }
+  return null;
+};
+
+const syncFitDescriptionOnCharts = (charts, productFit) => {
+  const fitDescription = productFitToFitDescription(productFit);
+  if (!fitDescription) return charts;
+
+  const next = { ...charts };
+  Object.keys(next).forEach((color) => {
+    next[color] = { ...next[color] };
+    Object.keys(next[color]).forEach((size) => {
+      next[color][size] = {
+        ...next[color][size],
+        fitDescription,
+      };
+    });
+  });
+  return next;
+};
+
 // Patterns
 const PATTERNS = [
   "Solid",
@@ -618,6 +695,23 @@ export const useProductForm = (initialData = null) => {
       basePrice = uniquePrices[0] || "";
     }
 
+    const charts = {};
+    if (product.variants) {
+      product.variants.forEach((variant) => {
+        if (
+          variant.sizeDetails &&
+          Object.keys(variant.sizeDetails).length > 0
+        ) {
+          if (!charts[variant.color]) {
+            charts[variant.color] = {};
+          }
+          charts[variant.color][variant.size] = variant.sizeDetails;
+        }
+      });
+    }
+    const loadedFit =
+      product.fit || inferFitFromSizeCharts(charts) || "Regular";
+
     setFormData({
       name: product.name || "",
       description: product.description || "",
@@ -631,7 +725,7 @@ export const useProductForm = (initialData = null) => {
       ageGroup: product.ageGroup || "Adult",
       productFamily: product.productFamily || "",
       fabricComposition: product.fabricComposition || "100% Cotton",
-      fit: product.fit || "Regular",
+      fit: loadedFit,
       pattern: product.pattern || "Solid",
       washType: product.washType || "Not Applicable",
       sleeveType: product.sleeveType || "Full Sleeve",
@@ -670,22 +764,7 @@ export const useProductForm = (initialData = null) => {
       },
     });
 
-    // Initialize size charts from variants
-    const charts = {};
-    if (product.variants) {
-      product.variants.forEach((variant) => {
-        if (
-          variant.sizeDetails &&
-          Object.keys(variant.sizeDetails).length > 0
-        ) {
-          if (!charts[variant.color]) {
-            charts[variant.color] = {};
-          }
-          charts[variant.color][variant.size] = variant.sizeDetails;
-        }
-      });
-    }
-    setSizeCharts(charts);
+    setSizeCharts(syncFitDescriptionOnCharts(charts, loadedFit));
 
     // Set colors and sizes from variants
     const productColors = [
@@ -754,9 +833,15 @@ export const useProductForm = (initialData = null) => {
     setVariantImages(images);
   }, []);
 
-  // Form update handlers
+  // Form update handlers — Fit dropdown syncs size chart fitDescription
   const updateFormData = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "fit" && TOP_WEAR_TYPES.includes(next.clothingType)) {
+        setSizeCharts((charts) => syncFitDescriptionOnCharts(charts, value));
+      }
+      return next;
+    });
   };
 
   // Rich text editor handler
@@ -1041,6 +1126,13 @@ export const useProductForm = (initialData = null) => {
         },
       };
     });
+
+    if (field === "fitDescription") {
+      const mappedFit = fitDescriptionToProductFit(value);
+      if (mappedFit) {
+        setFormData((prev) => ({ ...prev, fit: mappedFit }));
+      }
+    }
   };
 
   const getSizeChartForColor = (colorName) => {
@@ -1076,6 +1168,11 @@ export const useProductForm = (initialData = null) => {
       return false;
     }
 
+    const templateFit = template.productFit || null;
+    if (templateFit) {
+      setFormData((prev) => ({ ...prev, fit: templateFit }));
+    }
+
     setSizeCharts((prev) => {
       const nextCharts = { ...prev };
 
@@ -1096,6 +1193,9 @@ export const useProductForm = (initialData = null) => {
         nextCharts[colorName] = colorCharts;
       });
 
+      if (templateFit) {
+        return syncFitDescriptionOnCharts(nextCharts, templateFit);
+      }
       return nextCharts;
     });
 
@@ -1121,7 +1221,7 @@ export const useProductForm = (initialData = null) => {
       fabric: "Cotton",
       ageGroup: "Adult",
       productFamily: "Upper Body",
-      fit: prev.fit || "Regular",
+      fit: "Oversized",
       pattern: "Solid",
       washType: "Not Applicable",
       fabricComposition: "100% Cotton",
@@ -1182,15 +1282,31 @@ const prepareFormData = () => {
 
     const isEdit = Boolean(editingProductId);
 
-    // ✅ CLOTHING CATEGORY DETECT KARO
     const isBottomWear = BOTTOM_WEAR_TYPES.includes(formData.clothingType);
     const isTopWear = TOP_WEAR_TYPES.includes(formData.clothingType);
+
+    let resolvedFit = formData.fit || "Regular";
+    if (resolvedFit === "Regular" && isTopWear) {
+      const inferred = inferFitFromSizeCharts(sizeCharts);
+      if (inferred) resolvedFit = inferred;
+    }
+
+    // Always send fit — storefront filter uses this field
+    formDataObj.append("fit", resolvedFit);
+
+    const defaultFitDescription = isTopWear
+      ? productFitToFitDescription(resolvedFit)
+      : null;
 
     // Add basic fields
     Object.keys(formData).forEach((key) => {
       const value = formData[key];
 
       if (value === undefined || value === null) {
+        return;
+      }
+
+      if (key === "fit") {
         return;
       }
 
@@ -1285,7 +1401,14 @@ const prepareFormData = () => {
             parseFloat(formData.basePrice) || 0,
             parseFloat(formData.discount) || 0,
           ),
-          sizeDetails: sizeCharts[colorName]?.[sizeName] || {},
+          sizeDetails: (() => {
+            const raw = sizeCharts[colorName]?.[sizeName] || {};
+            if (!defaultFitDescription) return raw;
+            return {
+              ...raw,
+              fitDescription: raw.fitDescription || defaultFitDescription,
+            };
+          })(),
         });
       });
     });

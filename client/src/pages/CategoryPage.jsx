@@ -1,13 +1,50 @@
 import { useParams, useSearchParams } from "react-router-dom";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Search, ArrowUpDown } from "lucide-react";
 import FiltersSidebar from "@/components/category/FiltersSidebar";
 import TopBar from "@/components/category/TopBar";
 import ProductGrid from "@/components/category/ProductGrid";
+import ActiveFilterChips from "@/components/category/ActiveFilterChips";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import MobileFilterButton from "@/components/category/MobileFilterButton";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 import { resolveCategoryRoute } from "@/utils/categoryNav";
+
+const URL_FILTER_KEYS = [
+  "clothingType",
+  "fit",
+  "pattern",
+  "sleeveType",
+  "neckType",
+  "fabric",
+];
+
+const parseFiltersFromSearchParams = (searchParams) => {
+  const parsed = {
+    priceRange: [],
+    discount: [],
+    rating: [],
+    colors: [],
+    sizes: [],
+    brands: [],
+    fit: [],
+    pattern: [],
+    sleeveType: [],
+    neckType: [],
+    fabric: [],
+    clothingType: [],
+  };
+  URL_FILTER_KEYS.forEach((key) => {
+    const param = searchParams.get(key);
+    if (param?.trim()) {
+      parsed[key] = param
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+  });
+  return parsed;
+};
 
 const INITIAL_FILTERS = {
   priceRange: [],
@@ -21,6 +58,7 @@ const INITIAL_FILTERS = {
   sleeveType: [],
   neckType: [],
   fabric: [],
+  clothingType: [],
 };
 
 export default function CategoryPage() {
@@ -29,7 +67,7 @@ export default function CategoryPage() {
     () => resolveCategoryRoute(slug, subSlug),
     [slug, subSlug]
   );
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
   const initialSort = searchParams.get("sort") || "newest";
   const [mounted, setMounted] = useState(false);
@@ -41,8 +79,11 @@ export default function CategoryPage() {
   // ✅ MOBILE FILTER DRAWER STATE
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
 
-  // ✅ FILTER STATE
-  const [selectedFilters, setSelectedFilters] = useState(INITIAL_FILTERS);
+  // ✅ FILTER STATE (init from URL e.g. ?clothingType=Polo Shirt)
+  const [selectedFilters, setSelectedFilters] = useState(() =>
+    parseFiltersFromSearchParams(searchParams),
+  );
+  const skipUrlSyncRef = useRef(true);
 
   // ✅ Convert filters to query params format
   const queryFilters = useMemo(() => {
@@ -66,6 +107,9 @@ export default function CategoryPage() {
 
     if (selectedFilters.fabric.length > 0) {
       filters.fabric = selectedFilters.fabric.join(',');
+    }
+    if (selectedFilters.clothingType.length > 0) {
+      filters.clothingType = selectedFilters.clothingType.join(',');
     }
     if (selectedFilters.priceRange.length > 0) {
       filters.priceRange = selectedFilters.priceRange.join(',');
@@ -97,7 +141,7 @@ export default function CategoryPage() {
     const genderParam = searchParams.get("gender") || legacyFilters?.gender;
     const seasonParam = searchParams.get("season");
     const washTypeParam = searchParams.get("washType");
-    if (clothingTypeParam?.trim()) {
+    if (!filters.clothingType && clothingTypeParam?.trim()) {
       filters.clothingType = clothingTypeParam.trim();
     }
     if (genderParam?.trim()) {
@@ -158,7 +202,10 @@ export default function CategoryPage() {
   // ✅ Clear all filters
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
-  }, []);
+    const next = new URLSearchParams(searchParams);
+    URL_FILTER_KEYS.forEach((key) => next.delete(key));
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   // ✅ Clear specific filter
   const clearFilter = useCallback((filterKey) => {
@@ -188,7 +235,27 @@ export default function CategoryPage() {
     setSearchInput(paramSearch);
     setSearchTerm(paramSearch);
     setSortBy(paramSort);
-  }, [searchParams]);
+    setSelectedFilters(parseFiltersFromSearchParams(searchParams));
+    skipUrlSyncRef.current = true;
+  }, [searchParams, slug, subSlug]);
+
+  // Shareable URL when filters change
+  useEffect(() => {
+    if (skipUrlSyncRef.current) {
+      skipUrlSyncRef.current = false;
+      return;
+    }
+    const next = new URLSearchParams(searchParams);
+    URL_FILTER_KEYS.forEach((key) => {
+      next.delete(key);
+      if (selectedFilters[key]?.length) {
+        next.set(key, selectedFilters[key].join(","));
+      }
+    });
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [selectedFilters, searchParams, setSearchParams]);
 
   // ✅ Handle mount to avoid hydration mismatch
   useEffect(() => {
@@ -297,6 +364,8 @@ export default function CategoryPage() {
                   selectedFilters={selectedFilters}
                   updateFilter={updateFilter}
                   clearAllFilters={clearAllFilters}
+                  clearFilter={clearFilter}
+                  availableFilters={availableFilters}
                   compact
                   className="shrink-0"
                 />
@@ -388,6 +457,12 @@ export default function CategoryPage() {
                 clearAllFilters={clearAllFilters}
               />
             </div>
+
+            <ActiveFilterChips
+              selectedFilters={selectedFilters}
+              updateFilter={updateFilter}
+              clearAllFilters={clearAllFilters}
+            />
 
             {/* ERROR MESSAGE */}
             {error && (
