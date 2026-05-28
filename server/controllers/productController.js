@@ -414,6 +414,15 @@ const getProducts = async (req, res) => {
         .map((g) => g.trim().toLowerCase());
       query.gender = { $in: genders.map((g) => new RegExp(`^${g}$`, "i")) };
     }
+    if (req.query.season) {
+      const seasons = req.query.season
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (seasons.length > 0) {
+        query.season = { $in: seasons };
+      }
+    }
 
     if (req.query.isPremium === "true") query.isPremium = true;
     if (req.query.excludePremium === "true") {
@@ -1505,6 +1514,15 @@ const getProductsByCategory = async (req, res) => {
       query.clothingType = {
         $in: clothingTypes.map((t) => new RegExp(t, "i")),
       };
+    }
+    if (queryParams.season) {
+      const seasons = queryParams.season
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (seasons.length > 0) {
+        query.season = { $in: seasons };
+      }
     }
 
     // FEATURED/BESTSELLER/NEW ARRIVAL/PREMIUM FILTERS
