@@ -29,7 +29,7 @@ router.post(
   createProduct
 );
 
-router.put("/update-product/:id", verifyToken,upload.array("images", 15), updateProduct);
+router.put("/update-product/:id", verifyToken, upload.array("images", 40), updateProduct);
 router.post("/duplicate-product/:id", verifyToken, duplicateProduct);
 router.delete("/delete-product/:id", verifyToken, deleteProduct);
 

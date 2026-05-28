@@ -968,7 +968,14 @@ const updateProduct = async (req, res) => {
 
     const imageOrder = Array.isArray(data.imageOrder) ? data.imageOrder : null;
     const oldImagesById = new Map(
-      (product.allImages || []).map((img) => [img.id, img]),
+      (product.allImages || [])
+        .filter((img) => img?.id)
+        .map((img) => [img.id, img]),
+    );
+    const oldImagesByUrl = new Map(
+      (product.allImages || [])
+        .filter((img) => img?.url)
+        .map((img) => [img.url, img]),
     );
 
     let newUploadedImages = [];
@@ -1007,11 +1014,23 @@ const updateProduct = async (req, res) => {
     if (imageOrder && imageOrder.length > 0) {
       allImages = [];
       imageOrder.forEach((entry, index) => {
-        if (entry.type === "existing" && entry.id && oldImagesById.has(entry.id)) {
-          allImages.push({
-            ...oldImagesById.get(entry.id),
-            sortOrder: index,
-          });
+        if (entry.type === "existing") {
+          let existingImg = null;
+          if (entry.id && oldImagesById.has(entry.id)) {
+            existingImg = oldImagesById.get(entry.id);
+          } else if (entry.url && oldImagesByUrl.has(entry.url)) {
+            existingImg = oldImagesByUrl.get(entry.url);
+          } else if (entry.url) {
+            existingImg = (product.allImages || []).find(
+              (img) => img.url === entry.url,
+            );
+          }
+          if (existingImg) {
+            allImages.push({
+              ...existingImg,
+              sortOrder: index,
+            });
+          }
         } else if (
           entry.type === "new" &&
           typeof entry.fileIndex === "number" &&
@@ -1080,9 +1099,11 @@ const updateProduct = async (req, res) => {
           indices.forEach((idx) => {
             if (idx < allImages.length) {
               const img = { ...allImages[idx], color, colorCode };
-              if (!mainImageSet && idx === 0) {
+              if (!mainImageSet) {
                 img.isMain = true;
                 mainImageSet = true;
+              } else {
+                img.isMain = false;
               }
               fixedImages.push(img);
             }
@@ -1118,6 +1139,8 @@ const updateProduct = async (req, res) => {
     delete data.createdAt;
     delete data.slug; // Let pre-save regenerate if needed
     delete data.createdBy;
+    delete data.existingImages;
+    delete data.imageOrder;
 
     // ============ MERGE DATA INTO EXISTING PRODUCT ============
     Object.assign(product, data);

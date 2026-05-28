@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "./use-toast";
 import {
   MAX_IMAGE_SIZE_BYTES,
@@ -53,6 +53,22 @@ const SIZE_CHART_TEMPLATES = {
 };
 const MAX_IMAGES_PER_COLOR = 40;
 const DEFAULT_VARIANT_STOCK = 20;
+
+/** Resolve Cloudinary public_id for edit saves (DB id or URL fallback) */
+const extractCloudinaryPublicIdFromUrl = (url) => {
+  if (!url || typeof url !== "string") return null;
+  const match = url.match(/\/upload\/(?:v\d+\/)?(.+)$/i);
+  if (!match?.[1]) return null;
+  return match[1].replace(/\.[^/.]+$/, "");
+};
+
+const resolveExistingImageId = (img) => {
+  if (!img) return null;
+  if (img.id) return String(img.id);
+  if (img.public_id) return String(img.public_id);
+  return extractCloudinaryPublicIdFromUrl(img.url || img.preview) || null;
+};
+
 const DEFAULT_PRODUCT_DIMENSIONS = {
   length: 30,
   width: 25,
@@ -609,7 +625,7 @@ const normalizeSpecificationsForEdit = (specifications) => {
   return new Map(entries);
 };
 
-export const useProductForm = (initialData = null) => {
+export const useProductForm = (editProductId = null) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -669,18 +685,27 @@ export const useProductForm = (initialData = null) => {
   const [tempSpecKey, setTempSpecKey] = useState("");
   const [tempSpecValue, setTempSpecValue] = useState("");
   const [sizeCharts, setSizeCharts] = useState({});
-  const [editingProductId, setEditingProductId] = useState(null);
+  const [editingProductId, setEditingProductId] = useState(editProductId);
 
   const fileInputRefs = useRef({});
   const { toast } = useToast();
 
-  const mapExistingImageForEdit = (img) => ({
-    file: null,
-    preview: img.url,
-    id: img.id || img.public_id || null,
-    isMain: img.isMain || false,
-    isExisting: true,
-  });
+  useEffect(() => {
+    if (editProductId) {
+      setEditingProductId(editProductId);
+    }
+  }, [editProductId]);
+
+  const mapExistingImageForEdit = (img) => {
+    const imageId = resolveExistingImageId(img);
+    return {
+      file: null,
+      preview: img.url || img.preview,
+      id: imageId,
+      isMain: img.isMain || false,
+      isExisting: true,
+    };
+  };
 
   // Initialize form with product data if editing
   const initializeForm = useCallback((product) => {
@@ -1280,7 +1305,7 @@ const prepareFormData = () => {
 
     const formDataObj = new FormData();
 
-    const isEdit = Boolean(editingProductId);
+    const isEdit = Boolean(editingProductId || editProductId);
 
     const isBottomWear = BOTTOM_WEAR_TYPES.includes(formData.clothingType);
     const isTopWear = TOP_WEAR_TYPES.includes(formData.clothingType);
@@ -1450,9 +1475,24 @@ const prepareFormData = () => {
           imageOrder.push({ type: "new", fileIndex: allImageFiles.length });
           allImageFiles.push(imgObj.file);
           globalIndex++;
-        } else if (imgObj?.id) {
+          return;
+        }
+
+        const existingId = resolveExistingImageId(imgObj);
+        const existingUrl = imgObj?.preview || imgObj?.url;
+
+        if (imgObj?.isExisting || existingId || existingUrl) {
+          if (!existingId && !existingUrl) {
+            throw new Error(
+              `Could not identify an existing image for ${colorName}. Please re-upload it.`,
+            );
+          }
           indices.push(globalIndex);
-          imageOrder.push({ type: "existing", id: imgObj.id });
+          imageOrder.push({
+            type: "existing",
+            ...(existingId ? { id: existingId } : {}),
+            ...(existingUrl ? { url: existingUrl } : {}),
+          });
           globalIndex++;
         }
       });

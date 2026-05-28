@@ -75,7 +75,10 @@ export const updateProduct = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || error.message);
+      const payload = error.response?.data;
+      return rejectWithValue(
+        payload?.message || payload?.error || error.message,
+      );
     }
   }
 );

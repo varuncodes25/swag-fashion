@@ -127,7 +127,7 @@ const CreateProduct = () => {
     toggleSeason,
     toggleOccasion,
     applySizeChartTemplate,
-  } = useProductForm();
+  } = useProductForm(productId);
 
   const [customSizeInput, setCustomSizeInput] = useState("");
   const [selectedSizeChartTemplate, setSelectedSizeChartTemplate] = useState("oversizedTshirt");
@@ -215,9 +215,9 @@ const CreateProduct = () => {
       navigate("/admin/dashboard/all-products");
     } catch (error) {
       const errorMessage =
+        (typeof error === "string" ? error : null) ||
         error?.message ||
         error?.response?.data?.message ||
-        error?.toString() ||
         "Failed to save product";
 
       toast({
