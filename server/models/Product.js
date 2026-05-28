@@ -696,6 +696,19 @@ const productSchema = new mongoose.Schema(
       ],
       default: "Not Applicable",
     },
+    washType: {
+      type: String,
+      enum: [
+        "Normal Wash",
+        "Acid Wash",
+        "Stone Wash",
+        "Enzyme Wash",
+        "Bio Wash",
+        "Distressed Wash",
+        "Not Applicable",
+      ],
+      default: "Not Applicable",
+    },
 
     // ============== BRAND ==============
     brand: {

@@ -96,6 +96,7 @@ export default function CategoryPage() {
       searchParams.get("clothingType") || legacyFilters?.clothingType;
     const genderParam = searchParams.get("gender") || legacyFilters?.gender;
     const seasonParam = searchParams.get("season");
+    const washTypeParam = searchParams.get("washType");
     if (clothingTypeParam?.trim()) {
       filters.clothingType = clothingTypeParam.trim();
     }
@@ -104,6 +105,9 @@ export default function CategoryPage() {
     }
     if (seasonParam?.trim()) {
       filters.season = seasonParam.trim();
+    }
+    if (washTypeParam?.trim()) {
+      filters.washType = washTypeParam.trim();
     }
 
     if (searchParams.get("isPremium") === "true") {

@@ -224,7 +224,20 @@ const createProductSchema = yup.object({
       "Solid", "Striped", "Checked", "Plaid", "Printed", "Floral",
       "Geometric", "Abstract", "Polka Dot", "Ethnic", "Plain",
       "Embroidered", "Sequined", "Tie-Dye", "Camouflage", "Animal Print",
-      "Paisley", "Houndstooth", "Not Applicable"
+      "Paisley", "Houndstooth", "Graphic", "Not Applicable"
+    ])
+    .optional(),
+
+  washType: yup
+    .string()
+    .oneOf([
+      "Normal Wash",
+      "Acid Wash",
+      "Stone Wash",
+      "Enzyme Wash",
+      "Bio Wash",
+      "Distressed Wash",
+      "Not Applicable",
     ])
     .optional(),
 

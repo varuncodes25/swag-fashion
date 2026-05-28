@@ -18,7 +18,7 @@ const showcaseItems = [
     id: "acid-washed",
     title: "Acid-Washed",
     image: "/images/home-showcase/Acid-Wash----men-1774502496.webp",
-    href: "/category/all?search=acid%20wash",
+    href: "/category/all?washType=Acid%20Wash",
   },
   {
     id: "word-drip",
