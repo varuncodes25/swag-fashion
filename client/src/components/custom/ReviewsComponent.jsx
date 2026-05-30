@@ -17,7 +17,7 @@ import WriteReviewForm from "../Review/WriteReviewForm";
 import ProductPageReviews from "../Review/ProductPageReviews";
 import { fetchReviews } from "@/redux/slices/reviewsSlice";
 
-const ReviewsComponent = ({ productId }) => {
+const ReviewsComponent = ({ productId, fullPage = false }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -327,9 +327,7 @@ const ReviewsComponent = ({ productId }) => {
                   {/* Reviews */}
                   <ProductPageReviews
                     productId={productId}
-                    reviews={sortedReviews}
-                    loading={loading}
-                    onImageClick={handleImageClick}
+                    maxReviews={fullPage ? null : 2}
                   />
                 </div>
               ) : (

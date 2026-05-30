@@ -16,7 +16,8 @@ import {
   addReply 
 } from "../../redux/slices/reviewsSlice";
 
-const ProductPageReviews = ({ productId, productSlug }) => {
+/** @param {number | null} maxReviews — null = show all (dedicated reviews page) */
+const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
   const [newReply, setNewReply] = useState({ review: "" });
   const [replyingTo, setReplyingTo] = useState(null);
   const [editing, setEditing] = useState({
@@ -191,7 +192,10 @@ const ProductPageReviews = ({ productId, productSlug }) => {
     );
   }
 
-  const displayedReviews = reviews?.slice(0, 2) || [];
+  const displayedReviews =
+    maxReviews == null ? reviews || [] : reviews?.slice(0, maxReviews) || [];
+  const showViewAllLink =
+    maxReviews != null && (reviews?.length || 0) > maxReviews;
 
   return (
     <div className="mt-8 md:mt-12 md:px-0">
@@ -211,14 +215,14 @@ const ProductPageReviews = ({ productId, productSlug }) => {
         </div>
 
         {/* Write Review Button */}
-        {productSlug && user && (
+        {productId && maxReviews != null && (
           <Link to={`/product/${productId}/reviews`}>
             <Button
               size="sm"
               className="bg-primary hover:bg-primary/90 text-white"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
-              Write Review
+              View All Reviews
             </Button>
           </Link>
         )}
@@ -260,7 +264,7 @@ const ProductPageReviews = ({ productId, productSlug }) => {
           </div>
 
           {/* View All Reviews Button */}
-          {reviews.length > 2 && (
+          {showViewAllLink && (
             <div className="mt-6 md:mt-8 flex flex-col items-center">
               <Link
                 to={`/product/${productId}/reviews`}

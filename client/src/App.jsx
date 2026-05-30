@@ -17,6 +17,9 @@ const Signup = lazyRoute(() => import("./pages/Signup"));
 const Login = lazyRoute(() => import("./pages/Login"));
 const AuthCallback = lazyRoute(() => import("./pages/AuthCallback"));
 const Product = lazyRoute(() => import("./pages/Product"));
+const ProductReviewsPage = lazyRoute(() =>
+  import("./components/Review/ProductReviewsPage")
+);
 const Checkout = lazyRoute(() => import("./pages/Checkout"));
 const AdminLogin = lazyRoute(() => import("./pages/AdminLogin"));
 const Error = lazyRoute(() => import("./pages/Error"));
@@ -83,6 +86,10 @@ export default function App() {
     {
       path: "/product/:productId",
       element: <RootLayout children={<Product />} />,
+    },
+    {
+      path: "/product/:productId/reviews",
+      element: <RootLayout children={<ProductReviewsPage />} />,
     },
     {
       path: "/category/:slug",
