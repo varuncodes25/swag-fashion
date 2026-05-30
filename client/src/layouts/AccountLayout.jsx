@@ -5,8 +5,11 @@ import RoutePageFallback from "../components/RoutePageFallback";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useNoIndexPage } from "@/hooks/useNoIndexPage";
 
 export default function AccountLayout() {
+  useNoIndexPage("My Account | Swag Fashion");
+
   return (
     <div className="min-h-screen bg-muted/40 dark:bg-background">
       

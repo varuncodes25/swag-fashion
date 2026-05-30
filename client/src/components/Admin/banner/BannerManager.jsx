@@ -9,8 +9,10 @@ import {
 import BannerForm from "./BannerForm";
 import BannerList from "./BannerList";
 import BannerStats from "./BannerStats";
+import { useNoIndexPage } from "@/hooks/useNoIndexPage";
 
 const BannerManager = () => {
+  useNoIndexPage("Admin | Swag Fashion");
   const dispatch = useDispatch();
   const { banners, loading, error, success } = useSelector(
     (state) => state.banner
