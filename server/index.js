@@ -166,8 +166,8 @@ app.get("/sitemap.xml", async (req, res) => {
     const [categories, products] = await Promise.all([
       Category.find({}, "slug updatedAt").lean(),
       Product.find(
-        { status: "published", blacklisted: false },
-        "slug updatedAt"
+        { status: "published", blacklisted: false, isVisible: { $ne: false } },
+        "_id updatedAt"
       ).lean(),
     ]);
 
@@ -185,8 +185,8 @@ app.get("/sitemap.xml", async (req, res) => {
       .join("");
 
     const productNodes = products
-      .filter((p) => p?.slug)
-      .map((p) => buildUrlNode(`/product/${p.slug}`, p.updatedAt, "0.7", "weekly"))
+      .filter((p) => p?._id)
+      .map((p) => buildUrlNode(`/product/${p._id}`, p.updatedAt, "0.7", "weekly"))
       .join("");
 
     const staticNodes = staticRoutes
