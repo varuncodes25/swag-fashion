@@ -5,7 +5,6 @@ import { Separator } from "@/components/ui/separator";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
 import {
   ArrowLeft,
   Edit,
@@ -104,8 +103,8 @@ const AdminProductDetails = () => {
   };
 
   const formatSpecValue = (value) => {
-    if (value === null || value === undefined) return "-";
-    if (Array.isArray(value)) return value.map((item) => String(item)).join(", ");
+    if (value === null || value === undefined || value === "") return "—";
+    if (Array.isArray(value)) return value.length ? value.map((item) => String(item)).join(", ") : "—";
     if (typeof value === "object") {
       return Object.entries(value)
         .map(([k, v]) => `${k}: ${formatSpecValue(v)}`)
@@ -113,6 +112,37 @@ const AdminProductDetails = () => {
     }
     return String(value);
   };
+
+  const formatDisplayValue = (value) => formatSpecValue(value);
+
+  const getCategoryName = (category) => {
+    if (!category) return "—";
+    if (typeof category === "object") {
+      return category.name || category.slug || "—";
+    }
+    return String(category);
+  };
+
+  const formatDate = (value) => {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+  };
+
+  const DetailItem = ({ label, value }) => (
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-medium break-words">{formatDisplayValue(value)}</p>
+    </div>
+  );
+
+  const DetailGrid = ({ items }) => (
+    <div className="grid grid-cols-2 gap-4">
+      {items.map(({ label, value }) => (
+        <DetailItem key={label} label={label} value={value} />
+      ))}
+    </div>
+  );
 
   // 🔥 Loading state
   if (loading) {
@@ -177,7 +207,7 @@ const AdminProductDetails = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button onClick={() => navigate(`/admin/products/edit/${productId}`)}>
+          <Button onClick={() => navigate(`/admin/dashboard/edit-product/${productId}`)}>
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
@@ -383,60 +413,124 @@ const AdminProductDetails = () => {
             <CardHeader>
               <CardTitle>Product Information</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Brand</p>
-                  <p className="font-medium">{product.brand || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Category</p>
-                  <p className="font-medium">{product.clothingType || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Gender</p>
-                  <p className="font-medium">{product.gender || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Age Group</p>
-                  <p className="font-medium">{product.ageGroup || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Fabric</p>
-                  <p className="font-medium">{product.fabric || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Fit</p>
-                  <p className="font-medium">{product.fit || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Pattern</p>
-                  <p className="font-medium">{product.pattern || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Sleeve Type</p>
-                  <p className="font-medium">{product.sleeveType || "—"}</p>
-                </div>
-              </div>
+            <CardContent className="space-y-4">
+              <DetailGrid
+                items={[
+                  { label: "Brand", value: product.brand },
+                  { label: "Category", value: getCategoryName(product.category) },
+                  { label: "Sub Category", value: product.subCategory },
+                  { label: "Clothing Type", value: product.clothingType },
+                  { label: "Product Family", value: product.productFamily },
+                  { label: "Gender", value: product.gender },
+                  { label: "Age Group", value: product.ageGroup },
+                  { label: "Slug", value: product.slug },
+                ]}
+              />
 
-              <Separator className="my-4" />
+              <Separator />
+
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Short Description</p>
+                <p className="text-sm">{formatDisplayValue(product.shortDescription)}</p>
+              </div>
 
               <div>
                 <p className="text-sm text-gray-500 mb-2">Description</p>
-                <p className="text-sm">{product.description || "—"}</p>
+                <p className="text-sm whitespace-pre-wrap">
+                  {formatDisplayValue(product.fullDescription || product.description)}
+                </p>
               </div>
 
               {product.keyFeatures?.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">Key Features</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {product.keyFeatures.map((feature, idx) => (
+                      <li key={idx} className="text-sm">{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Fabric & Garment */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Fabric & Garment Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <DetailGrid
+                items={[
+                  { label: "Fabric", value: product.fabric },
+                  { label: "Fabric Composition", value: product.fabricComposition },
+                  { label: "Fit", value: product.fit },
+                  { label: "Pattern", value: product.pattern },
+                  { label: "Wash Type", value: product.washType },
+                  { label: "Sleeve Type", value: product.sleeveType },
+                  { label: "Neck Type", value: product.neckType },
+                  { label: "Bottom Style", value: product.bottomStyle },
+                  { label: "Waist Type", value: product.waistType },
+                  { label: "Bottom Length", value: product.bottomLength },
+                  { label: "Pocket Style", value: product.pocketStyle },
+                  { label: "Hem Style", value: product.hemStyle },
+                  { label: "Bottom Closure", value: product.bottomClosure },
+                ]}
+              />
+
+              {product.careInstructions?.length > 0 && (
                 <>
-                  <Separator className="my-4" />
+                  <Separator />
                   <div>
-                    <p className="text-sm text-gray-500 mb-2">Key Features</p>
+                    <p className="text-sm text-gray-500 mb-2">Care Instructions</p>
                     <ul className="list-disc list-inside space-y-1">
-                      {product.keyFeatures.map((feature, idx) => (
-                        <li key={idx} className="text-sm">{feature}</li>
+                      {product.careInstructions.map((item, idx) => (
+                        <li key={idx} className="text-sm">{item}</li>
                       ))}
                     </ul>
                   </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Season & Features */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Season, Occasion & Features</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <DetailGrid
+                items={[
+                  { label: "Season", value: product.season },
+                  { label: "Occasion", value: product.occasion },
+                  { label: "Package Content", value: product.packageContent },
+                  { label: "Country of Origin", value: product.countryOfOrigin },
+                ]}
+              />
+
+              {product.features?.length > 0 && (
+                <div>
+                  <p className="text-sm text-gray-500 mb-2">Features</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    {product.features.map((feature, idx) => (
+                      <li key={idx} className="text-sm">{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {product.productDimensions && (
+                <>
+                  <Separator />
+                  <DetailGrid
+                    items={[
+                      { label: "Length", value: product.productDimensions.length != null ? `${product.productDimensions.length} cm` : null },
+                      { label: "Width", value: product.productDimensions.width != null ? `${product.productDimensions.width} cm` : null },
+                      { label: "Height", value: product.productDimensions.height != null ? `${product.productDimensions.height} cm` : null },
+                      { label: "Weight", value: product.productDimensions.weight != null ? `${product.productDimensions.weight} kg` : null },
+                    ]}
+                  />
                 </>
               )}
             </CardContent>
@@ -542,18 +636,28 @@ const AdminProductDetails = () => {
           </Card>
 
           {/* Offer Details */}
-          {product.isOfferActive && (
-            <Card className="border-green-200 bg-green-50">
+          {(product.isOfferActive ||
+            product.offerTitle ||
+            product.offerDescription ||
+            product.offerValidFrom ||
+            product.offerValidTill) && (
+            <Card className={product.isOfferActive ? "border-green-200 bg-green-50" : ""}>
               <CardHeader>
-                <CardTitle className="text-green-700">Active Offer</CardTitle>
+                <CardTitle className={product.isOfferActive ? "text-green-700" : ""}>
+                  {product.isOfferActive ? "Active Offer" : "Offer Details"}
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="font-medium">{product.offerTitle}</p>
-                <p className="text-sm text-gray-600 mt-1">{product.offerDescription}</p>
-                <div className="mt-3 text-sm">
-                  <p>Valid till: {new Date(product.offerValidTill).toLocaleDateString()}</p>
+              <CardContent className="space-y-2 text-sm">
+                <p className="font-medium">{formatDisplayValue(product.offerTitle)}</p>
+                <p className="text-gray-600">{formatDisplayValue(product.offerDescription)}</p>
+                {product.offerCode && (
+                  <p><span className="text-gray-500">Offer Code:</span> {product.offerCode}</p>
+                )}
+                <p>Valid from: {formatDate(product.offerValidFrom)}</p>
+                <p>Valid till: {formatDate(product.offerValidTill)}</p>
+                {product.isOfferActive && product.offerDaysLeft != null && (
                   <p className="text-green-600">{product.offerDaysLeft} days left</p>
-                </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -582,52 +686,121 @@ const AdminProductDetails = () => {
           {/* Additional Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Additional Information</CardTitle>
+              <CardTitle>Shipping, Returns & Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span>Created: {new Date(product.createdAt).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span>Updated: {new Date(product.updatedAt).toLocaleDateString()}</span>
-              </div>
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4 text-gray-400" />
                 <span>Free Shipping: {product.freeShipping ? "Yes" : "No"}</span>
               </div>
               <div className="flex items-center gap-2">
+                <Truck className="w-4 h-4 text-gray-400" />
+                <span>Handling Time: {formatDisplayValue(product.handlingTime != null ? `${product.handlingTime} day(s)` : null)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Truck className="w-4 h-4 text-gray-400" />
+                <span>Estimated Delivery: {formatDisplayValue(product.estimatedDelivery != null ? `${product.estimatedDelivery} day(s)` : null)}</span>
+              </div>
+              <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-gray-400" />
-                <span>Return Policy: {product.returnPolicy}</span>
+                <span>Warranty: {formatDisplayValue(product.warranty)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-gray-400" />
+                <span>Return Policy: {formatDisplayValue(product.returnPolicy)}</span>
+              </div>
+              {product.returnWindow != null && (
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-gray-400" />
+                  <span>Return Window: {product.returnWindow} day(s)</span>
+                </div>
+              )}
+              <Separator />
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-gray-400" />
+                <span>Visible on Store: {product.isVisible !== false ? "Yes" : "No"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Package className="w-4 h-4 text-gray-400" />
+                <span>Total Stock: {formatDisplayValue(product.totalStock)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Package className="w-4 h-4 text-gray-400" />
+                <span>Available Stock: {formatDisplayValue(product.availableStock)}</span>
+              </div>
+              <Separator />
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <span>Created: {formatDate(product.createdAt)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <span>Updated: {formatDate(product.updatedAt)}</span>
               </div>
             </CardContent>
           </Card>
+
+          {/* SEO */}
+          {(product.metaTitle ||
+            product.metaDescription ||
+            product.keywords?.length ||
+            product.tags?.length) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>SEO & Tags</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {product.metaTitle && (
+                  <div>
+                    <p className="text-gray-500">Meta Title</p>
+                    <p className="font-medium">{product.metaTitle}</p>
+                  </div>
+                )}
+                {product.metaDescription && (
+                  <div>
+                    <p className="text-gray-500">Meta Description</p>
+                    <p>{product.metaDescription}</p>
+                  </div>
+                )}
+                {product.keywords?.length > 0 && (
+                  <div>
+                    <p className="text-gray-500 mb-1">Keywords</p>
+                    <div className="flex flex-wrap gap-1">
+                      {product.keywords.map((kw) => (
+                        <Badge key={kw} variant="outline">{kw}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {product.tags?.length > 0 && (
+                  <div>
+                    <p className="text-gray-500 mb-1">Tags</p>
+                    <div className="flex flex-wrap gap-1">
+                      {product.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary">{tag}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
-      {/* Full Specifications Table */}
-      {product.specifications && Object.keys(product.specifications).length > 0 && (
+      {/* Custom specifications only (standard fields shown above) */}
+      {product.specifications?.["Additional Specifications"] &&
+        Object.keys(product.specifications["Additional Specifications"]).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Complete Specifications</CardTitle>
+            <CardTitle>Additional Specifications</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(product.specifications).map(([key, value]) => (
+              {Object.entries(product.specifications["Additional Specifications"]).map(([key, value]) => (
                 <div key={key} className="border rounded-lg p-3">
                   <h3 className="font-medium text-sm mb-2">{key}</h3>
-                  {typeof value === 'object' ? (
-                    <div className="space-y-1">
-                      {Object.entries(value).map(([k, v]) => (
-                        <p key={k} className="text-sm">
-                          <span className="text-gray-500">{k}:</span> {formatSpecValue(v)}
-                        </p>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm">{formatSpecValue(value)}</p>
-                  )}
+                  <p className="text-sm">{formatSpecValue(value)}</p>
                 </div>
               ))}
             </div>
