@@ -604,6 +604,21 @@ const FORMATTED_SPEC_SECTION_KEYS = new Set([
   "Features",
 ]);
 
+const formatDateInputValue = (value) => {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+};
+
+const resolveCategoryId = (category) => {
+  if (!category) return "";
+  if (typeof category === "object" && category._id != null) {
+    return String(category._id);
+  }
+  return String(category);
+};
+
 const normalizeSpecificationsForEdit = (specifications) => {
   if (!specifications || typeof specifications !== "object") return new Map();
 
@@ -671,6 +686,8 @@ export const useProductForm = (editProductId = null) => {
     warranty: "No Warranty",
     returnPolicy: "7 Days Return Available",
     returnWindow: 7,
+    handlingTime: 1,
+    estimatedDelivery: 7,
     productDimensions: { ...DEFAULT_PRODUCT_DIMENSIONS },
   });
 
@@ -738,51 +755,64 @@ export const useProductForm = (editProductId = null) => {
       product.fit || inferFitFromSizeCharts(charts) || "Regular";
 
     setFormData({
-      name: product.name || "",
-      description: product.description || "",
-      shortDescription: product.shortDescription || "",
-      clothingType: product.clothingType || "T-Shirt",
-      gender: product.gender || "Men",
-      fabric: product.fabric || "Cotton",
-      brand: product.brand || "",
-      basePrice: basePrice, // ✅ Fixed
-      category: product.category?._id || product.category || "",
-      ageGroup: product.ageGroup || "Adult",
-      productFamily: product.productFamily || "",
-      fabricComposition: product.fabricComposition || "100% Cotton",
+      name: product.name ?? "",
+      description:
+        product.fullDescription || product.description || "",
+      shortDescription: product.shortDescription ?? "",
+      clothingType: product.clothingType ?? "T-Shirt",
+      gender: product.gender ?? "Men",
+      fabric: product.fabric ?? "Cotton",
+      brand: product.brand ?? "",
+      basePrice: basePrice,
+      category: resolveCategoryId(product.category),
+      ageGroup: product.ageGroup ?? "Adult",
+      productFamily: product.productFamily ?? "",
+      fabricComposition: product.fabricComposition ?? "100% Cotton",
       fit: loadedFit,
-      pattern: product.pattern || "Solid",
-      washType: product.washType || "Not Applicable",
-      sleeveType: product.sleeveType || "Full Sleeve",
-      neckType: product.neckType || "Round Neck",
-      bottomStyle: product.bottomStyle || "Regular",
-      waistType: product.waistType || "Mid Rise",
-      bottomLength: product.bottomLength || "Full Length",
-      pocketStyle: product.pocketStyle || "5 Pocket",
-      hemStyle: product.hemStyle || "Plain",
-      bottomClosure: product.bottomClosure || "Zip Fly",
-      discount: product.discount || "",
-      offerTitle: product.offerTitle || "",
-      offerDescription: product.offerDescription || "",
-      offerValidFrom: product.offerValidFrom || "",
-      offerValidTill: product.offerValidTill || "",
-      freeShipping: product.freeShipping || false,
-      season: product.season || ["All Season"],
-      occasion: product.occasion || ["Casual"],
-      features: product.features || [],
-      packageContent: product.packageContent || "1 Piece",
-      countryOfOrigin: product.countryOfOrigin || "India",
-      keyFeatures: product.keyFeatures || [],
+      pattern: product.pattern ?? "Solid",
+      washType: product.washType ?? "Not Applicable",
+      sleeveType: product.sleeveType ?? "Full Sleeve",
+      neckType: product.neckType ?? "Round Neck",
+      bottomStyle: product.bottomStyle ?? "Regular",
+      waistType: product.waistType ?? "Mid Rise",
+      bottomLength: product.bottomLength ?? "Full Length",
+      pocketStyle: product.pocketStyle ?? "5 Pocket",
+      hemStyle: product.hemStyle ?? "Plain",
+      bottomClosure: product.bottomClosure ?? "Zip Fly",
+      discount: product.discount ?? "",
+      offerTitle: product.offerTitle ?? "",
+      offerDescription: product.offerDescription ?? "",
+      offerValidFrom: formatDateInputValue(product.offerValidFrom),
+      offerValidTill: formatDateInputValue(product.offerValidTill),
+      freeShipping: Boolean(product.freeShipping),
+      season:
+        Array.isArray(product.season) && product.season.length > 0
+          ? product.season
+          : ["All Season"],
+      occasion:
+        Array.isArray(product.occasion) && product.occasion.length > 0
+          ? product.occasion
+          : ["Casual"],
+      features: Array.isArray(product.features) ? product.features : [],
+      packageContent: product.packageContent ?? "1 Piece",
+      countryOfOrigin: product.countryOfOrigin ?? "India",
+      keyFeatures: Array.isArray(product.keyFeatures) ? product.keyFeatures : [],
       specifications: normalizeSpecificationsForEdit(product.specifications),
-      careInstructions: product.careInstructions || ["Machine Wash"],
-      isFeatured: product.isFeatured || false,
+      careInstructions:
+        Array.isArray(product.careInstructions) &&
+        product.careInstructions.length > 0
+          ? product.careInstructions
+          : ["Machine Wash"],
+      isFeatured: Boolean(product.isFeatured),
       isNewArrival:
-        product.isNewArrival !== undefined ? product.isNewArrival : true,
-      isBestSeller: product.isBestSeller || false,
-      isPremium: product.isPremium || false,
-      warranty: product.warranty || "No Warranty",
-      returnPolicy: product.returnPolicy || "7 Days Return Available",
-      returnWindow: product.returnWindow || 7,
+        product.isNewArrival !== undefined ? Boolean(product.isNewArrival) : true,
+      isBestSeller: Boolean(product.isBestSeller),
+      isPremium: Boolean(product.isPremium),
+      warranty: product.warranty ?? "No Warranty",
+      returnPolicy: product.returnPolicy ?? "7 Days Return Available",
+      returnWindow: product.returnWindow ?? 7,
+      handlingTime: product.handlingTime ?? 1,
+      estimatedDelivery: product.estimatedDelivery ?? 7,
       productDimensions: {
         ...DEFAULT_PRODUCT_DIMENSIONS,
         ...(product.productDimensions || {}),
@@ -856,6 +886,10 @@ export const useProductForm = (editProductId = null) => {
     }
 
     setVariantImages(images);
+
+    if (productColors.length > 0) {
+      setCurrentColor(productColors[0]);
+    }
   }, []);
 
   // Form update handlers — Fit dropdown syncs size chart fitDescription
@@ -1570,6 +1604,8 @@ const prepareFormData = () => {
       warranty: "No Warranty",
       returnPolicy: "7 Days Return Available",
       returnWindow: 7,
+      handlingTime: 1,
+      estimatedDelivery: 7,
       productDimensions: { ...DEFAULT_PRODUCT_DIMENSIONS },
     });
     setColors([]);

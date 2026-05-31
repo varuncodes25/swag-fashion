@@ -1494,7 +1494,16 @@ productSchema.methods.getAdminProductData = function () {
     allImages: this.allImages,
     imagesByColor: Object.fromEntries(this.imagesByColor || new Map()),
 
-    // Complete product details
+    // Complete product details (full document fields for admin edit form)
+    name: this.name,
+    description: this.description,
+    clothingType: this.clothingType,
+    gender: this.gender,
+    brand: this.brand,
+    fabric: this.fabric,
+    productFamily: this.productFamily,
+    freeShipping: this.freeShipping,
+    discount: this.discount,
     category: this.category,
     subCategory: this.subCategory,
     ageGroup: this.ageGroup,

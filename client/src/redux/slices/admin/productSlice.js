@@ -347,7 +347,7 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.loading = false;
-        state.currentProduct = action.payload.product || action.payload.data;
+        state.currentProduct = action.payload?.data ?? null;
       })
       .addCase(fetchProductById.rejected, (state, action) => {
         state.loading = false;

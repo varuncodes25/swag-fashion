@@ -160,13 +160,18 @@ const CreateProduct = () => {
   }, []);
 
   const formInitializedForId = useRef(null);
+  const [editFormReady, setEditFormReady] = useState(!productId);
 
   // Load product data if editing
   useEffect(() => {
     formInitializedForId.current = null;
+    setEditFormReady(!productId);
+
     if (productId) {
+      clearProduct();
       getProduct(productId);
     } else {
+      clearProduct();
       resetForm();
     }
   }, [productId]);
@@ -181,6 +186,7 @@ const CreateProduct = () => {
     ) {
       initializeForm(currentProduct);
       formInitializedForId.current = productId;
+      setEditFormReady(true);
     }
   }, [currentProduct, productId, initializeForm]);
 
@@ -230,7 +236,7 @@ const CreateProduct = () => {
     }
   };
 
-  if (productLoading) {
+  if (productLoading || (productId && !editFormReady)) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-12 w-12 animate-spin" />
@@ -362,7 +368,10 @@ const CreateProduct = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (
-                        <SelectItem key={category._id} value={category._id}>
+                        <SelectItem
+                          key={category._id}
+                          value={String(category._id)}
+                        >
                           {category.name}
                         </SelectItem>
                       ))}
