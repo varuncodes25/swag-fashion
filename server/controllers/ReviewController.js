@@ -177,15 +177,6 @@ const deleteReview = async (req, res) => {
       });
     }
 
-    // Delete images from cloudinary
-    if (review.images?.length) {
-      for (const img of review.images) {
-        if (img.public_id) {
-          await cloudinary.uploader.destroy(img.public_id);
-        }
-      }
-    }
-
     const productId = review.productId;
 
     // ✅ FIX: Pehle review delete karo

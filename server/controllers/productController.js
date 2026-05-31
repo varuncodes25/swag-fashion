@@ -1136,16 +1136,6 @@ const updateProduct = async (req, res) => {
       allImages[0].isMain = true;
     }
 
-    const previousImageIds = new Set(
-      (product.allImages || []).map((img) => img.id).filter(Boolean),
-    );
-    const nextImageIds = new Set(
-      allImages.map((img) => img.id).filter(Boolean),
-    );
-    const removedImageIds = [...previousImageIds].filter(
-      (id) => !nextImageIds.has(id),
-    );
-
     data.allImages = allImages;
 
     // ============ REMOVE FIELDS THAT SHOULDN'T BE UPDATED DIRECTLY ============
@@ -1173,17 +1163,6 @@ const updateProduct = async (req, res) => {
     // ============ SAVE PRODUCT (TRIGGERS MIDDLEWARE) ============
     console.log("💾 Saving product with middleware...", { fit: product.fit });
     await product.save();
-
-    if (removedImageIds.length > 0) {
-      for (const imageId of removedImageIds) {
-        try {
-          await cloudinary.uploader.destroy(imageId);
-          console.log(`🗑️ Removed old image from Cloudinary: ${imageId}`);
-        } catch (err) {
-          console.error(`Failed to delete removed image ${imageId}:`, err);
-        }
-      }
-    }
 
     console.log("✅ Product updated successfully");
     console.log(`📊 Total variants: ${product.variants.length}`);
@@ -1240,21 +1219,7 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    // ✅ FIX: Delete images from Cloudinary from allImages array
-    if (product.allImages && product.allImages.length > 0) {
-      for (const image of product.allImages) {
-        if (image && image.id) {
-          try {
-            await cloudinary.uploader.destroy(image.id);
-            console.log(`Deleted image: ${image.id}`);
-          } catch (error) {
-            console.error(`Failed to delete image ${image.id}:`, error);
-          }
-        }
-      }
-    }
-
-    // Delete product from database
+    // Delete product from database (Cloudinary cleanup is manual)
     await product.deleteOne();
 
     return res.status(200).json({

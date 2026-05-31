@@ -1,5 +1,5 @@
 const Banner = require('../models/banner');
-const { uploadBuffer, deleteImage } = require('../config/cloudinary');
+const { uploadBuffer } = require('../config/cloudinary');
 
 // Get all active banners
 exports.getActiveBanners = async (req, res) => {
@@ -121,13 +121,6 @@ exports.updateBanner = async (req, res) => {
 
     if (req.file) {
       try {
-        // Delete old image if exists
-        const oldBanner = await Banner.findById(id);
-        if (oldBanner && oldBanner.cloudinaryId) {
-          await deleteImage(oldBanner.cloudinaryId);
-        }
-        
-        // Upload new image
         const uploadResult = await uploadBuffer(req.file.buffer, {
           folder: "banners",
           transformation: [
@@ -188,15 +181,6 @@ exports.deleteBanner = async (req, res) => {
         success: false,
         message: 'Banner not found'
       });
-    }
-
-    // Delete image from Cloudinary if cloudinaryId exists
-    if (banner.cloudinaryId) {
-      try {
-        await deleteImage(banner.cloudinaryId);
-      } catch (cloudinaryError) {
-        console.error("Error deleting image:", cloudinaryError);
-      }
     }
 
     await Banner.findByIdAndDelete(id);

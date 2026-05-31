@@ -74,7 +74,7 @@ const uploadBuffer = (buffer, options = {}) => {
   });
 };
 
-// Delete image function
+// Delete image function (manual use only — not called by app routes)
 const deleteImage = async (publicId) => {
   try {
     if (!publicId) {
