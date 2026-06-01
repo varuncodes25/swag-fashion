@@ -1,5 +1,6 @@
 import axios from "axios";
 import { CareerEncrypt, CareerDecrypt } from "../utils/crypto";
+import { getStoredToken } from "../utils/authStorage";
 
 // Create axios instance
 const apiClient = axios.create({
@@ -29,9 +30,10 @@ const processQueue = (error, token = null) => {
 const logout = () => {
   console.log("🚪 Logging out user...");
 
-  // Clear storage
-  localStorage.clear();
-  sessionStorage.clear();
+  // Clear auth keys only (keep rememberedEmail, deviceId, etc.)
+  ["role", "user", "token", "refreshToken", "adminRole", "adminUser", "adminToken", "adminRefreshToken"].forEach(
+    (key) => localStorage.removeItem(key),
+  );
 
   // ✅ Event dispatch karo (Redux ko batane ke liye)
   window.dispatchEvent(new CustomEvent("auth:logout"));
@@ -129,8 +131,8 @@ const getDeviceId = () => {
 apiClient.interceptors.request.use(
   async (config) => {
     // Add auth token
-    const token = localStorage.getItem("token");
-    
+    const token = getStoredToken();
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -206,7 +208,12 @@ apiClient.interceptors.response.use(
     console.log("🔴 Error message:", error.response?.data?.message);
     
     // ✅ Handle 401 Unauthorized - Token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    const storedToken = localStorage.getItem("token");
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      storedToken
+    ) {
       originalRequest._retry = true;
       
       // If already refreshing, queue this request

@@ -16,7 +16,7 @@ const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartBadgeKey, setCartBadgeKey] = useState(0);
 
-  const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { isAuthenticated, user, token } = useSelector((state) => state.auth);
   const { wishlistStatus } = useSelector((state) => state.wishlist || {});
   const wishlistCount = Object.values(wishlistStatus || {}).filter(Boolean).length;
 
@@ -39,11 +39,11 @@ const Navbar = () => {
 
   
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && token) {
       dispatch(fetchWishlist());
       dispatch(fetchCart());
     }
-  }, [isAuthenticated, dispatch]);
+  }, [isAuthenticated, token, dispatch]);
 
   // Function to open cart drawer
   const openCartDrawer = (e) => {

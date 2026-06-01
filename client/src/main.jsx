@@ -9,7 +9,7 @@ import { Toaster } from 'react-hot-toast';  // ✅ Import Toaster
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
-    <PersistGate loading={null} persistor={persistor}>
+    <PersistGate loading={<div className="min-h-screen" aria-busy="true" />} persistor={persistor}>
       <App />
       <Toaster  // ✅ Add Toaster here
         position="top-center"

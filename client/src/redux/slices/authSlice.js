@@ -1,5 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { REHYDRATE } from "redux-persist";
 import apiClient from "../../api/axiosConfig";
+import {
+  extractAuthFromResponse,
+  saveAuthToLocalStorage,
+  clearAuthFromLocalStorage,
+  getStoredToken,
+} from "../../utils/authStorage";
 
 // ============ AUTHENTICATION THUNKS ============
 
@@ -44,7 +51,7 @@ export const refreshToken = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
-      const response = await apiClient.post("/refresh-token", { refreshToken });
+      const response = await apiClient.post("/auth/refresh-token", { refreshToken });
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -397,9 +404,9 @@ const initialState = {
   // User auth state
   role: localStorage.getItem("role") || "",
   user: JSON.parse(localStorage.getItem("user")) || null,
-  token: localStorage.getItem("token") || "",
+  token: getStoredToken(),
   refreshToken: localStorage.getItem("refreshToken") || "",
-  isAuthenticated: !!localStorage.getItem("token"),
+  isAuthenticated: !!getStoredToken(),
 
   // Admin auth state
   adminRole: localStorage.getItem("adminRole") || "",
@@ -488,67 +495,48 @@ const authSlice = createSlice({
   reducers: {
     // Manual login setter
     setUserLogin: (state, action) => {
+      const { token, refreshToken, user } = extractAuthFromResponse(action.payload);
+      if (!token) {
+        state.isAuthenticated = false;
+        return;
+      }
 
-      // ✅ Handle both { data: {...} } and direct {...}
-      const payload = action.payload.data || action.payload;
-      const userData = payload.user || {};
-
-     
-
-      // ✅ Set state correctly
-      state.role = userData.role || "";
-      state.user = userData;
-      state.token = payload.token || "";
-      state.refreshToken = payload.refreshToken || "";
+      state.role = user?.role || "";
+      state.user = user;
+      state.token = token;
+      state.refreshToken = refreshToken;
       state.isAuthenticated = true;
 
-      // ✅ Save to localStorage
-      try {
-        localStorage.setItem("role", state.role);
-        localStorage.setItem("user", JSON.stringify(state.user));
-        localStorage.setItem("token", state.token);
-        if (state.refreshToken) {
-          localStorage.setItem("refreshToken", state.refreshToken);
-        }
-
-     
-      } catch (error) {
-        console.error("❌ Error saving to localStorage:", error);
-      }
+      saveAuthToLocalStorage({
+        token,
+        refreshToken,
+        user,
+        role: state.role,
+      });
     },
     setAdminLogin: (state, action) => {
-     
-      // ✅ Handle both { data: {...} } and direct {...}
-      const payload = action.payload.data || action.payload;
-      const userData = payload.user || {};
+      const { token, refreshToken, user } = extractAuthFromResponse(action.payload);
+      if (!token) {
+        state.isAuthenticated = false;
+        return;
+      }
 
-      
-
-      // ✅ Set state correctly
-      state.role = userData.role || "";
-      state.user = userData;
-      state.token = payload.token || "";
-      state.refreshToken = payload.refreshToken || "";
+      state.role = user?.role || "";
+      state.user = user;
+      state.token = token;
+      state.refreshToken = refreshToken;
       state.isAuthenticated = true;
 
-      // ✅ Save to localStorage
-      try {
-        localStorage.setItem("role", state.role);
-        localStorage.setItem("user", JSON.stringify(state.user));
-        localStorage.setItem("token", state.token);
-        if (state.refreshToken) {
-          localStorage.setItem("refreshToken", state.refreshToken);
-        }
-
-       
-      } catch (error) {
-        console.error("❌ Error saving to localStorage:", error);
-      }
+      saveAuthToLocalStorage({
+        token,
+        refreshToken,
+        user,
+        role: state.role,
+      });
     },
 
     // Manual logout
     setUserLogout: (state) => {
-      console.log(state,"state")
       state.role = "";
       state.user = null;
       state.token = "";
@@ -558,10 +546,7 @@ const authSlice = createSlice({
       state.sessions = [];
       state.wishlist = [];
 
-      localStorage.removeItem("role");
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
+      clearAuthFromLocalStorage();
     },
 
     // Manual admin logout
@@ -664,19 +649,20 @@ const authSlice = createSlice({
           "Registration successful!";
         state.fieldErrors = {};
 
-        if (action.payload.data?.token) {
-          state.role = action.payload.data.user?.role || "";
-          state.user = action.payload.data.user || null;
-          state.token = action.payload.data.token;
-          state.refreshToken = action.payload.data.refreshToken || "";
+        const signupAuth = extractAuthFromResponse(action.payload);
+        if (signupAuth.token) {
+          state.role = signupAuth.user?.role || "";
+          state.user = signupAuth.user;
+          state.token = signupAuth.token;
+          state.refreshToken = signupAuth.refreshToken;
           state.isAuthenticated = true;
 
-          localStorage.setItem("role", state.role);
-          localStorage.setItem("user", JSON.stringify(state.user));
-          localStorage.setItem("token", state.token);
-          if (state.refreshToken) {
-            localStorage.setItem("refreshToken", state.refreshToken);
-          }
+          saveAuthToLocalStorage({
+            token: signupAuth.token,
+            refreshToken: signupAuth.refreshToken,
+            user: signupAuth.user,
+            role: state.role,
+          });
         }
       })
       .addCase(signupUser.rejected, (state, action) => {
@@ -697,22 +683,33 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loginLoading = false;
         state.loading = false;
-        state.message = action.payload.message || "Login successful!";
         state.fieldErrors = {};
 
-        const data = action.payload.data || {};
-        state.role = data.user?.role || "";
-        state.user = data.user || null;
-        state.token = data.token || "";
-        state.refreshToken = data.refreshToken || "";
+        const { token, refreshToken, user, message } = extractAuthFromResponse(
+          action.payload,
+        );
+
+        if (!token) {
+          state.loginError =
+            "Login succeeded but session token was not received. Please try again.";
+          state.isAuthenticated = false;
+          state.message = state.loginError;
+          return;
+        }
+
+        state.message = message || "Login successful!";
+        state.role = user?.role || "";
+        state.user = user;
+        state.token = token;
+        state.refreshToken = refreshToken;
         state.isAuthenticated = true;
 
-        localStorage.setItem("role", state.role);
-        localStorage.setItem("user", JSON.stringify(state.user));
-        localStorage.setItem("token", state.token);
-        if (state.refreshToken) {
-          localStorage.setItem("refreshToken", state.refreshToken);
-        }
+        saveAuthToLocalStorage({
+          token,
+          refreshToken,
+          user,
+          role: state.role,
+        });
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loginLoading = false;
@@ -725,11 +722,13 @@ const authSlice = createSlice({
 
       // ============ REFRESH TOKEN ============
       .addCase(refreshToken.fulfilled, (state, action) => {
-        const data = action.payload.data || {};
-        state.token = data.token;
-        state.refreshToken = data.refreshToken;
-        localStorage.setItem("token", state.token);
-        localStorage.setItem("refreshToken", state.refreshToken);
+        const { token, refreshToken } = extractAuthFromResponse(action.payload);
+        if (!token) return;
+
+        state.token = token;
+        state.refreshToken = refreshToken;
+        state.isAuthenticated = true;
+        saveAuthToLocalStorage({ token, refreshToken });
       })
       .addCase(refreshToken.rejected, (state) => {
         state.token = "";
@@ -1070,6 +1069,25 @@ const authSlice = createSlice({
         state.adminRefreshToken = "";
         state.isAdminAuthenticated = false;
         state.loading = false;
+      })
+
+      // Keep localStorage in sync after redux-persist rehydrate
+      .addCase(REHYDRATE, (state, action) => {
+        const auth = action.payload?.auth;
+        if (!auth?.token) return;
+
+        state.token = auth.token;
+        state.refreshToken = auth.refreshToken || "";
+        state.user = auth.user || null;
+        state.role = auth.role || auth.user?.role || "";
+        state.isAuthenticated = true;
+
+        saveAuthToLocalStorage({
+          token: auth.token,
+          refreshToken: auth.refreshToken,
+          user: auth.user,
+          role: state.role,
+        });
       });
   },
 });

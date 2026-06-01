@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 import { useDispatch } from "react-redux";
 import { Loader2 } from "lucide-react";
 import { setUserLogin } from "@/redux/slices/authSlice";
@@ -187,15 +187,11 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   const handleGoogleResponse = async (response) => {
     setIsWorking(true);
     try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/auth/google/token`,
+      const res = await apiClient.post(
+        "/auth/google/token",
         { token: response.credential },
-        { headers: jsonHeaders },
       );
 
-      
-      // ✅ FIXED: Directly pass res.data (no extra wrapping)
-      
       dispatch(setUserLogin(res.data));
 
     
