@@ -10,6 +10,13 @@ import {
   Sparkles
 } from "lucide-react";
 
+function normalizeCategories(data) {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.categories)) return data.categories;
+  return [];
+}
+
 export default function HomeCollections() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,9 +27,10 @@ export default function HomeCollections() {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/categories`
         );
-        setCategories(res.data);
+        setCategories(normalizeCategories(res.data));
       } catch (error) {
         console.error("Error fetching categories", error);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -50,13 +58,14 @@ export default function HomeCollections() {
     return colors[key] || "bg-gray-500 hover:bg-gray-600";
   };
 
-  if (loading || categories.length === 0) return null;
+  const categoryList = Array.isArray(categories) ? categories : [];
+  if (loading || categoryList.length === 0) return null;
 
   return (
     <div className="py-8">
       <div className="container mx-auto px-4">
         <div className="flex flex-wrap justify-center gap-2">
-          {categories.slice(0, 6).map((category) => (
+          {categoryList.slice(0, 6).map((category) => (
             <Link
               key={category._id}
               to={`/category/${category.slug}`}
