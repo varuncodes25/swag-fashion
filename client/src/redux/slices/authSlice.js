@@ -1074,16 +1074,25 @@ const authSlice = createSlice({
       // Keep localStorage in sync after redux-persist rehydrate
       .addCase(REHYDRATE, (state, action) => {
         const auth = action.payload?.auth;
-        if (!auth?.token) return;
+        if (!auth) return;
 
-        state.token = auth.token;
+        const token = getStoredToken() || auth.token || "";
+        if (!token) {
+          state.isAuthenticated = false;
+          state.token = "";
+          state.user = null;
+          state.role = "";
+          return;
+        }
+
+        state.token = token;
         state.refreshToken = auth.refreshToken || "";
         state.user = auth.user || null;
         state.role = auth.role || auth.user?.role || "";
         state.isAuthenticated = true;
 
         saveAuthToLocalStorage({
-          token: auth.token,
+          token,
           refreshToken: auth.refreshToken,
           user: auth.user,
           role: state.role,

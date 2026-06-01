@@ -5,6 +5,7 @@ import ProductCard from "./ProductCard";
 import { useDispatch } from "react-redux";
 import { setProducts as setReduxProducts } from "@/redux/slices/productSlice";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
+import { getStoredToken } from "@/utils/authStorage";
 import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
 import {
   HOME_SECTION_CLASS,
@@ -27,13 +28,12 @@ const ProductList = ({
   const dispatch = useDispatch();
   const limit = 12;
 
-  // Fetch wishlist on mount
+  // Wishlist only for logged-in users (avoid 401 → login redirect for guests)
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
+    if (getStoredToken()) {
       dispatch(fetchWishlist());
     }
-  }, []);
+  }, [dispatch]);
 
   // Fetch products function
   const fetchProducts = useCallback(async (pageNum = 1, shouldAppend = false) => {

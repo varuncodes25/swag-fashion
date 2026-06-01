@@ -28,19 +28,38 @@ const processQueue = (error, token = null) => {
 
 // ============ LOGOUT FUNCTION ============
 
-const logout = () => {
-  console.log("🚪 Logging out user...");
+/** Guest can browse home/products without being sent to /login */
+function isPublicBrowsePath(pathname) {
+  if (pathname === "/") return true;
+  if (pathname.startsWith("/product/")) return true;
+  if (pathname.startsWith("/category/")) return true;
+  const publicExact = [
+    "/about",
+    "/contact",
+    "/faq",
+    "/termsandconditions",
+    "/track-order",
+    "/login",
+    "/signup",
+    "/forgot-password",
+  ];
+  return publicExact.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  );
+}
 
-  // Clear auth keys only (keep rememberedEmail, deviceId, etc.)
+const logout = () => {
+  console.log("🚪 Clearing session...");
+
   ["role", "user", "token", "refreshToken", "adminRole", "adminUser", "adminToken", "adminRefreshToken"].forEach(
     (key) => localStorage.removeItem(key),
   );
 
-  // ✅ Event dispatch karo (Redux ko batane ke liye)
   window.dispatchEvent(new CustomEvent("auth:logout"));
 
-  // Redirect
-  if (window.location.pathname !== "/login") {
+  const path = window.location.pathname;
+  // Only force login on pages that need an account
+  if (!isPublicBrowsePath(path)) {
     window.location.href = "/login";
   }
 };
@@ -188,7 +207,7 @@ apiClient.interceptors.response.use(
     console.log("🔴 Error message:", error.response?.data?.message);
     
     // ✅ Handle 401 Unauthorized - Token expired
-    const storedToken = localStorage.getItem("token");
+    const storedToken = getStoredToken();
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
