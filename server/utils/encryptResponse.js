@@ -2,12 +2,15 @@ const { CareerEncrypt } = require("./crypto");
 const ApiResponse = require("./handlar/ApiResponse");
 
 /**
- * Encrypt API response if enabled
- * @param {any} data - Response data (can be ApiResponse or raw data)
- * @returns {Object} Formatted and optionally encrypted response
+ * Encrypt API response (used in auth/admin controllers).
+ * Global encryptResponse.middleware also encrypts res.json() for ALL /api routes.
+ * If this returns { data: cipher }, middleware skips (no double encryption).
  */
 const encryptResponse = async (data) => {
-  const shouldEncrypt = process.env.ENCRYPT_RESPONSE === "1";
+  const shouldEncrypt =
+    process.env.DISABLE_ENCRYPT_RESPONSE !== "true" &&
+    (process.env.ENCRYPT_RESPONSE === "1" ||
+      process.env.ENCRYPT_RESPONSE === "true");
 
   // If already ApiResponse format
   const isApiResponse = data && 

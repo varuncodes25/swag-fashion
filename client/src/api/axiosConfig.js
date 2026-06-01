@@ -1,5 +1,6 @@
 import axios from "axios";
-import { CareerEncrypt, CareerDecrypt } from "../utils/crypto";
+import { CareerEncrypt } from "../utils/crypto";
+import { decryptApiResponse } from "./decryptApiResponse";
 import { getStoredToken } from "../utils/authStorage";
 
 // Create axios instance
@@ -58,30 +59,22 @@ const refreshAccessToken = async () => {
     console.log("🔄 Refreshing access token...");
     
     // Create separate axios instance to avoid interceptor loop
+    let refreshBody = { refreshToken };
+    const headers = { "Content-Type": "application/json" };
+
+    if (import.meta.env.VITE_ENCRYPT_REQUEST === "true") {
+      refreshBody = { encryptedData: await CareerEncrypt({ refreshToken }) };
+      headers["X-Encrypted"] = "true";
+    }
+
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
-      { refreshToken },
-      { 
-        headers: { 
-          "Content-Type": "application/json" 
-        } 
-      }
+      refreshBody,
+      { headers },
     );
     
-    // Handle decrypted response
-    let data = response.data;
-    
-    // Check if response is encrypted
-    if (typeof data === "string") {
-      data = await CareerDecrypt(data);
-    }
-    if (data?.data && typeof data.data === "string") {
-      data = await CareerDecrypt(data.data);
-    }
-    if (data?.encryptedData) {
-      data = await CareerDecrypt(data.encryptedData);
-    }
-    
+    const data = await decryptApiResponse(response.data);
+
     // Extract tokens
     let newToken = null;
     let newRefreshToken = null;
@@ -163,47 +156,34 @@ apiClient.interceptors.request.use(
   }
 );
 
-// ============ RESPONSE INTERCEPTOR - WITH TOKEN REFRESH ============
+// ============ SHARED DECRYPT (your existing interceptor logic, one place) ============
+function registerDecryptInterceptor(instance) {
+  instance.interceptors.response.use(
+    async (response) => {
+      if (response.data != null) {
+        response.data = await decryptApiResponse(response.data);
+      }
+      return response;
+    },
+    async (error) => {
+      if (error.response?.data != null) {
+        error.response.data = await decryptApiResponse(error.response.data);
+      }
+      return Promise.reject(error);
+    },
+  );
+}
+
+// Decrypt all API responses (apiClient + legacy `import axios from "axios"`)
+registerDecryptInterceptor(apiClient);
+registerDecryptInterceptor(axios);
+
+// ============ TOKEN REFRESH on 401 (apiClient only) ============
 apiClient.interceptors.response.use(
-  async (response) => {
-    // Decryption logic
-    const shouldEncrypt = true;
-    
-    if (shouldEncrypt && response.data) {
-      // Case 1: Direct encrypted data
-      if (typeof response.data === "string") {
-        try {
-          const decryptedData = await CareerDecrypt(response.data);
-          response.data = decryptedData;
-        } catch (error) {
-          console.error("❌ Decryption failed:", error);
-        }
-      }
-      // Case 2: { data: "encrypted-string" }
-      else if (response.data.data && typeof response.data.data === "string") {
-        try {
-          const decryptedData = await CareerDecrypt(response.data.data);
-          response.data = decryptedData;
-        } catch (error) {
-          console.error("❌ Decryption failed:", error);
-        }
-      }
-      // Case 3: { encryptedData: "encrypted-string" }
-      else if (response.data.encryptedData) {
-        try {
-          const decryptedData = await CareerDecrypt(response.data.encryptedData);
-          response.data = decryptedData;
-        } catch (error) {
-          console.error("❌ Decryption failed:", error);
-        }
-      }
-    }
-    
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     console.log("🔴 Error status:", error.response?.status);
     console.log("🔴 Error message:", error.response?.data?.message);
     

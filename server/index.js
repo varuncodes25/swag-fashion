@@ -10,6 +10,7 @@ const securityLogger = require("./middlewares/securityLogger");
 const { logger, morganStream } = require("./utils/logger");
 const { requestMetrics, getMetricsSnapshot } = require("./middlewares/requestMetrics");
 const { buildLimiter, toNumber, isProduction } = require("./utils/rateLimitConfig");
+const encryptResponseMiddleware = require("./middlewares/encryptResponse.middleware");
 const Product = require("./models/Product");
 const Category = require("./models/Category");
 
@@ -105,6 +106,9 @@ app.use(
 
 // Connect to MongoDB
 connectDb();
+
+// Encrypt all /api JSON responses (Network tab shows ciphertext only)
+app.use("/api", encryptResponseMiddleware);
 
 // Health check
 app.get("/", (req, res) => {
