@@ -1127,8 +1127,12 @@ productSchema.pre("save", function (next) {
 });
 
 // ==================== VIRTUAL PROPERTIES ====================
+function getProductVariants(doc) {
+  return Array.isArray(doc.variants) ? doc.variants : [];
+}
+
 productSchema.virtual("isInStock").get(function () {
-  return this.variants.some((v) => v.stock > 0);
+  return getProductVariants(this).some((v) => v.stock > 0);
 });
 
 productSchema.virtual("isOfferActive").get(function () {
@@ -1156,11 +1160,14 @@ productSchema.virtual("offerDaysLeft").get(function () {
 });
 
 productSchema.virtual("totalStock").get(function () {
-  return this.variants.reduce((sum, variant) => sum + (variant.stock || 0), 0);
+  return getProductVariants(this).reduce(
+    (sum, variant) => sum + (variant.stock || 0),
+    0,
+  );
 });
 
 productSchema.virtual("availableStock").get(function () {
-  return this.variants.reduce((sum, variant) => {
+  return getProductVariants(this).reduce((sum, variant) => {
     const available = variant.stock - (variant.reservedStock || 0);
     return sum + Math.max(available, 0);
   }, 0);
@@ -1290,9 +1297,51 @@ productSchema.methods.getAvailableColorsForSize = function (size) {
 
 // Get product card data for listing
 productSchema.methods.getProductCardData = function () {
-  const allSellingPrices = this.variants.map((v) => v.sellingPrice || 0);
+  const variants = getProductVariants(this);
+  const description =
+    this.shortDescription ||
+    (this.description
+      ? `${this.description.substring(0, 100)}...`
+      : "");
+
+  if (variants.length === 0) {
+    return {
+      _id: this._id,
+      name: this.name,
+      brand: this.brand,
+      clothingType: this.clothingType,
+      gender: this.gender,
+      ageGroup: this.ageGroup,
+      description,
+      sellingPrice: 0,
+      price: 0,
+      discount: this.discount,
+      rating: this.rating,
+      reviewCount: this.reviewCount,
+      image: this.getMainImage(),
+      isOfferActive: this.isOfferActive,
+      offerValidTill: this.offerValidTill,
+      offerDaysLeft: this.offerDaysLeft,
+      isInStock: false,
+      totalStock: 0,
+      availableStock: 0,
+      colors: this.colors,
+      sizes: this.sizes,
+      isFeatured: this.isFeatured,
+      isNewArrival: this.isNewArrival,
+      isBestSeller: this.isBestSeller,
+      isPremium: this.isPremium,
+      isVisible: this.isVisible,
+      fit: this.fit,
+      pattern: this.pattern,
+      freeShipping: this.freeShipping,
+      slug: this.slug,
+    };
+  }
+
+  const allSellingPrices = variants.map((v) => v.sellingPrice || 0);
   const minSellingPrice = Math.min(...allSellingPrices);
-  const cheapestVariant = this.variants.find(
+  const cheapestVariant = variants.find(
     (v) => v.sellingPrice === minSellingPrice,
   );
   const originalPriceOfCheapest = cheapestVariant?.price || minSellingPrice;
@@ -1304,8 +1353,7 @@ productSchema.methods.getProductCardData = function () {
     clothingType: this.clothingType,
     gender: this.gender,
     ageGroup: this.ageGroup,
-    description:
-      this.shortDescription || this.description.substring(0, 100) + "...",
+    description,
     sellingPrice: minSellingPrice, // ✅ Selling price
     price: originalPriceOfCheapest, // ✅ Original price
     discount: this.discount,

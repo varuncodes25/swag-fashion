@@ -140,6 +140,7 @@ export default function CategoryPage() {
       searchParams.get("clothingType") || legacyFilters?.clothingType;
     const genderParam = searchParams.get("gender") || legacyFilters?.gender;
     const seasonParam = searchParams.get("season");
+    const occasionParam = searchParams.get("occasion");
     const washTypeParam = searchParams.get("washType");
     if (!filters.clothingType && clothingTypeParam?.trim()) {
       filters.clothingType = clothingTypeParam.trim();
@@ -149,6 +150,9 @@ export default function CategoryPage() {
     }
     if (seasonParam?.trim()) {
       filters.season = seasonParam.trim();
+    }
+    if (occasionParam?.trim()) {
+      filters.occasion = occasionParam.trim();
     }
     if (washTypeParam?.trim()) {
       filters.washType = washTypeParam.trim();

@@ -231,6 +231,11 @@ function applyProductFilters(query, queryParams) {
     if (seasons.length > 0) query.season = { $in: seasons };
   }
 
+  if (queryParams.occasion) {
+    const occasions = parseCsvParam(queryParams.occasion);
+    if (occasions.length > 0) query.occasion = { $in: occasions };
+  }
+
   if (queryParams.isFeatured === "true") query.isFeatured = true;
   if (queryParams.isBestSeller === "true") query.isBestSeller = true;
   if (queryParams.isNewArrival === "true") query.isNewArrival = true;

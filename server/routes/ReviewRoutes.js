@@ -3,6 +3,7 @@ const {
   updateReview,
   deleteReview,
   getReviews,
+  getFeaturedReviews,
   replyReview,
 } = require("../controllers/ReviewController");
 const verifyToken = require("../middlewares/verifyToken");
@@ -15,6 +16,7 @@ router.put("/update-review/:id", verifyToken, updateReview);
 
 router.delete("/delete-review/:id", verifyToken, deleteReview);
 
+router.get("/reviews/featured", getFeaturedReviews);
 router.get("/get-reviews/:id", getReviews);
 
 router.put("/reply-review/:id", verifyToken, replyReview);

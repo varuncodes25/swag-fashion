@@ -66,7 +66,18 @@ function encryptResponseMiddleware(req, res, next) {
       })
       .catch((err) => {
         console.error("Response encryption failed:", err.message);
-        originalJson(body);
+        try {
+          originalJson(body);
+        } catch (fallbackErr) {
+          console.error(
+            "Unencrypted fallback failed:",
+            fallbackErr.message,
+          );
+          originalJson({
+            success: false,
+            message: "Response serialization failed",
+          });
+        }
       });
 
     return res;

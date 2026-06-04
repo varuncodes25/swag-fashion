@@ -362,12 +362,48 @@ const getProductReviewStats = async (req, res) => {
   }
 };
 
+const getFeaturedReviews = async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 6, 1), 12);
+
+    const reviews = await Review.find({ rating: { $gte: 4 } })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .populate("userId", "name")
+      .populate("productId", "name")
+      .lean();
+
+    const data = reviews.map((review) => ({
+      ...review,
+      userId: review.userId
+        ? { _id: review.userId._id, name: review.userId.name }
+        : null,
+      productId: review.productId
+        ? { _id: review.productId._id, name: review.productId.name }
+        : null,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      message: data.length ? "Featured reviews" : "No reviews yet",
+      data,
+    });
+  } catch (error) {
+    console.error("Featured reviews error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   createReview,
   updateReview,
   deleteReview,
   replyReview,
   getReviews,
+  getFeaturedReviews,
   getProductReviewStats,
-  calculateAndUpdateProductRating // Export karo agar dusre jagah use karna hai
+  calculateAndUpdateProductRating,
 };
