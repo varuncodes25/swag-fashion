@@ -119,13 +119,74 @@ function applyExactEnumFilter(query, field, paramValue) {
   };
 }
 
+const DESIGN_PATTERN_REGEXES = [
+  "Graphic",
+  "Printed",
+  "Abstract",
+  "Geometric",
+  "Floral",
+  "Striped",
+  "Checked",
+  "Plaid",
+  "Embroidered",
+  "Sequined",
+  "Tie-Dye",
+  "Camouflage",
+  "Animal Print",
+  "Paisley",
+  "Ethnic",
+  "Polka Dot",
+  "Houndstooth",
+].map((v) => new RegExp(`^${escapeRegex(v)}$`, "i"));
+
+const DESIGN_NAME_REGEX =
+  /graphic|anime|print(?:ed)?|typography|logo|slogan|cartoon|illustration/i;
+
+function applyStylePreset(query, style) {
+  const and = [{ pattern: { $nin: DESIGN_PATTERN_REGEXES } }];
+
+  switch (String(style).toLowerCase()) {
+    case "solids":
+      and.unshift({ pattern: { $in: [/^Solid$/i] } });
+      break;
+    case "minimalist":
+      and.unshift({ pattern: { $in: [/^Plain$/i, /^Solid$/i] } });
+      break;
+    case "acid-wash":
+      and.unshift(
+        { washType: { $in: [/^Acid Wash$/i] } },
+        { pattern: { $in: [/^Solid$/i, /^Plain$/i] } },
+      );
+      break;
+    case "graphic":
+      query.pattern = {
+        $in: [/^Graphic$/i, /^Printed$/i],
+      };
+      return;
+    default:
+      return;
+  }
+
+  and.push({ name: { $not: DESIGN_NAME_REGEX } });
+  query.$and = [...(query.$and || []), ...and];
+}
+
 function applyProductFilters(query, queryParams) {
+  const hasStylePreset = Boolean(queryParams.style);
+  if (hasStylePreset) {
+    applyStylePreset(query, queryParams.style);
+  }
+
   applyExactEnumFilter(query, "fit", queryParams.fit);
-  applyExactEnumFilter(query, "pattern", queryParams.pattern);
+  if (!hasStylePreset) {
+    applyExactEnumFilter(query, "pattern", queryParams.pattern);
+  }
   applyExactEnumFilter(query, "sleeveType", queryParams.sleeveType);
   applyExactEnumFilter(query, "neckType", queryParams.neckType);
   applyExactEnumFilter(query, "fabric", queryParams.fabric);
-  applyExactEnumFilter(query, "washType", queryParams.washType);
+  if (!hasStylePreset) {
+    applyExactEnumFilter(query, "washType", queryParams.washType);
+  }
 
   if (queryParams.search && queryParams.search.trim() !== "") {
     const keyword = queryParams.search.trim();

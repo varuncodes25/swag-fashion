@@ -3,41 +3,35 @@ import { ArrowRight } from "lucide-react";
 
 const showcaseItems = [
   {
-    id: "hyper-prints",
-    title: "Hyper Prints",
-    image: "/images/home-showcase/Hyper-Prints----men-1774502495.webp",
-    href: "/category/all?search=graphic%20tee",
+    id: "graphic-prints",
+    title: "Graphic Prints",
+    badge: "🔥",
+    image: "/images/home-showcase/graphic-prints.webp",
+    href: "/category/all?style=graphic",
   },
   {
-    id: "minimalistic",
-    title: "Minimalistic",
-    image: "/images/home-showcase/Minimal-Prints---men-1774502494.webp",
-    href: "/category/all?search=minimal%20tshirt",
+    id: "anime",
+    title: "Anime",
+    image: "/images/home-showcase/anime.webp",
+    href: "/category/all?search=anime",
   },
   {
-    id: "acid-washed",
-    title: "Acid-Washed",
-    image: "/images/home-showcase/Acid-Wash----men-1774502496.webp",
+    id: "acid-wash",
+    title: "Acid Wash",
+    image: "/images/home-showcase/acid-wash.webp",
     href: "/category/all?washType=Acid%20Wash",
   },
   {
-    id: "word-drip",
-    title: "Word Drip",
-    image: "/images/home-showcase/desktop-T-shirt-Widgets-worddrip-men-1774245323.webp",
-    href: "/category/all?search=typography%20tshirt",
+    id: "minimalist",
+    title: "Minimalist",
+    image: "/images/home-showcase/minimalist.webp",
+    href: "/category/all?style=minimalist",
   },
   {
     id: "solids",
     title: "Solids",
-    image: "/images/home-showcase/Solids----men-1774502493.webp",
-    href: "/category/all?search=solid%20tshirt",
-  },
-  {
-    id: "explore-all",
-    title: "Explore All",
-    image: "/images/home-showcase/Desktop-T-shirt-Widgets-360x400-6--1772133770.webp",
-    href: "/category/all",
-    isExploreAll: true,
+    image: "/images/home-showcase/solids.webp",
+    href: "/category/all?style=solids",
   },
 ];
 
@@ -47,19 +41,19 @@ export default function HomeShowcaseSection() {
       <div className="mx-auto max-w-7xl overflow-hidden rounded-xl bg-background p-2 sm:p-3">
         <div className="mb-2 text-center sm:mb-3">
           <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
-            Oversized Tees Haul
+            Shop by Style
           </h2>
           <p className="text-sm text-muted-foreground underline decoration-yellow-400 decoration-2 underline-offset-4 sm:text-base">
-            Bestsellers in one place
+            Graphic, anime, acid wash, minimal & solids
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:flex lg:flex-nowrap">
+        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:grid-cols-5">
           {showcaseItems.map((item) => (
             <Link
               key={item.id}
               to={item.href}
-              className="group relative block overflow-hidden rounded-[4px] lg:w-[calc(16.666%-0.35rem)] lg:shrink-0"
+              className="group relative block overflow-hidden rounded-[4px]"
             >
               <img
                 src={item.image}
@@ -70,16 +64,16 @@ export default function HomeShowcaseSection() {
                 }}
                 className="h-44 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-52"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35" />
-              <div className="absolute bottom-2 left-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-foreground shadow-sm">
-                <ArrowRight className="h-3.5 w-3.5" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/55" />
+              <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2">
+                <span className="text-sm font-bold text-white drop-shadow-sm sm:text-base">
+                  {item.title}
+                  {item.badge ? ` ${item.badge}` : ""}
+                </span>
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/95 text-foreground shadow-sm">
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </span>
               </div>
-
-              {item.isExploreAll && (
-                <>
-                  <div className="absolute inset-0 bg-white/25" />
-                </>
-              )}
             </Link>
           ))}
         </div>
