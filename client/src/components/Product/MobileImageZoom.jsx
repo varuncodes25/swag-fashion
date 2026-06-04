@@ -1,6 +1,7 @@
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
+import ImageSlideTrack from "./ImageSlideTrack";
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
@@ -159,23 +160,17 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   if (!images?.length) return null;
 
   const isZoomed = scale > 1;
-  const translateX = isZoomed ? position.x : slideOffset;
-  const translateY = isZoomed ? position.y : 0;
-  const isPinching = gestureRef.current === "pinch";
-  const isTransforming = isPanning || isSlideDragging || isPinching || isAnimating;
-
-  const activeUrl = images[activeIndex]?.url;
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-50 bg-black flex flex-col touch-none"
+      className="fixed inset-0 z-50 flex flex-col touch-none bg-black"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/90 via-black/70 to-transparent shrink-0">
-        <div className="text-white text-sm font-medium px-3 py-1.5 bg-black/50 rounded-full">
+      <div className="flex shrink-0 items-center justify-between bg-gradient-to-b from-black/90 via-black/70 to-transparent p-4">
+        <div className="rounded-full bg-black/50 px-3 py-1.5 text-sm font-medium text-white">
           {activeIndex + 1} / {images.length}
         </div>
 
@@ -184,7 +179,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
             type="button"
             onClick={zoomOut}
             disabled={scale <= 1}
-            className={`p-3 rounded-full ${scale <= 1 ? "bg-gray-800/50 text-gray-500" : "bg-black/60 text-white hover:bg-black/80"}`}
+            className={`rounded-full p-3 ${scale <= 1 ? "bg-gray-800/50 text-gray-500" : "bg-black/60 text-white hover:bg-black/80"}`}
             aria-label="Zoom out"
           >
             <ZoomOut size={20} />
@@ -193,7 +188,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
             type="button"
             onClick={zoomIn}
             disabled={scale >= MAX_SCALE}
-            className={`p-3 rounded-full ${scale >= MAX_SCALE ? "bg-gray-800/50 text-gray-500" : "bg-black/60 text-white hover:bg-black/80"}`}
+            className={`rounded-full p-3 ${scale >= MAX_SCALE ? "bg-gray-800/50 text-gray-500" : "bg-black/60 text-white hover:bg-black/80"}`}
             aria-label="Zoom in"
           >
             <ZoomIn size={20} />
@@ -201,7 +196,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
           <button
             type="button"
             onClick={onClose}
-            className="p-3 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
+            className="rounded-full bg-black/60 p-3 text-white transition-colors hover:bg-black/80"
             aria-label="Close"
           >
             <X size={24} />
@@ -211,37 +206,50 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
 
       <div
         ref={slideContainerRef}
-        className="flex-1 flex items-center justify-center overflow-hidden relative w-full min-h-0"
+        className="relative flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden"
       >
-        <div
-          className="relative will-change-transform origin-center"
-          style={{
-            transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
-            transition: isTransforming ? "none" : "transform 0.2s ease-out",
-          }}
-        >
-          <img
-            src={activeUrl}
-            alt="Zoomed product view"
-            className="block max-w-[100vw] max-h-[70vh] w-auto h-auto object-contain select-none pointer-events-none"
-            draggable={false}
+        {isZoomed ? (
+          <div
+            className="relative origin-center will-change-transform"
+            style={{
+              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+              transition: isPanning ? "none" : "transform 0.2s ease-out",
+            }}
+          >
+            <img
+              src={images[activeIndex]?.url}
+              alt="Zoomed product view"
+              className="pointer-events-none block h-auto max-h-[70vh] w-auto max-w-[100vw] select-none object-contain"
+              draggable={false}
+            />
+          </div>
+        ) : (
+          <ImageSlideTrack
+            images={images}
+            activeIndex={activeIndex}
+            slideOffset={slideOffset}
+            isSlideDragging={isSlideDragging}
+            isAnimating={isAnimating}
+            fit="contain"
+            className="absolute inset-0"
+            imgClassName="max-h-[70vh]"
           />
-        </div>
+        )}
       </div>
 
       {images.length > 1 && !isZoomed && (
-        <div className="shrink-0 p-4 pt-6 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="shrink-0 bg-gradient-to-t from-black/95 via-black/80 to-transparent p-4 pt-6">
+          <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
             {images.map((img, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => onSelect(i)}
-                className={`relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${
                   i === activeIndex ? "border-warning scale-105" : "border-white/20"
                 }`}
               >
-                <img src={img.url} alt="" className="h-full w-full object-cover" />
+                <img src={img.url} alt="" className="h-full w-full object-cover" loading="lazy" />
               </button>
             ))}
           </div>

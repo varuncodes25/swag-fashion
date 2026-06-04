@@ -65,7 +65,7 @@ const ImageSlideTrack = ({
     isSlideDragging || (isAnimating && slideOffset !== 0)
       ? isSlideDragging
         ? "none"
-        : "transform 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+        : "transform 0.26s cubic-bezier(0.22, 1, 0.36, 1)"
       : "none";
 
   const trackWidth = panelWidth > 0 ? panelWidth * 3 : "300%";

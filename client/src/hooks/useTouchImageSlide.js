@@ -1,7 +1,8 @@
 import { useRef, useState, useCallback } from "react";
 
-const SWIPE_THRESHOLD = 50;
-const SLIDE_DURATION_MS = 320;
+const SWIPE_THRESHOLD = 48;
+const SLIDE_DURATION_MS = 260;
+const DRAG_LOCK_PX = 6;
 
 /**
  * Horizontal drag-to-slide with commit animation (app-style carousel).
@@ -62,13 +63,14 @@ export function useTouchImageSlide({
         if (direction === "next") onNext?.();
         else onPrev?.();
 
-        // Instant reset (no animate-back); ImageSlideTrack skips transition when offset is 0
-        slideOffsetRef.current = 0;
-        setSlideOffset(0);
-        isHorizontalRef.current = false;
-        isVerticalRef.current = false;
-        setIsAnimating(false);
-        commitTimerRef.current = null;
+        requestAnimationFrame(() => {
+          slideOffsetRef.current = 0;
+          setSlideOffset(0);
+          isHorizontalRef.current = false;
+          isVerticalRef.current = false;
+          setIsAnimating(false);
+          commitTimerRef.current = null;
+        });
       }, SLIDE_DURATION_MS);
     },
     [enabled, getWidth, onNext, onPrev]
@@ -115,7 +117,7 @@ export function useTouchImageSlide({
       const deltaY = touch.clientY - touchStartRef.current.y;
 
       if (!isHorizontalRef.current && !isVerticalRef.current) {
-        if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10) return;
+        if (Math.abs(deltaX) < DRAG_LOCK_PX && Math.abs(deltaY) < DRAG_LOCK_PX) return;
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
           isVerticalRef.current = true;
           return;
