@@ -37,6 +37,10 @@ import { Badge } from "../ui/badge";
 import SizeChartForm from "../Admin/SizeChartForm";
 import { Ruler } from "lucide-react";
 import { MAX_IMAGE_SIZE_MB } from "@/constants/uploadLimits";
+import {
+  SHOP_BY_MOOD_OCCASIONS,
+  getShopByMoodOccasionLabel,
+} from "@/constants/shopByMood";
 
 const CreateProduct = () => {
   const { productId } = useParams();
@@ -1269,23 +1273,51 @@ const CreateProduct = () => {
         </div>
       </div>
 
-      {/* Occasion */}
-      <div className="space-y-2">
-        <Label>Occasion</Label>
-        <div className="flex flex-wrap gap-2">
-          {OCCASIONS.map((occasion) => (
-            <Button
-              key={occasion}
-              type="button"
-              variant={formData.occasion.includes(occasion) ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleOccasion(occasion)}
-              className="text-xs"
-            >
-              {formData.occasion.includes(occasion) && <Check className="h-3 w-3 mr-1" />}
-              {occasion}
-            </Button>
-          ))}
+      {/* Occasion — also powers homepage "Shop By Mood" */}
+      <div className="space-y-3">
+        <div>
+          <Label>Occasion</Label>
+          <p className="text-xs text-muted-foreground mt-1">
+            Homepage &quot;Shop By Mood&quot; in occasions se filter hota hai — College, Sports (Gym), Travel, Casual, Streetwear.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-foreground">Shop By Mood (Homepage)</p>
+          <div className="flex flex-wrap gap-2">
+            {SHOP_BY_MOOD_OCCASIONS.map((occasion) => (
+              <Button
+                key={occasion}
+                type="button"
+                variant={formData.occasion.includes(occasion) ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleOccasion(occasion)}
+                className="text-xs"
+              >
+                {formData.occasion.includes(occasion) && <Check className="h-3 w-3 mr-1" />}
+                {getShopByMoodOccasionLabel(occasion)}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Other Occasions</p>
+          <div className="flex flex-wrap gap-2">
+            {OCCASIONS.filter((o) => !SHOP_BY_MOOD_OCCASIONS.includes(o)).map((occasion) => (
+              <Button
+                key={occasion}
+                type="button"
+                variant={formData.occasion.includes(occasion) ? "default" : "outline"}
+                size="sm"
+                onClick={() => toggleOccasion(occasion)}
+                className="text-xs"
+              >
+                {formData.occasion.includes(occasion) && <Check className="h-3 w-3 mr-1" />}
+                {occasion}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 

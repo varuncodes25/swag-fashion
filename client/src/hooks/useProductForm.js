@@ -550,6 +550,8 @@ const SEASONS = [
 // Occasions
 const OCCASIONS = [
   "Casual",
+  "College",
+  "Streetwear",
   "Formal",
   "Party",
   "Wedding",

@@ -274,7 +274,7 @@ const createProductSchema = yup.object({
   occasion: yup
     .array()
     .of(yup.string().oneOf([
-      "Casual", "Formal", "Party", "Wedding", "Sports", "Beach", "Office",
+      "Casual", "College", "Streetwear", "Formal", "Party", "Wedding", "Sports", "Beach", "Office",
       "Travel", "Evening", "Traditional", "Festive", "Loungewear", "Sleepwear"
     ]))
     .default(["Casual"]),

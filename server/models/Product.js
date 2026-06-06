@@ -728,6 +728,8 @@ const productSchema = new mongoose.Schema(
       type: [String],
       enum: [
         "Casual",
+        "College",
+        "Streetwear",
         "Formal",
         "Party",
         "Wedding",
