@@ -794,7 +794,9 @@ export const useProductForm = (editProductId = null) => {
       occasion:
         Array.isArray(product.occasion) && product.occasion.length > 0
           ? product.occasion
-          : ["Casual"],
+          : typeof product.occasion === "string" && product.occasion.trim()
+            ? [product.occasion.trim()]
+            : ["Casual"],
       features: Array.isArray(product.features) ? product.features : [],
       packageContent: product.packageContent ?? "1 Piece",
       countryOfOrigin: product.countryOfOrigin ?? "India",

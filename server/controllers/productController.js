@@ -292,10 +292,7 @@ function applyProductFilters(query, queryParams) {
     if (seasons.length > 0) query.season = { $in: seasons };
   }
 
-  if (queryParams.occasion) {
-    const occasions = parseCsvParam(queryParams.occasion);
-    if (occasions.length > 0) query.occasion = { $in: occasions };
-  }
+  applyExactEnumFilter(query, "occasion", queryParams.occasion);
 
   if (queryParams.isFeatured === "true") query.isFeatured = true;
   if (queryParams.isBestSeller === "true") query.isBestSeller = true;
@@ -643,6 +640,9 @@ const getProducts = async (req, res) => {
       if (seasons.length > 0) {
         query.season = { $in: seasons };
       }
+    }
+    if (req.query.occasion) {
+      applyExactEnumFilter(query, "occasion", req.query.occasion);
     }
 
     if (req.query.isPremium === "true") query.isPremium = true;
@@ -994,6 +994,24 @@ const updateProduct = async (req, res) => {
         data[field] = parse(data[field]);
       }
     });
+
+    const OCCASION_VALUES = Product.schema.path("occasion").caster.enumValues;
+    if (data.occasion !== undefined && data.occasion !== null) {
+      const rawOccasions = Array.isArray(data.occasion)
+        ? data.occasion
+        : parseCsvParam(String(data.occasion));
+      data.occasion = rawOccasions
+        .map((value) => {
+          const text = String(value ?? "").trim();
+          if (!text) return null;
+          return (
+            OCCASION_VALUES.find(
+              (allowed) => allowed.toLowerCase() === text.toLowerCase(),
+            ) || text
+          );
+        })
+        .filter(Boolean);
+    }
 
     // ============ CONVERT TYPES ============
     if (data.basePrice) data.basePrice = Number(data.basePrice);
