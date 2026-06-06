@@ -12,33 +12,41 @@ export const SHOP_BY_MOOD_TILES = [
     id: "college",
     label: "College",
     occasion: "College",
-    gradient: "from-violet-500/20 to-purple-600/10",
+    emoji: "🎓",
+    gradient: "from-violet-600 to-indigo-700",
   },
   {
     id: "gym",
     label: "Gym",
     occasion: "Sports",
-    gradient: "from-orange-500/20 to-red-600/10",
+    emoji: "💪",
+    gradient: "from-orange-500 to-rose-600",
   },
   {
     id: "travel",
     label: "Travel",
     occasion: "Travel",
-    gradient: "from-sky-500/20 to-blue-600/10",
+    emoji: "✈️",
+    gradient: "from-sky-500 to-cyan-600",
   },
   {
     id: "casual",
     label: "Casual",
     occasion: "Casual",
-    gradient: "from-emerald-500/20 to-teal-600/10",
+    emoji: "☀️",
+    gradient: "from-emerald-500 to-green-600",
   },
   {
     id: "streetwear",
-    label: "Streetwear",
+    label: "Street",
     occasion: "Streetwear",
-    gradient: "from-amber-500/20 to-yellow-600/10",
+    emoji: "🔥",
+    gradient: "from-amber-500 to-yellow-600",
   },
 ];
+
+export const getMoodFilterHref = (occasion) =>
+  `/category/all?occasion=${encodeURIComponent(occasion)}`;
 
 /** Admin chip label — Sports shows as Gym on the homepage tile. */
 export const getShopByMoodOccasionLabel = (occasion) => {
