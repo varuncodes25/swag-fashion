@@ -1,39 +1,14 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { SHOP_BY_STYLE_LINKS } from "@/constants/productEnums";
 
-const showcaseItems = [
-  {
-    id: "graphic-prints",
-    title: "Graphic Prints",
-    badge: "🔥",
-    image: "/images/home-showcase/graphic-prints.webp",
-    href: "/category/all?style=graphic",
-  },
-  {
-    id: "anime",
-    title: "Anime",
-    image: "/images/home-showcase/anime.webp",
-    href: "/category/all?search=anime",
-  },
-  {
-    id: "acid-wash",
-    title: "Acid Wash",
-    image: "/images/home-showcase/acid-wash.webp",
-    href: "/category/all?washType=Acid%20Wash",
-  },
-  {
-    id: "minimalist",
-    title: "Minimalist",
-    image: "/images/home-showcase/minimalist.webp",
-    href: "/category/all?style=minimalist",
-  },
-  {
-    id: "solids",
-    title: "Solids",
-    image: "/images/home-showcase/solids.webp",
-    href: "/category/all?style=solids",
-  },
-];
+const showcaseImages = {
+  graphic: "/images/home-showcase/graphic-prints.webp",
+  anime: "/images/home-showcase/anime.webp",
+  "acid-wash": "/images/home-showcase/acid-wash.webp",
+  minimalist: "/images/home-showcase/minimalist.webp",
+  solids: "/images/home-showcase/solids.webp",
+};
 
 export default function HomeShowcaseSection() {
   return (
@@ -49,15 +24,15 @@ export default function HomeShowcaseSection() {
         </div>
 
         <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:grid-cols-5">
-          {showcaseItems.map((item) => (
+          {SHOP_BY_STYLE_LINKS.map((item) => (
             <Link
               key={item.id}
               to={item.href}
               className="group relative block overflow-hidden rounded-[4px]"
             >
               <img
-                src={item.image}
-                alt={item.title}
+                src={showcaseImages[item.id] || "/tshirt_model.png"}
+                alt={item.label}
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.src = "/tshirt_model.png";
@@ -67,8 +42,8 @@ export default function HomeShowcaseSection() {
               <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/55" />
               <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2">
                 <span className="text-sm font-bold text-white drop-shadow-sm sm:text-base">
-                  {item.title}
-                  {item.badge ? ` ${item.badge}` : ""}
+                  {item.label}
+                  {item.id === "graphic" ? " 🔥" : ""}
                 </span>
                 <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/95 text-foreground shadow-sm">
                   <ArrowRight className="h-3.5 w-3.5" />

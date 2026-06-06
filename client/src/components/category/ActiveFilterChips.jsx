@@ -40,17 +40,19 @@ export default function ActiveFilterChips({
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      {chips.map(({ key, value, label, source }) => (
+      {chips.map(({ key, value, label, source, display }) => (
         <button
           key={`${source}-${key}-${value}`}
           type="button"
           onClick={() =>
-            source === "url" ? onRemoveUrlFilter(key) : updateFilter(key, value)
+            source === "url"
+              ? onRemoveUrlFilter(key, value)
+              : updateFilter(key, value)
           }
           className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition hover:bg-primary/20 dark:border-primary/40 dark:bg-primary/15"
         >
           <span className="text-muted-foreground">{label}:</span>
-          <span>{value}</span>
+          <span>{display ?? value}</span>
           <X size={14} className="opacity-70" />
         </button>
       ))}

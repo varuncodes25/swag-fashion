@@ -142,10 +142,23 @@ const DESIGN_PATTERN_REGEXES = [
 const DESIGN_NAME_REGEX =
   /graphic|anime|print(?:ed)?|typography|logo|slogan|cartoon|illustration/i;
 
+const STYLE_PRESET_TAG_FALLBACKS = {
+  graphic: "Graphic",
+  solids: "Solids",
+  minimalist: "Minimalist",
+  "acid-wash": "Acid Wash",
+};
+
+function tagFallbackMatch(tagName) {
+  return { tags: new RegExp(`^${escapeRegex(tagName)}$`, "i") };
+}
+
 function applyStylePreset(query, style) {
+  const styleKey = String(style).toLowerCase();
+  const tagFallback = STYLE_PRESET_TAG_FALLBACKS[styleKey];
   const and = [{ pattern: { $nin: DESIGN_PATTERN_REGEXES } }];
 
-  switch (String(style).toLowerCase()) {
+  switch (styleKey) {
     case "solids":
       and.unshift({ pattern: { $in: [/^Solid$/i] } });
       break;
@@ -158,17 +171,30 @@ function applyStylePreset(query, style) {
         { pattern: { $in: [/^Solid$/i, /^Plain$/i] } },
       );
       break;
-    case "graphic":
-      query.pattern = {
-        $in: [/^Graphic$/i, /^Printed$/i],
+    case "graphic": {
+      const fieldMatch = {
+        pattern: { $in: [/^Graphic$/i, /^Printed$/i] },
       };
+      query.$and = query.$and || [];
+      query.$and.push(
+        tagFallback
+          ? { $or: [fieldMatch, tagFallbackMatch(tagFallback)] }
+          : fieldMatch,
+      );
       return;
+    }
     default:
       return;
   }
 
   and.push({ name: { $not: DESIGN_NAME_REGEX } });
-  query.$and = [...(query.$and || []), ...and];
+  const fieldMatch = { $and: and };
+  query.$and = query.$and || [];
+  query.$and.push(
+    tagFallback
+      ? { $or: [fieldMatch, tagFallbackMatch(tagFallback)] }
+      : fieldMatch,
+  );
 }
 
 function resolveProductSort(sort) {
@@ -195,6 +221,14 @@ function resolveProductSort(sort) {
   }
 }
 
+function applyTagsFilter(query, tagsParam) {
+  const tags = parseCsvParam(tagsParam);
+  if (tags.length === 0) return;
+  query.tags = {
+    $in: tags.map((t) => new RegExp(`^${escapeRegex(t.trim())}$`, "i")),
+  };
+}
+
 function applyProductFilters(query, queryParams) {
   const hasStylePreset = Boolean(queryParams.style);
   if (hasStylePreset) {
@@ -218,8 +252,11 @@ function applyProductFilters(query, queryParams) {
       { name: { $regex: keyword, $options: "i" } },
       { brand: { $regex: keyword, $options: "i" } },
       { clothingType: { $regex: keyword, $options: "i" } },
+      { tags: { $regex: keyword, $options: "i" } },
     ];
   }
+
+  applyTagsFilter(query, queryParams.tags);
 
   if (queryParams.priceRange) {
     const priceRanges = queryParams.priceRange.split(",");
@@ -358,6 +395,7 @@ const createProduct = async (req, res) => {
       freeShipping = false,
       season = "All Season",
       occasion = "Casual",
+      tags = [],
       features = [],
       packageContent = "1 Piece",
       countryOfOrigin = "India",
@@ -426,6 +464,9 @@ const createProduct = async (req, res) => {
     const colorImageMapping = parse(colorImageMap, {});
     const seasonArray = parse(season, ["All Season"]);
     const occasionArray = parse(occasion, ["Casual"]);
+    const tagsArray = parse(tags, [])
+      .map((t) => String(t ?? "").trim())
+      .filter(Boolean);
     const careInstructionsArray = parse(careInstructions, ["Machine Wash"]);
 
     // ============ PARSE VARIANTS ============
@@ -508,6 +549,7 @@ const createProduct = async (req, res) => {
       // Arrays
       season: seasonArray,
       occasion: occasionArray,
+      tags: tagsArray,
       features: featuresArray,
       careInstructions: careInstructionsArray,
 
@@ -667,6 +709,9 @@ const getProducts = async (req, res) => {
     }
     if (req.query.occasion) {
       applyExactEnumFilter(query, "occasion", req.query.occasion);
+    }
+    if (req.query.tags) {
+      applyTagsFilter(query, req.query.tags);
     }
 
     if (req.query.isPremium === "true") query.isPremium = true;
@@ -999,6 +1044,7 @@ const updateProduct = async (req, res) => {
       "features",
       "season",
       "occasion",
+      "tags",
       "careInstructions",
       "keyFeatures",
       "stockMatrix",
@@ -1027,6 +1073,17 @@ const updateProduct = async (req, res) => {
           );
         })
         .filter(Boolean);
+    }
+
+    if (data.tags !== undefined && data.tags !== null) {
+      const rawTags = Array.isArray(data.tags)
+        ? data.tags
+        : parseCsvParam(String(data.tags));
+      data.tags = [...new Set(
+        rawTags
+          .map((value) => String(value ?? "").trim())
+          .filter(Boolean),
+      )];
     }
 
     // ============ CONVERT TYPES ============

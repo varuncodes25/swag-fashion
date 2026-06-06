@@ -9,6 +9,7 @@ import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import MobileFilterButton from "@/components/category/MobileFilterButton";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 import { resolveCategoryRoute } from "@/utils/categoryNav";
+import { STYLE_PRESET_LABELS } from "@/constants/productEnums";
 
 const URL_FILTER_KEYS = [
   "clothingType",
@@ -30,6 +31,7 @@ const URL_SCALAR_FILTER_KEYS = [
   "pattern",
   "clothingType",
   "isPremium",
+  "tags",
 ];
 
 const parseFiltersFromSearchParams = (searchParams) => {
@@ -169,6 +171,10 @@ export default function CategoryPage() {
     if (occasionParam?.trim()) {
       filters.occasion = occasionParam.trim();
     }
+    const tagsParam = searchParams.get("tags");
+    if (tagsParam?.trim()) {
+      filters.tags = tagsParam.trim();
+    }
     if (patternParam?.trim() && !filters.pattern) {
       filters.pattern = patternParam.trim();
     }
@@ -236,9 +242,22 @@ export default function CategoryPage() {
   }, [searchParams, setSearchParams]);
 
   const clearUrlFilter = useCallback(
-    (key) => {
+    (key, value) => {
       const next = new URLSearchParams(searchParams);
-      next.delete(key);
+      if (key === "tags" && value) {
+        const remaining = (searchParams.get("tags") || "")
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+          .filter((t) => t.toLowerCase() !== String(value).toLowerCase());
+        if (remaining.length > 0) {
+          next.set("tags", remaining.join(","));
+        } else {
+          next.delete("tags");
+        }
+      } else {
+        next.delete(key);
+      }
       if (key === "search") {
         setSearchInput("");
         setSearchTerm("");
@@ -253,6 +272,28 @@ export default function CategoryPage() {
     const occasion = searchParams.get("occasion");
     if (occasion?.trim()) {
       chips.push({ key: "occasion", value: occasion.trim(), label: "Mood" });
+    }
+    const tagsParam = searchParams.get("tags");
+    if (tagsParam?.trim()) {
+      tagsParam
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .forEach((tag) => {
+          chips.push({ key: "tags", value: tag, label: "Tag" });
+        });
+    }
+    const styleParam = searchParams.get("style");
+    if (styleParam?.trim()) {
+      const styleKey = styleParam.trim().toLowerCase();
+      chips.push({
+        key: "style",
+        value: styleParam.trim(),
+        label: "Style",
+        display:
+          STYLE_PRESET_LABELS[styleKey] ||
+          styleParam.trim().replace(/-/g, " "),
+      });
     }
     const season = searchParams.get("season");
     if (season?.trim()) {

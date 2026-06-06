@@ -41,6 +41,7 @@ import {
   SHOP_BY_MOOD_OCCASIONS,
   getShopByMoodOccasionLabel,
 } from "@/constants/shopByMood";
+import { PRODUCT_TAG_GROUPS } from "@/constants/productTags";
 
 const CreateProduct = () => {
   const { productId } = useParams();
@@ -130,10 +131,14 @@ const CreateProduct = () => {
     toggleFeature,
     toggleSeason,
     toggleOccasion,
+    toggleTag,
+    addCustomTag,
+    removeTag,
     applySizeChartTemplate,
   } = useProductForm(productId);
 
   const [customSizeInput, setCustomSizeInput] = useState("");
+  const [customTagInput, setCustomTagInput] = useState("");
   const [selectedSizeChartTemplate, setSelectedSizeChartTemplate] = useState("oversizedTshirt");
   const clothingCategory = TOP_WEAR_TYPES.includes(formData.clothingType)
     ? "top"
@@ -1319,6 +1324,84 @@ const CreateProduct = () => {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Tags — themes & search (Anime, Gaming, etc.) */}
+      <div className="space-y-3">
+        <div>
+          <Label>Tags</Label>
+          <p className="text-xs text-muted-foreground mt-1">
+            Themes jo pattern mein nahi aate (Anime, Gaming, etc.). Graphic / Solid / Acid Wash ke liye Pattern aur Wash Type fields use karo.
+          </p>
+        </div>
+
+        {PRODUCT_TAG_GROUPS.map((group) => (
+          <div key={group.label} className="space-y-2">
+            <p className="text-xs font-medium text-foreground">{group.label}</p>
+            <div className="flex flex-wrap gap-2">
+              {group.tags.map((tag) => (
+                <Button
+                  key={tag}
+                  type="button"
+                  variant={formData.tags?.includes(tag) ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => toggleTag(tag)}
+                  className="text-xs"
+                >
+                  {formData.tags?.includes(tag) && (
+                    <Check className="h-3 w-3 mr-1" />
+                  )}
+                  {tag}
+                </Button>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <div className="flex gap-2">
+          <Input
+            placeholder="Custom tag (e.g. Naruto, Marvel)"
+            value={customTagInput}
+            onChange={(e) => setCustomTagInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (customTagInput.trim()) {
+                  addCustomTag(customTagInput);
+                  setCustomTagInput("");
+                }
+              }
+            }}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              if (customTagInput.trim()) {
+                addCustomTag(customTagInput);
+                setCustomTagInput("");
+              }
+            }}
+          >
+            Add
+          </Button>
+        </div>
+
+        {formData.tags?.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {formData.tags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="gap-1 pr-1 cursor-pointer"
+                onClick={() => removeTag(tag)}
+              >
+                {tag}
+                <X className="h-3 w-3" />
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
 
     </CardContent>

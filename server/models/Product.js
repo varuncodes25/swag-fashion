@@ -994,6 +994,7 @@ productSchema.index({ ageGroup: 1 });
 productSchema.index({ offerValidTill: 1 });
 productSchema.index({ colors: 1 });
 productSchema.index({ sizes: 1 });
+productSchema.index({ tags: 1 });
 
 // ==================== PRE-VALIDATE MIDDLEWARE ====================
 
@@ -1491,6 +1492,7 @@ productSchema.methods.getProductDetailData = function () {
 
     season: this.season,
     occasion: this.occasion,
+    tags: this.tags,
     features: this.features,
     returnPolicy: this.returnPolicy,
     estimatedDelivery: this.estimatedDelivery,
@@ -1572,6 +1574,7 @@ productSchema.methods.getAdminProductData = function () {
     bottomClosure: this.bottomClosure,
     season: this.season,
     occasion: this.occasion,
+    tags: this.tags,
     features: this.features,
 
     // Package & Shipping

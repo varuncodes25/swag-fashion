@@ -48,9 +48,18 @@ export const HOME_STYLE_FILTERS = [
   { value: "solids", label: "Solids" },
 ];
 
+/** URL ?style= values → display label (category filter chips) */
+export const STYLE_PRESET_LABELS = {
+  graphic: "Graphic Prints",
+  "acid-wash": "Acid Wash",
+  minimalist: "Minimalist",
+  solids: "Solids",
+};
+
+/** Homepage Shop by Style — pattern/washType presets + tags for themes */
 export const SHOP_BY_STYLE_LINKS = [
   { id: "graphic", label: "Graphic Prints", href: "/category/all?style=graphic" },
-  { id: "anime", label: "Anime", href: "/category/all?search=anime" },
+  { id: "anime", label: "Anime", href: "/category/all?tags=Anime" },
   { id: "acid-wash", label: "Acid Wash", href: "/category/all?style=acid-wash" },
   { id: "minimalist", label: "Minimalist", href: "/category/all?style=minimalist" },
   { id: "solids", label: "Solids", href: "/category/all?style=solids" },

@@ -4,6 +4,7 @@ import {
   MAX_IMAGE_SIZE_BYTES,
   MAX_IMAGE_SIZE_MB,
 } from "@/constants/uploadLimits";
+import { PRODUCT_TAG_PRESETS } from "@/constants/productTags";
 
 const SIZE_OPTIONS = ["S", "M", "L", "XL","XXL"];
 
@@ -675,6 +676,7 @@ export const useProductForm = (editProductId = null) => {
     freeShipping: false,
     season: ["All Season"],
     occasion: ["Casual"],
+    tags: [],
     features: [],
     packageContent: "1 Piece",
     countryOfOrigin: "India",
@@ -797,6 +799,7 @@ export const useProductForm = (editProductId = null) => {
           : typeof product.occasion === "string" && product.occasion.trim()
             ? [product.occasion.trim()]
             : ["Casual"],
+      tags: Array.isArray(product.tags) ? product.tags : [],
       features: Array.isArray(product.features) ? product.features : [],
       packageContent: product.packageContent ?? "1 Piece",
       countryOfOrigin: product.countryOfOrigin ?? "India",
@@ -988,6 +991,39 @@ export const useProductForm = (editProductId = null) => {
       : [...currentOccasions, occasion];
 
     setFormData((prev) => ({ ...prev, occasion: updatedOccasions }));
+  };
+
+  const toggleTag = (tag) => {
+    const currentTags = formData.tags || [];
+    const updatedTags = currentTags.includes(tag)
+      ? currentTags.filter((item) => item !== tag)
+      : [...currentTags, tag];
+
+    setFormData((prev) => ({ ...prev, tags: updatedTags }));
+  };
+
+  const addCustomTag = (rawTag) => {
+    const tag = String(rawTag ?? "").trim();
+    if (!tag) return;
+
+    setFormData((prev) => {
+      const currentTags = prev.tags || [];
+      if (
+        currentTags.some(
+          (existing) => existing.toLowerCase() === tag.toLowerCase(),
+        )
+      ) {
+        return prev;
+      }
+      return { ...prev, tags: [...currentTags, tag] };
+    });
+  };
+
+  const removeTag = (tag) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: (prev.tags || []).filter((item) => item !== tag),
+    }));
   };
 
   // Size handlers — pass optional explicit size for custom inputs (e.g. "UK 9", "32x34")
@@ -1373,6 +1409,14 @@ const prepareFormData = () => {
         return;
       }
 
+      if (key === "tags") {
+        formDataObj.append(
+          key,
+          JSON.stringify(Array.isArray(value) ? value : []),
+        );
+        return;
+      }
+
       // ✅ SKIP IRRELEVANT FIELDS BASED ON CLOTHING TYPE
       if (isBottomWear && (key === 'sleeveType' || key === 'neckType')) {
         return; // Bottom wear ke liye top fields skip
@@ -1595,6 +1639,7 @@ const prepareFormData = () => {
       freeShipping: false,
       season: ["All Season"],
       occasion: ["Casual"],
+      tags: [],
       features: [],
       packageContent: "1 Piece",
       countryOfOrigin: "India",
@@ -1764,6 +1809,7 @@ const prepareFormData = () => {
     ALL_FEATURES,
     SEASONS,
     OCCASIONS,
+    PRODUCT_TAGS: PRODUCT_TAG_PRESETS,
     CARE_INSTRUCTIONS,
     MAX_IMAGES_PER_COLOR,
     TOP_WEAR_TYPES,
@@ -1797,6 +1843,9 @@ const prepareFormData = () => {
     toggleFeature,
     toggleSeason,
     toggleOccasion,
+    toggleTag,
+    addCustomTag,
+    removeTag,
     getTotalStockForColor,
 
     sizeCharts,
