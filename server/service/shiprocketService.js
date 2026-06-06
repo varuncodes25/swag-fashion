@@ -322,8 +322,8 @@ async function assignLockedCourier(orderId, courierId, token) {
 
 // 🔥 UPDATED: Save shipment with invoice data
 async function saveShipment(order, shiprocketOrder, courierData, invoiceData) {
-  const shippingStatus = courierData.awb_code ? "COURIER_ASSIGNED" : "CREATED";
-  
+  const shippingStatus = courierData.awb_code ? "IN_TRANSIT" : "PROCESSING";
+
   const shipment = await shipmentSchema.create({
     orderId: order._id,
     provider: "Shiprocket",
@@ -333,7 +333,7 @@ async function saveShipment(order, shiprocketOrder, courierData, invoiceData) {
     trackingUrl: courierData.tracking_url || null,
     invoiceUrl: invoiceData?.invoiceUrl || null,  // 🆕 Save invoice URL
     irnNo: invoiceData?.irnNo || null,           // 🆕 Save e-invoice number
-    shippingStatus: shippingStatus,
+    shippingStatus: courierData.awb_code ? "IN_TRANSIT" : "PROCESSING",
     charges: {
       estimated: order.shippingCharge,
       actual: courierData.charges || order.shippingCharge
@@ -358,13 +358,17 @@ async function saveShipment(order, shiprocketOrder, courierData, invoiceData) {
 
   await Order.findByIdAndUpdate(order._id, {
     currentShipmentId: shipment._id,
-    "shiprocket.orderId": shiprocketOrder.order_id,
+    status: courierData.awb_code ? "PROCESSING" : order.status,
+    "shiprocket.orderId": String(shiprocketOrder.order_id),
+    "shiprocket.shipmentId": courierData.shipment_id
+      ? String(courierData.shipment_id)
+      : undefined,
     "shiprocket.awb": courierData.awb_code,
     "shiprocket.courierName": courierData.courier_name,
     "shiprocket.status": shippingStatus,
     "shiprocket.mode": courierData._mock ? "TESTING" : "PRODUCTION",
-    "shiprocket.invoiceUrl": invoiceData?.invoiceUrl || null,  // 🆕 Save to order
-    "shiprocket.irnNo": invoiceData?.irnNo || null             // 🆕 Save to order
+    "shiprocket.invoiceUrl": invoiceData?.invoiceUrl || null,
+    "shiprocket.irnNo": invoiceData?.irnNo || null,
   });
 
   return shipment;

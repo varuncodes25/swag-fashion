@@ -1,5 +1,23 @@
 // reviewUtils.js
 
+export function getAuthUserId(user) {
+  if (!user) return null;
+  return String(user._id || user.id || "");
+}
+
+export function getReviewUserId(review) {
+  const reviewUser = review?.user || review?.userId;
+  if (!reviewUser) return null;
+  if (typeof reviewUser === "string") return reviewUser;
+  return String(reviewUser._id || reviewUser.id || "");
+}
+
+export function isSameUser(user, review) {
+  const authId = getAuthUserId(user);
+  const reviewUserId = getReviewUserId(review);
+  return Boolean(authId && reviewUserId && authId === reviewUserId);
+}
+
 /**
  * First letter of first name + first letter of last name (e.g. "Rahul Kumar" → "RK")
  */
@@ -177,6 +195,9 @@ export const getRelativeTime = (dateString) => {
 
 // Export all utilities
 export default {
+  getAuthUserId,
+  getReviewUserId,
+  isSameUser,
   getUserInitials,
   formatDate,
   calculateAverageRating,

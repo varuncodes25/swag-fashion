@@ -1,23 +1,24 @@
-// components/Review/ProductPageReviews.js - DIRECT REDUX
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useSelector, useDispatch } from "react-redux";
-import { MessageCircle, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 import ReviewCard from "./ReviewCard";
-import { formatDate, calculateAverageRating } from "./reviewUtils";
-
-import { 
-  fetchReviews, 
-  deleteReview, 
-  updateReview, 
-  addReply 
+import { formatDate } from "./reviewUtils";
+import { isSameUser } from "./reviewUtils";
+import {
+  deleteReview,
+  updateReview,
+  addReply,
 } from "../../redux/slices/reviewsSlice";
 
-/** @param {number | null} maxReviews — null = show all (dedicated reviews page) */
-const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
+const ProductPageReviews = ({
+  productId,
+  reviewsList = [],
+  maxReviews = 2,
+  hideHeader = false,
+}) => {
   const [newReply, setNewReply] = useState({ review: "" });
   const [replyingTo, setReplyingTo] = useState(null);
   const [editing, setEditing] = useState({
@@ -30,24 +31,18 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
   const { toast } = useToast();
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const { reviews, loading, error } = useSelector((state) => state.reviews);
-  
-  useEffect(() => {
-    if (productId) {
-      dispatch(fetchReviews(productId));
-    }
-  }, [productId, dispatch]);
+  const { loading } = useSelector((state) => state.reviews);
+
+  const displayedReviews =
+    maxReviews == null ? reviewsList : reviewsList.slice(0, maxReviews);
+  const showViewAllLink =
+    maxReviews != null && reviewsList.length > maxReviews;
 
   const handleDeleteReview = async (reviewId) => {
-    // ✅ Check if user is owner or admin
-    const reviewToDelete = reviews.find(r => r._id === reviewId);
-    const reviewUserId = reviewToDelete?.user?._id || reviewToDelete?.user;
-    const isOwner = user?._id === reviewUserId;
+    const reviewToDelete = reviewsList.find((r) => r._id === reviewId);
+    const isOwner = isSameUser(user, reviewToDelete);
     const isAdmin = user?.role === "admin";
-    console.log("Review User ID:", reviewUserId);
-    console.log("Current User ID:", user?._id);
-    console.log("Is Owner:", isOwner);
-    console.log("Is Admin:", isAdmin);
+
     if (!isOwner && !isAdmin) {
       toast({
         title: "Unauthorized",
@@ -56,18 +51,16 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
       });
       return;
     }
-    
+
     if (!confirm("Are you sure you want to delete this review?")) return;
-    
+
     try {
       await dispatch(deleteReview(reviewId)).unwrap();
-      dispatch(fetchReviews(productId));
       toast({
         title: "Review deleted",
         description: "Your review has been deleted successfully",
       });
     } catch (error) {
-      console.error("❌ Delete error:", error);
       toast({
         title: "Error",
         description: error || "Failed to delete review",
@@ -77,12 +70,10 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
   };
 
   const handleEditReview = async (reviewId) => {
-    // ✅ Check if user is owner or admin
-    const reviewToEdit = reviews.find(r => r._id === reviewId);
-    const reviewUserId = reviewToEdit?.user?._id || reviewToEdit?.user;
-    const isOwner = user?._id === reviewUserId;
+    const reviewToEdit = reviewsList.find((r) => r._id === reviewId);
+    const isOwner = isSameUser(user, reviewToEdit);
     const isAdmin = user?.role === "admin";
-    
+
     if (!isOwner && !isAdmin) {
       toast({
         title: "Unauthorized",
@@ -91,33 +82,32 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
       });
       return;
     }
-    
+
     if (!confirm("Are you sure you want to save changes?")) return;
-    
+
     try {
-      await dispatch(updateReview({ 
-        reviewId, 
-        updateData: {
-          updatedReview: editing.review,
-          rating: editing.rating,
-        }
-      })).unwrap();
-      
+      await dispatch(
+        updateReview({
+          reviewId,
+          updateData: {
+            updatedReview: editing.review,
+            rating: editing.rating,
+          },
+        }),
+      ).unwrap();
+
       setEditing({
         status: false,
         reviewId: null,
         review: "",
         rating: 0,
       });
-      
+
       toast({
         title: "Review updated",
         description: "Your review has been updated successfully",
       });
-      
-      dispatch(fetchReviews(productId));
     } catch (error) {
-      console.error("❌ Update error:", error);
       toast({
         title: "Error",
         description: error || "Failed to update review",
@@ -127,10 +117,7 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
   };
 
   const handleAddReply = async (reviewId) => {
-    // ✅ Only admins can reply
-    const isAdmin = user?.role === "admin";
-    
-    if (!isAdmin) {
+    if (user?.role !== "admin") {
       toast({
         title: "Unauthorized",
         description: "Only admins can reply to reviews",
@@ -138,7 +125,7 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
       });
       return;
     }
-    
+
     if (!newReply.review.trim()) {
       toast({
         title: "Reply required",
@@ -149,21 +136,21 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
     }
 
     try {
-      await dispatch(addReply({ 
-        reviewId, 
-        replyData: { review: newReply.review } 
-      })).unwrap();
-      
+      await dispatch(
+        addReply({
+          reviewId,
+          replyData: { review: newReply.review },
+        }),
+      ).unwrap();
+
       toast({
         title: "Reply posted",
         description: "Your reply has been added successfully",
       });
-      
+
       setNewReply({ review: "" });
       setReplyingTo(null);
-      dispatch(fetchReviews(productId));
     } catch (error) {
-      console.error("❌ Reply error:", error);
       toast({
         title: "Error",
         description: error || "Failed to add reply",
@@ -172,118 +159,55 @@ const ProductPageReviews = ({ productId, maxReviews = 2 }) => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="mt-8 md:mt-12">
-        <div className="flex items-center justify-between mb-4 md:mb-6 px-4 md:px-0">
-          <h3 className="text-xl md:text-2xl font-bold text-foreground">
-            Customer Reviews
-          </h3>
-        </div>
-        <div className="space-y-3 md:space-y-4 px-4 md:px-0">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="animate-pulse bg-gray-200 dark:bg-gray-800 h-24 md:h-32 rounded-lg md:rounded-xl"
-            ></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const displayedReviews =
-    maxReviews == null ? reviews || [] : reviews?.slice(0, maxReviews) || [];
-  const showViewAllLink =
-    maxReviews != null && (reviews?.length || 0) > maxReviews;
+  if (!reviewsList.length) return null;
 
   return (
-    <div className="mt-8 md:mt-12 md:px-0">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 md:mb-6">
-        <div>
-          <h3 className="text-xl md:text-2xl font-bold text-foreground">
-            Customer Reviews ({reviews?.length || 0})
+    <div className={hideHeader ? "" : "mt-8 md:mt-12 md:px-0"}>
+      {!hideHeader && (
+        <div className="mb-4 flex items-center justify-between md:mb-6">
+          <h3 className="text-xl font-bold text-foreground md:text-2xl">
+            Customer Reviews ({reviewsList.length})
           </h3>
-          {reviews?.length > 0 && (
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-muted-foreground text-xs md:text-sm">
-                {reviews.length} reviews • {calculateAverageRating(reviews)}/5 average
-              </p>
-            </div>
-          )}
         </div>
+      )}
 
-        {/* Write Review Button */}
-        {productId && maxReviews != null && (
-          <Link to={`/product/${productId}/reviews`}>
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              View All Reviews
-            </Button>
-          </Link>
-        )}
+      <div className="w-full space-y-4 md:space-y-6">
+        {displayedReviews.map((review) => (
+          <ReviewCard
+            key={review._id}
+            review={review}
+            user={user}
+            isEditing={editing.status && editing.reviewId === review._id}
+            editing={editing}
+            setEditing={setEditing}
+            replyingTo={replyingTo}
+            setReplyingTo={setReplyingTo}
+            newReply={newReply}
+            setNewReply={setNewReply}
+            loading={loading}
+            handleAddReply={() => handleAddReply(review._id)}
+            handleEditReview={() => handleEditReview(review._id)}
+            handleDeleteReview={() => handleDeleteReview(review._id)}
+            formatDate={formatDate}
+          />
+        ))}
       </div>
 
-      {/* Reviews List */}
-      {!reviews || reviews.length === 0 ? (
-        <div className="text-center py-8 md:py-12 bg-card rounded-xl md:rounded-2xl border border-border">
-          <MessageCircle className="h-10 w-10 md:h-12 md:w-12 text-gray-400 dark:text-gray-600 mx-auto mb-3 md:mb-4" />
-          <h4 className="text-lg md:text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            No reviews yet
-          </h4>
-          <p className="text-muted-foreground text-sm md:text-base px-4 mb-6">
-            Be the first to share your thoughts
+      {showViewAllLink && (
+        <div className="mt-6 flex flex-col items-center md:mt-8">
+          <Link to={`/product/${productId}/reviews`} className="w-full md:w-auto">
+            <Button
+              variant="outline"
+              className="w-full border-primary text-sm text-primary hover:bg-primary/10 hover:text-primary"
+            >
+              <span>View All Reviews</span>
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+          <p className="mt-2 text-xs text-muted-foreground">
+            See all {reviewsList.length} reviews
           </p>
         </div>
-      ) : (
-        <>
-          <div className="w-full space-y-4 md:space-y-6">
-            {displayedReviews.map((review) => (
-              <ReviewCard
-                key={review._id}
-                review={review}
-                user={user}
-                isEditing={editing.status && editing.reviewId === review._id}
-                editing={editing}
-                setEditing={setEditing}
-                replyingTo={replyingTo}
-                setReplyingTo={setReplyingTo}
-                newReply={newReply}
-                setNewReply={setNewReply}
-                loading={loading}
-                handleAddReply={() => handleAddReply(review._id)}
-                handleEditReview={() => handleEditReview(review._id)}
-                handleDeleteReview={() => handleDeleteReview(review._id)}
-                formatDate={formatDate}
-              />
-            ))}
-          </div>
-
-          {/* View All Reviews Button */}
-          {showViewAllLink && (
-            <div className="mt-6 md:mt-8 flex flex-col items-center">
-              <Link
-                to={`/product/${productId}/reviews`}
-                className="w-full md:w-auto"
-              >
-                <Button
-                  variant="outline"
-                  className="w-full text-sm border-primary text-primary hover:bg-primary/10 hover:text-primary"
-                >
-                  <span>View All Reviews</span>
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              <p className="text-xs text-gray-500 mt-2">
-                Click to see all {reviews.length} reviews
-              </p>
-            </div>
-          )}
-        </>
       )}
     </div>
   );

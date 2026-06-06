@@ -406,16 +406,8 @@ console.log("📦 SAVED ORDER:", {
     // ✅ Call Shiprocket (ab courierId milega!)
     let shiprocketCreated = false;
     try {
-      const shiprocketResponse = await createShiprocketOrder(order);
+      await createShiprocketOrder(order);
       shiprocketCreated = true;
-      
-      await Order.findByIdAndUpdate(order._id, {
-        "shiprocket.orderId": shiprocketResponse.order_id,
-        "shiprocket.shipmentId": shiprocketResponse.shipment_id,
-        "shiprocket.awb": shiprocketResponse.awb,
-        "shiprocket.status": "CONFIRMED"
-      });
-      
       console.log("🚀 Shiprocket order created successfully");
     } catch (shiprocketError) {
       console.error("⚠️ Shiprocket order creation failed:", {

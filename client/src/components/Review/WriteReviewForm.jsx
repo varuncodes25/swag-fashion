@@ -67,22 +67,13 @@ const WriteReviewForm = ({
           rating: newReview.rating,
           productId,
           images,
-        })
+        }),
       ).unwrap();
 
-      toast({
-        title: "Review submitted",
-        description: "Thanks for your feedback!",
-      });
-
-      // Reset form
       setNewReview({ review: "", rating: 0 });
       setImages([]);
 
-      // Call success callback
-      if (onSuccess) {
-        onSuccess();
-      }
+      if (onSuccess) onSuccess();
     } catch (error) {
       // Error handling from Redux thunk
       toast({

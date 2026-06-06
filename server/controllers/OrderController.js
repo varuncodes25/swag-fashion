@@ -1,4 +1,7 @@
 const { ROLES } = require("../utils/constants");
+const {
+  applyOrderStatusTransition,
+} = require("../utils/orderStatusHelpers");
 const Order = require("../models/Order");
 const User = require("../models/User");
 const Product = require("../models/Product");
@@ -665,7 +668,10 @@ const updateOrderStatus = async (req, res) => {
     }
 
     const prevStatus = order.status;
-    order.status = status;
+    applyOrderStatusTransition(order, status, {
+      changedBy: req.id,
+      reason: "Admin updated order status",
+    });
     await order.save();
 
     const nextSt = String(status || "").toUpperCase();

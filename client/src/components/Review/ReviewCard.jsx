@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import MobileImageZoom from "../Product/MobileImageZoom";
 import ReviewUserAvatar from "./ReviewUserAvatar";
+import { isSameUser } from "./reviewUtils";
 
 const ReviewCard = ({
   review,
@@ -32,18 +33,11 @@ const ReviewCard = ({
   const [zoomImageIndex, setZoomImageIndex] = useState(null);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   
-  // ✅ FIX: Support both 'user' and 'userId' field names
   const reviewUserData = review?.user || review?.userId;
-  const reviewUserId = reviewUserData?._id;
   const reviewUserName = reviewUserData?.name || "Anonymous";
-  const currentUserId = user?.id;
-  
-  // ✅ Strict ownership check
-  const isReviewOwner = currentUserId && reviewUserId && currentUserId === reviewUserId;
+  const isReviewOwner = isSameUser(user, review);
   const isAdmin = user?.role === "admin";
-  
-  // ✅ Show actions only for owner or admin
-  const showActions = (currentUserId && (isReviewOwner || isAdmin));
+  const showActions = Boolean(user && (isReviewOwner || isAdmin));
   
   // ✅ Handle image click - open zoom
   const handleImageClick = (index) => {

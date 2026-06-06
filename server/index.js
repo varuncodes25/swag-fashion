@@ -227,6 +227,9 @@ app.use(notFound);
 app.use(errorHandler);
 // Start server
 app.listen(port, () => {
+  if (process.env.ENABLE_SHIPROCKET_POLL !== "false") {
+    require("./utils/shipRocketPoll");
+  }
   try {
     require("./utils/mailer").logMailStartupHint?.();
   } catch (_) {

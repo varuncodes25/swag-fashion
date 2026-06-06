@@ -532,6 +532,7 @@ const OrderStatusSelector = ({ order, loading, updateOrderStatus }) => {
   const statusOptions = [
     { value: "PENDING", label: "Pending" },
     { value: "CONFIRMED", label: "Confirmed" },
+    { value: "PROCESSING", label: "Processing" },
     { value: "SHIPPED", label: "Shipped" },
     { value: "DELIVERED", label: "Delivered" },
     { value: "CANCELLED", label: "Cancelled" },
