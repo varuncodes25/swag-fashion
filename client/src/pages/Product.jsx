@@ -218,7 +218,7 @@ function ProductLoaded({
         <div className="bg-background dark:bg-background rounded-xl lg:shadow-sm px-4 py-3 sm:px-6 lg:p-8 mb-4 lg:mb-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
             <ProductImages
-              images={variantImages}
+              images={displayImages}
               selectedImage={selectedImageIndex}
               onSelect={setSelectedImageIndex}
               productName={product.name}

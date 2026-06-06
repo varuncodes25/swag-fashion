@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import GalleryImage from "./GalleryImage";
+import { normalizeProductImages, optimizeGalleryImage } from "@/utils/productImages";
 
 /**
  * Three-panel carousel track: prev | current | next with horizontal slide offset.
@@ -16,8 +18,9 @@ const ImageSlideTrack = ({
   const containerRef = useRef(null);
   const [panelWidth, setPanelWidth] = useState(0);
 
-  const len = images.length;
-  const url = (i) => images[i]?.url;
+  const galleryImages = normalizeProductImages(images);
+  const len = galleryImages.length;
+  const url = (i) => galleryImages[i]?.url;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -31,7 +34,6 @@ const ImageSlideTrack = ({
     return () => ro.disconnect();
   }, []);
 
-  // Preload adjacent slides so img tags don't flash on index change.
   useEffect(() => {
     if (len <= 1) return;
     const prevIdx = (activeIndex - 1 + len) % len;
@@ -40,15 +42,11 @@ const ImageSlideTrack = ({
       const src = url(i);
       if (src) {
         const img = new Image();
-        img.src = src;
+        img.decoding = "async";
+        img.src = optimizeGalleryImage(src, { maxWidth: 900 });
       }
     });
-  }, [activeIndex, len, images]);
-
-  const imgFit =
-    fit === "contain"
-      ? "max-h-full max-w-full object-contain object-center"
-      : "h-full w-full object-cover object-top";
+  }, [activeIndex, len, galleryImages]);
 
   const centerWrapperClass =
     "flex h-full w-full items-center justify-center overflow-hidden";
@@ -57,15 +55,13 @@ const ImageSlideTrack = ({
 
   if (len === 1) {
     return (
-      <div
-        ref={containerRef}
-        className={`${centerWrapperClass} ${className}`}
-      >
-        <img
+      <div ref={containerRef} className={`${centerWrapperClass} ${className}`}>
+        <GalleryImage
           src={url(0)}
           alt=""
-          className={`select-none pointer-events-none ${imgFit} ${imgClassName}`}
-          draggable={false}
+          fit={fit}
+          priority
+          className={`select-none pointer-events-none ${imgClassName}`}
         />
       </div>
     );
@@ -86,10 +82,7 @@ const ImageSlideTrack = ({
   const baseOffset = panelWidth > 0 ? -panelWidth : 0;
 
   return (
-    <div
-      ref={containerRef}
-      className={`${centerWrapperClass} ${className}`}
-    >
+    <div ref={containerRef} className={`${centerWrapperClass} ${className}`}>
       <div className="h-full w-full overflow-hidden">
         <div
           className="flex h-full will-change-transform"
@@ -110,11 +103,12 @@ const ImageSlideTrack = ({
                 width: panelWidth > 0 ? panelWidth : "33.333%",
               }}
             >
-              <img
+              <GalleryImage
                 src={url(idx)}
                 alt=""
-                className={`select-none pointer-events-none ${imgFit} ${imgClassName}`}
-                draggable={false}
+                fit={fit}
+                priority={panel === 1}
+                className={`select-none pointer-events-none ${imgClassName}`}
               />
             </div>
           ))}

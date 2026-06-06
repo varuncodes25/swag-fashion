@@ -1,8 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import MobileImageZoom from "./MobileImageZoom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
 import ImageSlideTrack from "./ImageSlideTrack";
+import GalleryImage from "./GalleryImage";
+import { normalizeProductImages, optimizeGalleryImage } from "@/utils/productImages";
 
 const ProductGallery = ({
   images = [],
@@ -17,7 +19,12 @@ const ProductGallery = ({
   const [bgPos, setBgPos] = useState("50% 50%");
   const mobileSlideContainerRef = useRef(null);
 
-  const activeImage = images[selectedImage]?.url;
+  const galleryImages = useMemo(
+    () => normalizeProductImages(images),
+    [images],
+  );
+
+  const activeImage = galleryImages[selectedImage]?.url;
   
   // ❌ WRONG: Early return before useEffect
   // if (!activeImage) return null;
@@ -33,15 +40,15 @@ const ProductGallery = ({
   };
 
   const handlePrev = () => {
-    if (!images || images.length === 0) return;
-    onSelect((prev) => (prev - 1 + images.length) % images.length);
+    if (!galleryImages.length) return;
+    onSelect((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
     if (isZoomed) setIsZoomed(false);
     setShowZoom(false);
   };
 
   const handleNext = () => {
-    if (!images || images.length === 0) return;
-    onSelect((prev) => (prev + 1) % images.length);
+    if (!galleryImages.length) return;
+    onSelect((prev) => (prev + 1) % galleryImages.length);
     if (isZoomed) setIsZoomed(false);
     setShowZoom(false);
   };
@@ -55,7 +62,7 @@ const ProductGallery = ({
   } = useTouchImageSlide({
     onPrev: handlePrev,
     onNext: handleNext,
-    enabled: images.length > 1,
+    enabled: galleryImages.length > 1,
     containerRef: mobileSlideContainerRef,
   });
 
@@ -109,13 +116,20 @@ const ProductGallery = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedImage, isZoomed, isMobileZoomOpen, images]);
+  }, [selectedImage, isZoomed, isMobileZoomOpen, galleryImages]);
 
-  // ✅ CORRECT: Early return AFTER all hooks
-  if (!activeImage || !images || images.length === 0) {
+  if (!galleryImages.length) {
     return (
-      <div className="w-full h-[400px] bg-muted rounded-lg flex items-center justify-center">
-        <div className="text-gray-500">No image available</div>
+      <div className="flex h-[min(72vh,620px)] min-h-[320px] w-full items-center justify-center rounded-xl bg-muted/40 lg:min-h-[520px]">
+        <div className="h-full w-full max-w-[420px] animate-pulse rounded-xl bg-muted/60" />
+      </div>
+    );
+  }
+
+  if (!activeImage) {
+    return (
+      <div className="flex h-[min(72vh,620px)] min-h-[320px] w-full items-center justify-center rounded-xl bg-muted/40 lg:min-h-[520px]">
+        <div className="h-full w-full max-w-[420px] animate-pulse rounded-xl bg-muted/60" />
       </div>
     );
   }
@@ -125,9 +139,9 @@ const ProductGallery = ({
       {/* DESKTOP VIEW */}
       <div className="hidden lg:flex gap-4">
         {/* THUMBNAILS */}
-        {images.length > 1 && (
+        {galleryImages.length > 1 && (
           <div className="flex flex-col gap-2 shrink-0">
-            {images.map((img, i) => (
+            {galleryImages.map((img, i) => (
               <button
                 key={i}
                 onClick={() => {
@@ -141,11 +155,7 @@ const ProductGallery = ({
                     : "border-gray-300 dark:border-white/10 hover:border-gray-400 dark:hover:border-white/30"
                 }`}
               >
-                <img
-                  src={img.url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <GalleryImage src={img.url} alt="" fit="cover" thumb priority={i === selectedImage} />
               </button>
             ))}
           </div>
@@ -177,12 +187,12 @@ const ProductGallery = ({
           onClick={handleContainerClick}
         >
           {!showZoom && !isZoomed && (
-            <img
+            <GalleryImage
               src={activeImage}
               alt="product"
-              className="absolute inset-0 z-[1] h-full w-full object-contain object-center p-2 transition-transform duration-300"
-              loading="lazy"
-              decoding="async"
+              fit="contain"
+              priority
+              className="absolute inset-0 z-[1] p-2 transition-transform duration-300"
             />
           )}
 
@@ -191,7 +201,7 @@ const ProductGallery = ({
             <div
               className="absolute inset-0 z-[2] bg-no-repeat"
               style={{
-                backgroundImage: `url(${activeImage})`,
+                backgroundImage: `url(${optimizeGalleryImage(activeImage, { maxWidth: 1600 })})`,
                 backgroundSize: isZoomed ? "260%" : "200%",
                 backgroundPosition: bgPos,
               }}
@@ -215,7 +225,7 @@ const ProductGallery = ({
           )}
 
           {/* NAVIGATION ARROWS */}
-          {images.length > 1 && !isZoomed && (
+          {galleryImages.length > 1 && !isZoomed && (
             <>
               <button
                 onClick={(e) => {
@@ -265,7 +275,7 @@ const ProductGallery = ({
           onTouchEnd={mobileSlideHandlers.onTouchEnd}
         >
           <ImageSlideTrack
-            images={images}
+            images={galleryImages}
             activeIndex={selectedImage}
             slideOffset={mobileSlideOffset}
             isSlideDragging={isMobileSlideDragging}
@@ -276,9 +286,9 @@ const ProductGallery = ({
         </div>
 
         {/* THUMBNAILS */}
-        {images.length > 1 && (
+        {galleryImages.length > 1 && (
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {images.map((img, i) => (
+            {galleryImages.map((img, i) => (
               <button
                 key={i}
                 onClick={() => {
@@ -291,11 +301,7 @@ const ProductGallery = ({
                     : "border-gray-300 dark:border-white/10"
                 }`}
               >
-                <img
-                  src={img.url}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <GalleryImage src={img.url} alt="" fit="cover" thumb priority={i === selectedImage} />
               </button>
             ))}
           </div>
@@ -305,7 +311,7 @@ const ProductGallery = ({
       {/* MOBILE FULLSCREEN */}
       {(isMobileZoomOpen || (isZoomed && window.innerWidth < 1024)) && (
         <MobileImageZoom
-          images={images}
+          images={galleryImages}
           activeIndex={selectedImage}
           onClose={() => {
             setIsMobileZoomOpen(false);
