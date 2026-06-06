@@ -19,6 +19,19 @@ const URL_FILTER_KEYS = [
   "fabric",
 ];
 
+/** URL query params applied to listing but not in sidebar filter state */
+const URL_SCALAR_FILTER_KEYS = [
+  "occasion",
+  "season",
+  "gender",
+  "search",
+  "style",
+  "washType",
+  "pattern",
+  "clothingType",
+  "isPremium",
+];
+
 const parseFiltersFromSearchParams = (searchParams) => {
   const parsed = {
     priceRange: [],
@@ -214,10 +227,46 @@ export default function CategoryPage() {
   // ✅ Clear all filters
   const clearAllFilters = useCallback(() => {
     setSelectedFilters(INITIAL_FILTERS);
+    setSearchInput("");
+    setSearchTerm("");
     const next = new URLSearchParams(searchParams);
     URL_FILTER_KEYS.forEach((key) => next.delete(key));
+    URL_SCALAR_FILTER_KEYS.forEach((key) => next.delete(key));
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  const clearUrlFilter = useCallback(
+    (key) => {
+      const next = new URLSearchParams(searchParams);
+      next.delete(key);
+      if (key === "search") {
+        setSearchInput("");
+        setSearchTerm("");
+      }
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const urlFilterChips = useMemo(() => {
+    const chips = [];
+    const occasion = searchParams.get("occasion");
+    if (occasion?.trim()) {
+      chips.push({ key: "occasion", value: occasion.trim(), label: "Mood" });
+    }
+    const season = searchParams.get("season");
+    if (season?.trim()) {
+      chips.push({ key: "season", value: season.trim(), label: "Season" });
+    }
+    const gender = searchParams.get("gender");
+    if (gender?.trim()) {
+      chips.push({ key: "gender", value: gender.trim(), label: "Gender" });
+    }
+    if (searchParams.get("isPremium") === "true") {
+      chips.push({ key: "isPremium", value: "Premium", label: "Collection" });
+    }
+    return chips;
+  }, [searchParams]);
 
   // ✅ Clear specific filter
   const clearFilter = useCallback((filterKey) => {
@@ -328,9 +377,9 @@ export default function CategoryPage() {
   }, [slug, subSlug, searchTerm, searchParams]);
 
   // Calculate applied filters count
-  const appliedFilterCount = Object.values(selectedFilters)
-    .flat()
-    .filter(Boolean).length;
+  const appliedFilterCount =
+    Object.values(selectedFilters).flat().filter(Boolean).length +
+    urlFilterChips.length;
 
   // Don't render until mounted (to avoid hydration mismatch)
   if (!mounted) {
@@ -474,6 +523,8 @@ export default function CategoryPage() {
               selectedFilters={selectedFilters}
               updateFilter={updateFilter}
               clearAllFilters={clearAllFilters}
+              urlFilterChips={urlFilterChips}
+              onRemoveUrlFilter={clearUrlFilter}
             />
 
             {/* ERROR MESSAGE */}

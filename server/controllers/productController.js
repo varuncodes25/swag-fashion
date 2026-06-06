@@ -171,6 +171,30 @@ function applyStylePreset(query, style) {
   query.$and = [...(query.$and || []), ...and];
 }
 
+function resolveProductSort(sort) {
+  switch (sort) {
+    case "priceLowToHigh":
+    case "price_low":
+      return { sellingPrice: 1, createdAt: -1 };
+    case "priceHighToLow":
+    case "price_high":
+      return { sellingPrice: -1, createdAt: -1 };
+    case "rating":
+      return { rating: -1, createdAt: -1 };
+    case "best_seller":
+      return { soldCount: -1, createdAt: -1 };
+    case "discount":
+      return { discount: -1, createdAt: -1 };
+    case "oldest":
+      return { createdAt: 1 };
+    case "popular":
+      return { viewCount: -1, createdAt: -1 };
+    case "newest":
+    default:
+      return { updatedAt: -1, createdAt: -1 };
+  }
+}
+
 function applyProductFilters(query, queryParams) {
   const hasStylePreset = Boolean(queryParams.style);
   if (hasStylePreset) {
@@ -658,15 +682,7 @@ const getProducts = async (req, res) => {
 
     applyProductFilters(query, req.query);
 
-    // Sorting
-    let sortBy = { createdAt: -1 }; // default
-    if (sort === "priceLowToHigh" || sort === "price_low")
-      sortBy = { sellingPrice: 1 };
-    if (sort === "priceHighToLow" || sort === "price_high")
-      sortBy = { sellingPrice: -1 };
-    if (sort === "rating") sortBy = { rating: -1, createdAt: -1 };
-    if (sort === "best_seller") sortBy = { soldCount: -1, createdAt: -1 };
-    if (sort === "discount") sortBy = { discount: -1, createdAt: -1 };
+    const sortBy = resolveProductSort(sort);
 
     const skip = (page - 1) * limit;
 
@@ -1609,36 +1625,7 @@ const getProductsByCategory = async (req, res) => {
     console.log("Final MongoDB Query:", JSON.stringify(query, null, 2));
 
     // ============ 5. SORTING ============
-    let sortBy = { createdAt: -1 };
-
-    if (queryParams.sort) {
-      switch (queryParams.sort) {
-        case "price_low":
-          sortBy = { sellingPrice: 1 };
-          break;
-        case "price_high":
-          sortBy = { sellingPrice: -1 };
-          break;
-        case "rating":
-          sortBy = { rating: -1 };
-          break;
-        case "popular":
-          sortBy = { viewCount: -1 };
-          break;
-        case "discount":
-          sortBy = { discount: -1 };
-          break; // Fixed: discount not discountPercentage
-        case "newest":
-          sortBy = { createdAt: -1 };
-          break;
-        case "oldest":
-          sortBy = { createdAt: 1 };
-          break;
-        case "best_seller":
-          sortBy = { soldCount: -1 };
-          break;
-      }
-    }
+    const sortBy = resolveProductSort(queryParams.sort);
 
     // ============ 6. PAGINATION ============
     const page = parseInt(queryParams.page) || 1;

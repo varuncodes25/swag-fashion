@@ -2,7 +2,16 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 
-export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialPageSize = 12) => {
+const ALL_CATEGORY_SORT_MAP = {
+  newest: "newest",
+  price_low: "priceLowToHigh",
+  price_high: "priceHighToLow",
+  rating: "rating",
+  best_seller: "best_seller",
+  discount: "discount",
+};
+
+export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialPageSize = 24) => {
   const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,12 +38,8 @@ export const useCategoryProducts = (slug, subSlug = null, filters = {}, initialP
       const isAllCategory = String(slug).toLowerCase() === "all";
       const normalizedFilters = { ...filters };
       if (isAllCategory && normalizedFilters.sort) {
-        const sortMap = {
-          newest: "newest",
-          price_low: "priceLowToHigh",
-          price_high: "priceHighToLow",
-        };
-        normalizedFilters.sort = sortMap[normalizedFilters.sort] || "newest";
+        normalizedFilters.sort =
+          ALL_CATEGORY_SORT_MAP[normalizedFilters.sort] ?? normalizedFilters.sort;
       }
 
       // Build query params
