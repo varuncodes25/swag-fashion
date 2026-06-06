@@ -1,6 +1,6 @@
 const axios = require("axios");
 const Order = require("../models/Order");
-const getShiprocketToken = require("./shiprocketAuth");
+const getShiprocketToken = require("./shiprocket");
 const {
   applyOrderStatusTransition,
   mapExternalShipmentToOrderStatus,
@@ -48,20 +48,33 @@ const pollShiprocketStatus = async () => {
         order.shiprocket.status = mappedShipStatus;
       }
 
+      const prevStatus = order.status;
+
       if (mappedOrderStatus) {
         applyOrderStatusTransition(order, mappedOrderStatus, {
           reason: `Shiprocket poll: ${latest}`,
         });
       }
 
-      await order.save();
+      if (order.status !== prevStatus || mappedShipStatus) {
+        await order.save();
+      }
     } catch (err) {
       console.error(`Shiprocket poll error (${order._id}):`, err.message);
     }
   }
 };
 
-// Run every 15 minutes
-setInterval(pollShiprocketStatus, 15 * 60 * 1000);
+const POLL_INTERVAL_MS = 15 * 60 * 1000;
+
+// Run once on startup, then every 15 minutes
+pollShiprocketStatus().catch((err) =>
+  console.error("Shiprocket poll startup run failed:", err.message),
+);
+setInterval(() => {
+  pollShiprocketStatus().catch((err) =>
+    console.error("Shiprocket poll failed:", err.message),
+  );
+}, POLL_INTERVAL_MS);
 
 module.exports = { pollShiprocketStatus };
