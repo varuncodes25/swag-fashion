@@ -5,11 +5,13 @@ import FiltersSidebar from "@/components/category/FiltersSidebar";
 import TopBar from "@/components/category/TopBar";
 import ProductGrid from "@/components/category/ProductGrid";
 import ActiveFilterChips from "@/components/category/ActiveFilterChips";
+import PopularSearchTags from "@/components/category/PopularSearchTags";
 import { useCategoryProducts } from "@/hooks/useCategoryProducts";
 import MobileFilterButton from "@/components/category/MobileFilterButton";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 import { resolveCategoryRoute } from "@/utils/categoryNav";
 import { STYLE_PRESET_LABELS } from "@/constants/productEnums";
+import { TAG_FILTER_GROUPS } from "@/constants/productTags";
 
 const URL_FILTER_KEYS = [
   "clothingType",
@@ -32,6 +34,7 @@ const URL_SCALAR_FILTER_KEYS = [
   "clothingType",
   "isPremium",
   "tags",
+  "tagGroup",
 ];
 
 const parseFiltersFromSearchParams = (searchParams) => {
@@ -175,6 +178,10 @@ export default function CategoryPage() {
     if (tagsParam?.trim()) {
       filters.tags = tagsParam.trim();
     }
+    const tagGroupParam = searchParams.get("tagGroup");
+    if (tagGroupParam?.trim()) {
+      filters.tagGroup = tagGroupParam.trim();
+    }
     if (patternParam?.trim() && !filters.pattern) {
       filters.pattern = patternParam.trim();
     }
@@ -241,6 +248,24 @@ export default function CategoryPage() {
     setSearchParams(next, { replace: true });
   }, [searchParams, setSearchParams]);
 
+  const applyPopularTag = useCallback(
+    (item) => {
+      const next = new URLSearchParams(searchParams);
+      next.delete("search");
+      setSearchInput("");
+      setSearchTerm("");
+      if (item.type === "group") {
+        next.delete("tags");
+        next.set("tagGroup", item.value);
+      } else {
+        next.delete("tagGroup");
+        next.set("tags", item.value);
+      }
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams],
+  );
+
   const clearUrlFilter = useCallback(
     (key, value) => {
       const next = new URLSearchParams(searchParams);
@@ -282,6 +307,16 @@ export default function CategoryPage() {
         .forEach((tag) => {
           chips.push({ key: "tags", value: tag, label: "Tag" });
         });
+    }
+    const tagGroupParam = searchParams.get("tagGroup");
+    if (tagGroupParam?.trim()) {
+      const groupKey = tagGroupParam.trim().toLowerCase();
+      chips.push({
+        key: "tagGroup",
+        value: tagGroupParam.trim(),
+        label: "Collection",
+        display: TAG_FILTER_GROUPS[groupKey]?.label || tagGroupParam.trim(),
+      });
     }
     const styleParam = searchParams.get("style");
     if (styleParam?.trim()) {
@@ -482,10 +517,16 @@ export default function CategoryPage() {
               <input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search by name, brand, type..."
+                placeholder="Search Marvel, Krishna, Ben 10, brand..."
                 className="w-full rounded-full border border-gray-200 bg-gray-50 py-2.5 pl-9 pr-3 text-sm text-gray-700 outline-none transition focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:focus:border-primary dark:focus:bg-zinc-900"
               />
             </div>
+
+            <PopularSearchTags
+              searchParams={searchParams}
+              onSelect={applyPopularTag}
+              className={`${isMobileHeaderCompact ? "mt-2" : "mt-2.5"} px-0.5`}
+            />
 
             <div className={`${isMobileHeaderCompact ? "mt-2.5" : "mt-3"} transition-all duration-300`}>
               <div className={`mb-2 flex items-center justify-between gap-2 transition-all duration-300 ${isMobileHeaderCompact ? "opacity-0 h-0 overflow-hidden mb-0" : "opacity-100 h-auto"}`}>
@@ -543,6 +584,12 @@ export default function CategoryPage() {
           {/* MAIN CONTENT */}
           <section className="lg:col-span-9">
             {/* Desktop Top Bar */}
+            <div className="hidden lg:block mb-4">
+              <PopularSearchTags
+                searchParams={searchParams}
+                onSelect={applyPopularTag}
+              />
+            </div>
             <div className="hidden lg:block mb-6">
               <TopBar
                 title={

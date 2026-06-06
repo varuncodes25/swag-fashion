@@ -139,6 +139,7 @@ const CreateProduct = () => {
 
   const [customSizeInput, setCustomSizeInput] = useState("");
   const [customTagInput, setCustomTagInput] = useState("");
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
   const [selectedSizeChartTemplate, setSelectedSizeChartTemplate] = useState("oversizedTshirt");
   const clothingCategory = TOP_WEAR_TYPES.includes(formData.clothingType)
     ? "top"
@@ -1326,20 +1327,34 @@ const CreateProduct = () => {
         </div>
       </div>
 
-      {/* Tags — themes & search (Anime, Gaming, etc.) */}
+      {/* Tags — user search ke liye (Marvel, Krishna, Ben 10, etc.) */}
       <div className="space-y-3">
         <div>
-          <Label>Tags</Label>
+          <Label>Search Tags</Label>
           <p className="text-xs text-muted-foreground mt-1">
-            Themes jo pattern mein nahi aate (Anime, Gaming, etc.). Graphic / Solid / Acid Wash ke liye Pattern aur Wash Type fields use karo.
+            User jo search karega (Marvel, Ben 10, Krishna) woh yahan tag do. Product name short/clean rakh sakte ho.
           </p>
         </div>
 
-        {PRODUCT_TAG_GROUPS.map((group) => (
+        <Input
+          placeholder="Tag dhundho — e.g. marvel, krishna, ben"
+          value={tagSearchQuery}
+          onChange={(e) => setTagSearchQuery(e.target.value)}
+          className="max-w-md"
+        />
+
+        {PRODUCT_TAG_GROUPS.map((group) => {
+          const query = tagSearchQuery.trim().toLowerCase();
+          const visibleTags = query
+            ? group.tags.filter((tag) => tag.toLowerCase().includes(query))
+            : group.tags;
+          if (visibleTags.length === 0) return null;
+
+          return (
           <div key={group.label} className="space-y-2">
             <p className="text-xs font-medium text-foreground">{group.label}</p>
             <div className="flex flex-wrap gap-2">
-              {group.tags.map((tag) => (
+              {visibleTags.map((tag) => (
                 <Button
                   key={tag}
                   type="button"
@@ -1356,11 +1371,12 @@ const CreateProduct = () => {
               ))}
             </div>
           </div>
-        ))}
+          );
+        })}
 
         <div className="flex gap-2">
           <Input
-            placeholder="Custom tag (e.g. Naruto, Marvel)"
+            placeholder="Custom tag — Ben 10, Naruto, Spider-Man..."
             value={customTagInput}
             onChange={(e) => setCustomTagInput(e.target.value)}
             onKeyDown={(e) => {

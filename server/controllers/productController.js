@@ -1,6 +1,7 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 const cloudinary = require("cloudinary").v2;
+const { resolveTagsForFilter } = require("../constants/productTagGroups");
 
 /** Support both names: CLOUDINARY_* (docs) and CLOUD_* (Render / legacy). */
 function getCloudinaryCloudName() {
@@ -221,8 +222,8 @@ function resolveProductSort(sort) {
   }
 }
 
-function applyTagsFilter(query, tagsParam) {
-  const tags = parseCsvParam(tagsParam);
+function applyTagsFilter(query, tagsParam, tagGroupParam) {
+  const tags = resolveTagsForFilter(tagsParam, tagGroupParam);
   if (tags.length === 0) return;
   query.tags = {
     $in: tags.map((t) => new RegExp(`^${escapeRegex(t.trim())}$`, "i")),
@@ -256,7 +257,7 @@ function applyProductFilters(query, queryParams) {
     ];
   }
 
-  applyTagsFilter(query, queryParams.tags);
+  applyTagsFilter(query, queryParams.tags, queryParams.tagGroup);
 
   if (queryParams.priceRange) {
     const priceRanges = queryParams.priceRange.split(",");
@@ -675,8 +676,6 @@ const getProducts = async (req, res) => {
       });
       if (categoryDoc) query.category = categoryDoc._id;
     }
-    if (search && search.trim() !== "")
-      query.name = { $regex: search.trim(), $options: "i" };
     if (price && !isNaN(price)) query.price = { $lte: Number(price) };
 
     if (req.query.clothingType) {
@@ -710,8 +709,8 @@ const getProducts = async (req, res) => {
     if (req.query.occasion) {
       applyExactEnumFilter(query, "occasion", req.query.occasion);
     }
-    if (req.query.tags) {
-      applyTagsFilter(query, req.query.tags);
+    if (req.query.tags || req.query.tagGroup) {
+      applyTagsFilter(query, req.query.tags, req.query.tagGroup);
     }
 
     if (req.query.isPremium === "true") query.isPremium = true;
