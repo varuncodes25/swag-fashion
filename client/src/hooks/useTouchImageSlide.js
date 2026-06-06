@@ -60,17 +60,17 @@ export function useTouchImageSlide({
       setSlideOffset(target);
 
       commitTimerRef.current = window.setTimeout(() => {
+        // Reset offset and index in the same React batch so the track
+        // never paints one frame with a new index but the old slide offset.
+        slideOffsetRef.current = 0;
+        setSlideOffset(0);
+        setIsAnimating(false);
+        isHorizontalRef.current = false;
+        isVerticalRef.current = false;
+        commitTimerRef.current = null;
+
         if (direction === "next") onNext?.();
         else onPrev?.();
-
-        requestAnimationFrame(() => {
-          slideOffsetRef.current = 0;
-          setSlideOffset(0);
-          isHorizontalRef.current = false;
-          isVerticalRef.current = false;
-          setIsAnimating(false);
-          commitTimerRef.current = null;
-        });
       }, SLIDE_DURATION_MS);
     },
     [enabled, getWidth, onNext, onPrev]

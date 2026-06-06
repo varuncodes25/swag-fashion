@@ -31,6 +31,20 @@ const ImageSlideTrack = ({
     return () => ro.disconnect();
   }, []);
 
+  // Preload adjacent slides so img tags don't flash on index change.
+  useEffect(() => {
+    if (len <= 1) return;
+    const prevIdx = (activeIndex - 1 + len) % len;
+    const nextIdx = (activeIndex + 1) % len;
+    [prevIdx, activeIndex, nextIdx].forEach((i) => {
+      const src = url(i);
+      if (src) {
+        const img = new Image();
+        img.src = src;
+      }
+    });
+  }, [activeIndex, len, images]);
+
   const imgFit =
     fit === "contain"
       ? "max-h-full max-w-full object-contain object-center"
@@ -90,7 +104,7 @@ const ImageSlideTrack = ({
         >
           {panels.map((idx, panel) => (
             <div
-              key={`panel-${panel}-${activeIndex}-${idx}`}
+              key={`panel-${panel}`}
               className="flex h-full shrink-0 items-center justify-center"
               style={{
                 width: panelWidth > 0 ? panelWidth : "33.333%",
