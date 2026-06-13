@@ -3,17 +3,17 @@ const ApiResponse = require("../utils/handlar/ApiResponse");
 
 const isDisabled = () => process.env.DISABLE_ENCRYPT_RESPONSE === "true";
 
-/** Skip paths that must stay plain JSON for external providers */
-const SKIP_PATH_PREFIXES = [
-  // Razorpay/Shiprocket send webhooks to us; our ACK body can stay encrypted (they only check HTTP status).
-];
+/** External webhooks only need HTTP status — body can stay encrypted. */
+const SKIP_PATH_PREFIXES = [];
 
 function shouldSkipRequest(req) {
   if (isDisabled()) return true;
   const path = (req.originalUrl || req.url || "").split("?")[0];
+  if (!path.startsWith("/api")) return true;
   return SKIP_PATH_PREFIXES.some((prefix) => path.startsWith(prefix));
 }
 
+/** Controller already called encryptResponse() → { data: cipher } */
 function isAlreadyEncrypted(body) {
   if (!body || typeof body !== "object" || Array.isArray(body)) return false;
   const keys = Object.keys(body);
@@ -41,9 +41,36 @@ function toApiPayload(body, statusCode) {
   return new ApiResponse(statusCode || 200, body, message);
 }
 
+async function sendEncryptedJson(originalJson, res, body) {
+  const statusCode = res.statusCode || 200;
+
+  try {
+    const encrypted = await CareerEncrypt(toApiPayload(body, statusCode));
+    res.setHeader("X-Response-Encrypted", "true");
+    return originalJson({ data: encrypted });
+  } catch (err) {
+    console.error("Response encryption failed:", err.message);
+    try {
+      const fallback = new ApiResponse(
+        statusCode >= 400 ? statusCode : 500,
+        null,
+        "Response encryption failed",
+      );
+      const encrypted = await CareerEncrypt(fallback);
+      res.setHeader("X-Response-Encrypted", "true");
+      return originalJson({ data: encrypted });
+    } catch (fallbackErr) {
+      console.error("Encrypted fallback failed:", fallbackErr.message);
+      return originalJson({
+        data: "",
+      });
+    }
+  }
+}
+
 /**
- * Encrypt every res.json() under /api (categories, products, cart, etc.).
- * Controllers that already call encryptResponse() return { data: cipher } — we skip those.
+ * Encrypt every res.json() under /api.
+ * Pre-encrypted { data: cipher } from controllers is passed through unchanged.
  */
 function encryptResponseMiddleware(req, res, next) {
   if (shouldSkipRequest(req)) {
@@ -54,33 +81,11 @@ function encryptResponseMiddleware(req, res, next) {
 
   res.json = function encryptJsonBody(body) {
     if (isAlreadyEncrypted(body)) {
+      res.setHeader("X-Response-Encrypted", "true");
       return originalJson(body);
     }
 
-    const statusCode = res.statusCode || 200;
-
-    CareerEncrypt(toApiPayload(body, statusCode))
-      .then((encrypted) => {
-        res.setHeader("X-Response-Encrypted", "true");
-        originalJson({ data: encrypted });
-      })
-      .catch((err) => {
-        console.error("Response encryption failed:", err.message);
-        try {
-          originalJson(body);
-        } catch (fallbackErr) {
-          console.error(
-            "Unencrypted fallback failed:",
-            fallbackErr.message,
-          );
-          originalJson({
-            success: false,
-            message: "Response serialization failed",
-          });
-        }
-      });
-
-    return res;
+    return sendEncryptedJson(originalJson, res, body);
   };
 
   next();
