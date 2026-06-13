@@ -216,7 +216,7 @@ function ProductLoaded({
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-background dark:bg-background rounded-xl lg:shadow-sm px-4 py-3 sm:px-6 lg:p-8 mb-4 lg:mb-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-12">
             <ProductImages
               images={displayImages}
               selectedImage={selectedImageIndex}
@@ -226,7 +226,7 @@ function ProductLoaded({
               onMobileZoomChange={onMobileZoomChange}
             />
 
-            <div className="space-y-6">
+            <div className="space-y-3 lg:space-y-6">
               <ProductInfo
                 name={product.name}
                 rating={product.rating}

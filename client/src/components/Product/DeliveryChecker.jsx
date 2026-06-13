@@ -64,12 +64,11 @@ const DeliveryChecker = () => {
   };
 
   return (
-    <div className="bg-card rounded-lg p-4 border border-border shadow-sm">
-      {/* Header with Deliver To */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+    <div className="rounded-lg border border-border bg-card p-3 shadow-sm lg:p-4">
+      <div className="mb-2 flex items-center justify-between lg:mb-3">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-muted-foreground lg:h-4 lg:w-4" />
+          <span className="text-xs font-medium text-gray-700 dark:text-gray-300 lg:text-sm">
             Deliver To
           </span>
           {deliveryInfo ? (
@@ -100,9 +99,9 @@ const DeliveryChecker = () => {
 
       {/* Delivery Info Section - When available */}
       {deliveryInfo ? (
-        <div className="flex items-center gap-2 text-success bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
-          <Truck className="w-4 h-4 flex-shrink-0" />
-          <span className="text-sm">
+        <div className="flex items-center gap-2 rounded-md bg-green-50 p-2 text-success dark:bg-green-900/20 lg:p-3">
+          <Truck className="h-3.5 w-3.5 shrink-0 lg:h-4 lg:w-4" />
+          <span className="text-xs lg:text-sm">
             Free delivery in {deliveryInfo.deliveryDays}–{parseInt(deliveryInfo.deliveryDays) + 1} days
           </span>
           <CheckCircle className="w-5 h-5 ml-auto text-green-500 dark:text-green-400 flex-shrink-0" />
@@ -111,20 +110,19 @@ const DeliveryChecker = () => {
         <>
           {/* Instruction Text */}
           {!error && (
-            <p className="text-xs text-muted-foreground mb-3">
-              Enter your pincode to check delivery date.
+            <p className="mb-2 text-[11px] text-muted-foreground lg:mb-3 lg:text-xs">
+              Enter pincode to check delivery.
             </p>
           )}
 
-          {/* Input and Check Button */}
-          <div className="flex gap-2 mb-3">
-            <div className="flex-1 relative">
+          <div className="mb-2 flex gap-2 lg:mb-3">
+            <div className="relative flex-1">
               <input
                 type="text"
                 value={pincode}
                 onChange={handleChange}
                 placeholder="Enter pincode"
-                className="w-full px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary dark:focus:ring-blue-400 bg-card text-foreground placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                className="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-foreground transition-colors placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary dark:placeholder-gray-500 dark:focus:ring-blue-400 lg:px-3 lg:py-2 lg:text-sm"
                 maxLength="6"
                 disabled={loading}
               />
@@ -137,7 +135,7 @@ const DeliveryChecker = () => {
             <button
               onClick={handleCheck}
               disabled={pincode.length !== 6 || loading}
-              className="px-4 py-2 bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 disabled:bg-blue-300 dark:disabled:bg-blue-800 text-white text-sm font-medium rounded-md transition-colors min-w-[70px] disabled:cursor-not-allowed"
+              className="min-w-[60px] rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-blue-300 dark:bg-primary dark:disabled:bg-blue-800 dark:hover:bg-primary/90 lg:min-w-[70px] lg:px-4 lg:py-2 lg:text-sm"
             >
               {loading ? "..." : "Check"}
             </button>

@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { SHOP_BY_STYLE_LINKS } from "@/constants/productEnums";
+import {
+  HOME_SECTION_CLASS,
+  HOME_SECTION_CONTAINER,
+  HOME_SECTION_TOP_DIVIDER,
+} from "./homeSectionStyles";
 
 const showcaseImages = {
   graphic: "/images/home-showcase/graphic-prints.webp",
@@ -12,43 +16,75 @@ const showcaseImages = {
 
 export default function HomeShowcaseSection() {
   return (
-    <section className="bg-[#f5f5f5] px-2 pb-3 pt-2 sm:px-4">
-      <div className="mx-auto max-w-7xl overflow-hidden rounded-xl bg-background p-2 sm:p-3">
-        <div className="mb-2 text-center sm:mb-3">
-          <h2 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+    <section className={`${HOME_SECTION_CLASS} ${HOME_SECTION_TOP_DIVIDER}`}>
+      <div className={HOME_SECTION_CONTAINER}>
+        <div className="mb-4 text-center sm:mb-5">
+          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             Shop by Style
           </h2>
-          <p className="text-sm text-muted-foreground underline decoration-yellow-400 decoration-2 underline-offset-4 sm:text-base">
-            Graphic, anime, acid wash, minimal & solids
+          <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+            Graphic, anime, acid wash, minimal &amp; solids
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:grid-cols-5">
+        {/* Mobile + tablet: round chips, horizontal scroll */}
+        <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 scroll-smooth scrollbar-hide sm:gap-5 lg:hidden">
           {SHOP_BY_STYLE_LINKS.map((item) => (
             <Link
               key={item.id}
               to={item.href}
-              className="group relative block overflow-hidden rounded-[4px]"
+              className="group flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-2 sm:w-20"
             >
-              <img
-                src={showcaseImages[item.id] || "/tshirt_model.png"}
-                alt={item.label}
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.src = "/tshirt_model.png";
-                }}
-                className="h-44 w-full object-cover transition duration-500 group-hover:scale-105 sm:h-52"
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/55" />
-              <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between gap-2">
-                <span className="text-sm font-bold text-white drop-shadow-sm sm:text-base">
-                  {item.label}
-                  {item.id === "graphic" ? " 🔥" : ""}
-                </span>
-                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/95 text-foreground shadow-sm">
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </span>
+              <div className="relative h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md sm:h-20 sm:w-20">
+                <img
+                  src={showcaseImages[item.id] || "/tshirt_model.png"}
+                  alt={item.label}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = "/tshirt_model.png";
+                  }}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                {item.id === "graphic" && (
+                  <span className="absolute -right-0.5 -top-0.5 rounded-full bg-primary px-1 py-0.5 text-[8px] font-bold text-white">
+                    HOT
+                  </span>
+                )}
               </div>
+              <span className="max-w-[4.5rem] text-center text-[11px] font-medium leading-tight text-foreground group-hover:text-primary sm:max-w-20 sm:text-xs">
+                {item.label}
+              </span>
+            </Link>
+          ))}
+        </div>
+
+        {/* Desktop: round row, all visible */}
+        <div className="hidden justify-center gap-8 lg:flex">
+          {SHOP_BY_STYLE_LINKS.map((item) => (
+            <Link
+              key={item.id}
+              to={item.href}
+              className="group flex w-24 flex-col items-center gap-2.5"
+            >
+              <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md">
+                <img
+                  src={showcaseImages[item.id] || "/tshirt_model.png"}
+                  alt={item.label}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = "/tshirt_model.png";
+                  }}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                {item.id === "graphic" && (
+                  <span className="absolute -right-0.5 -top-0.5 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold text-white">
+                    HOT
+                  </span>
+                )}
+              </div>
+              <span className="text-center text-sm font-medium text-foreground group-hover:text-primary">
+                {item.label}
+              </span>
             </Link>
           ))}
         </div>

@@ -1,20 +1,62 @@
 import { Link } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { 
-  ArrowRight, 
-  Baby,
-  Heart,
-  Users,
-  ShoppingBag,
-  Sparkles
-} from "lucide-react";
+import { Baby, Heart, Users } from "lucide-react";
+import {
+  HOME_SECTION_CLASS,
+  HOME_SECTION_CONTAINER,
+  HOME_SECTION_TOP_DIVIDER,
+} from "./homeSectionStyles";
 
 function normalizeCategories(data) {
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.categories)) return data.categories;
   return [];
+}
+
+const GENDER_ORDER = ["women", "kids", "men"];
+
+const genderStyles = {
+  women: {
+    icon: Heart,
+    bg: "bg-rose-50 dark:bg-rose-950/30",
+    border: "border-rose-200/80 dark:border-rose-800/50",
+    iconBg: "bg-rose-100 text-rose-600 dark:bg-rose-900/50 dark:text-rose-400",
+    text: "text-rose-700 dark:text-rose-300",
+  },
+  kids: {
+    icon: Baby,
+    bg: "bg-emerald-50 dark:bg-emerald-950/30",
+    border: "border-emerald-200/80 dark:border-emerald-800/50",
+    iconBg: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400",
+    text: "text-emerald-700 dark:text-emerald-300",
+  },
+  men: {
+    icon: Users,
+    bg: "bg-sky-50 dark:bg-sky-950/30",
+    border: "border-sky-200/80 dark:border-sky-800/50",
+    iconBg: "bg-sky-100 text-sky-600 dark:bg-sky-900/50 dark:text-sky-400",
+    text: "text-sky-700 dark:text-sky-300",
+  },
+};
+
+function getGenderKey(name = "") {
+  const lower = name.toLowerCase();
+  if (lower.includes("women") || lower.includes("woman")) return "women";
+  if (lower.includes("kid")) return "kids";
+  if (lower.includes("men") || lower.includes("man")) return "men";
+  return null;
+}
+
+function sortGenderCategories(categories) {
+  return [...categories].sort((a, b) => {
+    const aKey = getGenderKey(a.name);
+    const bKey = getGenderKey(b.name);
+    const aIdx = aKey ? GENDER_ORDER.indexOf(aKey) : 99;
+    const bIdx = bKey ? GENDER_ORDER.indexOf(bKey) : 99;
+    return aIdx - bIdx;
+  });
 }
 
 export default function HomeCollections() {
@@ -25,7 +67,7 @@ export default function HomeCollections() {
     const fetchCategories = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/categories`
+          `${import.meta.env.VITE_API_URL}/categories`,
         );
         setCategories(normalizeCategories(res.data));
       } catch (error) {
@@ -38,52 +80,42 @@ export default function HomeCollections() {
     fetchCategories();
   }, []);
 
-  const getCategoryIcon = (categoryName) => {
-    const name = categoryName.toLowerCase();
-    if (name.includes('men')) return <Users className="w-3.5 h-3.5" />;
-    if (name.includes('women')) return <Heart className="w-3.5 h-3.5" />;
-    if (name.includes('kids')) return <Baby className="w-3.5 h-3.5" />;
-    if (name.includes('new')) return <Sparkles className="w-3.5 h-3.5" />;
-    return <ShoppingBag className="w-3.5 h-3.5" />;
-  };
+  const categoryList = sortGenderCategories(
+    Array.isArray(categories) ? categories : [],
+  ).slice(0, 3);
 
-  const getColor = (name) => {
-    const colors = {
-      men: "bg-primary hover:bg-primary/90",
-      women: "bg-primary/100 hover:bg-primary",
-      kids: "bg-emerald-500 hover:bg-emerald-600",
-      new: "bg-highlight hover:bg-amber-600",
-    };
-    const key = Object.keys(colors).find(k => name.toLowerCase().includes(k));
-    return colors[key] || "bg-gray-500 hover:bg-gray-600";
-  };
-
-  const categoryList = Array.isArray(categories) ? categories : [];
   if (loading || categoryList.length === 0) return null;
 
   return (
-    <div className="py-8">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap justify-center gap-2">
-          {categoryList.slice(0, 6).map((category) => (
-            <Link
-              key={category._id}
-              to={`/category/${category.slug}`}
-              className={`
-                inline-flex items-center gap-1.5 px-4 py-2
-                ${getColor(category.name)}
-                rounded-full text-xs font-medium text-white
-                transition-all duration-200
-                hover:scale-105 hover:shadow-md
-                active:scale-95
-              `}
-            >
-              {getCategoryIcon(category.name)}
-              <span>{category.name}</span>
-            </Link>
-          ))}
+    <section className={`${HOME_SECTION_CLASS} py-5 sm:py-6 ${HOME_SECTION_TOP_DIVIDER}`}>
+      <div className={HOME_SECTION_CONTAINER}>
+        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          {categoryList.map((category) => {
+            const genderKey = getGenderKey(category.name);
+            const style = genderStyles[genderKey] || genderStyles.men;
+            const Icon = style.icon;
+
+            return (
+              <Link
+                key={category._id}
+                to={`/category/${category.slug}`}
+                className={`group flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 transition-all active:scale-[0.98] sm:gap-2 sm:px-3 sm:py-3 ${style.bg} ${style.border} hover:shadow-sm`}
+              >
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-full sm:h-10 sm:w-10 ${style.iconBg}`}
+                >
+                  <Icon className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+                </div>
+                <span
+                  className={`text-center text-[11px] font-semibold leading-tight sm:text-xs ${style.text}`}
+                >
+                  {category.name}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

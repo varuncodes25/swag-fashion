@@ -37,24 +37,21 @@ const ProductVariants = ({
   );
 
   return (
-    <div className="space-y-8">
-      {/* Color Selection */}
+    <div className="space-y-4 lg:space-y-8">
       {colors.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
+        <div className="space-y-2 lg:space-y-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="text-sm font-semibold text-foreground lg:text-lg">
                 Select Color
-              </h3>
-              {selectedColor && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Selected: <span className="font-medium text-foreground capitalize">
-                    {selectedColor}
+                {selectedColor && (
+                  <span className="ml-1.5 font-normal text-muted-foreground lg:ml-0 lg:block lg:text-sm">
+                    · <span className="capitalize text-foreground">{selectedColor}</span>
                   </span>
-                </p>
-              )}
+                )}
+              </h3>
             </div>
-            <div className="text-xs px-3 py-1.5 rounded-full bg-muted text-gray-700 dark:text-gray-300">
+            <div className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-gray-700 dark:text-gray-300 lg:px-3 lg:py-1.5 lg:text-xs">
               {colors.length} options
             </div>
           </div>
@@ -68,42 +65,37 @@ const ProductVariants = ({
         </div>
       )}
 
-      {/* Size Selection - WITH SIZE CHART LINK */}
       {sizes.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground">
+        <div className="space-y-2 lg:space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-foreground lg:text-lg">
                 Select Size
-              </h3>
-              {selectedSize && (
-                <p className="text-sm text-muted-foreground mt-1">
-                  Selected: <span className="font-medium text-foreground">
-                    {selectedSize}
+                {selectedSize && (
+                  <span className="ml-1.5 font-normal text-muted-foreground lg:ml-0 lg:block lg:text-sm">
+                    · <span className="text-foreground">{selectedSize}</span>
                   </span>
-                </p>
-              )}
+                )}
+              </h3>
             </div>
-            
-            <div className="flex items-center gap-2">
-              {/* 🔥 SIZE CHART BUTTON - MEESHO STYLE */}
+
+            <div className="flex shrink-0 items-center gap-2">
               {hasSizeChart && (
-                <button 
+                <button
                   onClick={() => setShowSizeChart(true)}
-                  className="flex items-center gap-1.5 text-sm text-pink-500 hover:text-primary font-medium transition-colors"
+                  className="flex items-center gap-1 text-xs font-medium text-pink-500 transition-colors hover:text-primary lg:gap-1.5 lg:text-sm"
                 >
-                  <Ruler className="w-4 h-4" />
+                  <Ruler className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                   Size Chart
                 </button>
               )}
-              
-              {/* Original Size Guide (if any) */}
+
               {sizeGuide && !hasSizeChart && (
-                <button 
-                  onClick={() => window.open(sizeGuide, '_blank')}
-                  className="flex items-center gap-1.5 text-sm text-primary dark:text-primary hover:text-primary dark:hover:text-blue-300 hover:underline transition-colors"
+                <button
+                  onClick={() => window.open(sizeGuide, "_blank")}
+                  className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:underline lg:gap-1.5 lg:text-sm"
                 >
-                  <Ruler className="w-4 h-4" />
+                  <Ruler className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
                   Size Guide
                 </button>
               )}
@@ -118,26 +110,23 @@ const ProductVariants = ({
           
           {/* Size Help */}
           {!selectedSize && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 dark:bg-blue-900/20 border border-blue-100 dark:border-primary/30/30">
-              <Info className="w-4 h-4 text-primary dark:text-primary mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-primary dark:text-primary">
+            <div className="flex items-start gap-2 rounded-lg border border-blue-100 bg-primary/10 p-2 dark:border-primary/30 dark:bg-blue-900/20 lg:p-3">
+              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary lg:h-4 lg:w-4" />
+              <p className="text-xs text-primary lg:text-sm">
                 Please select a size to check availability and pricing
               </p>
             </div>
           )}
 
-          {/* 🔥 SIZE CHART PREVIEW - Small hint that size chart exists */}
           {hasSizeChart && selectedSize && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="w-1 h-1 rounded-full bg-green-500"></span>
-              <span>Size measurements available. Click "Size Chart" to view.</span>
-            </div>
+            <p className="hidden text-xs text-muted-foreground lg:block">
+              Size measurements available. Click &quot;Size Chart&quot; to view.
+            </p>
           )}
         </div>
       )}
 
-      {/* Quantity Selection */}
-      <div className="flex flex-row items-center gap-4 gap-6">
+      <div className="flex flex-row items-center gap-3 lg:gap-6">
         <div className="w-full md:w-auto">
           <QuantitySelector
             value={quantity}
@@ -145,20 +134,20 @@ const ProductVariants = ({
             max={stock}
           />
         </div>
-        
-        <div className="text-sm w-full md:w-auto">
+
+        <div className="w-full text-xs md:w-auto lg:text-sm">
           {stock > 0 ? (
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  stock > 10 ? 'bg-green-500' : 'bg-highlight'
+            <div>
+              <div className="flex items-center gap-1.5">
+                <div className={`h-1.5 w-1.5 rounded-full lg:h-2 lg:w-2 ${
+                  stock > 10 ? "bg-green-500" : "bg-highlight"
                 }`} />
                 <span className="text-muted-foreground">
-                  {stock > 10 ? 'Good availability' : 'Limited stock'}
+                  {stock > 10 ? "In stock" : "Limited stock"}
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Only {stock} units remaining
+              <p className="mt-0.5 text-[11px] text-muted-foreground lg:text-xs">
+                {stock} left
               </p>
             </div>
           ) : (

@@ -153,36 +153,36 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
   };
 
   const ratingSummary = totalReviews > 0 && (
-    <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
-      <div className="flex items-center gap-4 sm:gap-6">
-        <div className="flex shrink-0 flex-col items-center justify-center px-1">
-          <span className="text-3xl font-bold leading-none text-foreground">
+    <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 lg:rounded-xl lg:p-4">
+      <div className="flex items-center gap-3 lg:gap-6">
+        <div className="flex shrink-0 flex-col items-center justify-center">
+          <span className="text-2xl font-bold leading-none text-foreground lg:text-3xl">
             {averageRating}
           </span>
-          <div className="mt-1.5">{renderStars(Number(averageRating))}</div>
-          <span className="mt-1.5 text-xs text-muted-foreground">
+          <div className="mt-1">{renderStars(Number(averageRating))}</div>
+          <span className="mt-1 text-[10px] text-muted-foreground lg:text-xs">
             {totalReviews} {totalReviews === 1 ? "review" : "reviews"}
           </span>
         </div>
 
-        <div className="hidden h-16 w-px bg-border/80 sm:block" />
+        <div className="hidden h-12 w-px bg-border/80 sm:block lg:h-16" />
 
-        <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="min-w-0 flex-1 space-y-1">
           {[5, 4, 3, 2, 1].map((stars, index) => {
             const count = ratingCounts[index];
             const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
 
             return (
-              <div key={stars} className="flex items-center gap-2">
-                <span className="w-3 text-xs text-muted-foreground">{stars}</span>
-                <Star className="h-3 w-3 shrink-0 fill-amber-400/70 text-amber-400/70" />
-                <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+              <div key={stars} className="flex items-center gap-1.5 lg:gap-2">
+                <span className="w-2.5 text-[10px] text-muted-foreground lg:w-3 lg:text-xs">{stars}</span>
+                <Star className="h-2.5 w-2.5 shrink-0 fill-amber-400/70 text-amber-400/70" />
+                <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-muted lg:h-2">
                   <div
                     className="h-full rounded-full bg-primary/80 transition-all duration-300"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
-                <span className="w-5 text-right text-xs text-muted-foreground">
+                <span className="w-4 text-right text-[10px] text-muted-foreground lg:w-5 lg:text-xs">
                   {count}
                 </span>
               </div>
@@ -194,10 +194,10 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
   );
 
   const sectionCardClass = fullPage
-    ? "w-full overflow-hidden rounded-2xl border border-border bg-background shadow-lg"
-    : "mt-4 mb-4 w-full overflow-hidden rounded-2xl border border-border bg-background shadow-lg transition-colors duration-200 lg:mb-6";
+    ? "w-full overflow-hidden rounded-xl border border-border bg-background shadow-sm lg:rounded-2xl lg:shadow-lg"
+    : "mt-3 mb-3 w-full overflow-hidden rounded-xl border border-border bg-background shadow-sm transition-colors duration-200 lg:mt-4 lg:mb-6 lg:rounded-2xl lg:shadow-lg";
 
-  const sectionPadding = "p-4 sm:p-6";
+  const sectionPadding = "p-3 sm:p-4 lg:p-6";
 
   if (error) {
     return (
@@ -215,17 +215,17 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
     <div className="w-full">
       <div className={sectionCardClass}>
         <div className={`${sectionPadding} border-b border-border/60`}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Star className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2 lg:gap-3">
+              <div className="rounded-md bg-primary/10 p-1.5 lg:rounded-lg lg:p-2">
+                <Star className="h-4 w-4 text-primary lg:h-5 lg:w-5" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="text-sm font-semibold text-foreground lg:text-lg">
                   Ratings &amp; Reviews
                 </h2>
                 {totalReviews > 0 && !fullPage && (
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="text-[11px] text-muted-foreground lg:text-xs">
                     {averageRating} ★ · {totalReviews}{" "}
                     {totalReviews === 1 ? "review" : "reviews"}
                   </p>
@@ -241,7 +241,7 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
                 !eligibility.canReview &&
                 eligibility.reason === "already_reviewed"
               }
-              className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium transition-colors sm:text-sm ${
+              className={`shrink-0 rounded-md border px-2 py-1 text-[11px] font-medium transition-colors lg:rounded-lg lg:px-3 lg:py-2 lg:text-sm ${
                 showReviewForm
                   ? "border-border bg-muted text-foreground"
                   : "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
@@ -282,7 +282,9 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
           ) : (
             <>
               {!showReviewForm && totalReviews > 0 && (
-                <div className="mb-4">{ratingSummary}</div>
+                <div className={`mb-3 lg:mb-4 ${fullPage ? "" : "hidden sm:block"}`}>
+                  {ratingSummary}
+                </div>
               )}
 
               {!showReviewForm && totalReviews > 0 && (
@@ -342,7 +344,7 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
                   <ProductPageReviews
                     productId={productId}
                     reviewsList={sortedReviews}
-                    maxReviews={fullPage ? null : 2}
+                    maxReviews={fullPage ? null : 1}
                     hideHeader
                     compact={!fullPage}
                   />
@@ -350,7 +352,7 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
                   {!fullPage && totalReviews > 0 && (
                     <Link
                       to={`/product/${productId}/reviews`}
-                      className="mt-4 flex items-center justify-between rounded-lg border border-border/60 bg-muted/20 px-4 py-3 text-sm font-medium text-primary transition-colors hover:bg-muted/40"
+                      className="mt-2 flex items-center justify-between rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-xs font-medium text-primary transition-colors hover:bg-muted/40 lg:mt-4 lg:rounded-lg lg:px-4 lg:py-3 lg:text-sm"
                     >
                       <span>All {totalReviews} reviews</span>
                       <ChevronRight className="h-4 w-4" />
@@ -360,14 +362,14 @@ const ReviewsComponent = ({ productId, fullPage = false }) => {
               )}
 
               {!showReviewForm && !loading && totalReviews === 0 && (
-                <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 py-10 text-center">
-                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <Star className="h-5 w-5 text-primary" />
+                <div className="rounded-lg border border-dashed border-border/70 bg-muted/10 py-6 text-center lg:rounded-xl lg:py-10">
+                  <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 lg:mb-3 lg:h-12 lg:w-12">
+                    <Star className="h-4 w-4 text-primary lg:h-5 lg:w-5" />
                   </div>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-xs font-medium text-foreground lg:text-sm">
                     No reviews yet
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="mt-0.5 text-[11px] text-muted-foreground lg:mt-1 lg:text-xs">
                     Be the first to rate this product
                   </p>
                   {isAuthenticated && eligibility.canReview && (

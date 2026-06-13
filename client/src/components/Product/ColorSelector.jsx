@@ -45,35 +45,22 @@ const ColorSelector = ({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-4">
+    <div>
+      <div className="flex flex-wrap gap-2.5 lg:gap-4">
         {colors.map((color) => {
           const isSelected = value === color;
           const firstImage = getFirstImageForColor(color);
           const hexColor = getColorHex(color);
 
           return (
-            <div key={color} className="relative group">
-              {/* COLOR BUTTON */}
+            <div key={color} className="group relative">
               <button
                 onClick={() => onChange(color)}
                 className={`
-                  relative
-                  w-14
-                  h-14
-                  rounded-lg
-                  transition-all
-                  duration-200
-                  flex
-                  items-center
-                  justify-center
-                  overflow-hidden
-                  hover:scale-105
-                  hover:shadow-md
-                  border-2
-                  ${isSelected 
-                    ? 'border-warning dark:border-orange-400 shadow-lg' 
-                    : 'border-border hover:border-gray-300 dark:hover:border-gray-600'
+                  relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg border-2 transition-all duration-200 hover:scale-105 hover:shadow-md lg:h-14 lg:w-14
+                  ${isSelected
+                    ? "border-warning shadow-md dark:border-orange-400 lg:shadow-lg"
+                    : "border-border hover:border-gray-300 dark:hover:border-gray-600"
                   }
                 `}
                 aria-label={`Select ${color} color`}
@@ -108,19 +95,6 @@ const ColorSelector = ({
                   </>
                 )}
               </button>
-              
-              {/* Color Label */}
-              <div className="mt-2 text-center">
-                <span className={`
-                  text-xs font-medium capitalize
-                  ${isSelected 
-                    ? 'text-warning dark:text-orange-400 font-semibold' 
-                    : 'text-muted-foreground'
-                  }
-                `}>
-                  {color}
-                </span>
-              </div>
             </div>
           );
         })}

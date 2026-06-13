@@ -96,56 +96,43 @@ const wishlistState = useSelector((state) => state.wishlist);
       />
 
       {/* Quick Actions */}
-      <div className="flex items-center gap-3 pt-4 mt-4 lg:pt-6 lg:mt-6 border-t border-gray-100 dark:border-gray-800">
-  
-  {/* Wishlist Button - Mobile pe sirf icon, desktop pe icon+text */}
+      <div className="mt-3 flex items-center gap-2 border-t border-gray-100 pt-3 lg:mt-6 lg:gap-3 lg:pt-6 dark:border-gray-800">
   <button
     onClick={handleWishlistToggle}
     disabled={isToggling}
-    className={`flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-xl transition-all duration-300 transform active:scale-95 ${
+    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-2 transition-all active:scale-[0.98] lg:gap-2 lg:rounded-xl lg:px-4 lg:py-3 ${
       isWishlisted
-        ? "bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/30 dark:to-pink-900/30 text-destructive border-2 border-red-200 dark:border-red-800 shadow-md"
-        : "bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 text-gray-700 dark:text-gray-300 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-600 border-2 border-border shadow-sm hover:shadow-md"
-    } ${isToggling ? "opacity-70 cursor-not-allowed" : ""}`}
+        ? "border-red-200 bg-gradient-to-r from-red-50 to-pink-50 text-destructive shadow-sm dark:border-red-800 dark:from-red-900/30 dark:to-pink-900/30 lg:border-2 lg:shadow-md"
+        : "border-border bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 shadow-sm dark:from-gray-800 dark:to-gray-700 dark:text-gray-300 lg:border-2 lg:hover:from-gray-100 lg:hover:to-gray-200"
+    } ${isToggling ? "cursor-not-allowed opacity-70" : ""}`}
   >
     {isToggling ? (
-      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent lg:h-5 lg:w-5" />
     ) : (
       <>
-        <Heart 
-          size={22} 
-          className={`transition-all duration-300 ${
-            isWishlisted 
-              ? "text-destructive scale-110" 
-              : "text-muted-foreground"
+        <Heart
+          className={`h-4 w-4 transition-all lg:h-[22px] lg:w-[22px] ${
+            isWishlisted ? "scale-110 text-destructive" : "text-muted-foreground"
           }`}
-          fill={isWishlisted ? "currentColor" : "none"} 
+          fill={isWishlisted ? "currentColor" : "none"}
         />
-        {/* Desktop Text - Hidden on mobile */}
-        <span className="hidden sm:inline font-medium">
+        <span className="hidden font-medium sm:inline">
           {isWishlisted ? "Wishlisted" : "Add to Wishlist"}
         </span>
-        {/* Mobile Text - Very short */}
-        <span className="sm:hidden text-xs font-medium">
+        <span className="text-xs font-medium sm:hidden">
           {isWishlisted ? "Saved" : "Save"}
         </span>
       </>
     )}
   </button>
 
-  {/* Share Button - Mobile pe sirf icon, desktop pe icon+text */}
   <button
     onClick={handleShare}
-    className="flex-1 flex items-center justify-center gap-2 px-2 sm:px-4 py-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-primary dark:text-primary hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-800/40 dark:hover:to-indigo-800/40 border-2 border-primary/25 dark:border-primary/30 shadow-sm hover:shadow-md transition-all duration-300 transform active:scale-95 group"
+    className="group flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-primary/25 bg-gradient-to-r from-blue-50 to-indigo-50 px-2 py-2 shadow-sm transition-all active:scale-[0.98] dark:border-primary/30 dark:from-blue-900/30 dark:to-indigo-900/30 lg:gap-2 lg:rounded-xl lg:border-2 lg:px-4 lg:py-3 lg:shadow-md lg:hover:from-blue-100 lg:hover:to-indigo-100"
   >
-    <Share2 
-      size={22} 
-      className="group-hover:rotate-12 transition-transform duration-300 text-primary dark:text-primary" 
-    />
-    {/* Desktop Text - Hidden on mobile */}
-    <span className="hidden sm:inline font-medium">Share</span>
-    {/* Mobile Text - Very short */}
-    <span className="sm:hidden text-xs font-medium">Share</span>
+    <Share2 className="h-4 w-4 text-primary transition-transform group-hover:rotate-12 dark:text-primary lg:h-[22px] lg:w-[22px]" />
+    <span className="hidden font-medium sm:inline">Share</span>
+    <span className="text-xs font-medium sm:hidden">Share</span>
   </button>
 </div>
     </div>

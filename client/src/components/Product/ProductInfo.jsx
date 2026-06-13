@@ -19,20 +19,18 @@ const ProductInfo = ({
   const savings = hasDiscount ? price - finalPrice : 0;
 
   return (
-    <div className="space-y-4">
-      {/* Product Name */}
-      <h1 className="text-xl md:text-2xl font-bold text-foreground">
+    <div className="space-y-2 lg:space-y-4">
+      <h1 className="text-lg font-bold leading-snug text-foreground lg:text-2xl">
         {name}
       </h1>
 
-      {/* Rating */}
       {reviewCount > 0 && (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <div className="flex items-center gap-0.5">
             {[...Array(5)].map((_, i) => (
               <Star
                 key={i}
-                className={`w-4 h-4 ${
+                className={`h-3.5 w-3.5 lg:h-4 lg:w-4 ${
                   i < Math.floor(rating)
                     ? "fill-yellow-400 text-yellow-400"
                     : "text-gray-300"
@@ -40,47 +38,39 @@ const ProductInfo = ({
               />
             ))}
           </div>
-          <span className="text-sm font-medium">
-            {rating?.toFixed(1)}
-          </span>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs font-medium lg:text-sm">{rating?.toFixed(1)}</span>
+          <span className="text-xs text-muted-foreground lg:text-sm">
             ({reviewCount} reviews)
           </span>
         </div>
       )}
 
-      {/* Price Section */}
-      <div className="space-y-2">
-        <div className="flex items-baseline gap-2 flex-wrap">
-          {/* Final Price */}
-          <span className="text-3xl font-bold text-foreground">
+      <div className="space-y-0.5">
+        <div className="flex flex-wrap items-baseline gap-1.5 lg:gap-2">
+          <span className="text-2xl font-bold text-foreground lg:text-3xl">
             ₹{finalPrice?.toFixed(0)}
           </span>
 
-          {/* Original Price */}
           {hasDiscount && (
-            <span className="text-lg text-muted-foreground line-through">
+            <span className="text-sm text-muted-foreground line-through lg:text-lg">
               ₹{price?.toFixed(0)}
             </span>
           )}
 
-          {/* Discount Badge */}
           {hasDiscount && (
-            <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-md font-semibold">
+            <span className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white lg:px-2 lg:py-1 lg:text-xs">
               {discount}% OFF
             </span>
           )}
         </div>
 
-        {/* Savings */}
         {hasDiscount && savings > 0 && (
-          <p className="text-sm text-green-600 font-medium">
+          <p className="text-xs font-medium text-green-600 lg:text-sm">
             You save: ₹{savings.toFixed(0)} ({discount}% off)
           </p>
         )}
 
-        {/* Tax Info */}
-        <p className="text-xs text-muted-foreground">
+        <p className="text-[11px] text-muted-foreground lg:text-xs">
           Inclusive of all taxes
         </p>
       </div>

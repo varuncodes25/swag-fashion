@@ -240,33 +240,30 @@ const ProductTabs = ({ product }) => {
 };
 
   return (
-    <div className="bg-background dark:bg-background rounded-2xl shadow-lg border border-border overflow-hidden transition-colors duration-200">
-      {/* ===== ACCORDION ===== */}
+    <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm transition-colors duration-200 lg:rounded-2xl lg:shadow-lg">
       <div className="divide-y divide-gray-200 dark:divide-gray-700">
-
-        {/* Description Accordion */}
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-4 lg:p-6">
           <button
             onClick={() => toggleSection('description')}
-            className="w-full flex items-center justify-between text-left"
+            className="flex w-full items-center justify-between text-left"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <FileText className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="rounded-md bg-primary/10 p-1.5 lg:rounded-lg lg:p-2">
+                <FileText className="h-4 w-4 text-primary lg:h-5 lg:w-5" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="text-sm font-semibold text-foreground lg:text-lg">
                 Description
               </h3>
             </div>
             {openSections.description ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
+              <ChevronUp className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
+              <ChevronDown className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
             )}
           </button>
 
           {openSections.description && (
-            <div className="mt-4 animate-slideDown">
+            <div className="mt-3 animate-slideDown lg:mt-4">
               <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
                 <div
                   dangerouslySetInnerHTML={{ __html: product.description }}
@@ -286,57 +283,55 @@ const ProductTabs = ({ product }) => {
           )}
         </div>
 
-        {/* Specifications Accordion */}
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-4 lg:p-6">
           <button
             onClick={() => toggleSection('specifications')}
-            className="w-full flex items-center justify-between text-left"
+            className="flex w-full items-center justify-between text-left"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Info className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="rounded-md bg-primary/10 p-1.5 lg:rounded-lg lg:p-2">
+                <Info className="h-4 w-4 text-primary lg:h-5 lg:w-5" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="text-sm font-semibold text-foreground lg:text-lg">
                 Specifications
               </h3>
             </div>
             {openSections.specifications ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
+              <ChevronUp className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
+              <ChevronDown className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
             )}
           </button>
 
           {openSections.specifications && (
-            <div className="mt-4 animate-slideDown">
+            <div className="mt-3 animate-slideDown lg:mt-4">
               {renderSpecifications()}
             </div>
           )}
         </div>
 
-        {/* Shipping Accordion */}
-        <div className="p-4 sm:p-6">
+        <div className="p-3 sm:p-4 lg:p-6">
           <button
             onClick={() => toggleSection('shipping')}
-            className="w-full flex items-center justify-between text-left"
+            className="flex w-full items-center justify-between text-left"
           >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Truck className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="rounded-md bg-primary/10 p-1.5 lg:rounded-lg lg:p-2">
+                <Truck className="h-4 w-4 text-primary lg:h-5 lg:w-5" />
               </div>
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="text-sm font-semibold text-foreground lg:text-lg">
                 Delivery & Returns
               </h3>
             </div>
             {openSections.shipping ? (
-              <ChevronUp className="w-5 h-5 text-gray-500" />
+              <ChevronUp className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500" />
+              <ChevronDown className="h-4 w-4 text-gray-500 lg:h-5 lg:w-5" />
             )}
           </button>
 
           {openSections.shipping && (
-            <div className="mt-4 space-y-4 animate-slideDown">
+            <div className="mt-3 space-y-3 animate-slideDown lg:mt-4 lg:space-y-4">
               {/* Delivery Card */}
               <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-start gap-3">

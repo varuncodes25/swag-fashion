@@ -53,9 +53,8 @@ const SizeSelector = ({ sizes, value, onChange, stockData }) => {
   };
 
   return (
-    <div className="space-y-3">
-      {/* Size Grid */}
-      <div className="grid grid-cols-6 sm:grid-cols-8 gap-1.5">
+    <div className="space-y-2 lg:space-y-3">
+      <div className="grid grid-cols-6 gap-1 sm:grid-cols-8 lg:gap-1.5">
         {sortedSizes.map((size) => {
           const isSelected = value === size;
           const status = getSizeStatus(size);
@@ -67,17 +66,7 @@ const SizeSelector = ({ sizes, value, onChange, stockData }) => {
               onClick={() => !isOutOfStock && onChange(size)}
               disabled={isOutOfStock}
               className={`
-                relative
-                h-10
-                rounded-md
-                border
-                transition-all
-                duration-150
-                flex
-                items-center
-                justify-center
-                text-sm
-                font-medium
+                relative flex h-9 items-center justify-center rounded-md border text-xs font-medium transition-all duration-150 active:scale-95 hover:scale-105 disabled:hover:scale-100 disabled:hover:shadow-none group lg:h-10 lg:text-sm
                 ${isSelected
                   ? 'bg-gradient-to-br from-orange-500 to-amber-500 text-white border-warning shadow-sm'
                   : isOutOfStock
@@ -131,7 +120,7 @@ const SizeSelector = ({ sizes, value, onChange, stockData }) => {
       </div>
       
       {/* Compact Legend */}
-      <div className="flex items-center  gap-3 text-xs text-muted-foreground pt-1">
+      <div className="hidden items-center gap-3 pt-0.5 text-[10px] text-muted-foreground sm:flex lg:text-xs">
         <div className="flex items-center gap-1">
           <div className="w-3 h-3 rounded-full bg-green-500 flex items-center justify-center">
             <Zap className="w-2 h-2 text-white" />
