@@ -13,7 +13,7 @@ export default function HomeSectionHeader({
   viewAllLabel = "View all",
 }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
+    <div className="mb-4 flex items-end justify-between gap-3 sm:mb-6 sm:gap-4">
       <div>
         {badge && (
           <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
@@ -21,11 +21,11 @@ export default function HomeSectionHeader({
             {badge}
           </div>
         )}
-        <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
           {title}
         </h2>
         {subtitle && (
-          <p className="mt-1 max-w-md text-sm text-muted-foreground">{subtitle}</p>
+          <p className="mt-0.5 max-w-md text-xs text-muted-foreground sm:mt-1 sm:text-sm">{subtitle}</p>
         )}
       </div>
       {viewAllHref && (

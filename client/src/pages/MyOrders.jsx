@@ -152,19 +152,19 @@ const MyOrders = () => {
       {/* Orders List */}
       <div className="p-4">
         {filteredOrders.length === 0 ? (
-          <div className="text-center py-12 bg-card rounded-2xl border border-border">
-            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package className="w-10 h-10 text-muted-foreground" />
+          <div className="rounded-2xl border border-border bg-card py-8 text-center sm:py-10">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted sm:h-20 sm:w-20">
+              <Package className="h-8 w-8 text-muted-foreground sm:h-10 sm:w-10" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No orders found</h3>
-            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+            <h3 className="mb-2 text-base font-semibold text-foreground sm:text-lg">No orders found</h3>
+            <p className="mx-auto mb-5 max-w-sm text-sm text-muted-foreground sm:mb-6">
               {activeFilter === "ALL" 
                 ? "You haven't placed any orders yet. Start shopping!" 
                 : `You don't have any ${activeFilter.toLowerCase()} orders.`}
             </p>
             <button
               onClick={() => activeFilter !== "ALL" ? setActiveFilter("ALL") : navigate("/")}
-              className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-lg"
+              className="btn-premium"
             >
               {activeFilter === "ALL" ? "Start Shopping" : "View All Orders"}
             </button>

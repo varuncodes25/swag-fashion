@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import ProductCard from "../custom/ProductCard";
 import { buildCategoryListingUrl } from "@/utils/categoryNav";
+import { HOME_TEXT_LINK } from "@/components/Home/homeSectionStyles";
 
 const SimilarProducts = ({ productId, category, gender, clothingType }) => {
   const [products, setProducts] = useState([]);
@@ -44,21 +45,18 @@ const SimilarProducts = ({ productId, category, gender, clothingType }) => {
   if (loading || products.length === 0) return null;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+    <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6 sm:gap-3">
+        <h2 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent sm:text-2xl">
           Similar Products
         </h2>
-        <Link
-          to={viewAllHref}
-          className="shrink-0 text-sm font-medium text-primary transition-colors hover:text-primary/80 hover:underline flex items-center gap-1"
-        >
+        <Link to={viewAllHref} className={`shrink-0 ${HOME_TEXT_LINK}`}>
           View All
           <span aria-hidden="true">→</span>
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-6 lg:grid-cols-5">
         {products.slice(0, 5).map((product) => (
           <ProductCard
             key={product._id || product.id}

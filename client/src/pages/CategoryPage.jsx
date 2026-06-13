@@ -630,10 +630,10 @@ export default function CategoryPage() {
 
             {/* LOAD MORE */}
             {hasMore && !loading && (
-              <div className="text-center mt-8">
+              <div className="mt-6 text-center sm:mt-8">
                 <button
                   onClick={loadMore}
-                  className="px-6 py-3 bg-primary dark:bg-blue-700 text-white rounded-lg hover:bg-primary/90 dark:hover:bg-primary/90 transition-colors duration-200 disabled:opacity-50"
+                  className="btn-premium"
                   disabled={loading}
                 >
                   Load More ({pagination.totalProducts - products.length} remaining)
@@ -716,13 +716,13 @@ export default function CategoryPage() {
               <div className="flex gap-3">
                 <button
                   onClick={clearAllFilters}
-                  className="flex-1 py-3 px-4 border border-border rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                  className="flex-1 rounded-lg border border-border px-3 py-2 text-sm text-gray-700 transition-colors duration-200 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
                   Clear All
                 </button>
                 <button
                   onClick={applyFilters}
-                  className="flex-1 py-3 px-4 bg-primary dark:bg-blue-700 text-white rounded-lg hover:bg-primary/90 dark:hover:bg-primary/90 transition-colors duration-200"
+                  className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm text-white transition-colors duration-200 hover:bg-primary/90 dark:bg-blue-700 dark:hover:bg-primary/90"
                 >
                   Apply Filters
                 </button>

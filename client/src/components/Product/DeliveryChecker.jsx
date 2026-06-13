@@ -135,7 +135,7 @@ const DeliveryChecker = () => {
             <button
               onClick={handleCheck}
               disabled={pincode.length !== 6 || loading}
-              className="min-w-[60px] rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-blue-300 dark:bg-primary dark:disabled:bg-blue-800 dark:hover:bg-primary/90 lg:min-w-[70px] lg:px-4 lg:py-2 lg:text-sm"
+              className="btn-premium min-w-[60px] px-3 py-1.5 text-xs lg:min-w-[70px] lg:px-4 lg:py-2 lg:text-sm"
             >
               {loading ? "..." : "Check"}
             </button>

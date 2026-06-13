@@ -24,7 +24,7 @@ const ProductReviewsPage = () => {
             <div className="flex items-center gap-4">
               <Link
                 to={`/product/${productId}`}
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                className="link-premium flex items-center gap-1.5 text-sm"
               >
                 <ArrowLeft className="h-5 w-5" />
                 Back to Product
@@ -32,7 +32,7 @@ const ProductReviewsPage = () => {
 
               <Link
                 to="/"
-                className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+                className="link-premium flex items-center gap-1.5 text-sm"
               >
                 <Home className="h-5 w-5" />
                 Home
@@ -44,7 +44,7 @@ const ProductReviewsPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <ReviewsComponent productId={productId} fullPage />
       </div>
     </div>

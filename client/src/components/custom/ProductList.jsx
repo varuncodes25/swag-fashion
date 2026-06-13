@@ -125,7 +125,7 @@ const ProductList = ({
       <section className={`${HOME_SECTION_CLASS} ${HOME_SECTION_TOP_DIVIDER}`}>
         <div className={HOME_SECTION_CONTAINER}>
           {sectionHeader}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="bg-card rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm p-4">
@@ -150,7 +150,7 @@ const ProductList = ({
     {/* Search Results Header */}
     {search && (
       <div className="mb-6 animate-slideDown">
-        <div className="inline-flex items-center px-4 py-3 bg-card rounded-xl shadow-md border border-border">
+        <div className="inline-flex items-center rounded-lg border border-border bg-card px-3 py-2 shadow-sm sm:rounded-xl sm:px-4 sm:py-3 sm:shadow-md">
           <svg 
             className="w-5 h-5 text-muted-foreground mr-2" 
             fill="none" 
@@ -181,7 +181,7 @@ const ProductList = ({
     {products.length > 0 ? (
       <>
         <div className="relative">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-6 lg:grid-cols-5">
             {products.map((p, index) => {
               const isLastElement = index === products.length - 1;
               return (
@@ -282,7 +282,7 @@ const ProductList = ({
   {products.length > 8 && (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-      className="fixed bottom-8 right-8 w-12 h-12 bg-card rounded-full shadow-lg border border-border flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-xl transition-all duration-300 z-50"
+      className="fixed bottom-20 right-4 z-50 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card shadow-lg transition-all duration-300 hover:bg-gray-50 hover:shadow-xl dark:hover:bg-gray-700 sm:bottom-8 sm:right-8 sm:h-10 sm:w-10"
       aria-label="Back to top"
     >
       <svg 

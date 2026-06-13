@@ -171,7 +171,7 @@ console.log("📊 Cart Values:", {
               </p>
               <div className="space-y-2 w-full max-w-xs">
                 <Button
-                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="btn-premium w-full py-3"
                   onClick={() => {
                     onOpenChange?.(false);
                     navigate("/login", { state: { from: location.pathname } });
@@ -181,7 +181,7 @@ console.log("📊 Cart Values:", {
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full border-2 hover:bg-gray-100 dark:hover:bg-gray-800 py-4 rounded-lg"
+                  className="btn-premium-outline w-full py-3"
                   onClick={() => {
                     onOpenChange?.(false);
                     navigate("/");
@@ -207,7 +207,7 @@ console.log("📊 Cart Values:", {
               </p>
               <div className="space-y-2 w-full max-w-xs">
                 <Button
-                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 group"
+                  className="btn-premium w-full py-3 group"
                   onClick={() => {
                     onOpenChange?.(false);
                     navigate("/");
@@ -221,7 +221,7 @@ console.log("📊 Cart Values:", {
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full border-2 hover:bg-gray-100 dark:hover:bg-gray-800 py-4 rounded-lg"
+                  className="btn-premium-outline w-full py-3"
                   onClick={() => onOpenChange?.(false)}
                 >
                   Close

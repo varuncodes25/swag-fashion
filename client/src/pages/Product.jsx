@@ -206,7 +206,7 @@ function ProductLoaded({
   };
 
   return (
-    <div className="min-h-screen bg-background dark:bg-black  ">
+    <div className="min-h-screen bg-background dark:bg-black pb-24 lg:pb-0">
       <Breadcrumb
         category={product.category}
         clothingType={product.clothingType}

@@ -5,6 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ReviewCard from "./ReviewCard";
 import { formatDate } from "./reviewUtils";
+import { HOME_TEXT_LINK } from "@/components/Home/homeSectionStyles";
 import { isSameUser } from "./reviewUtils";
 import {
   deleteReview,
@@ -195,12 +196,10 @@ const ProductPageReviews = ({
       </div>
 
       {showViewAllLink && (
-        <div className="mt-4 flex justify-center">
-          <Link to={`/product/${productId}/reviews`} className="text-sm font-medium text-primary">
-            <span className="inline-flex items-center gap-1">
-              View all {reviewsList.length} reviews
-              <ChevronRight className="h-4 w-4" />
-            </span>
+        <div className="mt-3 flex justify-center">
+          <Link to={`/product/${productId}/reviews`} className={HOME_TEXT_LINK}>
+            View all {reviewsList.length} reviews
+            <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Link>
         </div>
       )}

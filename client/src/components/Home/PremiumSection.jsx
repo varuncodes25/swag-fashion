@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
-import { ArrowRight, Crown } from "lucide-react";
+import { Crown } from "lucide-react";
 import ProductCard from "@/components/custom/ProductCard";
 import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
+import HomeViewAllLink from "@/components/Home/HomeViewAllLink";
 import {
   HOME_SECTION_CLASS,
   HOME_SECTION_CONTAINER,
@@ -64,11 +64,11 @@ export default function PremiumSection() {
             ))}
           </div>
         ) : (
-          <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+          <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-4">
             {products.map((product) => (
               <div
                 key={product._id}
-                className="w-[min(72vw,220px)] shrink-0 sm:w-auto"
+                className="w-[min(68vw,200px)] shrink-0 sm:w-auto"
               >
                 <ProductCard {...product} />
               </div>
@@ -76,13 +76,9 @@ export default function PremiumSection() {
           </div>
         )}
 
-        <Link
-          to="/category/all?isPremium=true"
-          className="mt-6 flex w-full items-center justify-center gap-1 rounded-full border border-primary/30 bg-primary/10 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/15 sm:hidden"
-        >
+        <HomeViewAllLink to="/category/all?isPremium=true">
           View all premium
-          <ArrowRight className="h-4 w-4" />
-        </Link>
+        </HomeViewAllLink>
       </div>
     </section>
   );

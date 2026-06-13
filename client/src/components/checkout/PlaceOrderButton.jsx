@@ -121,7 +121,7 @@ console.log("KEY:", result.key); // ✅ Sahi
 
   return (
     <Button
-      className="w-full h-12 text-lg"
+      className="btn-premium h-10 w-full text-sm sm:h-11 sm:text-base"
       disabled={loading || !addressId || isProcessing.current}
       onClick={handlePlaceOrder}
     >

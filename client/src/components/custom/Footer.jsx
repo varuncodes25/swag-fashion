@@ -5,45 +5,45 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   return (
     <footer className="bg-card border-t border-border mt-auto">
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-10">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 md:grid-cols-4 lg:gap-12">
           
           {/* Company Name (Centered) */}
           <div className="flex items-center justify-center">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent text-center">
+            <h3 className="text-center text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent sm:text-2xl">
               Swag Fashion
             </h3>
           </div>
 
           {/* Explore */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-foreground relative inline-block after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-8 after:h-0.5 after:bg-primary after:rounded-full">
+            <h4 className="mb-3 text-base font-semibold text-foreground relative inline-block after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-8 after:h-0.5 after:bg-primary after:rounded-full sm:mb-4 sm:text-lg">
               Explore
             </h4>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-muted-foreground hover:text-primary text-sm">Home</Link></li>
-              <li><Link to="/about" className="text-muted-foreground hover:text-primary text-sm">About Us</Link></li>
-              <li><Link to="/faq" className="text-muted-foreground hover:text-primary text-sm">FAQs</Link></li>
-              <li><Link to="/contact" className="text-muted-foreground hover:text-primary text-sm">Contact</Link></li>
-              <li><Link to="/track-order" className="text-muted-foreground hover:text-primary text-sm">Track Order</Link></li>
+              <li><Link to="/" className="link-premium text-sm">Home</Link></li>
+              <li><Link to="/about" className="link-premium text-sm">About Us</Link></li>
+              <li><Link to="/faq" className="link-premium text-sm">FAQs</Link></li>
+              <li><Link to="/contact" className="link-premium text-sm">Contact</Link></li>
+              <li><Link to="/track-order" className="link-premium text-sm">Track Order</Link></li>
             </ul>
           </div>
 
           {/* Services */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-foreground relative inline-block after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-8 after:h-0.5 after:bg-primary after:rounded-full">
+            <h4 className="mb-3 text-base font-semibold text-foreground relative inline-block after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-8 after:h-0.5 after:bg-primary after:rounded-full sm:mb-4 sm:text-lg">
               Services
             </h4>
             <ul className="space-y-2">
-              <li><Link to="/contact" className="text-muted-foreground hover:text-primary text-sm">Print on Demand</Link></li>
-              <li><Link to="/contact" className="text-muted-foreground hover:text-primary text-sm">Bulk Orders</Link></li>
-              <li><Link to="/Termsandconditions" className="text-muted-foreground hover:text-primary text-sm">Terms & Conditions</Link></li>
+              <li><Link to="/contact" className="link-premium text-sm">Print on Demand</Link></li>
+              <li><Link to="/contact" className="link-premium text-sm">Bulk Orders</Link></li>
+              <li><Link to="/Termsandconditions" className="link-premium text-sm">Terms & Conditions</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-foreground relative inline-block after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-8 after:h-0.5 after:bg-primary after:rounded-full">
+            <h4 className="mb-3 text-base font-semibold text-foreground relative inline-block after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-8 after:h-0.5 after:bg-primary after:rounded-full sm:mb-4 sm:text-lg">
               Connect Us
             </h4>
 
@@ -89,7 +89,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="mt-10 pt-6 border-t border-border text-center">
+        <div className="mt-6 border-t border-border pt-4 text-center sm:mt-10 sm:pt-6">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Swag Fashion. All rights reserved.
           </p>

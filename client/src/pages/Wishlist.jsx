@@ -6,6 +6,7 @@ import { Heart, ShoppingCart, Home } from 'lucide-react';
 import { fetchWishlist, toggleWishlist } from '@/redux/slices/wishlistSlice';
 import { toast } from '@/hooks/use-toast';
 import ProductCard from '@/components/custom/ProductCard';
+import { BTN_PRIMARY, BTN_SECONDARY, HEADING_PAGE } from '@/styles/uiStyles';
 
 const WishlistPage = () => {
   const dispatch = useDispatch();
@@ -46,25 +47,25 @@ const WishlistPage = () => {
             <Heart className="w-20 h-20 text-pink-400 mx-auto" />
           </div>
           
-          <h1 className="text-2xl font-bold text-foreground mb-4">
+          <h1 className={`${HEADING_PAGE} mb-3`}>
             Login Required
           </h1>
           
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-6 text-sm sm:mb-8 sm:text-base">
             Please login to view your saved items
           </p>
           
-          <div className="flex gap-4 justify-center">
+          <div className="flex justify-center gap-3">
             <button
               onClick={() => navigate('/login')}
-              className="px-6 py-3 bg-primary/100 text-white font-medium rounded-lg hover:bg-primary"
+              className={BTN_PRIMARY}
             >
               Login
             </button>
             
             <button
               onClick={() => navigate('/')}
-              className="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100"
+              className={BTN_SECONDARY}
             >
               Go Home
             </button>
@@ -95,17 +96,17 @@ const WishlistPage = () => {
             <Heart className="w-24 h-24 text-gray-300 mx-auto" />
           </div>
           
-          <h1 className="text-2xl font-bold text-foreground mb-4">
+          <h1 className={`${HEADING_PAGE} mb-3`}>
             Your Wishlist is Empty
           </h1>
           
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-6 text-sm sm:mb-8 sm:text-base">
             Save items you like to your wishlist. They will appear here.
           </p>
           
           <button
             onClick={() => navigate('/products')}
-            className="px-6 py-3 bg-primary/100 text-white font-medium rounded-lg hover:bg-primary"
+            className={BTN_PRIMARY}
           >
             Browse Products
           </button>
@@ -118,16 +119,16 @@ const WishlistPage = () => {
     <div className="min-h-screen bg-muted/30 dark:bg-card">
       {/* Header */}
       <div className="bg-card shadow-sm">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="rounded-lg p-2 transition-all hover:bg-gray-100 active:scale-95 dark:hover:bg-gray-700"
               >
                 <Home size={20} />
               </button>
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className={HEADING_PAGE}>
                 My Wishlist ({wishlistItems.length})
               </h1>
             </div>
@@ -138,15 +139,14 @@ const WishlistPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="container mx-auto px-4 py-4 sm:py-6">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 lg:gap-6">
           {wishlistItems.map((product) => (
             <div key={product._id} className="relative group">
               {/* Remove Button */}
               <button
                 onClick={() => handleRemoveItem(product._id)}
-                className="absolute top-3 right-3 z-10 w-9 h-9 bg-card rounded-full shadow-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="absolute top-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-card shadow-md transition-all hover:bg-gray-100 hover:shadow-lg active:scale-95 dark:hover:bg-gray-700"
                 title="Remove from wishlist"
               >
                 <Heart 

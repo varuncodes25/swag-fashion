@@ -24,7 +24,7 @@ const FilterMenu = () => {
   };
 
   return (
-    <div className="w-full px-3 sm:px-4 lg:px-6 pt-4 sm:py-6 bg-background">
+    <div className="w-full bg-background px-4 pb-3 pt-2 sm:px-6 sm:pb-4 sm:pt-3">
       {/* Modern Search Container - Mobile Optimized */}
       <div className="relative max-w-4xl mx-auto">
         {/* Subtle Glow Effect - Mobile Friendly */}
@@ -59,9 +59,9 @@ const FilterMenu = () => {
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               className={`
-                w-full h-10 sm:h-10 md:h-10
+                w-full h-9 sm:h-10 md:h-10
                 pl-10 sm:pl-12 pr-10 sm:pr-12
-                text-base sm:text-lg font-normal sm:font-medium
+                text-sm sm:text-lg font-normal sm:font-medium
                 bg-transparent border-0
                 placeholder:text-gray-400 dark:placeholder:text-zinc-500
                 placeholder:text-sm sm:placeholder:text-base

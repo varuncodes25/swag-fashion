@@ -195,7 +195,7 @@ const WriteReviewForm = ({
             disabled={
               loading || !newReview.review.trim() || !newReview.rating
             }
-            className="w-full flex-1 px-6 py-3 text-base font-semibold sm:px-8"
+            className="btn-premium w-full flex-1 sm:px-8"
           >
             {loading ? (
               <span className="flex items-center gap-2">
@@ -212,7 +212,7 @@ const WriteReviewForm = ({
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="w-full flex-1 px-6 py-3 text-base sm:px-8"
+              className="btn-premium-outline w-full flex-1 sm:px-8"
             >
               Cancel
             </Button>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { SHOP_BY_STYLE_LINKS } from "@/constants/productEnums";
 import {
-  HOME_SECTION_CLASS,
+  HOME_SECTION_COMPACT,
   HOME_SECTION_CONTAINER,
   HOME_SECTION_TOP_DIVIDER,
 } from "./homeSectionStyles";
@@ -16,9 +16,9 @@ const showcaseImages = {
 
 export default function HomeShowcaseSection() {
   return (
-    <section className={`${HOME_SECTION_CLASS} ${HOME_SECTION_TOP_DIVIDER}`}>
+    <section className={`${HOME_SECTION_COMPACT} ${HOME_SECTION_TOP_DIVIDER}`}>
       <div className={HOME_SECTION_CONTAINER}>
-        <div className="mb-4 text-center sm:mb-5">
+        <div className="mb-3 text-center sm:mb-4">
           <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
             Shop by Style
           </h2>

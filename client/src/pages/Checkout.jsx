@@ -136,7 +136,7 @@ useEffect(() => {
 
       {/* Progress Steps */}
       <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-center gap-8 mb-6">
+        <div className="flex items-center justify-center gap-3 mb-4 sm:gap-8 sm:mb-6">
           {[
             { id: "address", label: "Address", icon: MapPin },
             { id: "summary", label: "Summary", icon: Package },
@@ -186,16 +186,16 @@ useEffect(() => {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-28 sm:py-6 lg:py-8 lg:pb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Left Column - Steps Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Step 1: Address Selection */}
             {currentStep === "address" && (
               <div className="animate-fadeIn">
                 <div className="bg-card rounded-2xl shadow-lg dark:shadow-foreground/10 border dark:border-gray-700 overflow-hidden transition-colors">
                   
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     <AddressSection />
                   </div>
                 </div>
@@ -309,7 +309,7 @@ useEffect(() => {
             {currentStep === "payment" && (
               <div className="space-y-6 animate-fadeIn">
                 {/* Payment Method Card */}
-                <div className="bg-card rounded-2xl shadow-lg dark:shadow-foreground/10 border dark:border-gray-700 p-6 transition-colors">
+                <div className="bg-card rounded-2xl shadow-lg dark:shadow-foreground/10 border dark:border-gray-700 p-4 sm:p-6 transition-colors">
                   <div className="flex items-center gap-4 mb-6">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-success to-success/90 flex items-center justify-center shadow-lg">
                       <CreditCard className="w-6 h-6 text-white" />
@@ -385,7 +385,7 @@ useEffect(() => {
 
                 {/* Desktop Place Order Button */}
                 <div className="hidden lg:block">
-                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-6 border dark:border-gray-700">
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl p-4 sm:p-6 border dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-bold text-foreground text-lg">Ready to Place Order?</p>
@@ -404,7 +404,7 @@ useEffect(() => {
           {/* Right Column - Order Summary (Desktop Only) */}
           <div className="">
             <div className="sticky top-32">
-              <div className="bg-card rounded-2xl shadow-xl dark:shadow-foreground/10 border dark:border-gray-700 p-6 transition-colors">
+              <div className="bg-card rounded-2xl shadow-xl dark:shadow-foreground/10 border dark:border-gray-700 p-4 sm:p-6 transition-colors">
                 <h3 className="font-bold text-foreground text-lg mb-6 pb-4 border-b dark:border-gray-700">Order Summary</h3>
                 
                 {/* Items Preview */}

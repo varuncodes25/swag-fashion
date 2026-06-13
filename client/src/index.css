@@ -182,6 +182,28 @@
   }
 }
 
+@layer components {
+  .btn-premium {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary/85 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-primary/20 transition-all duration-200 hover:from-primary/95 hover:to-primary/75 hover:shadow-lg hover:shadow-primary/25 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-premium-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition-all duration-200 hover:border-primary/30 hover:bg-muted/50 hover:shadow active:scale-[0.97];
+  }
+
+  .btn-buy-now {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-warning to-orange-500 px-3 py-2 text-xs font-semibold text-white shadow-md shadow-warning/25 transition-all duration-200 hover:shadow-lg active:scale-[0.97] disabled:opacity-50;
+  }
+
+  .btn-add-cart {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-400/60 bg-gradient-to-r from-highlight to-amber-500 px-3 py-2 text-xs font-semibold text-white shadow-md shadow-amber-500/20 transition-all duration-200 hover:shadow-lg active:scale-[0.97] disabled:opacity-50;
+  }
+
+  .link-premium {
+    @apply text-muted-foreground transition-all duration-200 hover:text-primary hover:underline underline-offset-2;
+  }
+}
+
 * {
   scroll-behavior: smooth;
 }

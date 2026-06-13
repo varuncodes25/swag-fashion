@@ -91,7 +91,7 @@ const Navbar = () => {
                   hover:from-pink-100 hover:to-rose-100 
                   dark:hover:from-pink-800/30 dark:hover:to-rose-800/30 
                   border border-pink-100 dark:border-pink-800/30 
-                  hover:shadow-sm transition-all duration-200"
+                  hover:shadow-sm transition-all duration-200 active:scale-95"
               >
                 <Heart
                   size={18}
@@ -168,7 +168,7 @@ const Navbar = () => {
                     hover:from-blue-100 hover:to-indigo-100 
                     dark:hover:from-blue-800/30 dark:hover:to-indigo-800/30 
                     border border-blue-100 dark:border-primary/30/30 
-                    hover:shadow-sm transition-all duration-200">
+                    hover:shadow-sm transition-all duration-200 active:scale-95">
                     <LogoutToggle user={user} iconSize={18} />
                   </div>
                   <span className="absolute -top-0.5 -right-0.5 w-2 h-2 
