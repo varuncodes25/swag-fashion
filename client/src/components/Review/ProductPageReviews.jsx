@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "../ui/button";
 import { useSelector, useDispatch } from "react-redux";
 import { ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +17,7 @@ const ProductPageReviews = ({
   reviewsList = [],
   maxReviews = 2,
   hideHeader = false,
+  compact = false,
 }) => {
   const [newReply, setNewReply] = useState({ review: "" });
   const [replyingTo, setReplyingTo] = useState(null);
@@ -36,7 +36,7 @@ const ProductPageReviews = ({
   const displayedReviews =
     maxReviews == null ? reviewsList : reviewsList.slice(0, maxReviews);
   const showViewAllLink =
-    maxReviews != null && reviewsList.length > maxReviews;
+    !compact && maxReviews != null && reviewsList.length > maxReviews;
 
   const handleDeleteReview = async (reviewId) => {
     const reviewToDelete = reviewsList.find((r) => r._id === reviewId);
@@ -162,21 +162,22 @@ const ProductPageReviews = ({
   if (!reviewsList.length) return null;
 
   return (
-    <div className={hideHeader ? "" : "mt-8 md:mt-12 md:px-0"}>
+    <div className={hideHeader ? "" : "mt-6 md:mt-8"}>
       {!hideHeader && (
-        <div className="mb-4 flex items-center justify-between md:mb-6">
-          <h3 className="text-xl font-bold text-foreground md:text-2xl">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-foreground sm:text-base">
             Customer Reviews ({reviewsList.length})
           </h3>
         </div>
       )}
 
-      <div className="w-full space-y-4 md:space-y-6">
+      <div className={`w-full ${compact ? "divide-y divide-border/60" : "space-y-3 sm:space-y-4"}`}>
         {displayedReviews.map((review) => (
           <ReviewCard
             key={review._id}
             review={review}
             user={user}
+            compact={compact}
             isEditing={editing.status && editing.reviewId === review._id}
             editing={editing}
             setEditing={setEditing}
@@ -194,19 +195,13 @@ const ProductPageReviews = ({
       </div>
 
       {showViewAllLink && (
-        <div className="mt-6 flex flex-col items-center md:mt-8">
-          <Link to={`/product/${productId}/reviews`} className="w-full md:w-auto">
-            <Button
-              variant="outline"
-              className="w-full border-primary text-sm text-primary hover:bg-primary/10 hover:text-primary"
-            >
-              <span>View All Reviews</span>
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
+        <div className="mt-4 flex justify-center">
+          <Link to={`/product/${productId}/reviews`} className="text-sm font-medium text-primary">
+            <span className="inline-flex items-center gap-1">
+              View all {reviewsList.length} reviews
+              <ChevronRight className="h-4 w-4" />
+            </span>
           </Link>
-          <p className="mt-2 text-xs text-muted-foreground">
-            See all {reviewsList.length} reviews
-          </p>
         </div>
       )}
     </div>

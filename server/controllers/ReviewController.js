@@ -442,6 +442,17 @@ const getProductReviewStats = async (req, res) => {
   }
 };
 
+const mapReviewList = (reviews) =>
+  reviews.map((review) => ({
+    ...review,
+    userId: review.userId
+      ? { _id: review.userId._id, name: review.userId.name }
+      : null,
+    productId: review.productId
+      ? { _id: review.productId._id, name: review.productId.name }
+      : null,
+  }));
+
 const getFeaturedReviews = async (req, res) => {
   try {
     const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 6, 1), 12);
@@ -453,15 +464,7 @@ const getFeaturedReviews = async (req, res) => {
       .populate("productId", "name")
       .lean();
 
-    const data = reviews.map((review) => ({
-      ...review,
-      userId: review.userId
-        ? { _id: review.userId._id, name: review.userId.name }
-        : null,
-      productId: review.productId
-        ? { _id: review.productId._id, name: review.productId.name }
-        : null,
-    }));
+    const data = mapReviewList(reviews);
 
     return res.status(200).json({
       success: true,

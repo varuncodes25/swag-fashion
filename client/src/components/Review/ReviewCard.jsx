@@ -28,6 +28,7 @@ const ReviewCard = ({
   handleEditReview,
   handleDeleteReview,
   formatDate,
+  compact = false,
 }) => {
   // ✅ State for image zoom
   const [zoomImageIndex, setZoomImageIndex] = useState(null);
@@ -73,31 +74,45 @@ const ReviewCard = ({
   };
 
   return (
-    <div className="w-full p-4 md:p-5 rounded-xl border border-border bg-card">
-      {/* Review Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3">
-          <ReviewUserAvatar name={reviewUserName} size="md" />
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-semibold text-foreground">
+    <div
+      className={`w-full ${
+        compact
+          ? "py-3.5"
+          : "rounded-lg border border-border bg-card p-3 sm:p-4"
+      }`}
+    >
+      <div className={`flex items-start justify-between ${compact ? "mb-2" : "mb-3"}`}>
+        <div className="flex min-w-0 items-center gap-2.5">
+          <ReviewUserAvatar name={reviewUserName} size={compact ? "sm" : "md"} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h4 className={`truncate font-medium text-foreground ${compact ? "text-sm" : ""}`}>
                 {reviewUserName}
               </h4>
-              <span className="text-xs text-gray-500">
-                {formatDate(review?.createdAt)}
-              </span>
+              {!compact && (
+                <span className="text-xs text-muted-foreground">
+                  {formatDate(review?.createdAt)}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-1 mt-1">
+            <div className="mt-0.5 flex items-center gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-4 h-4 ${
+                  className={`${
+                    compact ? "h-3 w-3" : "h-3.5 w-3.5"
+                  } ${
                     i < (review?.rating || 0)
-                      ? "text-yellow-400 fill-yellow-400"
-                      : "text-gray-300 dark:text-gray-600"
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-muted-foreground/30"
                   }`}
                 />
               ))}
+              {compact && (
+                <span className="ml-1 text-[11px] text-muted-foreground">
+                  {formatDate(review?.createdAt)}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -172,28 +187,36 @@ const ReviewCard = ({
         </div>
       ) : (
         <>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
+          <p
+            className={`text-foreground/90 ${
+              compact
+                ? "line-clamp-2 text-sm leading-snug"
+                : "mb-3 text-sm sm:text-base"
+            }`}
+          >
             {review?.review || ""}
           </p>
 
-          {/* ✅ Review Images with Click to Zoom */}
           {review?.images && review.images.length > 0 && (
-            <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+            <div className={`flex gap-2 overflow-x-auto ${compact ? "mt-2" : "mb-3"}`}>
               {review.images.map((img, idx) => (
                 <div
                   key={idx}
-                  className="relative group shrink-0 cursor-pointer"
+                  className="group relative shrink-0 cursor-pointer"
                   onClick={() => handleImageClick(idx)}
                 >
                   <img
                     src={img.url}
                     alt={`Review image ${idx + 1}`}
-                    className="w-20 h-20 object-cover rounded-lg border border-border hover:border-primary transition-all"
+                    className={`rounded-md border border-border object-cover transition-all hover:border-primary ${
+                      compact ? "h-14 w-14" : "h-16 w-16"
+                    }`}
                   />
-                  {/* Zoom overlay on hover */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <ZoomIn className="w-5 h-5 text-white" />
-                  </div>
+                  {!compact && (
+                    <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                      <ZoomIn className="h-4 w-4 text-white" />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -201,8 +224,8 @@ const ReviewCard = ({
         </>
       )}
 
-      {/* Reply Section - Only for admins */}
-      <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+      {!compact && (
+      <div className="border-t border-border pt-3">
         {isAdmin && replyingTo === review._id ? (
           <div className="space-y-2">
             <Textarea
@@ -265,6 +288,7 @@ const ReviewCard = ({
           </div>
         )}
       </div>
+      )}
 
       {/* ✅ Mobile Image Zoom Modal */}
       {isZoomOpen && review?.images && review.images.length > 0 && (

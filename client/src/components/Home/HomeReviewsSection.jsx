@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
 import { Star, Quote } from "lucide-react";
+import apiClient from "@/api/axiosConfig";
 import {
   HOME_SECTION_CLASS,
   HOME_SECTION_CONTAINER,
@@ -30,12 +30,12 @@ export default function HomeReviewsSection() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/reviews/featured`,
-          { params: { limit: 6 } },
-        );
-        const data = res.data?.data ?? res.data ?? [];
-        setReviews(Array.isArray(data) ? data : []);
+        const res = await apiClient.get("/reviews/featured", {
+          params: { limit: 6 },
+        });
+        const payload = res.data?.data ?? res.data;
+        const list = Array.isArray(payload) ? payload : payload?.data ?? [];
+        setReviews(list);
       } catch (err) {
         console.error("Featured reviews failed", err);
         setReviews([]);
@@ -59,7 +59,7 @@ export default function HomeReviewsSection() {
             Loved by the community
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            See what shoppers say about fit, print quality, and comfort.
+            Tap a review to see all reviews for that product.
           </p>
         </div>
 
@@ -74,16 +74,14 @@ export default function HomeReviewsSection() {
             {reviews.map((review) => {
               const userName = review.userId?.name || review.user?.name || "Customer";
               const product = review.productId;
-              const productName =
-                typeof product === "object" ? product?.name : null;
-              const productId =
-                typeof product === "object" ? product?._id : product;
+              const productName = typeof product === "object" ? product?.name : null;
+              const productId = typeof product === "object" ? product?._id : product;
 
-              return (
-                <article
-                  key={review._id}
-                  className="w-[min(85vw,320px)] shrink-0 rounded-2xl border border-border bg-card p-5 shadow-sm sm:w-auto"
-                >
+              const cardClass =
+                "group w-[min(85vw,320px)] shrink-0 rounded-2xl border border-border bg-card p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md sm:w-auto";
+
+              const cardBody = (
+                <>
                   <Quote className="mb-3 h-8 w-8 text-primary/25" />
                   <Stars rating={review.rating} />
                   <p className="mt-3 line-clamp-4 text-sm leading-relaxed text-foreground">
@@ -91,16 +89,31 @@ export default function HomeReviewsSection() {
                   </p>
                   <div className="mt-4 border-t border-border pt-3">
                     <p className="text-sm font-semibold text-foreground">{userName}</p>
-                    {productName && productId && (
-                      <Link
-                        to={`/product/${productId}`}
-                        className="mt-0.5 block truncate text-xs text-primary hover:underline"
-                      >
+                    {productName && (
+                      <p className="mt-0.5 truncate text-xs text-primary group-hover:underline">
                         {productName}
-                      </Link>
+                      </p>
                     )}
                   </div>
-                </article>
+                </>
+              );
+
+              if (!productId) {
+                return (
+                  <article key={review._id} className={cardClass}>
+                    {cardBody}
+                  </article>
+                );
+              }
+
+              return (
+                <Link
+                  key={review._id}
+                  to={`/product/${productId}/reviews`}
+                  className={cardClass}
+                >
+                  {cardBody}
+                </Link>
               );
             })}
           </div>
