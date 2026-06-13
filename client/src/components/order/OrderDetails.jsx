@@ -19,8 +19,6 @@ const OrderDetails = () => {
     error 
   } = useSelector((state) => state.order);
   
-  console.log("🔍 OrderDetails - Current Order from Redux:", order);
-  
   // Fetch order details
   useEffect(() => {
     if (orderId) {
@@ -68,16 +66,11 @@ const OrderDetails = () => {
     isGenerated: !!(order.shiprocket?.invoiceUrl)
   };
   
-  console.log("📦 Order Details:", {
-    tracking: trackingData,
-    invoice: invoiceData
-  });
-  
   const shiprocketData = order.shiprocket || {};
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header with Back Navigation */}
           <div className="mb-8">
@@ -150,11 +143,11 @@ const OrderDetails = () => {
           />
 
           {/* Additional Info Card */}
-          <div className="mt-8 bg-card rounded-xl p-6 border border-border transition-colors">
-            <h3 className="font-semibold text-foreground mb-4 text-lg">
+          <div className="mt-6 bg-card rounded-xl p-4 sm:p-6 border border-border transition-colors">
+            <h3 className="font-semibold text-foreground mb-4 text-base sm:text-lg">
               Additional Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Shipping Address */}
               <div>
                 <h4 className="font-medium text-foreground/80 mb-2">
@@ -219,7 +212,7 @@ const OrderDetails = () => {
           <div className="mt-8">
             <button
               onClick={() => navigate("/orders")}
-              className="px-6 py-3 border border-border text-muted-foreground rounded-lg hover:bg-muted hover:text-foreground font-medium transition-colors"
+              className="btn-premium-outline"
             >
               Back to Orders
             </button>
@@ -233,11 +226,11 @@ const OrderDetails = () => {
 // Loading Skeleton
 const LoadingSkeleton = () => (
   <div className="min-h-screen bg-background">
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <div className="h-8 w-32 bg-muted rounded animate-pulse mb-6"></div>
-          <div className="bg-card rounded-xl p-6 border border-border">
+          <div className="bg-card rounded-xl p-4 sm:p-6 border border-border">
             <div className="h-6 w-48 bg-muted rounded animate-pulse mb-4"></div>
             <div className="h-4 w-32 bg-muted rounded animate-pulse"></div>
           </div>
@@ -259,7 +252,7 @@ const ErrorPage = ({ error, navigate }) => (
       <div className="w-20 h-20 mx-auto mb-6 bg-destructive/10 rounded-full flex items-center justify-center">
         <Package className="w-10 h-10 text-destructive" />
       </div>
-      <h2 className="text-2xl font-bold text-foreground mb-3">
+      <h2 className="mb-3 text-xl font-bold text-foreground sm:text-2xl">
         Order Not Found
       </h2>
       <p className="text-muted-foreground mb-6">
@@ -268,13 +261,13 @@ const ErrorPage = ({ error, navigate }) => (
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <button
           onClick={() => navigate("/orders")}
-          className="px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 font-medium rounded-lg transition-colors shadow-sm"
+          className="btn-premium"
         >
           Back to Orders
         </button>
         <button
           onClick={() => navigate("/")}
-          className="px-6 py-3 border border-border text-muted-foreground hover:bg-muted hover:text-foreground font-medium rounded-lg transition-colors"
+          className="btn-premium-outline"
         >
           Go Home
         </button>

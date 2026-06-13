@@ -28,7 +28,7 @@ const FilterMenu = () => {
       {/* Modern Search Container - Mobile Optimized */}
       <div className="relative max-w-4xl mx-auto">
         {/* Subtle Glow Effect - Mobile Friendly */}
-        <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-purple-500 rounded-2xl blur-sm opacity-10 group-hover:opacity-15 transition-opacity duration-300"></div>
+        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/30 to-highlight/30 opacity-10 blur-sm transition-opacity duration-300 group-hover:opacity-20"></div>
         
         {/* Main Search Card - Responsive */}
         <form
@@ -44,7 +44,7 @@ const FilterMenu = () => {
               className={`
               absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2
               transition-all duration-200
-              ${isFocused || search ? 'text-blue-500' : 'text-gray-400 dark:text-zinc-500'}
+              ${isFocused || search ? 'text-primary' : 'text-gray-400 dark:text-zinc-500'}
             `}
               aria-label="Search products"
             >

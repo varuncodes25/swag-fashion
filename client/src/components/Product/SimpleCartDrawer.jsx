@@ -46,15 +46,6 @@ const subtotal = totalPrice + totalDiscount; // MRP before discount
 const totalSavings = totalDiscount;
 const itemCount = items.length;
 
-console.log("📊 Cart Values:", {
-  items: items.length,
-  totalPrice,
-  totalDiscount,
-  subtotal,
-  itemCount,
-  summary
-});
-  
   // ✅ Fix: Calculate display price
   const displayPrice = totalPrice || subtotal - totalSavings || 0;
 

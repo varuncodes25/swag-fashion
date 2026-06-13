@@ -263,10 +263,10 @@ export default function MyProfile() {
   const avatarUrl = avatarPreview || profile?.avatar;
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full max-w-4xl mx-auto px-4 py-4 sm:py-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent sm:text-3xl">
           Profile Settings
         </h1>
         <p className="text-muted-foreground mt-2">
@@ -276,7 +276,7 @@ export default function MyProfile() {
 
       <div className="space-y-6">
         {/* Personal Information Card with Avatar */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -460,7 +460,7 @@ export default function MyProfile() {
         </Card>
 
         {/* Security Card - Change Password */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 bg-primary/10 rounded-lg">
               <Lock className="w-5 h-5 text-primary" />

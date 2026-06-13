@@ -177,11 +177,11 @@ const AllReviewsPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar - Rating Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-card rounded-xl p-6 shadow-sm border border-border sticky top-24">
+            <div className="bg-card rounded-xl p-4 sm:p-6 shadow-sm border border-border sticky top-24">
               <h2 className="text-2xl font-bold text-foreground mb-6">
                 Rating Summary
               </h2>
@@ -279,7 +279,7 @@ const AllReviewsPage = () => {
               <div className="mb-8">
                 <Button
                   onClick={() => setShowWriteForm(true)}
-                  className="w-full md:w-auto px-8 py-3 text-base bg-primary hover:bg-primary/90 text-white font-semibold"
+                  className="btn-premium w-full md:w-auto"
                 >
                   Write a Review
                 </Button>

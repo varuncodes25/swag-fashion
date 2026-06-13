@@ -205,13 +205,13 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-indigo-50/30 to-purple-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 md:p-6 relative overflow-hidden ">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50/80 via-white to-amber-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 md:p-6 relative overflow-hidden ">
       
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-60 -right-60 w-96 h-96 bg-blue-400/10 dark:bg-primary/5 rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
-        <div className="absolute -bottom-60 -left-60 w-96 h-96 bg-purple-400/10 dark:bg-purple-500/5 rounded-full mix-blend-overlay filter blur-3xl animate-float delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-blue-500/5 to-purple-500/5 dark:from-blue-400/5 dark:to-purple-400/5 rounded-full blur-3xl"></div>
+        <div className="absolute -top-60 -right-60 w-96 h-96 bg-primary/10 dark:bg-primary/5 rounded-full mix-blend-overlay filter blur-3xl animate-float"></div>
+        <div className="absolute -bottom-60 -left-60 w-96 h-96 bg-highlight/10 dark:bg-highlight/5 rounded-full mix-blend-overlay filter blur-3xl animate-float delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/5 to-highlight/5 rounded-full blur-3xl"></div>
       </div>
 
       {/* Floating particles */}
@@ -248,10 +248,10 @@ const Signup = () => {
 
         {/* Card Container */}
         <div 
-          className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-blue-500/10 dark:shadow-blue-900/20 p-8 md:p-10 border border-white/50 dark:border-gray-700/50 relative overflow-hidden"
+          className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-primary/10 dark:shadow-primary/20 p-5 sm:p-8 md:p-10 border border-white/50 dark:border-gray-700/50 relative overflow-hidden"
         >
           {/* Card background pattern */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 dark:from-blue-400/5 dark:to-purple-400/5"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-highlight/5"></div>
           
           {/* Header */}
           <div className="text-center mb-10 relative z-10">
@@ -414,7 +414,7 @@ const Signup = () => {
                     }
                   }}
                   disabled={signupLoading || signupSuccess}
-                  className={`mt-1 h-5 w-5 ${acceptedTerms ? 'bg-gradient-to-r from-blue-500 to-purple-600 border-0' : ''}`}
+                  className={`mt-1 h-5 w-5 ${acceptedTerms ? 'bg-primary border-0' : ''}`}
                 />
                 <div className="space-y-2">
                   <label
@@ -443,11 +443,8 @@ const Signup = () => {
               <Button
                 type="submit"
                 disabled={!acceptedTerms || signupLoading || signupSuccess}
-                className={`w-full h-16 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 dark:hover:shadow-blue-900/30 transition-all duration-500 transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden`}
+                className="btn-premium w-full h-14 sm:h-16 text-base sm:text-lg"
               >
-                {/* Shine effect */}
-                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                
                 {signupLoading ? (
                   <>
                     <Loader2 className="mr-3 h-6 w-6 animate-spin" />

@@ -205,7 +205,7 @@ useEffect(() => {
                   <div className="hidden lg:flex justify-end mt-6">
                     <button
                       onClick={() => setCurrentStep("summary")}
-                      className="px-8 py-4 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-3 group"
+                      className="btn-premium flex items-center gap-3 group"
                     >
                       <span>Continue to Order Summary</span>
                       <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
@@ -296,7 +296,7 @@ useEffect(() => {
                 <div className="hidden lg:flex justify-end">
                   <button
                     onClick={() => setCurrentStep("payment")}
-                    className="px-8 py-4 bg-gradient-to-r from-primary to-primary/85 hover:from-primary/90 hover:to-primary/80 text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 flex items-center gap-3 group"
+                    className="btn-premium flex items-center gap-3 group"
                   >
                     <span>Continue to Payment</span>
                     <ArrowLeft className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
@@ -321,67 +321,6 @@ useEffect(() => {
                   </div>
                   <PaymentMethod />
                 </div>
-
-                {/* Order Summary Card */}
-                {/* <div className="bg-card rounded-2xl shadow-lg dark:shadow-foreground/10 border dark:border-gray-700 p-6 transition-colors">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg">
-                      <Package className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-foreground text-lg">Order Summary111</h3>
-                      <p className="text-sm text-muted-foreground">Review your items</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
-                    {items.map((item) => (
-                      <div key={item.productId} className="flex items-center gap-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-                        <div className="relative">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary dark:group-hover:border-pink-400 transition-colors"
-                          />
-                          {item.quantity > 1 && (
-                            <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-br from-primary to-primary/85 text-white text-xs rounded-full flex items-center justify-center shadow-lg">
-                              {item.quantity}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground truncate">{item.name}</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-sm text-muted-foreground">Qty: {item.quantity}</span>
-                            {item.discountAmount > 0 && (
-                              <span className="text-sm text-success">Save ₹{item.discountAmount.toFixed(2)}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-foreground">₹{(item.lineTotal || 0).toFixed(2)}</p>
-                          {item.discountAmount > 0 && (
-                            <p className="text-sm text-muted-foreground line-through">
-                              ₹{(item.price * item.quantity).toFixed(2)}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-6 pt-6 border-t dark:border-gray-700">
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-foreground text-lg">Total Amountgggg</span>
-                      <div className="text-right">
-                        <p className="font-bold text-foreground text-2xl">₹{total.toFixed(2)}</p>
-                        {discount > 0 && (
-                          <p className="text-sm text-success">You saved ₹{discount.toFixed(2)}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div> */}
 
                 {/* Desktop Place Order Button */}
                 <div className="hidden lg:block">

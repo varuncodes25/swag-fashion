@@ -162,17 +162,13 @@ function ProductLoaded({
     }
 
     try {
-      const result = await addToCart({
+      await addToCart({
         productId: product._id,
         variantId: selectedVariant._id,
         quantity,
         productName: product.name,
         variantColor: selectedVariant.color,
       });
-
-      if (result.success) {
-        console.log("Added successfully!");
-      }
     } catch (error) {
       console.error("Add to cart error:", error);
     }
@@ -327,10 +323,10 @@ const Product = () => {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <h2 className="text-2xl font-semibold mb-4">Product Not Found</h2>
+        <h2 className="mb-4 text-xl font-semibold sm:text-2xl">Product Not Found</h2>
         <button
           onClick={() => navigate("/")}
-          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+          className="btn-premium"
         >
           Back to Home
         </button>

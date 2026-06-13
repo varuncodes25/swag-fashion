@@ -74,7 +74,7 @@ export default function TrackOrder() {
         !String(result.tracking.awb).startsWith("MOCK")));
 
   return (
-    <div className="min-h-[calc(100vh-8rem)] bg-gradient-to-b from-muted/30 to-background py-10 px-4">
+    <div className="min-h-[calc(100vh-8rem)] bg-gradient-to-b from-muted/30 to-background px-4 py-6 sm:py-10">
       <div className="max-w-lg mx-auto">
         <Link
           to="/"
@@ -99,7 +99,7 @@ export default function TrackOrder() {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-2xl border border-border bg-card p-6 shadow-sm space-y-4"
+          className="rounded-2xl border border-border bg-card p-4 sm:p-6 shadow-sm space-y-4"
         >
           <div className="space-y-2">
             <Label htmlFor="orderNumber">Order number</Label>
@@ -135,7 +135,7 @@ export default function TrackOrder() {
             </p>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="btn-premium w-full h-11" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -162,7 +162,7 @@ export default function TrackOrder() {
 
         {result && (
           <div className="mt-8 space-y-6">
-            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <div className="rounded-2xl border border-border p-4 sm:p-6 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -241,7 +241,7 @@ export default function TrackOrder() {
             </div>
 
             {result.items?.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <div className="rounded-2xl border border-border p-4 sm:p-6 shadow-sm">
                 <h3 className="font-semibold text-foreground mb-3">Items</h3>
                 <ul className="space-y-3">
                   {result.items.map((item, idx) => (

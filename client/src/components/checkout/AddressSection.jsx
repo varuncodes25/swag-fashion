@@ -116,7 +116,7 @@ const AddressSection = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-1.5 md:p-2 bg-blue-100 dark:bg-primary/20 rounded-lg">
+            <div className="p-1.5 md:p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
               <MapPin className="w-5 h-5 md:w-6 md:h-6 text-primary dark:text-primary" />
             </div>
             <div>
@@ -131,7 +131,7 @@ const AddressSection = () => {
 
           <Button
             size="sm"
-            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md w-full sm:w-auto text-sm md:text-base"
+            className="btn-premium w-full sm:w-auto text-sm md:text-base"
             onClick={handleAddAddress}
           >
             <Plus size={16} className="mr-1 md:mr-2" />
@@ -152,7 +152,7 @@ const AddressSection = () => {
               </p>
               <Button
                 onClick={handleAddAddress}
-                className="bg-primary hover:bg-primary/90 text-white text-sm md:text-base w-full sm:w-auto"
+                className="btn-premium text-sm md:text-base w-full sm:w-auto"
               >
                 <Plus size={14} className="mr-1 md:mr-2" />
                 Add Your First Address
@@ -171,7 +171,7 @@ const AddressSection = () => {
                     border-2
                     ${
                       selected
-                        ? "border-primary dark:border-blue-400 bg-gradient-to-r from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-900 shadow-lg"
+                        ? "border-primary bg-gradient-to-r from-primary/5 to-white dark:from-primary/10 dark:to-gray-900 shadow-lg"
                         : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-md "
                     }
                   `}
@@ -187,7 +187,7 @@ const AddressSection = () => {
                           w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center
                           ${
                             selected
-                              ? "border-primary dark:border-blue-400 bg-primary dark:bg-blue-400"
+                              ? "border-primary bg-primary"
                               : "border-gray-300 dark:border-zinc-600 "
                           }
                         `}
@@ -203,7 +203,7 @@ const AddressSection = () => {
   {/* Name & Badge - Top Row */}
   <div className="flex items-center justify-between gap-3">
     <div className="flex items-center gap-2 md:gap-4 min-w-0">
-      <div className="flex-shrink-0 p-2 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl">
+      <div className="flex-shrink-0 p-2 bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl">
         <div className="text-primary dark:text-primary">
           {getAddressIcon(addr.address_type)}
         </div>
@@ -212,7 +212,7 @@ const AddressSection = () => {
         <h3 className="font-bold text-foreground truncate text-base md:text-lg  tracking-tight">
           {addr.name}
         </h3>
-        <span className="inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 text-primary dark:text-primary border border-blue-100 dark:border-primary/30/30">
+        <span className="inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-medium bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 text-primary dark:text-primary border border-primary/20 dark:border-primary/30">
           {addr.address_type || "Other"}
         </span>
       </div>
@@ -278,8 +278,8 @@ const AddressSection = () => {
 
       {/* Contact Info */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-5 pt-3 md:pt-4">
-        <div className="inline-flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg">
-          <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-full">
+        <div className="inline-flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 rounded-lg">
+          <div className="p-1.5 bg-primary/10 dark:bg-primary/20 rounded-full">
             <Phone className="w-4 h-4 text-primary dark:text-primary" />
           </div>
           <span className="text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 tracking-tight">
@@ -307,7 +307,7 @@ const AddressSection = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="hidden md:flex text-muted-foreground hover:text-primary dark:hover:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-900/20 flex-shrink-0"
+                      className="hidden md:flex text-muted-foreground hover:text-primary dark:hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 flex-shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditAddress(addr);
@@ -323,7 +323,7 @@ const AddressSection = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="md:hidden text-xs text-muted-foreground hover:text-primary dark:hover:text-blue-400 hover:bg-primary/10 dark:hover:bg-blue-900/20"
+                      className="md:hidden text-xs text-muted-foreground hover:text-primary dark:hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditAddress(addr);
@@ -355,7 +355,7 @@ const AddressSection = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 dark:bg-black/60">
           <div className="w-full max-w-2xl max-h-[90vh] bg-card rounded-2xl shadow-2xl overflow-hidden">
             {/* Desktop Header */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-100 dark:border-primary/30/30 p-6">
+            <div className="bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 border-b border-primary/20 dark:border-primary/30 p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-3 bg-gradient-to-r from-primary to-primary/90 rounded-xl">
@@ -401,7 +401,7 @@ const AddressSection = () => {
               <ChevronRight className="w-5 h-5 text-muted-foreground rotate-180" />
             </button>
             <div className="flex items-center gap-2">
-              <div className="p-1 bg-blue-100 dark:bg-primary/20 rounded">
+              <div className="p-1 bg-primary/10 dark:bg-primary/20 rounded">
                 <MapPin className="w-5 h-5 text-primary dark:text-primary" />
               </div>
               <h3 className="font-bold text-foreground">

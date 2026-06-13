@@ -609,7 +609,7 @@ const SizeChartModal = ({
         </div>
 
         <div className="relative z-20 shrink-0 border-t border-border bg-card p-4">
-          <button type="button" onClick={onClose} className="w-full rounded-lg bg-primary/100 py-3 text-white hover:bg-primary">
+          <button type="button" onClick={onClose} className="btn-premium w-full py-3">
             Close
           </button>
         </div>

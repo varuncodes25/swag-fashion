@@ -187,25 +187,25 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-rose-50/80 via-white to-amber-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4 transition-colors duration-300">
       
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] dark:bg-[radial-gradient(#60a5fa_1px,transparent_1px)] [background-size:40px_40px] transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(hsl(var(--primary))_1px,transparent_1px)] [background-size:40px_40px] transition-opacity duration-300"></div>
       </div>
 
       <div className="w-full max-w-md z-10">
         {/* Success Overlay - Only show when authenticated */}
         {isAuthenticated && !loginLoading && (
           <div className="fixed inset-0 bg-white/90 dark:bg-gray-900/90 flex items-center justify-center z-50 transition-all duration-300">
-            <div className="text-center p-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-success to-success/90 rounded-full flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="h-12 w-12 text-white animate-bounce" />
+            <div className="text-center p-6 sm:p-8">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-success to-success/90 rounded-full flex items-center justify-center mx-auto mb-5">
+                <CheckCircle className="h-10 w-10 sm:h-12 sm:w-12 text-white" />
               </div>
-              <h2 className="text-3xl font-bold text-foreground mb-3">
-                Welcome Back! 🎉
+              <h2 className="text-2xl font-bold text-foreground mb-2 sm:text-3xl">
+                Welcome Back
               </h2>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-muted-foreground mb-6 sm:mb-8">
                 Redirecting to dashboard...
               </p>
               <div className="w-48 h-1 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto overflow-hidden">
@@ -216,11 +216,11 @@ const Login = () => {
         )}
 
         {/* Card Container */}
-        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-xl dark:shadow-2xl dark:shadow-black/30 p-8 border border-gray-100 dark:border-gray-800 transition-all duration-300">
+        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-2xl shadow-xl dark:shadow-2xl dark:shadow-black/30 p-5 sm:p-8 border border-gray-100 dark:border-gray-800 transition-all duration-300">
           
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2 transition-colors duration-300">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl font-bold text-foreground mb-2 sm:text-3xl transition-colors duration-300">
               Welcome Back
             </h1>
             <p className="text-muted-foreground transition-colors duration-300">
@@ -229,7 +229,7 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
             
             {/* Email Input */}
             <div className="space-y-2">
@@ -247,15 +247,15 @@ const Login = () => {
                   className={`pl-10 h-12 bg-card ${
                     errors.email 
                       ? 'border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500' 
-                      : 'border-border focus:border-primary dark:focus:border-blue-400'
-                  } focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20 
+                      : 'border-border focus:border-primary dark:focus:border-primary'
+                  } focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/20 
                     text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
                     transition-all duration-300 disabled:opacity-50`}
                 />
                 <Mail className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 
                                ${errors.email 
                                  ? 'text-red-500 dark:text-red-400' 
-                                 : 'text-muted-foreground group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'
+                                 : 'text-muted-foreground group-focus-within:text-primary dark:group-focus-within:text-primary'
                                } transition-colors duration-300`} />
               </div>
               {errors.email && (
@@ -289,15 +289,15 @@ const Login = () => {
                   className={`pl-10 pr-10 h-12 bg-card ${
                     errors.password 
                       ? 'border-red-500 focus:border-red-500 dark:border-red-500 dark:focus:border-red-500' 
-                      : 'border-border focus:border-primary dark:focus:border-blue-400'
-                  } focus:ring-2 focus:ring-primary/20 dark:focus:ring-blue-400/20
+                      : 'border-border focus:border-primary dark:focus:border-primary'
+                  } focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary/20
                     text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
                     transition-all duration-300 disabled:opacity-50`}
                 />
                 <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 
                                 ${errors.password 
                                   ? 'text-red-500 dark:text-red-400' 
-                                  : 'text-muted-foreground group-focus-within:text-blue-500 dark:group-focus-within:text-blue-400'
+                                  : 'text-muted-foreground group-focus-within:text-primary dark:group-focus-within:text-primary'
                                 } transition-colors duration-300`} />
                 <button
                   type="button"
@@ -348,21 +348,8 @@ const Login = () => {
             <Button
               type="submit"
               disabled={loginLoading}
-              className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 
-                       hover:from-blue-700 hover:to-purple-700 
-                       dark:from-blue-500 dark:to-purple-500 
-                       dark:hover:from-blue-600 dark:hover:to-purple-600
-                       text-white font-medium rounded-lg 
-                       shadow-lg hover:shadow-xl dark:shadow-purple-500/20
-                       transition-all duration-300 
-                       disabled:opacity-50 disabled:cursor-not-allowed 
-                       relative overflow-hidden group"
+              className="btn-premium w-full h-11 sm:h-12"
             >
-              {/* Shine effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full 
-                            transition-transform duration-1000 
-                            bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-              
               {loginLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />

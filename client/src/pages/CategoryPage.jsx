@@ -219,7 +219,6 @@ export default function CategoryPage() {
 
   // ✅ updateFilter FUNCTION
   const updateFilter = useCallback((filterKey, value) => {
-    console.log("Updating filter:", filterKey, value); // ✅ Debug log 
     setSelectedFilters(prev => {
       const currentValues = prev[filterKey] || [];
 
