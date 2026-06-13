@@ -7,6 +7,12 @@ const userRepository = require("../repositories/userRepository");
 const ApiResponse = require("../utils/handlar/ApiResponse");
 const asyncHandler = require("../utils/handlar/AsyncHandler");
 const encryptResponse = require("../utils/encryptResponse");
+const {
+  setAuthCookies,
+  clearAuthCookies,
+  getRefreshTokenFromRequest,
+  getAccessTokenFromRequest,
+} = require("../utils/authCookies");
 const sendMail = require("../utils/mailer");
 const { welcomeEmailTemplate } = require("../utils/userTemplate");
 const {
@@ -239,12 +245,15 @@ const login = asyncHandler(async (req, res, next) => {
     const response = new ApiResponse(
       200,
       {
-        token: accessToken,
-        refreshToken,
         user: userData,
       },
       "Login successful",
     );
+
+    setAuthCookies(res, {
+      accessToken,
+      refreshToken,
+    });
 
     return res.status(200).json(await encryptResponse(response));
   } catch (error) {
@@ -304,12 +313,10 @@ const setPasswordForGoogleUser = asyncHandler(async (req, res, next) => {
 });
 // ============ REFRESH TOKEN ============
 const refreshToken = asyncHandler(async (req, res) => {
-  console.log("🔄 Refresh token function called");
-
   try {
-    const { refreshToken } = req.body;
+    const tokenFromRequest = getRefreshTokenFromRequest(req);
 
-    if (!refreshToken) {
+    if (!tokenFromRequest) {
       const response = new ApiResponse(400, null, "Refresh token required");
       return res.status(400).json(await encryptResponse(response));
     }
@@ -317,7 +324,7 @@ const refreshToken = asyncHandler(async (req, res) => {
     // Verify JWT
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+      decoded = jwt.verify(tokenFromRequest, process.env.JWT_REFRESH_SECRET);
     } catch (err) {
       const message =
         err.name === "TokenExpiredError"
@@ -336,7 +343,7 @@ const refreshToken = asyncHandler(async (req, res) => {
     }
 
     // Check refresh token match (for DB option)
-    if (user.refreshToken && user.refreshToken !== refreshToken) {
+    if (user.refreshToken && user.refreshToken !== tokenFromRequest) {
       const response = new ApiResponse(401, null, "Invalid session");
       return res.status(401).json(await encryptResponse(response));
     }
@@ -349,13 +356,14 @@ const refreshToken = asyncHandler(async (req, res) => {
     user.refreshToken = newRefreshToken;
     await user.save();
 
-    // ✅ EXACT SAME FORMAT AS LOGIN
+    setAuthCookies(res, {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    });
+
     const response = new ApiResponse(
       200,
-      {
-        token: newAccessToken,
-        refreshToken: newRefreshToken,
-      },
+      { refreshed: true },
       "Token refreshed successfully",
     );
 
@@ -371,18 +379,23 @@ const refreshToken = asyncHandler(async (req, res) => {
 const logout = asyncHandler(async (req, res, next) => {
   try {
     const { deviceId } = req.body;
-    const userId = req.userId;
+    const userId = req.id;
 
-    if (deviceId) {
-      await userRepository.removeDevice(userId, deviceId);
-    } else {
-      const user = await userRepository.findById(userId);
-      user.refreshToken = null;
-      user.deviceInfo = [];
-      await user.save();
+    if (userId) {
+      if (deviceId) {
+        await userRepository.removeDevice(userId, deviceId);
+      } else {
+        const user = await userRepository.findById(userId);
+        if (user) {
+          user.refreshToken = null;
+          user.deviceInfo = [];
+          await user.save();
+        }
+      }
     }
 
-    // ✅ Success response with encryption
+    clearAuthCookies(res);
+
     const response = new ApiResponse(200, null, "Logged out successfully");
     return res.json(await encryptResponse(response));
   } catch (error) {
@@ -919,7 +932,77 @@ const verifyOTP = asyncHandler(async (req, res, next) => {
     next(error);
   }
 });
-// ============ REFRESH TOKEN - FIXED ============
+// ============ SESSION (cookie-based restore) ============
+const getSession = asyncHandler(async (req, res) => {
+  const token = getAccessTokenFromRequest(req);
+
+  if (!token) {
+    const response = new ApiResponse(200, { authenticated: false }, "No session");
+    return res.status(200).json(await encryptResponse(response));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role === "admin") {
+      const Admin = require("../models/Admin");
+      const adminDoc = await Admin.findById(decoded.id).select("username role permissions");
+      if (!adminDoc) {
+        clearAuthCookies(res);
+        const response = new ApiResponse(200, { authenticated: false }, "No session");
+        return res.status(200).json(await encryptResponse(response));
+      }
+      const response = new ApiResponse(
+        200,
+        {
+          authenticated: true,
+          role: adminDoc.role,
+          user: {
+            id: adminDoc._id,
+            username: adminDoc.username,
+            role: adminDoc.role,
+            permissions: adminDoc.permissions,
+          },
+        },
+        "Session active",
+      );
+      return res.status(200).json(await encryptResponse(response));
+    }
+
+    const user = await User.findById(decoded.id).select(
+      "name email role avatar isEmailVerified provider phone",
+    );
+    if (!user) {
+      clearAuthCookies(res);
+      const response = new ApiResponse(200, { authenticated: false }, "No session");
+      return res.status(200).json(await encryptResponse(response));
+    }
+
+    const response = new ApiResponse(
+      200,
+      {
+        authenticated: true,
+        role: user.role,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          avatar: user.avatar,
+          isEmailVerified: user.isEmailVerified,
+          provider: user.provider,
+          phone: user.phone,
+        },
+      },
+      "Session active",
+    );
+    return res.status(200).json(await encryptResponse(response));
+  } catch {
+    clearAuthCookies(res);
+    const response = new ApiResponse(200, { authenticated: false }, "No session");
+    return res.status(200).json(await encryptResponse(response));
+  }
+});
 
 module.exports = {
   signup,
@@ -928,6 +1011,7 @@ module.exports = {
   resetPassword,
   refreshToken,
   logout,
+  getSession,
   changePassword,
   getProfile,
   updateProfile,

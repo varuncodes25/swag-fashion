@@ -28,7 +28,7 @@ const Login = () => {
     loginLoading, 
     loginError, 
     isAuthenticated,
-    token,
+    sessionChecked,
   } = useSelector((state) => state.auth);
   
   const [showPassword, setShowPassword] = useState(false);
@@ -41,10 +41,10 @@ const Login = () => {
 
   // Redirect only when a real session token exists
   useEffect(() => {
-    if (isAuthenticated && token) {
+    if (sessionChecked && isAuthenticated) {
       navigate("/");
     }
-  }, [isAuthenticated, token, navigate]);
+  }, [isAuthenticated, sessionChecked, navigate]);
 
   // Handle login success
   useEffect(() => {
@@ -196,7 +196,7 @@ const Login = () => {
 
       <div className="w-full max-w-md z-10">
         {/* Success Overlay - Only show when authenticated */}
-        {isAuthenticated && token && !loginLoading && (
+        {isAuthenticated && !loginLoading && (
           <div className="fixed inset-0 bg-white/90 dark:bg-gray-900/90 flex items-center justify-center z-50 transition-all duration-300">
             <div className="text-center p-8">
               <div className="w-24 h-24 bg-gradient-to-br from-success to-success/90 rounded-full flex items-center justify-center mx-auto mb-6">

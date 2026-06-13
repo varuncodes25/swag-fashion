@@ -1,13 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import apiClient from '@/api/axiosConfig';
 
 export const fetchReviews = createAsyncThunk(
   'reviews/fetchReviews',
   async (productId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/get-reviews/${productId}`,
-      );
+      const res = await apiClient.get(`/get-reviews/${productId}`);
 
       if (res.data.success) {
         return { productId, reviews: res.data.data || [] };
@@ -22,18 +20,8 @@ export const fetchReviews = createAsyncThunk(
 export const fetchReviewEligibility = createAsyncThunk(
   'reviews/fetchReviewEligibility',
   async (productId, { rejectWithValue }) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      return { productId, canReview: false, reason: 'login' };
-    }
-
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/review-eligibility/${productId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await apiClient.get(`/review-eligibility/${productId}`);
 
       if (res.data.success) {
         return {
@@ -44,6 +32,9 @@ export const fetchReviewEligibility = createAsyncThunk(
       }
       return rejectWithValue(res.data.message || 'Failed to check eligibility');
     } catch (error) {
+      if (error.response?.status === 401) {
+        return { productId, canReview: false, reason: 'login' };
+      }
       return rejectWithValue(error.response?.data?.message || error.message);
     }
   },
@@ -64,16 +55,9 @@ export const createReview = createAsyncThunk(
         });
       }
 
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/create-review`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        },
-      );
+      const res = await apiClient.post('/create-review', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
 
       if (res.data.success) {
         return {
@@ -92,15 +76,7 @@ export const updateReview = createAsyncThunk(
   'reviews/updateReview',
   async ({ reviewId, updateData }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/update-review/${reviewId}`,
-        updateData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        },
-      );
+      const res = await apiClient.put(`/update-review/${reviewId}`, updateData);
 
       if (res.data.success) return res.data.data;
       return rejectWithValue(res.data.message || 'Failed to update review');
@@ -114,14 +90,7 @@ export const deleteReview = createAsyncThunk(
   'reviews/deleteReview',
   async (reviewId, { rejectWithValue }) => {
     try {
-      const res = await axios.delete(
-        `${import.meta.env.VITE_API_URL}/delete-review/${reviewId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        },
-      );
+      const res = await apiClient.delete(`/delete-review/${reviewId}`);
 
       if (res.data.success) return reviewId;
       return rejectWithValue(res.data.message || 'Failed to delete review');
@@ -135,15 +104,7 @@ export const addReply = createAsyncThunk(
   'reviews/addReply',
   async ({ reviewId, replyData }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/reply-review/${reviewId}`,
-        replyData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        },
-      );
+      const res = await apiClient.put(`/reply-review/${reviewId}`, replyData);
 
       if (res.data.success) return res.data.data;
       return rejectWithValue(res.data.message || 'Failed to add reply');

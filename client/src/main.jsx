@@ -6,12 +6,15 @@ import App from './App.jsx'
 import { store, persistor } from "./redux/store";
 import { PersistGate } from "redux-persist/integration/react";
 import { Provider } from 'react-redux';
+import SessionBootstrap from "./components/SessionBootstrap";
 import { Toaster } from 'react-hot-toast';  // ✅ Import Toaster
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
     <PersistGate loading={<div className="min-h-screen" aria-busy="true" />} persistor={persistor}>
-      <App />
+      <SessionBootstrap>
+        <App />
+      </SessionBootstrap>
       <Toaster  // ✅ Add Toaster here
         position="top-center"
         reverseOrder={false}

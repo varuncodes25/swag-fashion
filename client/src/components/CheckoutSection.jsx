@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 import { useToast } from "@/hooks/use-toast";
 import useRazorpay from "@/hooks/use-razorpay";
 
@@ -46,15 +46,7 @@ const CheckoutSection = ({
       if (paymentMode === "COD") {
         // COD order API
       
-       const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/create-cod-order`,
-          orderPayload,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+       const res = await apiClient.post("/create-cod-order", orderPayload);
 
         toast({ title: "COD Order Placed Successfully" });
         onComplete();

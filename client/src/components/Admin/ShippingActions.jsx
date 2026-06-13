@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 import { Package, Truck, CheckCircle, Clock, CreditCard, Banknote } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -11,14 +11,9 @@ const ShippingActions = ({ order, fetchOrders }) => {
   const createShipment = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/admin/orders/${order.id}/create-shipment`,
+      const response = await apiClient.post(
+        `/admin/orders/${order.id}/create-shipment`,
         {},
-        { 
-          headers: { 
-            Authorization: `Bearer ${localStorage.getItem("token")}` 
-          } 
-        }
       );
       
       console.log("Shipment response:", response.data);

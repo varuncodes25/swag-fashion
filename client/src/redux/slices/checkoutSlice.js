@@ -1,10 +1,6 @@
 // redux/slices/checkoutSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import apiClient from "../../api/axiosConfig";  // ✅ Import apiClient
-
-const authHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
-});
+import apiClient from "../../api/axiosConfig";
 
 /* =====================================================
    ASYNC THUNKS

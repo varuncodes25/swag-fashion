@@ -1,34 +1,30 @@
 import axios from "axios";
 import { CareerEncrypt } from "../utils/crypto";
 import { decryptApiResponse } from "./decryptApiResponse";
-import { getStoredToken } from "../utils/authStorage";
+import { clearUserSession } from "../utils/authStorage";
 
-// Create axios instance
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// ============ TOKEN REFRESH LOGIC ============
 let isRefreshing = false;
 let failedQueue = [];
 
-const processQueue = (error, token = null) => {
-  failedQueue.forEach(prom => {
+const processQueue = (error, success = null) => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
-      prom.resolve(token);
+      prom.resolve(success);
     }
   });
   failedQueue = [];
 };
 
-// ============ LOGOUT FUNCTION ============
-
-/** Guest can browse home/products without being sent to /login */
 function isPublicBrowsePath(pathname) {
   if (pathname === "/") return true;
   if (pathname.startsWith("/product/")) return true;
@@ -42,6 +38,8 @@ function isPublicBrowsePath(pathname) {
     "/login",
     "/signup",
     "/forgot-password",
+    "/admin/login",
+    "/auth/callback",
   ];
   return publicExact.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`),
@@ -49,87 +47,45 @@ function isPublicBrowsePath(pathname) {
 }
 
 const logout = () => {
-  console.log("🚪 Clearing session...");
-
-  ["role", "user", "token", "refreshToken", "adminRole", "adminUser", "adminToken", "adminRefreshToken"].forEach(
-    (key) => localStorage.removeItem(key),
-  );
-
+  clearUserSession();
   window.dispatchEvent(new CustomEvent("auth:logout"));
 
   const path = window.location.pathname;
-  // Only force login on pages that need an account
   if (!isPublicBrowsePath(path)) {
     window.location.href = "/login";
   }
 };
 
-// ============ REFRESH TOKEN FUNCTION ============
 const refreshAccessToken = async () => {
-  const refreshToken = localStorage.getItem("refreshToken");
-  
-  if (!refreshToken) {
-    console.log("❌ No refresh token found");
-     logout();
-    throw new Error("No refresh token available");
-  }
-  
   try {
-    console.log("🔄 Refreshing access token...");
-    
-    // Create separate axios instance to avoid interceptor loop
-    let refreshBody = { refreshToken };
+    let refreshBody = {};
     const headers = { "Content-Type": "application/json" };
 
     if (import.meta.env.VITE_ENCRYPT_REQUEST === "true") {
-      refreshBody = { encryptedData: await CareerEncrypt({ refreshToken }) };
+      refreshBody = { encryptedData: await CareerEncrypt({}) };
       headers["X-Encrypted"] = "true";
     }
 
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/auth/refresh-token`,
       refreshBody,
-      { headers },
+      { headers, withCredentials: true },
     );
-    
-    const data = await decryptApiResponse(response.data);
 
-    // Extract tokens
-    let newToken = null;
-    let newRefreshToken = null;
-    
-    if (data?.data) {
-      newToken = data.data.token || data.data.accessToken;
-      newRefreshToken = data.data.refreshToken;
-    } else if (data?.token) {
-      newToken = data.token;
-      newRefreshToken = data.refreshToken;
-    }
-    
-    if (newToken) {
-      localStorage.setItem("token", newToken);
-      console.log("✅ Access token refreshed successfully");
-    }
-    
-    if (newRefreshToken) {
-      localStorage.setItem("refreshToken", newRefreshToken);
-    }
-    
-    return newToken;
-    
+    await decryptApiResponse(response.data);
+    return true;
   } catch (error) {
-    console.error("❌ Refresh token failed:", error.response?.status);
-    
-    // Refresh token expired or invalid - logout user
-    if (error.response?.status === 401 || error.response?.status === 403 || error.response?.status === 400) {
+    if (
+      error.response?.status === 401 ||
+      error.response?.status === 403 ||
+      error.response?.status === 400
+    ) {
       logout();
     }
-    
     throw error;
   }
 };
 
-// ============ HELPER FUNCTIONS ============
 const getDeviceId = () => {
   let deviceId = localStorage.getItem("deviceId");
   if (!deviceId) {
@@ -139,43 +95,30 @@ const getDeviceId = () => {
   return deviceId;
 };
 
-// ============ REQUEST INTERCEPTOR ============
 apiClient.interceptors.request.use(
   async (config) => {
-    // Add auth token
-    const token = getStoredToken();
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    // Add device info
+    config.withCredentials = true;
     config.headers["device-id"] = getDeviceId();
     config.headers["platform"] = "web";
     config.headers["timestamp"] = Date.now().toString();
 
-    // Encrypt request data
     const shouldEncrypt = import.meta.env.VITE_ENCRYPT_REQUEST === "true";
-  
+
     if (shouldEncrypt && config.data && config.method !== "get") {
       try {
         const encryptedData = await CareerEncrypt(config.data);
         config.data = { encryptedData };
         config.headers["X-Encrypted"] = "true";
       } catch (error) {
-        console.error("❌ Encryption failed:", error);
+        console.error("Encryption failed:", error);
       }
     }
 
     return config;
   },
-  (error) => {
-    console.error("❌ Request interceptor error:", error);
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error),
 );
 
-// ============ SHARED DECRYPT (your existing interceptor logic, one place) ============
 function registerDecryptInterceptor(instance) {
   instance.interceptors.response.use(
     async (response) => {
@@ -193,77 +136,51 @@ function registerDecryptInterceptor(instance) {
   );
 }
 
-// Decrypt all API responses (apiClient + legacy `import axios from "axios"`)
 registerDecryptInterceptor(apiClient);
 registerDecryptInterceptor(axios);
 
-// ============ TOKEN REFRESH on 401 (apiClient only) ============
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    console.log("🔴 Error status:", error.response?.status);
-    console.log("🔴 Error message:", error.response?.data?.message);
-    
-    // ✅ Handle 401 Unauthorized - Token expired
-    const storedToken = getStoredToken();
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      storedToken
+      !originalRequest.url?.includes("/auth/refresh-token") &&
+      !originalRequest.url?.includes("/auth/session")
     ) {
       originalRequest._retry = true;
-      
-      // If already refreshing, queue this request
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
-          .then(token => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return apiClient(originalRequest);
-          })
-          .catch(err => Promise.reject(err));
+          .then(() => apiClient(originalRequest))
+          .catch((err) => Promise.reject(err));
       }
-      
+
       isRefreshing = true;
-      
+
       try {
-        // Try to refresh the token
-        const newToken = await refreshAccessToken();
-        
-        if (newToken) {
-          // Update the failed request with new token
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          
-          // Process queued requests
-          processQueue(null, newToken);
-          
-          // Retry the original request
-          return apiClient(originalRequest);
-        } else {
-          throw new Error("No token received");
-        }
-        
+        await refreshAccessToken();
+        processQueue(null, true);
+        return apiClient(originalRequest);
       } catch (refreshError) {
-        console.error("❌ Refresh failed, logging out...");
         processQueue(refreshError, null);
         logout();
         return Promise.reject(refreshError);
-        
       } finally {
         isRefreshing = false;
       }
     }
-    
-    // ✅ Handle 403 Forbidden
-    if (error.response?.status === 403) {
+
+    if (error.response?.status === 403 && !originalRequest.url?.includes("/auth/")) {
       logout();
     }
-    
+
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;

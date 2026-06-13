@@ -5,6 +5,7 @@ const adminRepository = require("../repositories/adminRepository");
 const ApiResponse = require("../utils/handlar/ApiResponse");
 const asyncHandler = require("../utils/handlar/AsyncHandler");
 const encryptResponse = require("../utils/encryptResponse");
+const { setAuthCookies, clearAuthCookies, getRefreshTokenFromRequest } = require("../utils/authCookies");
 
 // ============ ADMIN LOGIN ============
 const adminLogin = asyncHandler(async (req, res) => {
@@ -58,7 +59,8 @@ const adminLogin = asyncHandler(async (req, res) => {
     permissions: admin.permissions
   };
 
-  const response = new ApiResponse(200, { token: accessToken, refreshToken, user: adminData }, "Admin logged in successfully");
+  const response = new ApiResponse(200, { user: adminData }, "Admin logged in successfully");
+  setAuthCookies(res, { accessToken, refreshToken });
   return res.status(200).json(await encryptResponse(response));
 });
 
@@ -94,7 +96,7 @@ const adminSignup = asyncHandler(async (req, res) => {
 
 // ============ ADMIN REFRESH TOKEN ============
 const adminRefreshToken = asyncHandler(async (req, res) => {
-  const { refreshToken: token } = req.body;
+  const token = getRefreshTokenFromRequest(req);
 
   if (!token) {
     const response = new ApiResponse(401, null, "Refresh token required");
@@ -110,7 +112,6 @@ const adminRefreshToken = asyncHandler(async (req, res) => {
     return res.status(403).json(await encryptResponse(response));
   }
 
-  // Generate new tokens
   const newAccessToken = jwt.sign(
     { id: admin._id, role: admin.role },
     process.env.JWT_SECRET,
@@ -125,15 +126,21 @@ const adminRefreshToken = asyncHandler(async (req, res) => {
 
   await adminRepository.updateRefreshToken(admin._id, newRefreshToken);
 
-  const response = new ApiResponse(200, { token: newAccessToken, refreshToken: newRefreshToken }, "Token refreshed successfully");
+  setAuthCookies(res, { accessToken: newAccessToken, refreshToken: newRefreshToken });
+
+  const response = new ApiResponse(200, { refreshed: true }, "Token refreshed successfully");
   res.json(await encryptResponse(response));
 });
 
 // ============ ADMIN LOGOUT ============
 const adminLogout = asyncHandler(async (req, res) => {
-  const adminId = req.userId;
+  const adminId = req.id;
 
-  await adminRepository.updateRefreshToken(adminId, null);
+  if (adminId) {
+    await adminRepository.updateRefreshToken(adminId, null);
+  }
+
+  clearAuthCookies(res);
 
   const response = new ApiResponse(200, null, "Logged out successfully");
   res.json(await encryptResponse(response));

@@ -27,18 +27,8 @@ const initialState = {
   removedIndex: -1,
 };
 
-// ✅ Helper function to get auth headers (apiClient already handles token)
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    throw new Error("No authentication token found");
-  }
-  return {
-    headers: { 
-      Authorization: `Bearer ${token}` 
-    }
-  };
-};
+// Cookies carry auth — no manual Authorization header needed
+const getAuthHeaders = () => ({});
 
 // ✅ Calculate cart totals
 const calculateTotals = (items) => {

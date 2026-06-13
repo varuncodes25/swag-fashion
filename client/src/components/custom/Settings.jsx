@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useToast } from "@/hooks/use-toast";
 import useErrorLogout from "@/hooks/use-error-logout";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 
 const Settings = () => {
   const { toast } = useToast();
@@ -24,18 +24,10 @@ const Settings = () => {
     }
 
     try {
-      const res = await axios.put(
-        import.meta.env.VITE_API_URL + "/change-username",
-        {
-          previousUsername,
-          newUsername,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const res = await apiClient.put("/change-username", {
+        previousUsername,
+        newUsername,
+      });
 
       const data = await res.data;
       localStorage.setItem("user", JSON.stringify(data.user));
@@ -66,19 +58,11 @@ const Settings = () => {
     }
 
     try {
-      const res = await axios.put(
-        import.meta.env.VITE_API_URL + "/change-password",
-        {
-          username: JSON.parse(localStorage.getItem("user")).username,
-          previousPassword,
-          newPassword,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const res = await apiClient.put("/change-password", {
+        username: JSON.parse(localStorage.getItem("user")).username,
+        previousPassword,
+        newPassword,
+      });
 
       const data = await res.data;
       localStorage.setItem("user", JSON.stringify(data.user));

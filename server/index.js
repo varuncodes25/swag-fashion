@@ -10,6 +10,7 @@ const securityLogger = require("./middlewares/securityLogger");
 const { logger, morganStream } = require("./utils/logger");
 const { requestMetrics, getMetricsSnapshot } = require("./middlewares/requestMetrics");
 const { buildLimiter, toNumber, isProduction } = require("./utils/rateLimitConfig");
+const cookieParser = require("cookie-parser");
 const encryptResponseMiddleware = require("./middlewares/encryptResponse.middleware");
 const Product = require("./models/Product");
 const Category = require("./models/Category");
@@ -56,6 +57,7 @@ app.use(
 );
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ limit: "15mb", extended: true }));
+app.use(cookieParser());
 app.use(requestMetrics);
 app.use(securityLogger);
 app.use(

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 
 const EditProductDialog = ({ open, onClose, product, categories, onSave }) => {
   const [form, setForm] = useState({
@@ -56,11 +56,7 @@ const EditProductDialog = ({ open, onClose, product, categories, onSave }) => {
     try {
       setLoading(true);
 
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/update-product/${product._id}`,
-        form,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
+      await apiClient.put(`/update-product/${product._id}`, form);
 
       onSave();
       onClose();

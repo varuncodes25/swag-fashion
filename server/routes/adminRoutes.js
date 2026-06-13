@@ -1,5 +1,6 @@
-const { adminSignup, adminLogin } = require("../controllers/adminController");
+const { adminSignup, adminLogin, adminRefreshToken, adminLogout } = require("../controllers/adminController");
 const decryptRequest = require("../utils/decryptResponse");
+const verifyToken = require("../middlewares/verifyToken");
 const { buildLimiter, toNumber } = require("../utils/rateLimitConfig");
 
 const router = require("express").Router();
@@ -14,5 +15,7 @@ const adminAuthLimiter = buildLimiter({
 router.post("/admin-signup", adminAuthLimiter, adminSignup);
 
 router.post("/admin-login", adminAuthLimiter, decryptRequest, adminLogin);
+router.post("/admin/refresh-token", adminAuthLimiter, decryptRequest, adminRefreshToken);
+router.post("/admin/logout", adminAuthLimiter, verifyToken, adminLogout);
 
 module.exports = router;

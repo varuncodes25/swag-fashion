@@ -2,10 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import axios from "axios";
 import { Sparkles } from "lucide-react";
 import ProductCard from "./ProductCard";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setProducts as setReduxProducts } from "@/redux/slices/productSlice";
 import { fetchWishlist } from "@/redux/slices/wishlistSlice";
-import { getStoredToken } from "@/utils/authStorage";
 import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
 import {
   HOME_SECTION_CLASS,
@@ -26,14 +25,15 @@ const ProductList = ({
   const observer = useRef();
   
   const dispatch = useDispatch();
+  const { isAuthenticated } = useSelector((state) => state.auth);
   const limit = 12;
 
   // Wishlist only for logged-in users (avoid 401 → login redirect for guests)
   useEffect(() => {
-    if (getStoredToken()) {
+    if (isAuthenticated) {
       dispatch(fetchWishlist());
     }
-  }, [dispatch]);
+  }, [dispatch, isAuthenticated]);
 
   // Fetch products function
   const fetchProducts = useCallback(async (pageNum = 1, shouldAppend = false) => {

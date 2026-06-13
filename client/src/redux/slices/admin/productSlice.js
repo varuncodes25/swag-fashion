@@ -1,14 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-// Helper to get auth token
-const getAuthHeaders = () => ({
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
-  },
-});
+import apiClient from '@/api/axiosConfig';
 
 // Async Thunks - Updated to match your backend routes
 export const fetchProducts = createAsyncThunk(
@@ -28,7 +19,7 @@ export const fetchProducts = createAsyncThunk(
         ...(params.sort && params.sort !== 'createdAt' && { sort: params.sort }),
       };
       
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/get-products-admin`, {
+      const response = await apiClient.get('/get-products-admin', {
         params: queryParams
       });
       
@@ -44,15 +35,9 @@ export const createProduct = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       // Using your route: /create-product
-      const response = await axios.post(
-        `${API_URL}/create-product`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        },
-      );
+      const response = await apiClient.post('/create-product', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -64,15 +49,7 @@ export const updateProduct = createAsyncThunk(
   'products/updateProduct',
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        `${API_URL}/update-product/${id}`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        },
-      );
+      const response = await apiClient.put(`/update-product/${id}`, data);
       return response.data;
     } catch (error) {
       const payload = error.response?.data;
@@ -87,10 +64,8 @@ export const duplicateProduct = createAsyncThunk(
   'products/duplicateProduct',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        `${API_URL}/duplicate-product/${id}`,
-        {},
-        getAuthHeaders(),
+      const response = await apiClient.post(
+        `/duplicate-product/${id}`,
       );
       return response.data;
     } catch (error) {
@@ -104,9 +79,8 @@ export const deleteProduct = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       // Using your route: /delete-product/:id
-      const response = await axios.delete(
-        `${API_URL}/delete-product/${id}`,
-        getAuthHeaders()
+      const response = await apiClient.delete(
+        `/delete-product/${id}`,
       );
       return { id, ...response.data };
     } catch (error) {
@@ -120,14 +94,7 @@ export const fetchProductById = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       // ✅ Admin route with token
-      const response = await axios.get(
-        `${API_URL}/admin/product/${id}`, 
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
+      const response = await apiClient.get(`/admin/product/${id}`);
       
       // Response structure: { success, message, data }
       return response.data;
@@ -142,7 +109,7 @@ export const fetchProductByName = createAsyncThunk(
   async (name, { rejectWithValue }) => {
     try {
       // Using your route: /get-product-by-name/:name
-      const response = await axios.get(`${API_URL}/product/get-product-by-name/${name}`);
+      const response = await apiClient.get(`/product/get-product-by-name/${name}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -156,10 +123,10 @@ export const fetchProductsByCategory = createAsyncThunk(
     try {
       // Using your route: /products/category/:slug or /products/category/:slug/:subSlug
       const url = subSlug 
-        ? `${API_URL}/product/products/category/${slug}/${subSlug}`
-        : `${API_URL}/product/products/category/${slug}`;
+        ? `/product/products/category/${slug}/${subSlug}`
+        : `/product/products/category/${slug}`;
       
-      const response = await axios.get(url);
+      const response = await apiClient.get(url);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -172,10 +139,8 @@ export const blacklistProduct = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       // Using your route: /blacklist-product/:id
-      const response = await axios.put(
-        `${API_URL}/product/blacklist-product/${id}`,
-        {},
-        getAuthHeaders()
+      const response = await apiClient.put(
+        `/product/blacklist-product/${id}`,
       );
       return response.data;
     } catch (error) {
@@ -189,10 +154,8 @@ export const removeFromBlacklist = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       // Using your route: /remove-from-blacklist/:id
-      const response = await axios.put(
-        `${API_URL}/product/remove-from-blacklist/${id}`,
-        {},
-        getAuthHeaders()
+      const response = await apiClient.put(
+        `/product/remove-from-blacklist/${id}`,
       );
       return response.data;
     } catch (error) {
@@ -206,7 +169,7 @@ export const fetchSimilarProducts = createAsyncThunk(
   async (productId, { rejectWithValue }) => {
     try {
       // Using your route: /similar-products/:productId
-      const response = await axios.get(`${API_URL}/product/similar-products/${productId}`);
+      const response = await apiClient.get(`/product/similar-products/${productId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -218,11 +181,7 @@ export const toggleProductVisibility = createAsyncThunk(
   'products/toggleProductVisibility',
   async ({ id, isVisible }, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(
-        `${API_URL}/toggle-visibility/${id}`,
-        { isVisible },
-        getAuthHeaders()
-      );
+      const response = await apiClient.patch(`/toggle-visibility/${id}`, { isVisible });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

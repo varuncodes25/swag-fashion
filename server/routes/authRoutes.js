@@ -5,6 +5,7 @@ const {
   resetPassword,
   refreshToken,
   logout,
+  getSession,
   changePassword,
   getProfile,
   updateProfile,
@@ -51,7 +52,8 @@ router.get("/auth/google/callback", googleCallback);
 router.post("/auth/google/token", authLimiter, decryptRequest, googleOneTapLogin);
 router.post("/auth/refresh-token", authLimiter, decryptRequest, refreshToken);
 
-router.post("/logout", authLimiter, logout);
+router.get("/auth/session", authLimiter, getSession);
+router.post("/logout", authLimiter, verifyToken, logout);
 router.put("/user/change-password", authLimiter, verifyToken,decryptRequest, changePassword);
 router.get("/users/profile", authLimiter, verifyToken, getProfile);
 router.put("/users/profile", verifyToken, decryptRequest, updateProfile);

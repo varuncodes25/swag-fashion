@@ -7,7 +7,7 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
   const { pathname, search } = location;
 
-  const { isAuthenticated, role } = useSelector((state) => state.auth);
+  const { isAuthenticated, role, sessionChecked } = useSelector((state) => state.auth);
   
   // ✅ CORRECT: 'items' access करें, 'cartItems' नहीं
   const { items = [] } = useSelector((state) => state.cart); // 'items' है slice में
@@ -16,6 +16,10 @@ const ProtectedRoute = ({ children }) => {
   const isBuyNow = Boolean(params.get("productId"));
 
   const render = children || <Outlet />;
+
+  if (!sessionChecked) {
+    return null;
+  }
 
   // ============================
   // ADMIN ROUTES

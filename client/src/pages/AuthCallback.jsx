@@ -5,8 +5,8 @@ import { setUserLogin } from "@/redux/slices/authSlice";
 import apiClient from "@/api/axiosConfig";
 
 /**
- * OAuth redirect flow lands here with ?token=&refreshToken= (no user payload).
- * Loads profile once tokens are stored so Redux matches One Tap login behaviour.
+ * OAuth redirect — cookies are set by the server before redirect.
+ * This page loads profile via cookie-authenticated API.
  */
 export default function AuthCallback() {
   const [searchParams] = useSearchParams();
@@ -15,11 +15,9 @@ export default function AuthCallback() {
   const [message, setMessage] = useState("Signing you in…");
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    const refreshToken = searchParams.get("refreshToken");
-
-    if (!token) {
-      navigate("/login?error=auth_failed", { replace: true });
+    const error = searchParams.get("error");
+    if (error) {
+      navigate(`/login?error=${error}`, { replace: true });
       return;
     }
 
@@ -27,30 +25,18 @@ export default function AuthCallback() {
 
     (async () => {
       try {
-        localStorage.setItem("token", token);
-        if (refreshToken) {
-          localStorage.setItem("refreshToken", refreshToken);
-        }
-
-        const res = await apiClient.get("/users/profile");
+        const res = await apiClient.get("/auth/session");
         if (cancelled) return;
 
-        const body = res.data?.data ?? res.data;
-        const user = {
-          id: body._id ?? body.id,
-          name: body.name,
-          email: body.email,
-          role: body.role,
-          avatar: body.avatar,
-          isEmailVerified: body.isEmailVerified,
-          provider: body.provider,
-        };
+        const payload = res.data?.data ?? res.data;
+        if (!payload?.authenticated || !payload?.user) {
+          throw new Error("No session");
+        }
 
         dispatch(
           setUserLogin({
-            token,
-            refreshToken: refreshToken || "",
-            user,
+            user: payload.user,
+            role: payload.role,
           }),
         );
 
@@ -58,8 +44,6 @@ export default function AuthCallback() {
       } catch {
         if (cancelled) return;
         setMessage("Could not complete sign-in. Redirecting to login…");
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
         setTimeout(() => {
           navigate("/login?error=profile_failed", { replace: true });
         }, 1200);

@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const { OAuth2Client } = require("google-auth-library");
+const { setAuthCookies } = require("../utils/authCookies");
 
 // ✅ Initialize Google OAuth Client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -163,13 +164,12 @@ const googleOneTapLogin = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
+    setAuthCookies(res, { accessToken, refreshToken });
+
     console.log("✅ Login successful for:", user.email);
 
-    // Send response
     res.json({
       success: true,
-      token: accessToken,
-      refreshToken: refreshToken,
       user: {
         id: user._id,
         name: user.name,
@@ -281,12 +281,11 @@ const googleCallback = async (req, res) => {
       user.refreshToken = refreshToken;
       await user.save();
 
+      setAuthCookies(res, { accessToken, refreshToken });
+
       console.log("✅ User authenticated successfully:", user.email);
 
-      // ✅ Redirect to frontend with tokens
-      const redirectUrl = `${publicFrontendBase()}/auth/callback?token=${accessToken}&refreshToken=${refreshToken}`;
-      
-      return res.redirect(redirectUrl);
+      return res.redirect(`${publicFrontendBase()}/auth/callback?success=1`);
       
     } catch (tokenError) {
       console.error("❌ Token exchange failed:", tokenError);

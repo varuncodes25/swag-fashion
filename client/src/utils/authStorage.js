@@ -1,49 +1,40 @@
 /**
- * Normalize login/signup API payloads (encrypted ApiResponse, Google flat JSON, OAuth callback).
+ * Auth session helpers — tokens live in HttpOnly cookies (not localStorage).
+ * Only non-sensitive user display data is cached locally.
  */
 export function extractAuthFromResponse(payload) {
   if (!payload) {
-    return { token: "", refreshToken: "", user: null, message: "" };
+    return { user: null, role: "", message: "" };
   }
 
-  // Flat shape: { token, refreshToken, user } (Google One Tap, AuthCallback)
-  if (payload.token && (payload.user || payload.refreshToken !== undefined)) {
+  if (payload.user) {
     return {
-      token: payload.token,
-      refreshToken: payload.refreshToken || "",
-      user: payload.user || null,
+      user: payload.user,
+      role: payload.user?.role || payload.role || "",
       message: payload.message || "",
     };
   }
 
-  // ApiResponse: { statusCode, data: { token, refreshToken, user }, message }
   let inner = payload.data;
 
   if (typeof inner === "string") {
-    return { token: "", refreshToken: "", user: null, message: payload.message || "" };
+    return { user: null, role: "", message: payload.message || "" };
   }
 
-  if (inner?.data && typeof inner.data === "object" && (inner.data.token || inner.data.user)) {
+  if (inner?.data && typeof inner.data === "object" && inner.data.user) {
     inner = inner.data;
   }
 
   const data = inner && typeof inner === "object" ? inner : payload;
 
   return {
-    token: data.token || data.accessToken || "",
-    refreshToken: data.refreshToken || "",
     user: data.user || null,
+    role: data.role || data.user?.role || "",
     message: payload.message || data.message || "",
   };
 }
 
-export function saveAuthToLocalStorage({ token, refreshToken, user, role }) {
-  if (token) {
-    localStorage.setItem("token", token);
-  }
-  if (refreshToken) {
-    localStorage.setItem("refreshToken", refreshToken);
-  }
+export function saveUserSession({ user, role }) {
   if (user) {
     localStorage.setItem("user", JSON.stringify(user));
   }
@@ -52,14 +43,37 @@ export function saveAuthToLocalStorage({ token, refreshToken, user, role }) {
   }
 }
 
-export function clearAuthFromLocalStorage() {
+export function clearUserSession() {
   localStorage.removeItem("role");
   localStorage.removeItem("user");
   localStorage.removeItem("token");
   localStorage.removeItem("refreshToken");
+  localStorage.removeItem("adminRole");
+  localStorage.removeItem("adminUser");
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("adminRefreshToken");
 }
 
+export function getCachedUser() {
+  try {
+    const raw = localStorage.getItem("user");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** @deprecated Tokens are in HttpOnly cookies — always returns empty string */
 export function getStoredToken() {
-  const token = localStorage.getItem("token");
-  return token && token !== "null" && token !== "undefined" ? token : "";
+  return "";
+}
+
+/** @deprecated Use saveUserSession */
+export function saveAuthToLocalStorage({ user, role }) {
+  saveUserSession({ user, role });
+}
+
+/** @deprecated Use clearUserSession */
+export function clearAuthFromLocalStorage() {
+  clearUserSession();
 }

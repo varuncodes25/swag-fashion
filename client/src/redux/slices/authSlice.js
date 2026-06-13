@@ -3,10 +3,21 @@ import { REHYDRATE } from "redux-persist";
 import apiClient from "../../api/axiosConfig";
 import {
   extractAuthFromResponse,
-  saveAuthToLocalStorage,
-  clearAuthFromLocalStorage,
-  getStoredToken,
+  saveUserSession,
+  clearUserSession,
+  getCachedUser,
 } from "../../utils/authStorage";
+
+function applyUserSession(state, { user, role, message }) {
+  if (!user) return false;
+  state.role = role || user.role || "";
+  state.user = user;
+  state.isAuthenticated = true;
+  state.sessionChecked = true;
+  if (message) state.message = message;
+  saveUserSession({ user, role: state.role });
+  return true;
+}
 
 // ============ AUTHENTICATION THUNKS ============
 
@@ -45,13 +56,28 @@ export const loginUser = createAsyncThunk(
   },
 );
 
-// 3. REFRESH TOKEN - FIXED
+// 2b. RESTORE SESSION (HttpOnly cookie)
+export const restoreSession = createAsyncThunk(
+  "auth/restoreSession",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.get("/auth/session");
+      return response.data;
+    } catch (error) {
+      const errorData = error.response?.data || {};
+      return rejectWithValue({
+        message: errorData.message || "Session restore failed",
+      });
+    }
+  },
+);
+
+// 3. REFRESH TOKEN - cookie-based
 export const refreshToken = createAsyncThunk(
   "auth/refreshToken",
   async (_, { rejectWithValue }) => {
     try {
-      const refreshToken = localStorage.getItem("refreshToken");
-      const response = await apiClient.post("/auth/refresh-token", { refreshToken });
+      const response = await apiClient.post("/auth/refresh-token", {});
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -63,37 +89,16 @@ export const refreshToken = createAsyncThunk(
   },
 );
 
-// 5. LOGOUT - FIXED
+// 5. LOGOUT
 export const logoutUser = createAsyncThunk(
   "auth/logout",
   async (deviceId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.post(
-        "/logout",
-        { deviceId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      // Clear localStorage
-      localStorage.removeItem("role");
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("deviceId");
-
+      const response = await apiClient.post("/logout", { deviceId });
+      clearUserSession();
       return response.data;
     } catch (error) {
-      // Still clear localStorage even if API fails
-      localStorage.removeItem("role");
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-
+      clearUserSession();
       const errorData = error.response?.data || {};
       return rejectWithValue({
         message: errorData.message || error.message || "Logout failed",
@@ -144,12 +149,7 @@ export const changePassword = createAsyncThunk(
   "auth/changePassword",
   async (passwordData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.put("/user/change-password", passwordData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.put("/user/change-password", passwordData);
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -166,12 +166,7 @@ export const getProfile = createAsyncThunk(
   "auth/getProfile",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.get("/users/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.get("/users/profile");
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -188,12 +183,7 @@ export const updateProfile = createAsyncThunk(
   "auth/updateProfile",
   async (profileData, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.put("/users/profile", profileData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.put("/users/profile", profileData);
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -210,16 +200,7 @@ export const toggleWishlist = createAsyncThunk(
   "auth/toggleWishlist",
   async (productId, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.post(
-        `/wishlist/${productId}`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const response = await apiClient.post(`/wishlist/${productId}`, {});
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -236,12 +217,7 @@ export const getSessions = createAsyncThunk(
   "auth/getSessions",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.get("/sessions", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiClient.get("/sessions");
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -258,16 +234,7 @@ export const requestOTP = createAsyncThunk(
   "auth/requestOTP",
   async ({ email, phone }, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.post(
-        "/request-otp",
-        { email, phone },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const response = await apiClient.post("/request-otp", { email, phone });
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -284,16 +251,7 @@ export const verifyOTP = createAsyncThunk(
   "auth/verifyOTP",
   async (otp, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await apiClient.post(
-        "/verify-otp",
-        { otp },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const response = await apiClient.post("/verify-otp", { otp });
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -346,10 +304,7 @@ export const adminRefreshToken = createAsyncThunk(
   "auth/adminRefreshToken",
   async (_, { rejectWithValue }) => {
     try {
-      const refreshToken = localStorage.getItem("adminRefreshToken");
-      const response = await apiClient.post("/admin/refresh-token", {
-        refreshToken,
-      });
+      const response = await apiClient.post("/admin/refresh-token", {});
       return response.data;
     } catch (error) {
       const errorData = error.response?.data || {};
@@ -366,28 +321,12 @@ export const adminLogout = createAsyncThunk(
   "auth/adminLogout",
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem("adminToken");
-      const response = await apiClient.post(
-        "/admin/logout",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      localStorage.removeItem("adminRole");
-      localStorage.removeItem("adminUser");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminRefreshToken");
+      const response = await apiClient.post("/admin/logout", {});
+      clearUserSession();
 
       return response.data;
     } catch (error) {
-      localStorage.removeItem("adminRole");
-      localStorage.removeItem("adminUser");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminRefreshToken");
+      clearUserSession();
 
       const errorData = error.response?.data || {};
       return rejectWithValue({
@@ -401,19 +340,14 @@ export const adminLogout = createAsyncThunk(
 // ============ SLICE INITIAL STATE ============
 
 const initialState = {
-  // User auth state
   role: localStorage.getItem("role") || "",
-  user: JSON.parse(localStorage.getItem("user")) || null,
-  token: getStoredToken(),
-  refreshToken: localStorage.getItem("refreshToken") || "",
-  isAuthenticated: !!getStoredToken(),
+  user: getCachedUser(),
+  isAuthenticated: false,
+  sessionChecked: false,
 
-  // Admin auth state
-  adminRole: localStorage.getItem("adminRole") || "",
-  adminUser: JSON.parse(localStorage.getItem("adminUser")) || null,
-  adminToken: localStorage.getItem("adminToken") || "",
-  adminRefreshToken: localStorage.getItem("adminRefreshToken") || "",
-  isAdminAuthenticated: !!localStorage.getItem("adminToken"),
+  adminRole: "",
+  adminUser: null,
+  isAdminAuthenticated: false,
 
   // Profile data
   profile: null,  // ✅ Complete profile data (phone, addresses, etc.)
@@ -495,72 +429,48 @@ const authSlice = createSlice({
   reducers: {
     // Manual login setter
     setUserLogin: (state, action) => {
-      const { token, refreshToken, user } = extractAuthFromResponse(action.payload);
-      if (!token) {
+      const { user, role, message } = extractAuthFromResponse(action.payload);
+      if (!applyUserSession(state, { user, role, message })) {
         state.isAuthenticated = false;
-        return;
       }
-
-      state.role = user?.role || "";
-      state.user = user;
-      state.token = token;
-      state.refreshToken = refreshToken;
-      state.isAuthenticated = true;
-
-      saveAuthToLocalStorage({
-        token,
-        refreshToken,
-        user,
-        role: state.role,
-      });
     },
     setAdminLogin: (state, action) => {
-      const { token, refreshToken, user } = extractAuthFromResponse(action.payload);
-      if (!token) {
+      const { user, role, message } = extractAuthFromResponse(action.payload);
+      if (!user) {
         state.isAuthenticated = false;
         return;
       }
-
-      state.role = user?.role || "";
-      state.user = user;
-      state.token = token;
-      state.refreshToken = refreshToken;
-      state.isAuthenticated = true;
-
-      saveAuthToLocalStorage({
-        token,
-        refreshToken,
-        user,
-        role: state.role,
-      });
+      applyUserSession(state, { user, role, message });
+      state.isAdminAuthenticated = true;
+      state.adminUser = user;
+      state.adminRole = role || user.role || "admin";
     },
 
-    // Manual logout
     setUserLogout: (state) => {
       state.role = "";
       state.user = null;
-      state.token = "";
-      state.refreshToken = "";
       state.isAuthenticated = false;
+      state.sessionChecked = true;
+      state.isAdminAuthenticated = false;
+      state.adminRole = "";
+      state.adminUser = null;
       state.profile = null;
       state.sessions = [];
       state.wishlist = [];
 
-      clearAuthFromLocalStorage();
+      clearUserSession();
     },
 
-    // Manual admin logout
     setAdminLogout: (state) => {
       state.adminRole = "";
       state.adminUser = null;
-      state.adminToken = "";
-      state.adminRefreshToken = "";
       state.isAdminAuthenticated = false;
-
-      localStorage.removeItem("adminRole");
-      localStorage.removeItem("adminUser");
-      localStorage.removeItem("adminToken");
-      localStorage.removeItem("adminRefreshToken");
+      if (state.role === "admin") {
+        state.role = "";
+        state.user = null;
+        state.isAuthenticated = false;
+      }
+      clearUserSession();
     },
 
     // Clear all errors
@@ -650,19 +560,8 @@ const authSlice = createSlice({
         state.fieldErrors = {};
 
         const signupAuth = extractAuthFromResponse(action.payload);
-        if (signupAuth.token) {
-          state.role = signupAuth.user?.role || "";
-          state.user = signupAuth.user;
-          state.token = signupAuth.token;
-          state.refreshToken = signupAuth.refreshToken;
-          state.isAuthenticated = true;
-
-          saveAuthToLocalStorage({
-            token: signupAuth.token,
-            refreshToken: signupAuth.refreshToken,
-            user: signupAuth.user,
-            role: state.role,
-          });
+        if (signupAuth.user) {
+          applyUserSession(state, signupAuth);
         }
       })
       .addCase(signupUser.rejected, (state, action) => {
@@ -685,31 +584,18 @@ const authSlice = createSlice({
         state.loading = false;
         state.fieldErrors = {};
 
-        const { token, refreshToken, user, message } = extractAuthFromResponse(
-          action.payload,
-        );
+        const auth = extractAuthFromResponse(action.payload);
 
-        if (!token) {
+        if (!auth.user) {
           state.loginError =
-            "Login succeeded but session token was not received. Please try again.";
+            "Login succeeded but user data was not received. Please try again.";
           state.isAuthenticated = false;
           state.message = state.loginError;
           return;
         }
 
-        state.message = message || "Login successful!";
-        state.role = user?.role || "";
-        state.user = user;
-        state.token = token;
-        state.refreshToken = refreshToken;
-        state.isAuthenticated = true;
-
-        saveAuthToLocalStorage({
-          token,
-          refreshToken,
-          user,
-          role: state.role,
-        });
+        state.message = auth.message || "Login successful!";
+        applyUserSession(state, auth);
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.loginLoading = false;
@@ -721,21 +607,48 @@ const authSlice = createSlice({
       })
 
       // ============ REFRESH TOKEN ============
-      .addCase(refreshToken.fulfilled, (state, action) => {
-        const { token, refreshToken } = extractAuthFromResponse(action.payload);
-        if (!token) return;
-
-        state.token = token;
-        state.refreshToken = refreshToken;
+      .addCase(refreshToken.fulfilled, (state) => {
         state.isAuthenticated = true;
-        saveAuthToLocalStorage({ token, refreshToken });
+        state.sessionChecked = true;
       })
       .addCase(refreshToken.rejected, (state) => {
-        state.token = "";
-        state.refreshToken = "";
         state.isAuthenticated = false;
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
+        state.user = null;
+        state.role = "";
+        state.sessionChecked = true;
+        clearUserSession();
+      })
+
+      // ============ RESTORE SESSION ============
+      .addCase(restoreSession.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(restoreSession.fulfilled, (state, action) => {
+        state.loading = false;
+        state.sessionChecked = true;
+        const payload = action.payload?.data || action.payload;
+        if (payload?.authenticated && payload?.user) {
+          applyUserSession(state, {
+            user: payload.user,
+            role: payload.role || payload.user?.role,
+          });
+          if (payload.role === "admin") {
+            state.isAdminAuthenticated = true;
+            state.adminUser = payload.user;
+            state.adminRole = payload.role;
+          }
+        } else {
+          state.isAuthenticated = false;
+          state.user = null;
+          state.role = "";
+        }
+      })
+      .addCase(restoreSession.rejected, (state) => {
+        state.loading = false;
+        state.sessionChecked = true;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.role = "";
       })
 
       // ============ LOGOUT ============
@@ -745,9 +658,11 @@ const authSlice = createSlice({
       .addCase(logoutUser.fulfilled, (state) => {
         state.role = "";
         state.user = null;
-        state.token = "";
-        state.refreshToken = "";
         state.isAuthenticated = false;
+        state.sessionChecked = true;
+        state.isAdminAuthenticated = false;
+        state.adminRole = "";
+        state.adminUser = null;
         state.profile = null;
         state.sessions = [];
         state.wishlist = [];
@@ -758,9 +673,11 @@ const authSlice = createSlice({
       .addCase(logoutUser.rejected, (state) => {
         state.role = "";
         state.user = null;
-        state.token = "";
-        state.refreshToken = "";
         state.isAuthenticated = false;
+        state.sessionChecked = true;
+        state.isAdminAuthenticated = false;
+        state.adminRole = "";
+        state.adminUser = null;
         state.profile = null;
         state.sessions = [];
         state.wishlist = [];
@@ -1011,19 +928,15 @@ const authSlice = createSlice({
         state.message = action.payload.message || "Admin login successful!";
         state.fieldErrors = {};
 
-        const data = action.payload.data || {};
+        const data = action.payload.data || action.payload;
         state.adminRole = data.user?.role || "";
         state.adminUser = data.user || null;
-        state.adminToken = data.token || "";
-        state.adminRefreshToken = data.refreshToken || "";
         state.isAdminAuthenticated = true;
-
-        localStorage.setItem("adminRole", state.adminRole);
-        localStorage.setItem("adminUser", JSON.stringify(state.adminUser));
-        localStorage.setItem("adminToken", state.adminToken);
-        if (state.adminRefreshToken) {
-          localStorage.setItem("adminRefreshToken", state.adminRefreshToken);
-        }
+        applyUserSession(state, {
+          user: data.user,
+          role: data.user?.role || "admin",
+          message: action.payload.message,
+        });
       })
       .addCase(adminLogin.rejected, (state, action) => {
         state.adminLoginLoading = false;
@@ -1034,19 +947,16 @@ const authSlice = createSlice({
       })
 
       // ============ ADMIN REFRESH TOKEN ============
-      .addCase(adminRefreshToken.fulfilled, (state, action) => {
-        const data = action.payload.data || {};
-        state.adminToken = data.token;
-        state.adminRefreshToken = data.refreshToken;
-        localStorage.setItem("adminToken", state.adminToken);
-        localStorage.setItem("adminRefreshToken", state.adminRefreshToken);
+      .addCase(adminRefreshToken.fulfilled, (state) => {
+        state.isAuthenticated = true;
+        state.isAdminAuthenticated = true;
       })
       .addCase(adminRefreshToken.rejected, (state) => {
-        state.adminToken = "";
-        state.adminRefreshToken = "";
         state.isAdminAuthenticated = false;
-        localStorage.removeItem("adminToken");
-        localStorage.removeItem("adminRefreshToken");
+        state.isAuthenticated = false;
+        state.adminRole = "";
+        state.adminUser = null;
+        clearUserSession();
       })
 
       // ============ ADMIN LOGOUT ============
@@ -1056,47 +966,28 @@ const authSlice = createSlice({
       .addCase(adminLogout.fulfilled, (state) => {
         state.adminRole = "";
         state.adminUser = null;
-        state.adminToken = "";
-        state.adminRefreshToken = "";
         state.isAdminAuthenticated = false;
+        state.isAuthenticated = false;
+        state.role = "";
+        state.user = null;
         state.loading = false;
         state.fieldErrors = {};
       })
       .addCase(adminLogout.rejected, (state) => {
         state.adminRole = "";
         state.adminUser = null;
-        state.adminToken = "";
-        state.adminRefreshToken = "";
         state.isAdminAuthenticated = false;
+        state.isAuthenticated = false;
+        state.role = "";
+        state.user = null;
         state.loading = false;
       })
 
-      // Keep localStorage in sync after redux-persist rehydrate
       .addCase(REHYDRATE, (state, action) => {
         const auth = action.payload?.auth;
         if (!auth) return;
-
-        const token = getStoredToken() || auth.token || "";
-        if (!token) {
-          state.isAuthenticated = false;
-          state.token = "";
-          state.user = null;
-          state.role = "";
-          return;
-        }
-
-        state.token = token;
-        state.refreshToken = auth.refreshToken || "";
-        state.user = auth.user || null;
+        state.user = auth.user || getCachedUser();
         state.role = auth.role || auth.user?.role || "";
-        state.isAuthenticated = true;
-
-        saveAuthToLocalStorage({
-          token,
-          refreshToken: auth.refreshToken,
-          user: auth.user,
-          role: state.role,
-        });
       });
   },
 });

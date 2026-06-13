@@ -17,7 +17,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import useErrorLogout from "@/hooks/use-error-logout";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 import { useToast } from "@/hooks/use-toast";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate, getStatusColor } from "@/utils/orderHelpers";
@@ -88,14 +88,7 @@ const Orders = () => {
         if (statusFilter) params.append('status', statusFilter);
         if (debouncedSearch) params.append('search', debouncedSearch);
 
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/get-all-orders?${params.toString()}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const res = await apiClient.get(`/get-all-orders?${params.toString()}`);
 
         setOrders(res.data.data);
         setPagination(res.data.pagination);
@@ -131,19 +124,10 @@ const Orders = () => {
 
     setLoading(true);
     try {
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_URL}/update-order-status/${orderId}`,
-        {
-          status: newStatus,
-          ...(reason && { reason }),
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const res = await apiClient.put(`/update-order-status/${orderId}`, {
+        status: newStatus,
+        ...(reason && { reason }),
+      });
 
       if (res.data.success) {
         // Update local state

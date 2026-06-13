@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 import {
   Activity,
   CreditCard,
@@ -89,13 +89,8 @@ const Analytics = () => {
     const fetchMetrics = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/get-metrics?year=${selectedYear}&half=${selectedHalf}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
+        const res = await apiClient.get(
+          `/get-metrics?year=${selectedYear}&half=${selectedHalf}`,
         );
 
         setMetrics(res.data.data);

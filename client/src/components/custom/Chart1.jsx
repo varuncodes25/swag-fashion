@@ -24,7 +24,7 @@ import {
 } from "../ui/card";
 import { TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import apiClient from "@/api/axiosConfig";
 
 // Mapping product categories to bar keys
 const categoryMap = {
@@ -55,14 +55,7 @@ export function Chart1() {
   useEffect(() => {
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/get-all-orders`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await apiClient.get("/get-all-orders");
 
       const orders = response.data.data;
       const monthlyStats = {};
