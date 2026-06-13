@@ -42,99 +42,81 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   const dispatch = useDispatch();
   const { toast } = useToast();
   const [isWorking, setIsWorking] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Connecting…");
 
-  // ✅ Method 1: Web Redirect Flow
+  const startLoading = (message) => {
+    setLoadingMessage(message);
+    setIsWorking(true);
+  };
+
+  const stopLoading = () => {
+    setIsWorking(false);
+    setLoadingMessage("Connecting…");
+  };
+
   const handleRedirectLogin = async (e) => {
-    e?.preventDefault(); // Form submit hone se rokega
+    e?.preventDefault();
+    startLoading("Redirecting to Google…");
 
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/auth/google/url`,
-        { headers: jsonHeaders },
-      );
-
+      const res = await apiClient.get("/auth/google/url", { headers: jsonHeaders });
       window.location.href = res.data.url;
     } catch (error) {
-      console.error("❌ Google redirect login failed:", error);
-      console.error("❌ Error response:", error.response);
-      console.error("❌ Error message:", error.message);
       toast({
         title: "Login Failed",
         description: await getGoogleAuthErrorMessage(error),
         variant: "destructive",
       });
-      setIsWorking(false);
+      stopLoading();
     }
   };
 
-  // ✅ Method 2: Token Flow (Google One Tap)
   const handleTokenLogin = (e) => {
-    e?.preventDefault(); // Form submit hone se rokega
+    e?.preventDefault();
+    startLoading("Opening Google…");
 
-    // Check if script already exists
     const existingScript = document.querySelector('script[src*="gsi/client"]');
 
-    
     if (existingScript) {
       if (window.google) {
         initializeGoogleSignIn();
       } else {
-        console.error("❌ window.google not found even though script exists");
         toast({
           title: "Try again",
-          description: "Google sign-in script is still loading. Wait a moment and tap again.",
+          description: "Google sign-in is still loading. Wait a moment and tap again.",
         });
-        setIsWorking(false);
+        stopLoading();
       }
       return;
     }
-
 
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    
-    script.onload = () => {
-     
-      initializeGoogleSignIn();
-    };
-    
-    script.onerror = (error) => {
-      console.error("❌❌❌ Failed to load Google script:", error);
-      console.error("❌ Script error details:", error);
+
+    script.onload = () => initializeGoogleSignIn();
+
+    script.onerror = () => {
       toast({
         title: "Error",
         description: "Failed to load Google Sign-In. Trying browser redirect instead…",
         variant: "destructive",
       });
-
       void handleRedirectLogin();
     };
-    
-    console.log("📦 Appending script to document.body");
+
     document.body.appendChild(script);
-    console.log("✅ Script appended");
   };
 
   const initializeGoogleSignIn = () => {
-    console.log("🔧 initializeGoogleSignIn called");
-
-    if (!window.google) {
-      console.error("❌❌❌ Google object not found in initializeGoogleSignIn");
-      setIsWorking(false);
-      return;
-    }
-
-    if (!window.google.accounts) {
-      console.error("❌❌❌ Google accounts not found");
-      setIsWorking(false);
-      return;
-    }
-
-    if (!window.google.accounts.id) {
-      console.error("❌❌❌ Google accounts.id not found");
-      setIsWorking(false);
+    if (!window.google?.accounts?.id) {
+      stopLoading();
+      toast({
+        title: "Google Sign-In",
+        description: "Could not load Google. Try again or use email login.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -146,22 +128,11 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
         cancel_on_tap_outside: true,
       });
 
-      window.google.accounts.id.prompt((notification) => {
-        console.log("📢 Notification details:", {
-          isNotDisplayed: notification.isNotDisplayed(),
-          isSkippedMoment: notification.isSkippedMoment(),
-          isDismissedMoment: notification.isDismissedMoment(),
-          isDisplayMoment: notification.isDisplayMoment(),
-        });
+      setLoadingMessage("Select your Google account…");
 
-        if (
-          notification.isDisplayMoment?.() ||
-          notification.isDisplayed?.()
-        ) {
-          setIsWorking(false);
-        }
+      window.google.accounts.id.prompt((notification) => {
         if (notification.isDismissedMoment?.()) {
-          setIsWorking(false);
+          stopLoading();
         }
         if (
           notification.isNotDisplayed?.() ||
@@ -171,11 +142,7 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
         }
       });
     } catch (error) {
-      console.error("❌❌❌ Google initialization error:", error);
-      console.error("❌ Error name:", error.name);
-      console.error("❌ Error message:", error.message);
-      console.error("❌ Error stack:", error.stack);
-      setIsWorking(false);
+      stopLoading();
       toast({
         title: "Google Sign-In",
         description: "Could not start Google picker. Try again or use email login.",
@@ -185,55 +152,40 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
   };
 
   const handleGoogleResponse = async (response) => {
-    setIsWorking(true);
+    startLoading("Signing in…");
+
     try {
-      const res = await apiClient.post(
-        "/auth/google/token",
-        { token: response.credential },
-      );
+      const res = await apiClient.post("/auth/google/token", {
+        token: response.credential,
+      });
 
       dispatch(setUserLogin(res.data));
 
-    
-      
       toast({
         title: "Login Successful",
         description: `Welcome ${res.data.user?.name || "User"}!`,
       });
 
- 
       window.location.href = "/";
-      
     } catch (error) {
-      console.error("❌❌❌ Google backend login failed:", error);
-      console.error("❌ Error response:", error.response);
-      console.error("❌ Error data:", error.response?.data);
-      console.error("❌ Error status:", error.response?.status);
-      console.error("❌ Error message:", error.message);
-      
       toast({
         title: "Login Failed",
         description: await getGoogleAuthErrorMessage(error),
         variant: "destructive",
       });
-      setIsWorking(false);
+      stopLoading();
     }
   };
 
-  // ✅ FIXED: Main click handler with preventDefault
   const handleClick = (e) => {
-    e.preventDefault(); // 👈 Form submit hone se rokega
-    e.stopPropagation(); // 👈 Event bubbling rokega
+    e.preventDefault();
+    e.stopPropagation();
 
     if (isWorking) return;
 
-    setIsWorking(true);
-
     if (type === "redirect") {
-      console.log("👆 Calling handleRedirectLogin");
       void handleRedirectLogin(e);
     } else {
-      console.log("👆 Calling handleTokenLogin");
       handleTokenLogin(e);
     }
   };
@@ -244,16 +196,20 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
       onClick={handleClick}
       disabled={isWorking}
       aria-busy={isWorking}
-      aria-label={isWorking ? "Connecting to Google" : "Continue with Google"}
-      className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg bg-white dark:bg-gray-900 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800 transition-colors transition-transform active:scale-[0.98] disabled:opacity-90 disabled:cursor-wait focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950"
+      aria-label={isWorking ? loadingMessage : "Continue with Google"}
+      className={`relative w-full flex items-center justify-center gap-3 rounded-lg border px-4 py-3 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98] dark:focus-visible:ring-offset-gray-950 ${
+        isWorking
+          ? "cursor-wait border-primary/30 bg-primary/5 dark:bg-primary/10"
+          : "border-gray-300 bg-white hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-900 dark:hover:bg-gray-800"
+      }`}
     >
       {isWorking ? (
         <Loader2
-          className="w-5 h-5 shrink-0 animate-spin text-gray-600 dark:text-gray-300"
+          className="h-5 w-5 shrink-0 animate-spin text-primary"
           aria-hidden
         />
       ) : (
-        <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
+        <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden>
           <path
             fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -272,8 +228,12 @@ const GoogleLoginButton = ({ type = "redirect" }) => {
           />
         </svg>
       )}
-      <span className="text-gray-700 dark:text-gray-200 font-medium">
-        {isWorking ? "Connecting…" : "Continue with Google"}
+      <span
+        className={`font-medium ${
+          isWorking ? "text-primary" : "text-gray-700 dark:text-gray-200"
+        }`}
+      >
+        {isWorking ? loadingMessage : "Continue with Google"}
       </span>
     </button>
   );
