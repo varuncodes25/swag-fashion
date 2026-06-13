@@ -3,13 +3,18 @@ import {
   SHOP_BY_MOOD_TILES,
   getMoodFilterHref,
 } from "@/constants/shopByMood";
+import {
+  HOME_SECTION_CLASS,
+  HOME_SECTION_CONTAINER,
+  HOME_SECTION_TOP_DIVIDER,
+} from "./homeSectionStyles";
 
 export default function ShopByMoodSection() {
   return (
-    <section className="bg-[#f5f5f5] px-2 pb-2 pt-2 sm:px-4 dark:bg-zinc-950/40">
-      <div className="mx-auto max-w-7xl rounded-xl bg-background px-2 py-2.5 sm:px-3 sm:py-3">
-        <div className="mb-2 flex items-center justify-between gap-2 px-0.5">
-          <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg">
+    <section className={`${HOME_SECTION_CLASS} ${HOME_SECTION_TOP_DIVIDER}`}>
+      <div className={HOME_SECTION_CONTAINER}>
+        <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4">
+          <h2 className="text-base font-bold tracking-tight text-foreground sm:text-lg lg:text-xl">
             Shop By Mood
           </h2>
           <span className="hidden text-xs text-muted-foreground sm:inline">
@@ -17,7 +22,7 @@ export default function ShopByMoodSection() {
           </span>
         </div>
 
-        <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5 sm:max-w-lg sm:gap-2 md:max-w-xl lg:max-w-2xl lg:gap-2.5">
+        <div className="mx-auto grid max-w-md grid-cols-5 gap-1.5 sm:max-w-lg sm:gap-2 lg:max-w-2xl lg:gap-3">
           {SHOP_BY_MOOD_TILES.map(
             ({ id, label, occasion, emoji, gradient }) => (
               <Link

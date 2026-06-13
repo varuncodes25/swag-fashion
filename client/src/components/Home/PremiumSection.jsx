@@ -64,7 +64,7 @@ export default function PremiumSection() {
             ))}
           </div>
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:gap-4 sm:overflow-visible lg:grid-cols-4">
+          <div className="flex gap-3 overflow-x-auto pb-1 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible lg:grid-cols-4 lg:gap-6">
             {products.map((product) => (
               <div
                 key={product._id}

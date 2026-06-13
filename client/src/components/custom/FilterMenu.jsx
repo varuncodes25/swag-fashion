@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../ui/input";
 import { Search, X } from "lucide-react";
+import {
+  HOME_SECTION_COMPACT,
+  HOME_SECTION_CONTAINER,
+  HOME_SECTION_TOP_DIVIDER,
+} from "@/components/Home/homeSectionStyles";
 
 const FilterMenu = () => {
   const navigate = useNavigate();
@@ -24,9 +29,9 @@ const FilterMenu = () => {
   };
 
   return (
-    <div className="w-full bg-background px-4 pb-3 pt-2 sm:px-6 sm:pb-4 sm:pt-3">
-      {/* Modern Search Container - Mobile Optimized */}
-      <div className="relative max-w-4xl mx-auto">
+    <section className={`${HOME_SECTION_COMPACT} ${HOME_SECTION_TOP_DIVIDER}`}>
+      <div className={HOME_SECTION_CONTAINER}>
+      <div className="relative mx-auto max-w-4xl">
         {/* Subtle Glow Effect - Mobile Friendly */}
         <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary/30 to-highlight/30 opacity-10 blur-sm transition-opacity duration-300 group-hover:opacity-20"></div>
         
@@ -185,7 +190,8 @@ const FilterMenu = () => {
         transition-opacity duration-300
         ${isFocused ? 'opacity-70' : 'opacity-30'}
       `}></div>
-    </div>
+      </div>
+    </section>
   );
 };
 

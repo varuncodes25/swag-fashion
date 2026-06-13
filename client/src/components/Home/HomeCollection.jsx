@@ -83,15 +83,15 @@ export default function HomeCollections() {
   return (
     <section className={`${HOME_SECTION_COMPACT} ${HOME_SECTION_TOP_DIVIDER}`}>
       <div className={HOME_SECTION_CONTAINER}>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2 lg:gap-2.5">
           {categoryList.map((category) => (
             <Link
               key={category._id}
               to={`/category/${category.slug}`}
               className={`
-                inline-flex items-center justify-center gap-1.5
-                rounded-full px-4 py-2
-                text-xs font-medium text-white
+                inline-flex shrink-0 items-center justify-center gap-1.5
+                rounded-full px-3 py-1.5
+                text-[11px] font-medium text-white sm:text-xs
                 transition-all duration-200
                 hover:scale-105 hover:shadow-md
                 active:scale-95

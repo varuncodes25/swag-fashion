@@ -1,15 +1,16 @@
-/** Shared layout + background for home product sections */
-export const HOME_SECTION_CLASS =
-  "relative bg-muted/30 py-4 dark:bg-muted/10 sm:py-8";
+/** Full-width home canvas — use once on Home.jsx wrapper below banner */
+export const HOME_PAGE_WRAP = "w-full bg-muted/30 dark:bg-muted/10";
 
-/** Tighter blocks (shop by style, gender chips, search area) */
-export const HOME_SECTION_COMPACT =
-  "relative bg-muted/30 py-3 dark:bg-muted/10 sm:py-4";
+/** Section spacing only (background comes from HOME_PAGE_WRAP) */
+export const HOME_SECTION_CLASS = "relative py-4 sm:py-6 lg:py-8";
 
-/** Top divider between search / premium / shop-all blocks */
-export const HOME_SECTION_TOP_DIVIDER = "border-t border-border";
+/** Tighter blocks (shop by style, gender chips, search) */
+export const HOME_SECTION_COMPACT = "relative py-3 sm:py-4 lg:py-5";
 
-export const HOME_SECTION_CONTAINER = "mx-auto max-w-7xl px-4 sm:px-6";
+/** Subtle divider between sections */
+export const HOME_SECTION_TOP_DIVIDER = "border-t border-border/50";
+
+export const HOME_SECTION_CONTAINER = "mx-auto w-full max-w-7xl px-4 sm:px-6";
 
 /** Mobile-only full-width section footer link (View all premium, etc.) */
 export const HOME_MOBILE_VIEW_ALL_LINK =

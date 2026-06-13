@@ -7,6 +7,7 @@ import SummerSection from "@/components/Home/SummerSection";
 import HomeShowcaseSection from "@/components/Home/HomeShowcaseSection";
 import ShopByMoodSection from "@/components/Home/ShopByMoodSection";
 import HomeReviewsSection from "@/components/Home/HomeReviewsSection";
+import { HOME_PAGE_WRAP } from "@/components/Home/homeSectionStyles";
 import { useEffect, useState } from "react";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
@@ -34,14 +35,16 @@ const Home = () => {
   return (
     <div>
       <Banner />
-      <HomeShowcaseSection />
-      <HomeCollections />
-      <FilterMenu onSearch={setSearch} />
-      <SummerSection />
-      <PremiumSection />
-      <ShopByMoodSection />
-      <HomeReviewsSection />
-      <ProductList search={search} excludePremium />
+      <div className={HOME_PAGE_WRAP}>
+        <HomeShowcaseSection />
+        <HomeCollections />
+        <FilterMenu onSearch={setSearch} />
+        <SummerSection />
+        <PremiumSection />
+        <ShopByMoodSection />
+        <HomeReviewsSection />
+        <ProductList search={search} excludePremium />
+      </div>
     </div>
   );
 };
