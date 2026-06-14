@@ -5,6 +5,14 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  esbuild: {
+    target: "es2022",
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "es2022",
+    },
+  },
   server: {
     proxy: {
       "/api": {
@@ -20,6 +28,7 @@ export default defineConfig({
     },
   },
   build: {
+    target: "es2022",
     minify: "esbuild",
     cssMinify: true,
     rollupOptions: {

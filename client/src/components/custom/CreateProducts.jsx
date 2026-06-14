@@ -29,8 +29,8 @@ import {
   createProduct,
   updateProduct,
 } from "@/redux/slices/admin/productSlice";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
