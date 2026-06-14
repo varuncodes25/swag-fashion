@@ -18,7 +18,9 @@ const OrderData = ({
   tracking = {},    // TRACKING OBJECT
   invoice = {},     // INVOICE OBJECT
   shiprocket = {},  // SHIPROCKET DETAILS
+  canExchange = false,
   onCancel,
+  onExchangeSuccess,
 }) => {
   const [trackingData, setTrackingData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -99,8 +101,10 @@ const OrderData = ({
   };
 
   // Return/exchange handler
-  const handleReturnOrder = () => {
-    alert("Return/exchange to be implemented");
+  const handleExchangeSuccess = () => {
+    if (onExchangeSuccess) {
+      onExchangeSuccess();
+    }
   };
 
   const handleCancelSuccess = (data) => {
@@ -157,8 +161,10 @@ const OrderData = ({
         setShowActions={setShowActions}
         handleTrackOrder={handleTrackOrder}
         handleDownloadInvoice={handleDownloadInvoice}
-        handleReturnOrder={handleReturnOrder}
         onCancelSuccess={handleCancelSuccess}
+        onExchangeSuccess={handleExchangeSuccess}
+        canExchange={canExchange}
+        items={items}
         hasTracking={isShipped}
         hasInvoice={isInvoiceGenerated}
         trackingUrl={trackingUrl}

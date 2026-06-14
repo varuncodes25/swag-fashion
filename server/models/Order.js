@@ -168,6 +168,8 @@ const orderSchema = new mongoose.Schema(
         "DELIVERED",
         "CANCELLED",
         "RETURNED",
+        "EXCHANGE_REQUESTED",
+        "EXCHANGED",
       ],
       default: "PENDING",
     },
@@ -182,6 +184,12 @@ const orderSchema = new mongoose.Schema(
     customerNotes: String,
     cancelReason: String,
     returnReason: String,
+
+    activeExchangeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Exchange",
+      default: null,
+    },
 
     /* 🔄 TRACKING */
     statusHistory: [
@@ -232,6 +240,7 @@ orderSchema.index({ "shippingAddress.phone": 1 });
 orderSchema.index({ createdAt: -1 });
 orderSchema.index({ "shiprocket.orderId": 1 });
 orderSchema.index({ "paymentGateway.orderId": 1 });
+orderSchema.index({ activeExchangeId: 1 });
 
 /* =========================
    HELPER METHODS
@@ -239,7 +248,14 @@ orderSchema.index({ "paymentGateway.orderId": 1 });
 
 // Check if order can be cancelled
 orderSchema.methods.canCancel = function () {
-  const nonCancellable = ["SHIPPED", "DELIVERED", "CANCELLED", "RETURNED"];
+  const nonCancellable = [
+    "SHIPPED",
+    "DELIVERED",
+    "CANCELLED",
+    "RETURNED",
+    "EXCHANGE_REQUESTED",
+    "EXCHANGED",
+  ];
   return !nonCancellable.includes(this.status);
 };
 
@@ -252,6 +268,25 @@ orderSchema.methods.canReturn = function () {
   returnDeadline.setDate(returnDeadline.getDate() + returnWindow);
 
   return new Date() <= returnDeadline;
+};
+
+// Check if order can be exchanged (basic checks — active exchange checked in service)
+orderSchema.methods.canExchange = function () {
+  if (this.status !== "DELIVERED") return false;
+  if (["EXCHANGE_REQUESTED", "EXCHANGED"].includes(this.status)) return false;
+  if (this.activeExchangeId) return false;
+
+  const deliveredAt =
+    this.deliveredAt ||
+    (this.shiprocket?.status === "DELIVERED" ? this.updatedAt : null);
+
+  if (!deliveredAt) return false;
+
+  const exchangeWindow = 7;
+  const exchangeDeadline = new Date(deliveredAt);
+  exchangeDeadline.setDate(exchangeDeadline.getDate() + exchangeWindow);
+
+  return new Date() <= exchangeDeadline;
 };
 
 // 🆕 Get invoice URL

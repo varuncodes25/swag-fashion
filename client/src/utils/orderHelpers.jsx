@@ -1,6 +1,6 @@
 // src/utils/orderUtils.js
 
-import { Calendar } from "lucide-react";
+import { Calendar, Package, Truck, RefreshCw } from "lucide-react";
 
 // Format price
 export const formatPrice = (price) => {
@@ -34,6 +34,9 @@ export const getStatusColor = (status) => {
   if (statusUpper.includes("DELIVERED")) {
     return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300";
   }
+  if (statusUpper.includes("EXCHANGE")) {
+    return "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300";
+  }
   if (statusUpper.includes("CANCELLED")) {
     return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
   }
@@ -52,6 +55,9 @@ export const getStatusIcon = (status) => {
   
   if (statusUpper.includes("DELIVERED")) {
     return <Package className="w-4 h-4" />;
+  }
+  if (statusUpper.includes("EXCHANGE")) {
+    return <RefreshCw className="w-4 h-4" />;
   }
   if (statusUpper.includes("CANCELLED")) {
     return <span className="w-4 h-4 flex items-center justify-center">✕</span>;

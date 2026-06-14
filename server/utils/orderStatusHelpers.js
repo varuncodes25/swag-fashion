@@ -6,6 +6,8 @@ const VALID_ORDER_STATUSES = [
   "DELIVERED",
   "CANCELLED",
   "RETURNED",
+  "EXCHANGE_REQUESTED",
+  "EXCHANGED",
 ];
 
 /** Apply business order.status + timestamps + history in one place */

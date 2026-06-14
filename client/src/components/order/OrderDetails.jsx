@@ -31,6 +31,10 @@ const OrderDetails = () => {
     dispatch(fetchOrderDetails(orderId));
   };
 
+  const handleExchangeSuccess = () => {
+    dispatch(fetchOrderDetails(orderId));
+  };
+
   // Loading state
   if (loading && !order) {
     return <LoadingSkeleton />;
@@ -139,7 +143,9 @@ const OrderDetails = () => {
             tracking={trackingData}
             invoice={invoiceData}
             shiprocket={shiprocketData}
+            canExchange={order.canExchange}
             onCancelSuccess={handleCancelSuccess}
+            onExchangeSuccess={handleExchangeSuccess}
           />
 
           {/* Additional Info Card */}
@@ -199,6 +205,28 @@ const OrderDetails = () => {
                       {invoiceData.irnNo && (
                         <p className="text-muted-foreground/70">
                           e-Invoice No: {invoiceData.irnNo}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {order.exchange?.details && (
+                    <div className="pt-2 border-t border-border">
+                      <p className="font-medium text-foreground/90">Exchange Request</p>
+                      <p className="text-muted-foreground/70">
+                        {order.exchange.details.originalProductName} →{" "}
+                        {order.exchange.details.newProductName}
+                      </p>
+                      <p className="text-muted-foreground/70">
+                        {order.exchange.details.newColor} / {order.exchange.details.newSize}
+                      </p>
+                      {order.exchange.pricing?.paymentRequired ? (
+                        <p className="text-amber-700 font-medium mt-1">
+                          Extra payment pending: {formatPrice(order.exchange.pricing.extraAmountToPay)}
+                        </p>
+                      ) : (
+                        <p className="text-green-700 font-medium mt-1">
+                          No extra payment required
                         </p>
                       )}
                     </div>

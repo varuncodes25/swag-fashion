@@ -28,6 +28,10 @@ const {
   notifyAdminCodPending,
   notifyCodOrderConfirmed,
 } = require("../utils/orderNotificationEmails");
+const {
+  getActiveExchangeForOrder,
+  canOrderBeExchanged,
+} = require("../service/exchangeService");
 
 const normalizePhone = (phone) => {
   const digits = String(phone || "").replace(/\D/g, "");
@@ -386,6 +390,15 @@ const getOrderDetails = async (req, res) => {
       });
     }
 
+    const activeExchange = await getActiveExchangeForOrder(order._id);
+    if (activeExchange?.requestedAt) {
+      timeline.push({
+        status: "EXCHANGE_REQUESTED",
+        date: activeExchange.requestedAt,
+        description: `Exchange requested${activeExchange.reason ? `: ${activeExchange.reason}` : ""}`,
+      });
+    }
+
     // Format order details with DYNAMIC tracking and invoice objects
     const formattedOrder = {
       id: order._id,
@@ -515,8 +528,12 @@ const getOrderDetails = async (req, res) => {
       notes: {
         customerNotes: order.customerNotes,
         cancelReason: order.cancelReason,
-        returnReason: order.returnReason
+        returnReason: order.returnReason,
       },
+
+      // 🔄 EXCHANGE (from Exchange collection)
+      exchange: activeExchange,
+      canExchange: await canOrderBeExchanged(order),
       
       // 🔄 STATUS HISTORY (last 5 entries)
       recentStatusHistory: order.statusHistory?.slice(-5) || []
@@ -1852,30 +1869,6 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-// Exchange Paid Delivered Orders
-const exchangeOrder = async (req, res) => {
-  const { orderId, reason } = req.body;
-  const order = await Order.findById(orderId);
-
-  if (!order) return res.status(404).json({ message: "Order not found" });
-  if (!order.isPaid)
-    return res
-      .status(400)
-      .json({ message: "Only paid orders can be exchanged" });
-  if (order.status !== "delivered")
-    return res
-      .status(400)
-      .json({ message: "Only delivered orders can be exchanged" });
-
-  order.isExchanged = true;
-  order.exchangeReason = reason;
-  order.exchangedAt = new Date();
-  order.status = "exchanged";
-  await order.save();
-
-  res.json({ success: true, message: "Order exchanged", order });
-};
-
 /** Public guest tracking — order number + phone (no login) */
 const trackGuestOrder = async (req, res) => {
   try {
@@ -2008,7 +2001,6 @@ module.exports = {
   getMetrics,
   createOrder,
   cancelOrder,
-  exchangeOrder,
   trackShipment,
   trackGuestOrder,
   createShipmentForOrder,

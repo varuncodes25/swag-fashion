@@ -11,8 +11,9 @@ import {
   Sparkles
 } from "lucide-react";
 import CancelOrderModal from "./CancelOrderModal";
+import ExchangeOrderModal from "./ExchangeOrderModal";
 import { useSelector, useDispatch } from "react-redux";
-import { clearCancelStatus } from "@/redux/slices/order";
+import { clearCancelStatus, clearExchangeStatus } from "@/redux/slices/order";
 
 const OrderActions = ({
   orderId,
@@ -22,22 +23,35 @@ const OrderActions = ({
   setShowActions,
   handleTrackOrder,
   handleDownloadInvoice,
-  handleReturnOrder,
   hasTracking = false,
   hasInvoice = false,
   trackingUrl = null,
   invoiceUrl = null,
-  onCancelSuccess
+  onCancelSuccess,
+  onExchangeSuccess,
+  items = [],
+  canExchange = false,
 }) => {
   
   const dispatch = useDispatch();
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showExchangeModal, setShowExchangeModal] = useState(false);
   
   const { currentOrder } = useSelector((state) => state.order);
   
   const status = currentOrder?.id === orderId || currentOrder?._id === orderId
     ? currentOrder.status
     : propStatus;
+
+  const orderItems =
+    currentOrder?.id === orderId || currentOrder?._id === orderId
+      ? currentOrder.items || items
+      : items;
+
+  const exchangeEligible =
+    currentOrder?.id === orderId || currentOrder?._id === orderId
+      ? currentOrder.canExchange ?? canExchange
+      : canExchange;
 
   const handleCancelClick = () => {
     setShowCancelModal(true);
@@ -46,6 +60,15 @@ const OrderActions = ({
   const handleCancelSuccess = () => {
     dispatch(clearCancelStatus());
     if (onCancelSuccess) onCancelSuccess();
+  };
+
+  const handleExchangeClick = () => {
+    setShowExchangeModal(true);
+  };
+
+  const handleExchangeSuccess = () => {
+    dispatch(clearExchangeStatus());
+    if (onExchangeSuccess) onExchangeSuccess();
   };
 
   const getAvailableActions = () => {
@@ -94,15 +117,15 @@ const OrderActions = ({
       });
     }
     
-    // Return/Exchange Button
-    if (statusUpper === "DELIVERED") {
+    // Exchange Button (delivered orders within 7-day window)
+    if (statusUpper === "DELIVERED" && exchangeEligible) {
       actions.push({
-        label: "Return/Exchange",
+        label: "Request Exchange",
         icon: <RefreshCw className="w-4 h-4" />,
         variant: "warning",
-        onClick: handleReturnOrder,
+        onClick: handleExchangeClick,
         disabled: false,
-        description: "Return items",
+        description: "Any product, price diff auto",
         gradient: "from-amber-500 to-orange-600",
         shadow: "shadow-amber-500/20"
       });
@@ -190,6 +213,15 @@ const OrderActions = ({
     onClose={() => setShowCancelModal(false)}
     orderId={orderId}
     onCancelSuccess={handleCancelSuccess}
+  />
+
+  {/* Exchange Modal */}
+  <ExchangeOrderModal
+    isOpen={showExchangeModal}
+    onClose={() => setShowExchangeModal(false)}
+    orderId={orderId}
+    items={orderItems}
+    onExchangeSuccess={handleExchangeSuccess}
   />
 </div>
   );

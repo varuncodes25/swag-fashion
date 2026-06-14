@@ -27,7 +27,10 @@ const ProductCard = ({
   isBestSeller = false,
   isPremium = false,
   colors = [],
-  sizes = []
+  sizes = [],
+  selectable = false,
+  onSelect,
+  hideWishlist = false,
 }) => {
   const { isAuthenticated } = useSelector((state) => state.auth);
   const { wishlistStatus } = useSelector((state) => state.wishlist);
@@ -113,7 +116,24 @@ const ProductCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <Link to={`/product/${_id}`} className="block h-full">
+      {selectable ? (
+        <button
+          type="button"
+          onClick={() => onSelect?.()}
+          className="block h-full w-full text-left cursor-pointer"
+        >
+          {renderCard()}
+        </button>
+      ) : (
+        <Link to={`/product/${_id}`} className="block h-full">
+          {renderCard()}
+        </Link>
+      )}
+    </div>
+  );
+
+  function renderCard() {
+    return (
         <div className="overflow-hidden rounded-xl bg-card shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col border border-border hover:border-primary/30">
           
           {/* Image Container */}
@@ -126,14 +146,15 @@ const ProductCard = ({
               src={displayImage}
               alt={name}
               loading="lazy"
+              decoding="async"
               onLoad={() => setImageLoaded(true)}
               onError={(e) => {
                 e.target.src = "https://images.pexels.com/photos/3801990/pexels-photo-3801990.jpeg";
                 setImageLoaded(true);
               }}
-              className={`w-full h-full object-cover transition-transform duration-700 ${
-                isHovered ? 'scale-110' : 'scale-100'
-              } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              className={`w-full h-full object-cover transition-transform duration-300 ${
+                isHovered && !selectable ? "scale-105" : "scale-100"
+              } ${imageLoaded ? "opacity-100" : "opacity-0"}`}
             />
 
             {/* Badges — spaced row so Premium & discount don't stick together */}
@@ -162,10 +183,12 @@ const ProductCard = ({
             )}
 
             {/* Wishlist Button - White color */}
+            {!hideWishlist && (
             <button
+              type="button"
               onClick={handleWishlistToggle}
               disabled={isToggling}
-              className={`absolute bottom-2 left-2 transition-all duration-300 ${
+              className={`absolute bottom-2 left-2 z-10 transition-all duration-300 ${
                 wishlisted 
                   ? 'text-primary' 
                   : 'text-white hover:text-primary'
@@ -173,6 +196,7 @@ const ProductCard = ({
             >
               <Heart size={20} fill={wishlisted ? "currentColor" : "none"} />
             </button>
+            )}
 
             {/* FLIPKART STYLE RATING - Bottom Right */}
             {safeRating > 0 && (
@@ -271,9 +295,8 @@ const ProductCard = ({
             )}
           </div>
         </div>
-      </Link>
-    </div>
-  );
+    );
+  }
 };
 
 export default ProductCard;

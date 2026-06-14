@@ -10,7 +10,11 @@ const initialState = {
   error: null,
   cancelLoading: false,
   cancelSuccess: false,
-  refundStatus: null
+  refundStatus: null,
+  exchangeLoading: false,
+  exchangeSuccess: false,
+  exchangePreview: null,
+  exchangePreviewLoading: false,
 };
 
 // ============ 1. FETCH USER ORDERS ============
@@ -71,6 +75,61 @@ export const cancelOrder = createAsyncThunk(
   }
 );
 
+// ============ 4. PREVIEW EXCHANGE ============
+export const previewExchangeOrder = createAsyncThunk(
+  "order/previewExchangeOrder",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await apiClient.post("/exchanges/preview", payload);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to calculate exchange price"
+      );
+    }
+  }
+);
+
+// ============ 5. EXCHANGE ORDER ============
+export const exchangeOrder = createAsyncThunk(
+  "order/exchangeOrder",
+  async (
+    {
+      orderId,
+      reason,
+      exchangeType,
+      itemIndex,
+      newProductId,
+      newColor,
+      newSize,
+      newVariantId,
+    },
+    { rejectWithValue, dispatch }
+  ) => {
+    try {
+      const response = await apiClient.post("/exchanges", {
+        orderId,
+        reason,
+        exchangeType,
+        itemIndex,
+        newProductId,
+        newColor,
+        newSize,
+        newVariantId,
+      });
+
+      dispatch(fetchUserOrders());
+      dispatch(fetchOrderDetails(orderId));
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to submit exchange request"
+      );
+    }
+  }
+);
+
 // ============ ORDER SLICE ============
 const orderSlice = createSlice({
   name: "order",
@@ -83,6 +142,14 @@ const orderSlice = createSlice({
       state.cancelSuccess = false;
       state.cancelLoading = false;
       state.refundStatus = null;
+    },
+    clearExchangeStatus: (state) => {
+      state.exchangeSuccess = false;
+      state.exchangeLoading = false;
+      state.exchangePreview = null;
+    },
+    clearExchangePreview: (state) => {
+      state.exchangePreview = null;
     },
     resetOrderState: () => initialState,
   },
@@ -123,7 +190,9 @@ const orderSlice = createSlice({
             shippingCharge: orderData.shippingCharge || 0,
             totalAmount: orderData.totalAmount || 0,
             couponDiscount: orderData.discount || 0
-          }
+          },
+          canExchange: orderData.canExchange ?? false,
+          exchange: orderData.exchange || null,
         };
       })
       .addCase(fetchOrderDetails.rejected, (state, action) => {
@@ -176,6 +245,60 @@ const orderSlice = createSlice({
         state.cancelLoading = false;
         state.cancelSuccess = false;
         state.error = action.payload || "Failed to cancel order";
+      })
+
+      // ============ EXCHANGE ORDER ============
+      .addCase(exchangeOrder.pending, (state) => {
+        state.exchangeLoading = true;
+        state.exchangeSuccess = false;
+        state.error = null;
+      })
+      .addCase(exchangeOrder.fulfilled, (state, action) => {
+        state.exchangeLoading = false;
+        state.exchangeSuccess = true;
+
+        const orderId = action.meta.arg.orderId;
+        const exchangeData = action.payload.data?.exchange;
+
+        if (state.orders.length > 0) {
+          const index = state.orders.findIndex(
+            (o) => o.id === orderId || o._id === orderId
+          );
+          if (index !== -1) {
+            state.orders[index].status = "EXCHANGE_REQUESTED";
+            state.orders[index].exchange = exchangeData;
+          }
+        }
+
+        if (state.currentOrder) {
+          const currentOrderId =
+            state.currentOrder._id || state.currentOrder.id;
+          if (currentOrderId === orderId) {
+            state.currentOrder.status = "EXCHANGE_REQUESTED";
+            state.currentOrder.exchange = exchangeData;
+            state.currentOrder.canExchange = false;
+          }
+        }
+      })
+      .addCase(exchangeOrder.rejected, (state, action) => {
+        state.exchangeLoading = false;
+        state.exchangeSuccess = false;
+        state.error = action.payload || "Failed to submit exchange request";
+      })
+
+      // ============ PREVIEW EXCHANGE ============
+      .addCase(previewExchangeOrder.pending, (state) => {
+        state.exchangePreviewLoading = true;
+        state.error = null;
+      })
+      .addCase(previewExchangeOrder.fulfilled, (state, action) => {
+        state.exchangePreviewLoading = false;
+        state.exchangePreview = action.payload;
+      })
+      .addCase(previewExchangeOrder.rejected, (state, action) => {
+        state.exchangePreviewLoading = false;
+        state.exchangePreview = null;
+        state.error = action.payload;
       });
   },
 });
@@ -183,7 +306,9 @@ const orderSlice = createSlice({
 // ============ EXPORT ACTIONS & REDUCER ============
 export const { 
   clearOrderError, 
-  clearCancelStatus, 
+  clearCancelStatus,
+  clearExchangeStatus,
+  clearExchangePreview,
   resetOrderState 
 } = orderSlice.actions;
 
