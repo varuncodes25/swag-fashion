@@ -13,6 +13,8 @@ const {
   rejectExchangeRequest,
   completeExchangeRequest,
   markExchangePaid,
+  createExchangePayment,
+  verifyExchangePayment,
   updateExchangeProgress,
 } = require("../controllers/exchangeController");
 
@@ -48,6 +50,22 @@ router.post(
 );
 
 router.get("/exchanges/my", exchangeReadLimiter, verifyToken, getMyExchanges);
+
+router.post(
+  "/exchanges/:id/create-payment",
+  exchangeMutationLimiter,
+  verifyToken,
+  createExchangePayment,
+);
+
+router.post(
+  "/exchanges/:id/verify-payment",
+  exchangeMutationLimiter,
+  verifyToken,
+  decryptRequest,
+  verifyExchangePayment,
+);
+
 router.get("/exchanges/:id", exchangeReadLimiter, verifyToken, getExchangeDetails);
 
 router.post(

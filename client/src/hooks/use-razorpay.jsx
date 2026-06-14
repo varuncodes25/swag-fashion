@@ -2,6 +2,7 @@
 import { useDispatch } from "react-redux";
 import { useToast } from "./use-toast";
 import { verifyRazorpayPayment } from "@/redux/slices/checkoutSlice";
+import apiClient from "@/api/axiosConfig";
 
 const useRazorpay = () => {
   const dispatch = useDispatch();
@@ -137,7 +138,85 @@ const useRazorpay = () => {
     }
   };
 
-  return { openRazorpayModal };
+  const openExchangePaymentModal = async ({
+    exchangeId,
+    razorpayOrderId,
+    amount,
+    key,
+    userDetails = {},
+    onSuccess,
+    onFailure,
+  }) => {
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        toast({
+          title: "Payment gateway failed to load",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const options = {
+        key: key || import.meta.env.VITE_RAZORPAY_KEY_ID,
+        amount,
+        currency: "INR",
+        name: "Swag Fashion",
+        description: "Exchange price difference",
+        order_id: razorpayOrderId,
+        prefill: {
+          name: userDetails.name || "",
+          email: userDetails.email || "",
+          contact: userDetails.phone || "",
+        },
+        theme: { color: "#2874f0" },
+        handler: async (response) => {
+          try {
+            await apiClient.post(`/exchanges/${exchangeId}/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            toast({
+              title: "Payment successful",
+              description: "Exchange request submitted with payment.",
+            });
+            onSuccess?.();
+          } catch (error) {
+            onFailure?.(error);
+            toast({
+              title: "Payment verification failed",
+              description:
+                error.response?.data?.message || error.message || "Try again",
+              variant: "destructive",
+            });
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            toast({
+              title: "Payment cancelled",
+              description: "Exchange saved — complete payment from order page.",
+            });
+            onFailure?.(new Error("Payment cancelled"));
+          },
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.open();
+      return razorpayInstance;
+    } catch (error) {
+      onFailure?.(error);
+      toast({
+        title: "Failed to open payment",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  return { openRazorpayModal, openExchangePaymentModal, loadRazorpayScript };
 };
 
 export default useRazorpay;

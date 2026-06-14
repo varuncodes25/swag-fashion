@@ -53,6 +53,23 @@ const OrderActions = ({
       ? currentOrder.canExchange ?? canExchange
       : canExchange;
 
+  const isCurrentOrder =
+    currentOrder?.id === orderId || currentOrder?._id === orderId;
+
+  const orderPaymentMethod = isCurrentOrder
+    ? currentOrder?.payment?.method
+    : undefined;
+
+  const shippingAddress = isCurrentOrder
+    ? currentOrder?.shipping?.address || {}
+    : {};
+
+  const customerDetails = {
+    name: shippingAddress.name || "",
+    email: shippingAddress.email || "",
+    phone: shippingAddress.phone || "",
+  };
+
   const handleCancelClick = () => {
     setShowCancelModal(true);
   };
@@ -221,6 +238,8 @@ const OrderActions = ({
     onClose={() => setShowExchangeModal(false)}
     orderId={orderId}
     items={orderItems}
+    paymentMethod={orderPaymentMethod || "COD"}
+    customerDetails={customerDetails}
     onExchangeSuccess={handleExchangeSuccess}
   />
 </div>

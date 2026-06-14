@@ -10,6 +10,8 @@ const {
   rejectExchange,
   completeExchange,
   markExchangePaymentPaid,
+  createExchangePaymentOrder,
+  verifyExchangePaymentOrder,
   updateExchangeStatus,
   ExchangeError,
 } = require("../service/exchangeService");
@@ -169,6 +171,37 @@ const completeExchangeRequest = async (req, res) => {
   }
 };
 
+const createExchangePayment = async (req, res) => {
+  try {
+    const data = await createExchangePaymentOrder(
+      req.params.id,
+      req.id,
+      req.role,
+    );
+    return res.json({ success: true, data });
+  } catch (error) {
+    return handleExchangeError(res, error, "Failed to initiate exchange payment");
+  }
+};
+
+const verifyExchangePayment = async (req, res) => {
+  try {
+    const exchange = await verifyExchangePaymentOrder(
+      req.params.id,
+      req.id,
+      req.role,
+      req.body,
+    );
+    return res.json({
+      success: true,
+      message: "Exchange payment verified successfully",
+      data: exchange,
+    });
+  } catch (error) {
+    return handleExchangeError(res, error, "Failed to verify exchange payment");
+  }
+};
+
 const markExchangePaid = async (req, res) => {
   try {
     if (req.role !== ROLES.admin) {
@@ -219,5 +252,7 @@ module.exports = {
   rejectExchangeRequest,
   completeExchangeRequest,
   markExchangePaid,
+  createExchangePayment,
+  verifyExchangePayment,
   updateExchangeProgress,
 };

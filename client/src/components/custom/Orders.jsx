@@ -229,6 +229,9 @@ const Orders = () => {
               <SelectItem value="CONFIRMED">Confirmed</SelectItem>
               <SelectItem value="SHIPPED">Shipped</SelectItem>
               <SelectItem value="DELIVERED">Delivered</SelectItem>
+              <SelectItem value="EXCHANGE_REQUESTED">Exchange requested</SelectItem>
+              <SelectItem value="EXCHANGE_APPROVED">Exchange approved</SelectItem>
+              <SelectItem value="EXCHANGED">Exchanged</SelectItem>
               <SelectItem value="CANCELLED">Cancelled</SelectItem>
             </SelectContent>
           </Select>
@@ -519,8 +522,15 @@ const OrderStatusSelector = ({ order, loading, updateOrderStatus }) => {
     { value: "PROCESSING", label: "Processing" },
     { value: "SHIPPED", label: "Shipped" },
     { value: "DELIVERED", label: "Delivered" },
+    { value: "EXCHANGE_REQUESTED", label: "Exchange requested" },
+    { value: "EXCHANGE_APPROVED", label: "Exchange approved" },
+    { value: "EXCHANGED", label: "Exchanged" },
     { value: "CANCELLED", label: "Cancelled" },
   ];
+
+  const isExchangeStatus = String(order.status || "")
+    .toUpperCase()
+    .includes("EXCHANGE");
 
   return (
     <div className="flex items-center gap-2">
@@ -533,13 +543,13 @@ const OrderStatusSelector = ({ order, loading, updateOrderStatus }) => {
         {order.status}
       </span>
 
-      {/* Status Selector */}
+      {/* Status Selector — use Exchanges page for approve/complete flow */}
       <Select
         value={order.status}
         onValueChange={(value) => updateOrderStatus(value, order.id)}
-        disabled={loading}
+        disabled={loading || isExchangeStatus}
       >
-        <SelectTrigger className="w-[150px] capitalize bg-card border-border">
+        <SelectTrigger className="w-[180px] capitalize bg-card border-border">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -554,6 +564,14 @@ const OrderStatusSelector = ({ order, loading, updateOrderStatus }) => {
           ))}
         </SelectContent>
       </Select>
+      {isExchangeStatus && (
+        <a
+          href="/admin/dashboard/exchanges"
+          className="text-xs text-primary hover:underline whitespace-nowrap"
+        >
+          Manage in Exchanges →
+        </a>
+      )}
     </div>
   );
 };

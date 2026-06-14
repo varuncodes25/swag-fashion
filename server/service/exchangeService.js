@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
+const razorpay = require("../config/razorpay");
 const Order = require("../models/Order");
 const Exchange = require("../models/Exchange");
 const Product = require("../models/Product");
@@ -10,6 +12,7 @@ const {
   EXCHANGE_WINDOW_DAYS,
 } = require("../constants/exchangeConstants");
 const {
+  round2,
   calculateExchangePricing,
   resolveExchangeVariant,
   isSameVariant,
@@ -223,6 +226,107 @@ async function resolveNewItem(orderItem, { newProductId, newColor, newSize, newV
   const pricing = calculateExchangePricing(orderItem, product, variant);
 
   return { product, variant, pricing, quantity };
+}
+
+function plainOrderItem(item) {
+  if (!item) return null;
+  return item.toObject ? item.toObject() : { ...item };
+}
+
+function applyNewItemToOrderLine(order, exchange, product, variant) {
+  const idx = exchange.itemIndex || 0;
+  const oldItem = order.items[idx];
+  if (!oldItem) {
+    throw new ExchangeError("Order item not found for exchange", 400);
+  }
+
+  const old = plainOrderItem(oldItem);
+  const qty = exchange.newItem.quantity || old.quantity || 1;
+  const newUnitPrice = Number(exchange.newItem.unitPrice) || 0;
+  const newLineTotal =
+    Number(exchange.newItem.lineTotal) || round2(newUnitPrice * qty);
+  const mrp = Number(variant?.price || product?.price || newUnitPrice) || newUnitPrice;
+
+  order.items[idx] = {
+    ...old,
+    productId: exchange.newItem.productId,
+    variantId: exchange.newItem.variantId,
+    name: exchange.newItem.name,
+    image: exchange.newItem.image || old.image,
+    color: exchange.newItem.color,
+    size: exchange.newItem.size,
+    sku: exchange.newItem.sku || old.sku,
+    quantity: qty,
+    price: mrp,
+    finalPrice: newUnitPrice,
+    discountAmount: round2(Math.max(0, mrp - newUnitPrice)),
+    discountPercent:
+      mrp > 0 ? Math.round(((mrp - newUnitPrice) / mrp) * 100) : 0,
+    lineTotal: newLineTotal,
+  };
+
+  recalculateOrderAmounts(order, exchange);
+  return order;
+}
+
+function restoreOriginalOrderLine(order, exchange) {
+  const idx = exchange.itemIndex || 0;
+  const currentItem = order.items[idx];
+  const orig = exchange.originalItem;
+
+  if (!currentItem || !orig) return order;
+
+  const old = plainOrderItem(currentItem);
+  const qty = orig.quantity || old.quantity || 1;
+  const unitPrice = Number(orig.unitPrice) || 0;
+
+  order.items[idx] = {
+    ...old,
+    productId: orig.productId,
+    variantId: orig.variantId,
+    name: orig.name,
+    image: orig.image || old.image,
+    color: orig.color,
+    size: orig.size,
+    sku: orig.sku || old.sku,
+    quantity: qty,
+    price: unitPrice,
+    finalPrice: unitPrice,
+    discountAmount: 0,
+    discountPercent: 0,
+    lineTotal: Number(orig.lineTotal) || round2(unitPrice * qty),
+  };
+
+  recalculateOrderAmounts(order);
+  return order;
+}
+
+function recalculateOrderAmounts(order, exchange = null) {
+  const newSubtotal = order.items.reduce(
+    (sum, item) => sum + (Number(item.lineTotal) || 0),
+    0,
+  );
+
+  order.subtotal = round2(newSubtotal);
+
+  let newTotal = round2(
+    order.subtotal +
+      (Number(order.shippingCharge) || 0) +
+      (Number(order.taxAmount) || 0) -
+      (Number(order.discount) || 0),
+  );
+
+  if (
+    exchange?.pricing?.paymentRequired &&
+    exchange?.payment?.status === "PAID"
+  ) {
+    newTotal = round2(
+      newTotal + (Number(exchange.pricing.extraAmountToPay) || 0),
+    );
+  }
+
+  order.totalAmount = newTotal;
+  return order;
 }
 
 function buildPreviewResponse(orderItem, product, variant, pricing) {
@@ -575,18 +679,42 @@ async function approveExchange(exchangeId, adminId, adminNotes = "") {
     throw new ExchangeError("New product variant is now out of stock", 400);
   }
 
-  exchange.status = "APPROVED";
-  exchange.approvedAt = new Date();
-  exchange.processedBy = adminId;
-  exchange.adminNotes = adminNotes || exchange.adminNotes;
-  exchange.statusHistory.push({
-    status: "APPROVED",
-    note: adminNotes || "Exchange approved",
-    changedBy: adminId,
-  });
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  await exchange.save();
-  return formatExchangeForClient(exchange);
+  try {
+    const order = await Order.findById(exchange.orderId).session(session);
+    if (!order) throw new ExchangeError("Order not found", 404);
+
+    applyNewItemToOrderLine(order, exchange, product, variant);
+
+    applyOrderStatusTransition(order, "EXCHANGE_APPROVED", {
+      changedBy: adminId,
+      reason: `Exchange ${exchange.exchangeNumber || exchange._id} approved — order item updated`,
+    });
+
+    exchange.status = "APPROVED";
+    exchange.approvedAt = new Date();
+    exchange.processedBy = adminId;
+    exchange.adminNotes = adminNotes || exchange.adminNotes;
+    exchange.statusHistory.push({
+      status: "APPROVED",
+      note: adminNotes || "Exchange approved — order updated with new item",
+      changedBy: adminId,
+    });
+
+    await exchange.save({ session });
+    await order.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return formatExchangeForClient(exchange);
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
 }
 
 async function rejectExchange(exchangeId, adminId, rejectionReason) {
@@ -617,7 +745,10 @@ async function rejectExchange(exchangeId, adminId, rejectionReason) {
     await exchange.save({ session });
 
     const order = await Order.findById(exchange.orderId).session(session);
-    if (order && order.status === "EXCHANGE_REQUESTED") {
+    if (order && ["EXCHANGE_REQUESTED", "EXCHANGE_APPROVED"].includes(order.status)) {
+      if (order.status === "EXCHANGE_APPROVED") {
+        restoreOriginalOrderLine(order, exchange);
+      }
       applyOrderStatusTransition(order, "DELIVERED", {
         changedBy: adminId,
         reason: `Exchange rejected: ${rejectionReason}`,
@@ -643,6 +774,18 @@ async function completeExchange(exchangeId, adminId, adminNotes = "") {
 
   if (exchange.status !== "APPROVED") {
     throw new ExchangeError("Only approved exchanges can be completed", 400);
+  }
+
+  const orderForComplete = await Order.findById(exchange.orderId);
+  if (
+    orderForComplete &&
+    orderForComplete.status !== "EXCHANGE_APPROVED" &&
+    orderForComplete.status !== "EXCHANGE_REQUESTED"
+  ) {
+    throw new ExchangeError(
+      "Order is not in a valid state to complete this exchange",
+      400,
+    );
   }
 
   const session = await mongoose.startSession();
@@ -699,6 +842,114 @@ async function completeExchange(exchangeId, adminId, adminNotes = "") {
   }
 }
 
+async function loadExchangeForPayment(exchangeId, userId, userRole) {
+  if (!isValidObjectId(exchangeId)) {
+    throw new ExchangeError("Invalid exchange ID", 400);
+  }
+
+  const exchange = await Exchange.findById(exchangeId);
+  if (!exchange) throw new ExchangeError("Exchange request not found", 404);
+
+  const isAdmin = userRole === ROLES.admin;
+  if (!isAdmin && exchange.userId.toString() !== String(userId)) {
+    throw new ExchangeError("You are not authorized to pay for this exchange", 403);
+  }
+
+  return exchange;
+}
+
+async function createExchangePaymentOrder(exchangeId, userId, userRole) {
+  const exchange = await loadExchangeForPayment(exchangeId, userId, userRole);
+
+  if (!exchange.pricing?.paymentRequired) {
+    throw new ExchangeError("No extra payment required for this exchange", 400);
+  }
+
+  if (exchange.payment?.status === "PAID") {
+    throw new ExchangeError("Extra payment already completed", 400);
+  }
+
+  if (!["PAYMENT_PENDING", "REQUESTED"].includes(exchange.status)) {
+    throw new ExchangeError(
+      `Cannot pay for exchange in ${exchange.status} status`,
+      400,
+    );
+  }
+
+  const amountInPaise = Math.round(Number(exchange.pricing.extraAmountToPay) * 100);
+  if (amountInPaise <= 0) {
+    throw new ExchangeError("Invalid payment amount", 400);
+  }
+
+  const receiptBase = String(exchange.exchangeNumber || exchange._id)
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 32);
+  const rpOrder = await razorpay.orders.create({
+    amount: amountInPaise,
+    currency: "INR",
+    receipt: `exc_${receiptBase}`.slice(0, 40),
+    notes: {
+      type: "EXCHANGE_EXTRA",
+      exchangeId: String(exchange._id),
+      orderId: String(exchange.orderId),
+      userId: String(exchange.userId),
+    },
+  });
+
+  exchange.payment.razorpayOrderId = rpOrder.id;
+  exchange.payment.amount = exchange.pricing.extraAmountToPay;
+  await exchange.save();
+
+  return {
+    exchangeId: exchange._id,
+    razorpayOrderId: rpOrder.id,
+    amount: rpOrder.amount,
+    currency: rpOrder.currency,
+    key: process.env.RAZORPAY_KEY_ID,
+    extraAmountToPay: exchange.pricing.extraAmountToPay,
+  };
+}
+
+async function verifyExchangePaymentOrder(exchangeId, userId, userRole, paymentDetails = {}) {
+  const {
+    razorpay_order_id: razorpayOrderId,
+    razorpay_payment_id: razorpayPaymentId,
+    razorpay_signature: razorpaySignature,
+  } = paymentDetails;
+
+  if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+    throw new ExchangeError("Incomplete payment verification data", 400);
+  }
+
+  const exchange = await loadExchangeForPayment(exchangeId, userId, userRole);
+
+  if (exchange.payment?.razorpayOrderId !== razorpayOrderId) {
+    throw new ExchangeError("Payment order does not match this exchange", 400);
+  }
+
+  const expectedSignature = crypto
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+    .digest("hex");
+
+  if (expectedSignature !== razorpaySignature) {
+    throw new ExchangeError("Payment verification failed", 400);
+  }
+
+  const rpOrder = await razorpay.orders.fetch(razorpayOrderId);
+  const expectedPaise = Math.round(Number(exchange.pricing.extraAmountToPay) * 100);
+
+  if (Number(rpOrder.amount) !== expectedPaise) {
+    throw new ExchangeError("Paid amount does not match exchange difference", 400);
+  }
+
+  return markExchangePaymentPaid(exchangeId, userId, {
+    paymentId: razorpayPaymentId,
+    razorpayOrderId,
+    paidBy: "USER",
+  });
+}
+
 async function markExchangePaymentPaid(exchangeId, adminId, paymentDetails = {}) {
   const exchange = await Exchange.findById(exchangeId);
   if (!exchange) throw new ExchangeError("Exchange request not found", 404);
@@ -729,7 +980,9 @@ async function markExchangePaymentPaid(exchangeId, adminId, paymentDetails = {})
 
   exchange.statusHistory.push({
     status: "PAYMENT_PAID",
-    note: `Payment of ₹${exchange.payment.amount} received`,
+    note: `Payment of ₹${exchange.payment.amount} received${
+      paymentDetails.paidBy === "USER" ? " (online)" : ""
+    }`,
     changedBy: adminId,
   });
 
@@ -781,5 +1034,7 @@ module.exports = {
   rejectExchange,
   completeExchange,
   markExchangePaymentPaid,
+  createExchangePaymentOrder,
+  verifyExchangePaymentOrder,
   updateExchangeStatus,
 };

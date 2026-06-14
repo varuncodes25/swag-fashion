@@ -169,6 +169,7 @@ const orderSchema = new mongoose.Schema(
         "CANCELLED",
         "RETURNED",
         "EXCHANGE_REQUESTED",
+        "EXCHANGE_APPROVED",
         "EXCHANGED",
       ],
       default: "PENDING",
@@ -254,6 +255,7 @@ orderSchema.methods.canCancel = function () {
     "CANCELLED",
     "RETURNED",
     "EXCHANGE_REQUESTED",
+    "EXCHANGE_APPROVED",
     "EXCHANGED",
   ];
   return !nonCancellable.includes(this.status);
@@ -273,7 +275,9 @@ orderSchema.methods.canReturn = function () {
 // Check if order can be exchanged (basic checks — active exchange checked in service)
 orderSchema.methods.canExchange = function () {
   if (this.status !== "DELIVERED") return false;
-  if (["EXCHANGE_REQUESTED", "EXCHANGED"].includes(this.status)) return false;
+  if (["EXCHANGE_REQUESTED", "EXCHANGE_APPROVED", "EXCHANGED"].includes(this.status)) {
+    return false;
+  }
   if (this.activeExchangeId) return false;
 
   const deliveredAt =

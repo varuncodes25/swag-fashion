@@ -34,6 +34,9 @@ const QuickAddProduct = lazyRoute(() =>
 const AllProducts = lazyRoute(() => import("./components/custom/AllProducts"));
 const Analytics = lazyRoute(() => import("./components/custom/Analytics"));
 const Orders = lazyRoute(() => import("./components/custom/Orders"));
+const AdminExchanges = lazyRoute(() =>
+  import("./components/Admin/AdminExchanges")
+);
 const Settings = lazyRoute(() => import("./components/custom/Settings"));
 const MyOrders = lazyRoute(() => import("./pages/MyOrders"));
 const Contact = lazyRoute(() => import("./components/custom/Contact"));
@@ -264,6 +267,14 @@ export default function App() {
       element: (
         <ProtectedRoute requireAdmin={true}>
           <AdminLayout children={<Orders />} />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/admin/dashboard/exchanges",
+      element: (
+        <ProtectedRoute requireAdmin={true}>
+          <AdminLayout children={<AdminExchanges />} />
         </ProtectedRoute>
       ),
     },

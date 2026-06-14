@@ -7,6 +7,8 @@ import {
   ArrowRight,
   Package,
   Loader2,
+  CreditCard,
+  Banknote,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,11 +16,14 @@ import {
   exchangeOrder,
   previewExchangeOrder,
   clearExchangePreview,
+  clearExchangeStatus,
+  fetchOrderDetails,
 } from "@/redux/slices/order";
 import apiClient from "@/api/axiosConfig";
 import { formatPrice } from "@/utils/orderHelpers";
 import { getImageUrl, optimizeGalleryImage } from "@/utils/productImages";
 import ProductCard from "@/components/custom/ProductCard";
+import useRazorpay from "@/hooks/use-razorpay";
 
 const EXCHANGE_TYPES = [
   { id: "SIZE", label: "Wrong size", value: "SIZE" },
@@ -43,10 +48,14 @@ const ExchangeOrderModal = ({
   onClose,
   orderId,
   items = [],
+  paymentMethod = "COD",
+  customerDetails = {},
   onExchangeSuccess,
 }) => {
   const { toast } = useToast();
   const dispatch = useDispatch();
+  const { openExchangePaymentModal } = useRazorpay();
+  const { user } = useSelector((state) => state.auth);
 
   const {
     exchangeLoading,
@@ -74,8 +83,18 @@ const ExchangeOrderModal = ({
   const [loadingProductDetails, setLoadingProductDetails] = useState(false);
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const selectedItem = items[itemIndex] || items[0];
+  const isCodOrder = String(paymentMethod || "COD").toUpperCase() === "COD";
+  const extraAmount = Number(exchangePreview?.pricing?.extraAmountToPay) || 0;
+  const needsExtraPayment = Boolean(exchangePreview?.pricing?.paymentRequired);
+  const needsOnlinePay = needsExtraPayment && !isCodOrder;
+  const razorpayUserDetails = {
+    name: customerDetails.name || user?.name || "",
+    email: customerDetails.email || user?.email || "",
+    phone: customerDetails.phone || user?.phone || "",
+  };
   const stepIndex = STEPS.indexOf(step);
   const meta = STEP_META[step];
 
@@ -454,9 +473,10 @@ const ExchangeOrderModal = ({
 
   useEffect(() => {
     if (exchangeSuccess) {
-      const extraMsg = exchangePreview?.pricing?.paymentRequired
-        ? ` Extra payment of ${formatPrice(exchangePreview.pricing.extraAmountToPay)} pending.`
-        : "";
+      const extraMsg =
+        isCodOrder && needsExtraPayment
+          ? ` Delivery par ${formatPrice(extraAmount)} cash ready rakhein.`
+          : "";
       toast({
         title: "Exchange Requested",
         description: `Your exchange request has been submitted.${extraMsg}`,
@@ -465,7 +485,15 @@ const ExchangeOrderModal = ({
       onClose();
       if (onExchangeSuccess) onExchangeSuccess();
     }
-  }, [exchangeSuccess, exchangePreview, onClose, onExchangeSuccess, toast]);
+  }, [
+    exchangeSuccess,
+    isCodOrder,
+    needsExtraPayment,
+    extraAmount,
+    onClose,
+    onExchangeSuccess,
+    toast,
+  ]);
 
   useEffect(() => {
     if (error) {
@@ -512,8 +540,8 @@ const ExchangeOrderModal = ({
     setStep("confirm");
   };
 
-  const handleSubmit = () => {
-    if (!exchangePreview) {
+  const handleSubmit = async () => {
+    if (!exchangePreview || !selectedProduct?._id) {
       toast({
         title: "Error",
         description: "Please wait for price calculation",
@@ -522,18 +550,64 @@ const ExchangeOrderModal = ({
       return;
     }
 
-    dispatch(
-      exchangeOrder({
-        orderId,
-        reason: getReason(),
-        exchangeType,
-        itemIndex,
-        newProductId: selectedProduct._id,
-        newColor: selectedColor,
-        newSize: selectedSize,
-        newVariantId: selectedVariant?._id,
-      })
-    );
+    const payload = {
+      orderId,
+      reason: getReason(),
+      exchangeType,
+      itemIndex,
+      newProductId: selectedProduct._id,
+      newColor: selectedColor,
+      newSize: selectedSize,
+      newVariantId: selectedVariant?._id,
+    };
+
+    setSubmitting(true);
+
+    try {
+      if (needsOnlinePay) {
+        const createRes = await apiClient.post("/exchanges", payload);
+        const exchange = createRes.data?.data?.exchange;
+
+        if (!exchange?.id) {
+          throw new Error("Could not create exchange request");
+        }
+
+        const payRes = await apiClient.post(
+          `/exchanges/${exchange.id}/create-payment`
+        );
+        const payData = payRes.data?.data;
+
+        await openExchangePaymentModal({
+          exchangeId: exchange.id,
+          razorpayOrderId: payData.razorpayOrderId,
+          amount: payData.amount,
+          key: payData.key,
+          userDetails: razorpayUserDetails,
+          onSuccess: () => {
+            dispatch(fetchOrderDetails(orderId));
+            dispatch(clearExchangeStatus());
+            onClose();
+            if (onExchangeSuccess) onExchangeSuccess();
+          },
+          onFailure: () => {
+            dispatch(fetchOrderDetails(orderId));
+          },
+        });
+      } else {
+        await dispatch(exchangeOrder(payload)).unwrap();
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description:
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to submit exchange",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const canProceedFromReason = () => {
@@ -973,21 +1047,64 @@ const ExchangeOrderModal = ({
 
                   <div
                     className={`p-4 rounded-xl ${
-                      exchangePreview.pricing.paymentRequired
-                        ? "bg-orange-50 border border-orange-200"
+                      needsExtraPayment
+                        ? isCodOrder
+                          ? "bg-amber-50 border border-amber-200"
+                          : "bg-blue-50 border border-blue-200"
                         : "bg-green-50 border border-green-200"
                     }`}
                   >
-                    <p className="text-sm font-semibold text-gray-900">
-                      {exchangePreview.pricing.paymentRequired
-                        ? `Pay ${formatPrice(exchangePreview.pricing.extraAmountToPay)} extra`
-                        : exchangePreview.pricing.savingsAmount > 0
-                          ? `₹${exchangePreview.pricing.savingsAmount} cheaper — no refund`
-                          : "No extra payment needed"}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      {exchangePreview.pricing.message}
-                    </p>
+                    {needsExtraPayment && isCodOrder ? (
+                      <>
+                        <div className="flex items-center gap-2 text-amber-900 mb-2">
+                          <Banknote className="w-4 h-4 shrink-0" />
+                          <p className="text-sm font-semibold">
+                            Cash on delivery — extra amount
+                          </p>
+                        </div>
+                        <p className="text-2xl font-bold text-amber-900">
+                          {formatPrice(extraAmount)}
+                        </p>
+                        <p className="text-xs text-amber-900/90 mt-2 leading-relaxed">
+                          Naya product jab deliver hoga, tab delivery agent ko
+                          yeh amount <strong>cash mein</strong> dena hoga.
+                          Admin approve ke baad bhi yeh amount order page par
+                          dikhega.
+                        </p>
+                      </>
+                    ) : needsOnlinePay ? (
+                      <>
+                        <div className="flex items-center gap-2 text-[#2874f0] mb-2">
+                          <CreditCard className="w-4 h-4 shrink-0" />
+                          <p className="text-sm font-semibold">
+                            Pay online now
+                          </p>
+                        </div>
+                        <p className="text-2xl font-bold text-[#2874f0]">
+                          {formatPrice(extraAmount)}
+                        </p>
+                        <p className="text-xs text-gray-700 mt-2 leading-relaxed">
+                          Submit par Razorpay khulega. Payment successful hone ke
+                          baad hi exchange request admin ke paas jayegi.
+                        </p>
+                      </>
+                    ) : needsExtraPayment ? (
+                      <p className="text-sm font-semibold text-gray-900">
+                        {exchangePreview.pricing.message}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-sm font-semibold text-gray-900">
+                          No extra payment needed
+                        </p>
+                        {exchangePreview.pricing.savingsAmount > 0 && (
+                          <p className="text-xs text-green-700 mt-1">
+                            ₹{exchangePreview.pricing.savingsAmount} cheaper —
+                            no cash refund (exchange only)
+                          </p>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1043,13 +1160,23 @@ const ExchangeOrderModal = ({
           {step === "confirm" && exchangePreview && (
             <button
               onClick={handleSubmit}
-              disabled={exchangeLoading}
+              disabled={exchangeLoading || submitting}
               className={primaryBtn}
             >
-              {exchangeLoading ? (
+              {exchangeLoading || submitting ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Submitting...
+                  {needsOnlinePay ? "Opening payment..." : "Submitting..."}
+                </>
+              ) : needsOnlinePay ? (
+                <>
+                  <CreditCard className="w-4 h-4" />
+                  Pay {formatPrice(extraAmount)} &amp; submit
+                </>
+              ) : needsExtraPayment && isCodOrder ? (
+                <>
+                  <Banknote className="w-4 h-4" />
+                  Submit — pay {formatPrice(extraAmount)} on delivery
                 </>
               ) : (
                 <>

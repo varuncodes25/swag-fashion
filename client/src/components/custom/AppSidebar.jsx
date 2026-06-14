@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   Home,
+  RefreshCw,
 } from "lucide-react";
 
 import {
@@ -47,6 +48,11 @@ const items = [
     title: "Orders",
     url: "/admin/dashboard/orders",
     icon: PackageSearch,
+  },
+  {
+    title: "Exchanges",
+    url: "/admin/dashboard/exchanges",
+    icon: RefreshCw,
   },
   {
     title: "Analytics",

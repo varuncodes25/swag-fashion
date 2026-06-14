@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchOrderDetails } from "@/redux/slices/order";
 import OrderData from "../../components/custom/OrderData";
 import { formatPrice, formatDate, StatusDisplay } from "../../utils/orderHelpers";
+import ExchangePaymentStatus from "./ExchangePaymentStatus";
 
 const OrderDetails = () => {
   const { orderId } = useParams();
@@ -95,7 +96,23 @@ const OrderDetails = () => {
               </button>
             </div>
 
-            {/* Order Header */}
+            {order.exchange?.details && order.exchange?.pricing?.paymentRequired && (
+            <div className="mb-6">
+              <ExchangePaymentStatus
+                exchange={order.exchange}
+                orderId={orderId}
+                paymentMethod={paymentMethod}
+                customerDetails={{
+                  name: address.name || "",
+                  email: address.email || "",
+                  phone: address.phone || "",
+                }}
+                onPaymentSuccess={handleExchangeSuccess}
+              />
+            </div>
+          )}
+
+          {/* Order Header */}
             <div className="bg-card rounded-xl p-5 border border-border mb-6 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
@@ -220,15 +237,18 @@ const OrderDetails = () => {
                       <p className="text-muted-foreground/70">
                         {order.exchange.details.newColor} / {order.exchange.details.newSize}
                       </p>
-                      {order.exchange.pricing?.paymentRequired ? (
-                        <p className="text-amber-700 font-medium mt-1">
-                          Extra payment pending: {formatPrice(order.exchange.pricing.extraAmountToPay)}
-                        </p>
-                      ) : (
-                        <p className="text-green-700 font-medium mt-1">
-                          No extra payment required
-                        </p>
-                      )}
+                      <ExchangePaymentStatus
+                        exchange={order.exchange}
+                        orderId={orderId}
+                        paymentMethod={paymentMethod}
+                        customerDetails={{
+                          name: address.name || "",
+                          email: address.email || "",
+                          phone: address.phone || "",
+                        }}
+                        onPaymentSuccess={handleExchangeSuccess}
+                        compact
+                      />
                     </div>
                   )}
                 </div>
