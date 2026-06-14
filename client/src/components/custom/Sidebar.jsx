@@ -122,10 +122,12 @@ export function Sidebar() {
   const displayRole = profile?.role || "user";
   const avatarUrl = getAvatarUrl();
 
-  // Debug log
-  console.log("Avatar URL:", avatarUrl);
-  console.log("Profile Avatar:", profile?.avatar);
-  console.log("Preview:", preview);
+  const formatSpent = (amount) => {
+    const n = Number(amount) || 0;
+    if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`;
+    if (n >= 1000) return `₹${(n / 1000).toFixed(1)}k`;
+    return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`;
+  };
 
   if (loading && !profile) {
     return (
@@ -139,8 +141,8 @@ export function Sidebar() {
   }
 
   return (
-    <div className="rounded-xl border bg-card text-card-foreground">
-      <div className="flex flex-col items-center gap-2 p-6">
+    <div className="bg-card text-card-foreground md:rounded-none">
+      <div className="flex flex-col items-center gap-2 px-4 py-5 sm:px-6">
         <input 
           type="file" 
           accept="image/*" 
@@ -176,13 +178,17 @@ export function Sidebar() {
         </div>
 
         <div className="text-center">
-          <p className="font-semibold text-lg">{displayName}</p>
-          <p className="text-xs text-muted-foreground">{profile?.email}</p>
+          <p className="text-base font-semibold sm:text-lg">{displayName}</p>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground max-w-[220px]">
+            {profile?.email}
+          </p>
           {profile?.phone && (
-            <p className="text-xs text-muted-foreground mt-1">{profile.phone}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{profile.phone}</p>
           )}
-          <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${getRoleBadgeColor()}`}>
-            <Shield className="inline w-3 h-3 mr-1" />
+          <span
+            className={`mt-2 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${getRoleBadgeColor()}`}
+          >
+            <Shield className="inline h-3 w-3" />
             {displayRole.charAt(0).toUpperCase() + displayRole.slice(1)}
           </span>
         </div>
@@ -191,20 +197,32 @@ export function Sidebar() {
       <Separator />
 
       {isAuthenticated && (
-        <div className="p-4">
-          <div className="bg-muted/30 rounded-lg p-3">
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div>
-                <p className="text-xl font-bold text-primary">{totalOrders}</p>
-                <p className="text-xs text-muted-foreground">Orders</p>
+        <div className="px-4 py-3 sm:px-5">
+          <div className="rounded-xl bg-muted/40 p-3">
+            <div className="grid grid-cols-3 gap-1 text-center">
+              <div className="px-1">
+                <p className="text-lg font-bold text-primary sm:text-xl">
+                  {totalOrders}
+                </p>
+                <p className="text-[10px] text-muted-foreground sm:text-xs">
+                  Orders
+                </p>
               </div>
-              <div>
-                <p className="text-xl font-bold text-primary">{wishlistCount}</p>
-                <p className="text-xs text-muted-foreground">Wishlist</p>
+              <div className="px-1 border-x border-border/60">
+                <p className="text-lg font-bold text-primary sm:text-xl">
+                  {wishlistCount}
+                </p>
+                <p className="text-[10px] text-muted-foreground sm:text-xs">
+                  Wishlist
+                </p>
               </div>
-              <div>
-                <p className="text-xl font-bold text-primary">₹{totalSpent?.toLocaleString() || 0}</p>
-                <p className="text-xs text-muted-foreground">Spent</p>
+              <div className="px-1">
+                <p className="text-sm font-bold leading-tight text-primary sm:text-base">
+                  {formatSpent(totalSpent)}
+                </p>
+                <p className="text-[10px] text-muted-foreground sm:text-xs">
+                  Spent
+                </p>
               </div>
             </div>
           </div>
@@ -213,36 +231,45 @@ export function Sidebar() {
 
       <Separator />
 
-      <div className="p-2 space-y-1">
+      <div className="space-y-0.5 p-2 pb-4">
         {isAuthenticated ? (
           <>
             {menu.map((item) => (
               <NavLink
                 key={item.label}
                 to={item.to}
-                end
+                end={item.to === "/account"}
                 className={({ isActive }) =>
-                  `w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-muted ${isActive ? "bg-muted font-medium text-primary" : ""}`
+                  `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                    isActive
+                      ? "bg-primary/10 font-medium text-primary"
+                      : "text-foreground/80 hover:bg-muted"
+                  }`
                 }
               >
-                <item.icon size={18} />
+                <item.icon size={18} className="shrink-0" />
                 {item.label}
               </NavLink>
             ))}
-            <NavLink 
-              to="/account/addresses" 
-              className={({ isActive }) => 
-                `w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition hover:bg-muted ${isActive ? "bg-muted font-medium text-primary" : ""}`
+            <NavLink
+              to="/account/addresses"
+              className={({ isActive }) =>
+                `flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                  isActive
+                    ? "bg-primary/10 font-medium text-primary"
+                    : "text-foreground/80 hover:bg-muted"
+                }`
               }
             >
-              <MapPin size={18} />
+              <MapPin size={18} className="shrink-0" />
               Saved Addresses
             </NavLink>
-            <button 
-              onClick={handleLogout} 
-              className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition mt-2"
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-2 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950/30"
             >
-              <LogOut size={18} />
+              <LogOut size={18} className="shrink-0" />
               Logout
             </button>
           </>
