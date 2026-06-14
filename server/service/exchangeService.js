@@ -53,6 +53,20 @@ function buildPricingMessage(pricing) {
   return "No extra payment required for this exchange";
 }
 
+function normalizeExtraPaymentMethod(method) {
+  return String(method || "RAZORPAY").toUpperCase() === "COD" ? "COD" : "RAZORPAY";
+}
+
+function resolveExtraPaymentMethod(payload, order, paymentRequired) {
+  if (!paymentRequired) return null;
+
+  if (payload?.extraPaymentMethod) {
+    return normalizeExtraPaymentMethod(payload.extraPaymentMethod);
+  }
+
+  return order.paymentMethod === "COD" ? "COD" : "RAZORPAY";
+}
+
 function formatExchangeForClient(exchange) {
   if (!exchange) return null;
 
@@ -392,6 +406,7 @@ async function createExchangeRequest(userId, userRole, payload) {
     newColor,
     newSize,
     newVariantId,
+    extraPaymentMethod,
   } = payload;
 
   const type = validateExchangePayload({ exchangeType, reason, newProductId });
@@ -410,11 +425,15 @@ async function createExchangeRequest(userId, userRole, payload) {
   session.startTransaction();
 
   try {
+    const selectedPaymentMethod = resolveExtraPaymentMethod(
+      { extraPaymentMethod },
+      order,
+      pricing.paymentRequired,
+    );
+    const payOnline = selectedPaymentMethod === "RAZORPAY";
     const paymentStatus = pricing.paymentRequired ? "PENDING" : "NOT_REQUIRED";
     const exchangeStatus =
-      pricing.paymentRequired && order.paymentMethod !== "COD"
-        ? "PAYMENT_PENDING"
-        : "REQUESTED";
+      pricing.paymentRequired && payOnline ? "PAYMENT_PENDING" : "REQUESTED";
 
     const exchange = new Exchange({
       orderId: order._id,
@@ -457,7 +476,7 @@ async function createExchangeRequest(userId, userRole, payload) {
       payment: {
         status: paymentStatus,
         amount: pricing.extraAmountToPay,
-        method: order.paymentMethod,
+        method: selectedPaymentMethod || order.paymentMethod,
       },
       statusHistory: [
         {
@@ -482,7 +501,9 @@ async function createExchangeRequest(userId, userRole, payload) {
 
     const formatted = formatExchangeForClient(exchange);
     const paymentMessage = pricing.paymentRequired
-      ? ` Extra payment of ₹${pricing.extraAmountToPay} will be collected when we process your exchange.`
+      ? payOnline
+        ? ` Pay ₹${pricing.extraAmountToPay} online to complete your exchange request.`
+        : ` Pay ₹${pricing.extraAmountToPay} in cash when the exchanged item is delivered.`
       : pricing.savingsAmount > 0
         ? " No cash refund for the price difference — exchange only policy."
         : "";
@@ -867,6 +888,13 @@ async function createExchangePaymentOrder(exchangeId, userId, userRole) {
 
   if (exchange.payment?.status === "PAID") {
     throw new ExchangeError("Extra payment already completed", 400);
+  }
+
+  if (exchange.payment?.method === "COD") {
+    throw new ExchangeError(
+      "This exchange uses cash on delivery. Pay the delivery agent when your item arrives.",
+      400,
+    );
   }
 
   if (!["PAYMENT_PENDING", "REQUESTED"].includes(exchange.status)) {

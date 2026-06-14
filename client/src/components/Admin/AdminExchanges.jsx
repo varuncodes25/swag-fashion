@@ -13,7 +13,7 @@ import apiClient from "@/api/axiosConfig";
 import { useToast } from "@/hooks/use-toast";
 import useErrorLogout from "@/hooks/use-error-logout";
 import { formatDate, formatPrice } from "@/utils/orderHelpers";
-import { Loader2, RefreshCw, Search, X, ArrowRight } from "lucide-react";
+import { Loader2, RefreshCw, Search, X, ArrowRight, Banknote, CheckCircle2, Clock } from "lucide-react";
 
 const EXCHANGE_STATUS_OPTIONS = [
   { value: "ALL", label: "All statuses" },
@@ -39,6 +39,111 @@ const statusBadgeClass = (status) => {
     return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300";
   }
   return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300";
+};
+
+const getExchangePaymentBadge = (exchange) => {
+  const method = String(exchange.payment?.method || "COD").toUpperCase();
+  const status = String(exchange.payment?.status || "PENDING").toUpperCase();
+  const isCod = method === "COD";
+  const isPaid = status === "PAID";
+
+  if (isPaid) {
+    return {
+      icon: <CheckCircle2 className="h-3 w-3" />,
+      label: isCod ? "Extra paid (COD)" : "Extra paid online",
+      color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    };
+  }
+
+  if (isCod) {
+    return {
+      icon: <Banknote className="h-3 w-3" />,
+      label: "COD — collect on delivery",
+      color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300",
+    };
+  }
+
+  return {
+    icon: <Clock className="h-3 w-3" />,
+    label: "Online payment pending",
+    color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  };
+};
+
+const ExchangePaymentInfo = ({ exchange }) => {
+  if (!exchange.pricing?.paymentRequired) {
+    if (exchange.pricing?.savingsAmount > 0) {
+      return (
+        <span className="text-green-700">
+          {formatPrice(exchange.pricing.savingsAmount)} cheaper — no refund
+        </span>
+      );
+    }
+    return <span className="text-muted-foreground">No extra payment</span>;
+  }
+
+  const badge = getExchangePaymentBadge(exchange);
+  const method = String(exchange.payment?.method || "COD").toUpperCase();
+  const isPaid = exchange.payment?.status === "PAID";
+  const isOnline = method !== "COD";
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/20 p-3 space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase">
+            Exchange extra payment
+          </p>
+          <p className="text-base font-bold text-foreground">
+            {formatPrice(exchange.pricing.extraAmountToPay)}
+          </p>
+        </div>
+        <span
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${badge.color}`}
+        >
+          {badge.icon}
+          {badge.label}
+        </span>
+      </div>
+
+      <div className="text-xs text-muted-foreground space-y-1">
+        <p>
+          Method:{" "}
+          <span className="font-medium text-foreground">
+            {isOnline ? "Online (Razorpay)" : "Cash on delivery"}
+          </span>
+        </p>
+        {isPaid && exchange.payment?.paidAt && (
+          <p>
+            Paid on:{" "}
+            <span className="font-medium text-foreground">
+              {formatDate(exchange.payment.paidAt)}
+            </span>
+          </p>
+        )}
+        {isPaid && isOnline && exchange.payment?.paymentId && (
+          <p className="font-mono break-all">
+            Razorpay ID: {exchange.payment.paymentId}
+          </p>
+        )}
+        {isPaid && isOnline && exchange.payment?.razorpayOrderId && (
+          <p className="font-mono break-all">
+            Order ID: {exchange.payment.razorpayOrderId}
+          </p>
+        )}
+        {!isPaid && isOnline && (
+          <p className="text-red-600 dark:text-red-400">
+            User must complete Razorpay payment before you can approve.
+          </p>
+        )}
+        {!isPaid && !isOnline && (
+          <p className="text-amber-700 dark:text-amber-300">
+            Collect cash on delivery, then use Mark paid before approve.
+          </p>
+        )}
+      </div>
+    </div>
+  );
 };
 
 const AdminExchanges = () => {
@@ -135,7 +240,8 @@ const AdminExchanges = () => {
     ) {
       toast({
         title: "Payment pending",
-        description: "Mark extra payment as paid before approving (or use COD).",
+        description:
+          "User has not paid online yet. Wait for Razorpay payment or ask user to pay from order page.",
         variant: "destructive",
       });
       return;
@@ -255,7 +361,8 @@ const AdminExchanges = () => {
                   {["REQUESTED", "PAYMENT_PENDING"].includes(ex.status) && (
                     <>
                       {ex.pricing?.paymentRequired &&
-                        ex.payment?.status === "PENDING" && (
+                        ex.payment?.status === "PENDING" &&
+                        ex.payment?.method === "COD" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -325,20 +432,7 @@ const AdminExchanges = () => {
                 </div>
               </div>
 
-              <div className="text-sm">
-                {ex.pricing?.paymentRequired ? (
-                  <span className="text-amber-700 font-medium">
-                    Extra payment: {formatPrice(ex.pricing.extraAmountToPay)} (
-                    {ex.payment?.status || "PENDING"})
-                  </span>
-                ) : ex.pricing?.savingsAmount > 0 ? (
-                  <span className="text-green-700">
-                    {formatPrice(ex.pricing.savingsAmount)} cheaper — no refund
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">No extra payment</span>
-                )}
-              </div>
+              <ExchangePaymentInfo exchange={ex} />
             </Card>
           ))}
         </div>

@@ -9,6 +9,7 @@ import {
   Loader2,
   CreditCard,
   Banknote,
+  Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useDispatch, useSelector } from "react-redux";
@@ -42,6 +43,23 @@ const STEP_META = {
 };
 
 const PRODUCT_LIMIT = 12;
+
+const EXTRA_PAYMENT_OPTIONS = [
+  {
+    id: "RAZORPAY",
+    title: "Pay online now",
+    desc: "Cards, UPI, netbanking & wallets via Razorpay",
+    icon: CreditCard,
+    accent: "blue",
+  },
+  {
+    id: "COD",
+    title: "Pay on delivery",
+    desc: "Extra amount cash mein delivery agent ko dena hoga",
+    icon: Banknote,
+    accent: "amber",
+  },
+];
 
 const ExchangeOrderModal = ({
   isOpen,
@@ -84,12 +102,13 @@ const ExchangeOrderModal = ({
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [extraPaymentMethod, setExtraPaymentMethod] = useState("RAZORPAY");
 
   const selectedItem = items[itemIndex] || items[0];
-  const isCodOrder = String(paymentMethod || "COD").toUpperCase() === "COD";
   const extraAmount = Number(exchangePreview?.pricing?.extraAmountToPay) || 0;
   const needsExtraPayment = Boolean(exchangePreview?.pricing?.paymentRequired);
-  const needsOnlinePay = needsExtraPayment && !isCodOrder;
+  const payOnlineSelected = extraPaymentMethod === "RAZORPAY";
+  const needsOnlinePay = needsExtraPayment && payOnlineSelected;
   const razorpayUserDetails = {
     name: customerDetails.name || user?.name || "",
     email: customerDetails.email || user?.email || "",
@@ -97,6 +116,16 @@ const ExchangeOrderModal = ({
   };
   const stepIndex = STEPS.indexOf(step);
   const meta = STEP_META[step];
+
+  useEffect(() => {
+    if (isOpen) {
+      setExtraPaymentMethod(
+        String(paymentMethod || "COD").toUpperCase() === "COD"
+          ? "COD"
+          : "RAZORPAY"
+      );
+    }
+  }, [isOpen, paymentMethod]);
 
   const quickTags = useMemo(() => {
     const tags = [
@@ -474,7 +503,7 @@ const ExchangeOrderModal = ({
   useEffect(() => {
     if (exchangeSuccess) {
       const extraMsg =
-        isCodOrder && needsExtraPayment
+        needsExtraPayment && extraPaymentMethod === "COD"
           ? ` Delivery par ${formatPrice(extraAmount)} cash ready rakhein.`
           : "";
       toast({
@@ -487,8 +516,8 @@ const ExchangeOrderModal = ({
     }
   }, [
     exchangeSuccess,
-    isCodOrder,
     needsExtraPayment,
+    extraPaymentMethod,
     extraAmount,
     onClose,
     onExchangeSuccess,
@@ -559,6 +588,7 @@ const ExchangeOrderModal = ({
       newColor: selectedColor,
       newSize: selectedSize,
       newVariantId: selectedVariant?._id,
+      extraPaymentMethod: needsExtraPayment ? extraPaymentMethod : undefined,
     };
 
     setSubmitting(true);
@@ -1048,50 +1078,80 @@ const ExchangeOrderModal = ({
                   <div
                     className={`p-4 rounded-xl ${
                       needsExtraPayment
-                        ? isCodOrder
-                          ? "bg-amber-50 border border-amber-200"
-                          : "bg-blue-50 border border-blue-200"
+                        ? "bg-gray-50 border border-gray-200 dark:bg-zinc-900 dark:border-zinc-700"
                         : "bg-green-50 border border-green-200"
                     }`}
                   >
-                    {needsExtraPayment && isCodOrder ? (
+                    {needsExtraPayment ? (
                       <>
-                        <div className="flex items-center gap-2 text-amber-900 mb-2">
-                          <Banknote className="w-4 h-4 shrink-0" />
-                          <p className="text-sm font-semibold">
-                            Cash on delivery — extra amount
-                          </p>
-                        </div>
-                        <p className="text-2xl font-bold text-amber-900">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                          Extra payment required
+                        </p>
+                        <p className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                           {formatPrice(extraAmount)}
                         </p>
-                        <p className="text-xs text-amber-900/90 mt-2 leading-relaxed">
-                          Naya product jab deliver hoga, tab delivery agent ko
-                          yeh amount <strong>cash mein</strong> dena hoga.
-                          Admin approve ke baad bhi yeh amount order page par
-                          dikhega.
+
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                          Payment option choose karein
                         </p>
-                      </>
-                    ) : needsOnlinePay ? (
-                      <>
-                        <div className="flex items-center gap-2 text-[#2874f0] mb-2">
-                          <CreditCard className="w-4 h-4 shrink-0" />
-                          <p className="text-sm font-semibold">
-                            Pay online now
-                          </p>
+                        <div className="space-y-2">
+                          {EXTRA_PAYMENT_OPTIONS.map((option) => {
+                            const Icon = option.icon;
+                            const selected = extraPaymentMethod === option.id;
+                            const isBlue = option.accent === "blue";
+
+                            return (
+                              <button
+                                key={option.id}
+                                type="button"
+                                onClick={() => setExtraPaymentMethod(option.id)}
+                                className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                                  selected
+                                    ? isBlue
+                                      ? "border-[#2874f0] bg-blue-50 dark:bg-blue-950/30"
+                                      : "border-amber-500 bg-amber-50 dark:bg-amber-950/30"
+                                    : "border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 hover:border-gray-300"
+                                }`}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <div
+                                    className={`p-2 rounded-lg shrink-0 ${
+                                      isBlue
+                                        ? "bg-blue-100 text-[#2874f0]"
+                                        : "bg-amber-100 text-amber-700"
+                                    }`}
+                                  >
+                                    <Icon className="w-4 h-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                        {option.title}
+                                      </p>
+                                      {selected && (
+                                        <Check
+                                          className={`w-4 h-4 shrink-0 ${
+                                            isBlue ? "text-[#2874f0]" : "text-amber-600"
+                                          }`}
+                                        />
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                                      {option.desc}
+                                    </p>
+                                  </div>
+                                </div>
+                              </button>
+                            );
+                          })}
                         </div>
-                        <p className="text-2xl font-bold text-[#2874f0]">
-                          {formatPrice(extraAmount)}
-                        </p>
-                        <p className="text-xs text-gray-700 mt-2 leading-relaxed">
-                          Submit par Razorpay khulega. Payment successful hone ke
-                          baad hi exchange request admin ke paas jayegi.
+
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 leading-relaxed">
+                          {payOnlineSelected
+                            ? "Submit par Razorpay khulega. Payment successful hone ke baad hi exchange request admin ke paas jayegi."
+                            : "Submit ke baad exchange request jayegi. Naya product deliver hote waqt delivery agent ko cash dena hoga."}
                         </p>
                       </>
-                    ) : needsExtraPayment ? (
-                      <p className="text-sm font-semibold text-gray-900">
-                        {exchangePreview.pricing.message}
-                      </p>
                     ) : (
                       <>
                         <p className="text-sm font-semibold text-gray-900">
@@ -1173,7 +1233,7 @@ const ExchangeOrderModal = ({
                   <CreditCard className="w-4 h-4" />
                   Pay {formatPrice(extraAmount)} &amp; submit
                 </>
-              ) : needsExtraPayment && isCodOrder ? (
+              ) : needsExtraPayment && extraPaymentMethod === "COD" ? (
                 <>
                   <Banknote className="w-4 h-4" />
                   Submit — pay {formatPrice(extraAmount)} on delivery
