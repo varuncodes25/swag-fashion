@@ -6,7 +6,7 @@ import useRazorpay from "@/hooks/use-razorpay";
 import { useToast } from "@/hooks/use-toast";
 import { createRazorpayOrder, placeCodOrder } from "@/redux/slices/checkoutSlice";
 
-const PlaceOrderButton = () => {
+const PlaceOrderButton = ({ isDisabled = false }) => {
   const dispatch = useDispatch();
   const { toast } = useToast();
   
@@ -120,8 +120,14 @@ const PlaceOrderButton = () => {
 
   return (
     <Button
-      className="btn-premium h-10 w-full text-sm sm:h-11 sm:text-base"
-      disabled={loading || !addressId || isProcessing.current}
+      className="btn-premium h-9 w-full text-xs sm:h-11 sm:text-base"
+      disabled={
+        loading ||
+        !addressId ||
+        !paymentMethod ||
+        isDisabled ||
+        isProcessing.current
+      }
       onClick={handlePlaceOrder}
     >
       {loading ? "Processing..." : paymentMethod === "COD" ? "Place Order" : "Pay Now"}

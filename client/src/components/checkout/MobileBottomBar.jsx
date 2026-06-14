@@ -1,26 +1,28 @@
-// components/checkout/MobileBottomBar.jsx
-import React from 'react';
-import PlaceOrderButton from './PlaceOrderButton';
-import { ArrowLeft } from 'lucide-react';
+import React from "react";
+import PlaceOrderButton from "./PlaceOrderButton";
+import { ArrowRight } from "lucide-react";
 
-const MobileBottomBar = ({ 
-  currentStep, 
-  addressId, 
-  total, 
-  discount, 
-  paymentMethod, 
-  setCurrentStep 
+const barClass =
+  "lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-card/95 px-3 py-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-sm safe-area-pb";
+
+const MobileBottomBar = ({
+  currentStep,
+  addressId,
+  total,
+  paymentMethod,
+  setCurrentStep,
 }) => {
-  if (currentStep === 'payment') {
+  if (currentStep === "payment") {
     return (
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-card/95 p-2.5 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-xs text-muted-foreground">Total Payable</p>
-            <p className="text-lg font-bold text-foreground">₹{total.toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground">Inclusive of all taxes</p>
+      <div className={barClass}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] text-muted-foreground">Total</p>
+            <p className="text-base font-bold leading-tight text-foreground">
+              ₹{total.toFixed(2)}
+            </p>
           </div>
-          <div className="max-w-[180px] flex-1">
+          <div className="min-w-[140px] flex-1 max-w-[200px]">
             <PlaceOrderButton isDisabled={!paymentMethod} />
           </div>
         </div>
@@ -28,56 +30,59 @@ const MobileBottomBar = ({
     );
   }
 
-  if (currentStep === 'summary') {
+  if (currentStep === "summary") {
     return (
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-card/95 p-2.5 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <p className="text-xs text-muted-foreground">Total Payable</p>
-            <p className="text-lg font-bold text-foreground">₹{total.toFixed(2)}</p>
+      <div className={barClass}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[10px] text-muted-foreground">Total</p>
+            <p className="text-base font-bold leading-tight text-foreground">
+              ₹{total.toFixed(2)}
+            </p>
           </div>
           <button
-            onClick={() => setCurrentStep('payment')}
-            className="btn-premium px-4 py-2 text-xs sm:text-sm"
+            type="button"
+            onClick={() => setCurrentStep("payment")}
+            className="btn-premium inline-flex shrink-0 items-center gap-1.5 px-4 py-2 text-xs font-semibold"
           >
-            <span>Continue to Payment</span>
-            <ArrowLeft className="w-4 h-4 rotate-180" />
+            Payment
+            <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
     );
   }
 
-  if (currentStep === 'address') {
+  if (currentStep === "address") {
     return (
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border/80 bg-card/95 p-2.5 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-        <div className="flex items-center justify-between gap-2">
-          <div>
+      <div className={barClass}>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
             {addressId ? (
-              <div className="text-success">
-                <p className="text-sm font-medium">Address Selected ✓</p>
-                <p className="text-xs">Ready to proceed</p>
-              </div>
+              <p className="text-xs font-medium text-green-600">
+                Address selected
+              </p>
             ) : (
-              <div>
-                <p className="text-sm text-muted-foreground">Select Address to Continue</p>
-                <p className="text-xs text-muted-foreground">Choose delivery location</p>
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Select delivery address
+              </p>
             )}
           </div>
           {addressId ? (
             <button
-              onClick={() => setCurrentStep('summary')}
-              className="btn-premium px-4 py-2 text-xs sm:text-sm"
+              type="button"
+              onClick={() => setCurrentStep("summary")}
+              className="btn-premium shrink-0 px-4 py-2 text-xs font-semibold"
             >
               Continue
             </button>
           ) : (
             <button
+              type="button"
               disabled
-              className="rounded-xl bg-muted px-4 py-2 text-xs font-semibold text-muted-foreground sm:text-sm"
+              className="shrink-0 rounded-lg bg-muted px-4 py-2 text-xs font-semibold text-muted-foreground"
             >
-              Select Address
+              Continue
             </button>
           )}
         </div>

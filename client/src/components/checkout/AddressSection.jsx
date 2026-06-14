@@ -14,7 +14,6 @@ import {
   Plus,
   X,
   ChevronRight,
-  Globe,
   Mail,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -112,18 +111,18 @@ const AddressSection = () => {
 
   return (
     <>
-      <Card className="p-4 md:p-6 space-y-4 md:space-y-6 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-lg rounded-2xl">
+      <Card className="space-y-3 rounded-xl border bg-card p-3 shadow-sm md:space-y-6 md:rounded-2xl md:bg-gradient-to-br md:from-gray-100 md:to-gray-200 md:p-6 md:shadow-lg dark:md:from-gray-900 dark:md:to-zinc-900">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 md:gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-1.5 md:p-2 bg-primary/10 dark:bg-primary/20 rounded-lg">
-              <MapPin className="w-5 h-5 md:w-6 md:h-6 text-primary dark:text-primary" />
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="rounded-lg bg-primary/10 p-1.5 md:p-2">
+              <MapPin className="h-4 w-4 text-primary md:h-6 md:w-6" />
             </div>
-            <div>
-              <h2 className="text-lg md:text-xl font-bold text-foreground">
+            <div className="min-w-0">
+              <h2 className="text-base font-bold text-foreground md:text-xl">
                 Delivery Address
               </h2>
-              <p className="text-xs md:text-sm text-muted-foreground">
+              <p className="hidden text-sm text-muted-foreground sm:block">
                 Select or add a delivery address
               </p>
             </div>
@@ -131,31 +130,32 @@ const AddressSection = () => {
 
           <Button
             size="sm"
-            className="btn-premium w-full sm:w-auto text-sm md:text-base"
+            className="btn-premium h-8 shrink-0 px-2.5 text-xs md:h-9 md:px-4 md:text-sm"
             onClick={handleAddAddress}
           >
-            <Plus size={16} className="mr-1 md:mr-2" />
-            Add New Address
+            <Plus size={14} className="md:mr-2" />
+            <span className="hidden sm:inline">Add New</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
 
         {/* Address list */}
-        <div className="space-y-3 md:space-y-4">
+        <div className="space-y-2 md:space-y-4">
           {addresses.length === 0 ? (
-            <div className="text-center py-6 md:py-8 border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded-xl px-4">
-              <MapPin className="w-10 h-10 md:w-12 md:h-12 text-gray-400 dark:text-zinc-600 mx-auto mb-2 md:mb-3" />
-              <h3 className="text-base md:text-lg font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <div className="rounded-xl border-2 border-dashed border-border px-3 py-5 text-center md:py-8">
+              <MapPin className="mx-auto mb-2 h-8 w-8 text-muted-foreground md:mb-3 md:h-12 md:w-12" />
+              <h3 className="text-sm font-medium text-foreground md:text-lg">
                 No Address Found
               </h3>
-              <p className="text-xs md:text-sm text-muted-foreground mb-3 md:mb-4">
+              <p className="mb-3 mt-1 text-xs text-muted-foreground md:mb-4 md:text-sm">
                 Add an address to deliver your order
               </p>
               <Button
                 onClick={handleAddAddress}
-                className="btn-premium text-sm md:text-base w-full sm:w-auto"
+                className="btn-premium h-9 text-xs md:text-sm"
               >
-                <Plus size={14} className="mr-1 md:mr-2" />
-                Add Your First Address
+                <Plus size={14} className="mr-1" />
+                Add Address
               </Button>
             </div>
           ) : (
@@ -166,148 +166,110 @@ const AddressSection = () => {
               return (
                 <div
                   key={addr._id}
-                  className={`
-                    rounded-xl p-3 md:p-5 transition-all duration-300 cursor-pointer
-                    border-2
-                    ${
-                      selected
-                        ? "border-primary bg-gradient-to-r from-primary/5 to-white dark:from-primary/10 dark:to-gray-900 shadow-lg"
-                        : "border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-gray-300 dark:hover:border-zinc-700 hover:shadow-md "
-                    }
-                  `}
+                  className={`cursor-pointer rounded-xl border-2 p-2.5 transition-all md:p-5 ${
+                    selected
+                      ? "border-primary bg-primary/5 shadow-sm dark:bg-primary/10"
+                      : "border-border bg-card hover:border-primary/30"
+                  }`}
                   onClick={() => dispatch(setAddress(addr._id))}
                 >
-                  <div className="flex items-start justify-between gap-2 md:gap-4">
-                    {/* Left Content */}
-                    <div className="flex gap-2 md:gap-4 flex-1 min-w-0">
-                      {/* Selection Indicator */}
-                      <div className="mt-0.5 md:mt-1 flex-shrink-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex min-w-0 flex-1 gap-2 md:gap-4">
+                      <div className="mt-0.5 shrink-0">
                         <div
-                          className={`
-                          w-4 h-4 md:w-5 md:h-5 rounded-full border-2 flex items-center justify-center
-                          ${
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border-2 md:h-5 md:w-5 ${
                             selected
                               ? "border-primary bg-primary"
-                              : "border-gray-300 dark:border-zinc-600 "
-                          }
-                        `}
+                              : "border-muted-foreground/40"
+                          }`}
                         >
                           {selected && (
-                            <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white"></div>
+                            <div className="h-1.5 w-1.5 rounded-full bg-white md:h-2 md:w-2" />
                           )}
                         </div>
                       </div>
 
-                      {/* Address Details */}
-                     <div className="space-y-2 md:space-y-4 flex-1 min-w-0">
-  {/* Name & Badge - Top Row */}
-  <div className="flex items-center justify-between gap-3">
-    <div className="flex items-center gap-2 md:gap-4 min-w-0">
-      <div className="flex-shrink-0 p-2 bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl">
-        <div className="text-primary dark:text-primary">
-          {getAddressIcon(addr.address_type)}
-        </div>
-      </div>
-      <div className="min-w-0">
-        <h3 className="font-bold text-foreground truncate text-base md:text-lg  tracking-tight">
-          {addr.name}
-        </h3>
-        <span className="inline-flex items-center px-2.5 py-0.5 mt-1 rounded-full text-xs font-medium bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 text-primary dark:text-primary border border-primary/20 dark:border-primary/30">
-          {addr.address_type || "Other"}
-        </span>
-      </div>
-    </div>
+                      <div className="min-w-0 flex-1 space-y-1.5 md:space-y-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <div className="hidden rounded-lg bg-primary/10 p-1.5 md:block">
+                              {getAddressIcon(addr.address_type)}
+                            </div>
+                            <div className="min-w-0">
+                              <h3 className="truncate text-sm font-semibold text-foreground md:text-lg">
+                                {addr.name}
+                              </h3>
+                              <span className="mt-0.5 inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground md:text-xs">
+                                {addr.address_type || "Other"}
+                              </span>
+                            </div>
+                          </div>
 
-    {/* Mobile Expand Button */}
-    <button
-      onClick={(e) => toggleAddressExpand(addr._id, e)}
-      className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-    >
-      <ChevronRight
-        className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${
-          isExpanded ? "rotate-90" : ""
-        }`}
-      />
-    </button>
+                          <button
+                            type="button"
+                            onClick={(e) => toggleAddressExpand(addr._id, e)}
+                            className="shrink-0 rounded-md p-1 hover:bg-muted md:hidden"
+                          >
+                            <ChevronRight
+                              className={`h-4 w-4 text-muted-foreground transition-transform ${
+                                isExpanded ? "rotate-90" : ""
+                              }`}
+                            />
+                          </button>
 
-    {selected && (
-      <span className="hidden md:inline-flex items-center gap-2 text-sm font-semibold text-success bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full">
-        <CheckCircle size={18} className="flex-shrink-0" />
-        Selected
-      </span>
-    )}
-  </div>
+                          {selected && (
+                            <span className="hidden items-center gap-1 text-xs font-medium text-green-600 md:inline-flex">
+                              <CheckCircle size={14} />
+                              Selected
+                            </span>
+                          )}
+                        </div>
 
-  {/* Selected badge for mobile */}
-  {selected && (
-    <div className="md:hidden inline-flex items-center gap-1.5 text-sm font-semibold text-success bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 rounded-full w-fit">
-      <CheckCircle size={14} className="flex-shrink-0" />
-      Selected
-    </div>
-  )}
+                        {selected && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-green-600 md:hidden">
+                            <CheckCircle size={12} />
+                            Selected
+                          </span>
+                        )}
 
-  {/* Main Address (Always visible) */}
-  <div className="space-y-1.5 md:space-y-2">
-    <p className="text-gray-800 dark:text-gray-100 font-semibold text-sm md:text-base  line-clamp-1 tracking-wide">
-      {addr.address_line1}
-    </p>
-    <p className="text-gray-700 dark:text-gray-300 text-xs md:text-sm font-medium tracking-wide">
-      {addr.city}, {addr.state} - {addr.pincode}
-    </p>
-  </div>
+                        <div>
+                          <p className="line-clamp-2 text-xs font-medium text-foreground md:text-base">
+                            {addr.address_line1}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground md:text-sm">
+                            {addr.city}, {addr.state} - {addr.pincode}
+                          </p>
+                        </div>
 
-  {/* Expanded Details (Mobile) or Always Visible (Desktop) */}
-  {(isExpanded || window.innerWidth >= 768) && (
-    <div className="space-y-2.5 md:space-y-3 pt-3 md:pt-4 border-t border-gray-100 dark:border-zinc-800/50">
-      {/* Full Address Lines */}
-      {addr.address_line2 && (
-        <div className="flex items-start gap-2">
-          <MapPin className="w-4 h-4 text-highlight dark:text-amber-400 mt-0.5 flex-shrink-0" />
-          <p className="text-gray-700 dark:text-gray-300 text-sm md:text-base font-medium tracking-wide">
-            {addr.address_line2}
-          </p>
-        </div>
-      )}
-      
-      <div className="flex items-start gap-2">
-        <Globe className="w-4 h-4 text-primary dark:text-purple-400 mt-0.5 flex-shrink-0" />
-        <p className="text-muted-foreground text-sm md:text-base font-medium">
-          {addr.country}
-        </p>
-      </div>
-
-      {/* Contact Info */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 md:gap-5 pt-3 md:pt-4">
-        <div className="inline-flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/5 rounded-lg">
-          <div className="p-1.5 bg-primary/10 dark:bg-primary/20 rounded-full">
-            <Phone className="w-4 h-4 text-primary dark:text-primary" />
-          </div>
-          <span className="text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 tracking-tight">
-            {addr.phone}
-          </span>
-        </div>
-        
-        {addr.email && (
-          <div className="inline-flex items-center gap-3 px-3 py-2 bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 rounded-lg">
-            <div className="p-1.5 bg-rose-100 dark:bg-rose-900/40 rounded-full">
-              <Mail className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-            </div>
-            <span className="text-sm md:text-base font-semibold text-gray-800 dark:text-gray-200 tracking-tight truncate">
-              {addr.email}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
-  )}
-</div>
+                        {(isExpanded || isDesktop) && (
+                          <div className="space-y-2 border-t border-border/60 pt-2 text-xs md:space-y-3 md:pt-4 md:text-sm">
+                            {addr.address_line2 && (
+                              <p className="text-muted-foreground">
+                                {addr.address_line2}
+                              </p>
+                            )}
+                            <p className="text-muted-foreground">{addr.country}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="inline-flex items-center gap-1.5 rounded-md bg-muted/60 px-2 py-1">
+                                <Phone className="h-3.5 w-3.5" />
+                                {addr.phone}
+                              </span>
+                              {addr.email && (
+                                <span className="inline-flex max-w-full items-center gap-1.5 truncate rounded-md bg-muted/60 px-2 py-1">
+                                  <Mail className="h-3.5 w-3.5 shrink-0" />
+                                  {addr.email}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    {/* Edit Button - Desktop */}
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="hidden md:flex text-muted-foreground hover:text-primary dark:hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 flex-shrink-0"
+                      className="hidden shrink-0 md:flex"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditAddress(addr);
@@ -317,13 +279,11 @@ const AddressSection = () => {
                     </Button>
                   </div>
 
-                  {/* Mobile Edit Button and Expanded Content */}
-                  <div className="flex items-center justify-between mt-2 md:mt-0 pt-2 border-t border-gray-100 dark:border-zinc-800 md:border-0">
-                    {/* Mobile Edit Button */}
+                  <div className="mt-2 flex items-center justify-between border-t border-border/60 pt-2 md:hidden">
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="md:hidden text-xs text-muted-foreground hover:text-primary dark:hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20"
+                      className="h-7 px-2 text-xs"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEditAddress(addr);
@@ -332,14 +292,13 @@ const AddressSection = () => {
                       <Edit2 size={12} className="mr-1" />
                       Edit
                     </Button>
-
-                    {/* Mobile View More/Less */}
                     {isExpanded && (
                       <button
+                        type="button"
                         onClick={(e) => toggleAddressExpand(addr._id, e)}
-                        className="md:hidden text-xs text-primary dark:text-primary font-medium"
+                        className="text-xs font-medium text-primary"
                       >
-                        View Less
+                        Less
                       </button>
                     )}
                   </div>

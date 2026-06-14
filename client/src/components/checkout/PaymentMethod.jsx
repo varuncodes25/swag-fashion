@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setPaymentMethod } from "@/redux/slices/checkoutSlice";
 import { CreditCard, Wallet, Shield, Check } from "lucide-react";
 
-const PaymentMethod = ({ disabled = false }) => {
+const PaymentMethod = ({ disabled = false, compact = false }) => {
   const dispatch = useDispatch();
   const { paymentMethod } = useSelector((s) => s.checkout);
 
@@ -29,14 +29,16 @@ const PaymentMethod = ({ disabled = false }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Select Payment Method
-        </h2>
-      </div>
+    <div className={compact ? "space-y-2" : "space-y-4"}>
+      {!compact && (
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Select Payment Method
+          </h2>
+        </div>
+      )}
 
-      <div className="space-y-3">
+      <div className={compact ? "space-y-2" : "space-y-3"}>
         {methods.map((method) => {
           const isSelected = paymentMethod === method.id;
 
@@ -46,14 +48,14 @@ const PaymentMethod = ({ disabled = false }) => {
               onClick={() => handleSelect(method.id)}
               disabled={disabled}
               className={`
-    w-full flex items-center gap-4 p-4 border rounded-lg text-left
-    transition-colors relative
+    w-full flex items-center gap-3 rounded-lg border text-left transition-colors
+    ${compact ? "p-3" : "gap-4 p-4"}
     ${
       isSelected
         ? method.color === "blue"
           ? "border-primary bg-primary/10 dark:bg-blue-900/20"
           : "border-green-500 bg-green-50 dark:bg-green-900/20"
-        : "border-border hover:bg-gray-50 dark:hover:bg-gray-800"
+        : "border-border hover:bg-muted/50"
     }
     ${disabled ? "opacity-50 cursor-not-allowed" : ""}
   `}
@@ -96,13 +98,11 @@ const PaymentMethod = ({ disabled = false }) => {
                 />
               </div>
 
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-foreground">
-                    {method.title}
-                  </h3>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
+              <div className="flex-1 min-w-0">
+                <h3 className={`font-medium text-foreground ${compact ? "text-sm" : ""}`}>
+                  {method.title}
+                </h3>
+                <p className={`text-muted-foreground ${compact ? "text-xs mt-0.5" : "text-sm mt-1"}`}>
                   {method.desc}
                 </p>
               </div>
@@ -111,7 +111,7 @@ const PaymentMethod = ({ disabled = false }) => {
         })}
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-muted-foreground pt-3 border-t">
+      <div className={`flex items-center gap-2 text-muted-foreground border-t ${compact ? "pt-2 text-xs" : "pt-3 text-sm"}`}>
         <Shield className="w-4 h-4 flex-shrink-0" />
         <span>100% secure payments</span>
       </div>

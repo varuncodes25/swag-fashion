@@ -106,37 +106,35 @@ useEffect(() => {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-card">
       {/* Header */}
-      <header className="bg-card shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={handleBack}
-              className="flex items-center gap-2 text-muted-foreground hover:text-gray-900 dark:hover:text-white"
-            >
-              <ArrowLeft size={20} />
-              <span className="hidden sm:inline">Back</span>
-            </button>
+      <header className="sticky top-0 z-40 border-b bg-card/95 backdrop-blur-sm shadow-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft size={18} />
+            <span className="hidden sm:inline text-sm">Back</span>
+          </button>
 
-            <div className="flex items-center gap-2">
-              <ShoppingBag className="w-6 h-6 text-primary dark:text-primary" />
-              <h1 className="text-lg font-bold text-foreground">
-                Checkout
-              </h1>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <ShoppingBag className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
+            <h1 className="text-base font-bold text-foreground sm:text-lg">
+              Checkout
+            </h1>
+          </div>
 
-            <div className="flex items-center gap-2 text-sm">
-              <Shield className="w-4 h-4 text-green-600" />
-              <span className="hidden sm:inline text-muted-foreground">
-                100% Secure
-              </span>
-            </div>
+          <div className="flex items-center gap-1 text-xs sm:text-sm">
+            <Shield className="h-3.5 w-3.5 text-green-600 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline text-muted-foreground">
+              Secure
+            </span>
           </div>
         </div>
       </header>
 
       {/* Progress Steps */}
-      <div className="max-w-6xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-center gap-3 mb-4 sm:gap-8 sm:mb-6">
+      <div className="mx-auto max-w-6xl px-3 py-2 sm:px-4 sm:py-4">
+        <div className="mb-2 flex items-center justify-center gap-1.5 sm:mb-6 sm:gap-8">
           {[
             { id: "address", label: "Address", icon: MapPin },
             { id: "summary", label: "Summary", icon: Package },
@@ -148,24 +146,21 @@ useEffect(() => {
               (step.id === "summary" && addressId);
 
             return (
-              <div key={step.id} className="flex items-center gap-2">
+              <div key={step.id} className="flex items-center gap-1 sm:gap-2">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                  ${
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold sm:h-8 sm:w-8 sm:text-sm ${
                     isCompleted
                       ? "bg-primary text-white"
                       : isActive
-                      ? "bg-blue-100 dark:bg-primary/20 text-primary dark:text-primary border-2 border-primary"
-                      : "bg-gray-200 dark:bg-gray-700 text-gray-500"
+                        ? "border-2 border-primary bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {index + 1}
                 </div>
                 <span
-                  className={`text-sm font-medium hidden sm:inline ${
-                    isActive
-                      ? "text-primary dark:text-primary"
-                      : "text-gray-500"
+                  className={`hidden text-sm font-medium sm:inline ${
+                    isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
                   {step.label}
@@ -173,10 +168,10 @@ useEffect(() => {
 
                 {index < 2 && (
                   <div
-                    className={`w-12 h-0.5 ${
+                    className={`h-0.5 w-6 sm:w-12 ${
                       step.id === "address" && addressId
                         ? "bg-primary"
-                        : "bg-gray-200 dark:bg-gray-700"
+                        : "bg-muted"
                     }`}
                   />
                 )}
@@ -186,19 +181,12 @@ useEffect(() => {
         </div>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 pb-28 sm:py-6 lg:py-8 lg:pb-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-          {/* Left Column - Steps Content */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-            {/* Step 1: Address Selection */}
+      <main className="mx-auto max-w-7xl px-3 py-2 pb-[4.75rem] sm:px-6 sm:py-6 sm:pb-8 lg:px-8 lg:py-8">
+        <div className="grid grid-cols-1 gap-3 sm:gap-8 lg:grid-cols-3">
+          <div className="space-y-3 sm:space-y-6 lg:col-span-2">
             {currentStep === "address" && (
               <div className="animate-fadeIn">
-                <div className="bg-card rounded-2xl shadow-lg dark:shadow-foreground/10 border dark:border-gray-700 overflow-hidden transition-colors">
-                  
-                  <div className="p-4 sm:p-6">
-                    <AddressSection />
-                  </div>
-                </div>
+                <AddressSection />
 
                 {/* Desktop Continue Button (Only when address selected) */}
                 {addressId && (
@@ -217,82 +205,71 @@ useEffect(() => {
 
             {/* Step 2: Order Summary */}
             {currentStep === "summary" && (
-              <div className="space-y-6 animate-fadeIn">
-                {/* Address Card */}
-               <div className="bg-card rounded-2xl shadow-lg dark:shadow-foreground/10 border dark:border-gray-700 p-4 sm:p-6 transition-colors">
-  {/* Header - Mobile Optimized */}
-  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 mb-4">
-    <div className="flex items-center gap-3 sm:gap-4">
-      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-success to-success/90 flex items-center justify-center shadow-lg flex-shrink-0">
-        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <h3 className="font-bold text-foreground text-base sm:text-lg truncate">
-          Delivery Address
-        </h3>
-        <p className="text-xs sm:text-sm text-muted-foreground truncate">
-          Confirmed for delivery
-        </p>
-      </div>
-    </div>
-    
-    <button
-      onClick={() => setCurrentStep("address")}
-      className="px-3 py-1.5 sm:px-4 sm:py-2 text-primary dark:text-primary hover:text-primary dark:hover:text-pink-300 font-medium bg-primary/10 dark:bg-primary/15 rounded-lg transition-colors text-sm sm:text-base w-full sm:w-auto text-center"
-    >
-      Change
-    </button>
-  </div>
-  
-  {/* Address Details - Mobile Optimized */}
-  <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700/50 dark:to-gray-800/50 rounded-xl p-4 sm:p-5 border dark:border-gray-700">
-    <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
-      {/* Icon - Hidden on very small screens or adjust size */}
-      <div className="hidden xs:flex w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-blue-100 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-        <span className="text-primary dark:text-primary text-base sm:text-lg">📍</span>
-      </div>
-      
-      {/* Address Content - With proper text wrapping */}
-      <div className="flex-1 min-w-0 w-full">
-        {/* Name */}
-        <p className="font-semibold text-foreground text-sm sm:text-base break-words">
-          {selectedAddress?.name}
-        </p>
-        
-        {/* Address lines - Break long words */}
-        <p className="text-gray-700 dark:text-gray-300 mt-1.5 sm:mt-2 text-xs sm:text-sm break-words">
-          {selectedAddress?.address_line1}
-        </p>
-        
-        {/* City, State, Pincode */}
-        <p className="text-muted-foreground text-xs sm:text-sm break-words mt-1">
-          {selectedAddress?.city}, {selectedAddress?.state} - {selectedAddress?.pincode}
-        </p>
-        
-        {/* Contact Info - Stack on mobile, row on larger screens */}
-        <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-4 sm:gap-6 mt-3">
-          {/* Phone */}
-          <span className="text-muted-foreground flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm break-all">
-            <span className="text-base sm:text-lg flex-shrink-0">📱</span>
-            <span className="truncate">{selectedAddress?.phone}</span>
-          </span>
-          
-          {/* Email - Optional, hide on very small screens if too long */}
-          {selectedAddress?.email && (
-            <span className="text-muted-foreground flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm break-all">
-              <span className="text-base sm:text-lg flex-shrink-0">✉️</span>
-              <span className="truncate">{selectedAddress.email}</span>
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+              <div className="animate-fadeIn space-y-3 sm:space-y-6">
+                <div className="rounded-xl border bg-card p-3 sm:rounded-2xl sm:p-6">
+                  <div className="mb-2 flex items-center justify-between gap-2 sm:mb-4">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <CheckCircle className="h-4 w-4 shrink-0 text-green-600 sm:h-5 sm:w-5" />
+                      <h3 className="truncate text-sm font-semibold text-foreground sm:text-lg">
+                        Delivery Address
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep("address")}
+                      className="shrink-0 text-xs font-medium text-primary sm:text-sm"
+                    >
+                      Change
+                    </button>
+                  </div>
 
-                {/* Price Details Card */}
-                
-                {/* Desktop Continue Button */}
+                  <div className="rounded-lg bg-muted/40 p-3 text-xs sm:p-4 sm:text-sm">
+                    <p className="font-semibold text-foreground">
+                      {selectedAddress?.name}
+                    </p>
+                    <p className="mt-1 break-words text-muted-foreground">
+                      {selectedAddress?.address_line1}
+                      {selectedAddress?.address_line2
+                        ? `, ${selectedAddress.address_line2}`
+                        : ""}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {selectedAddress?.city}, {selectedAddress?.state} -{" "}
+                      {selectedAddress?.pincode}
+                    </p>
+                    <p className="mt-2 text-muted-foreground">
+                      {selectedAddress?.phone}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mobile price summary */}
+                <div className="rounded-xl border bg-card p-3 lg:hidden">
+                  <h3 className="mb-2 text-sm font-semibold">Order Total</h3>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>₹{subtotal.toFixed(2)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Discount</span>
+                        <span>-₹{discount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Shipping</span>
+                      <span>
+                        {shipping === 0 ? "FREE" : `₹${shipping.toFixed(2)}`}
+                      </span>
+                    </div>
+                    <div className="flex justify-between border-t pt-1.5 font-bold">
+                      <span>Total</span>
+                      <span>₹{total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="hidden lg:flex justify-end">
                   <button
                     onClick={() => setCurrentStep("payment")}
@@ -307,19 +284,22 @@ useEffect(() => {
 
             {/* Step 3: Payment */}
             {currentStep === "payment" && (
-              <div className="space-y-6 animate-fadeIn">
-                {/* Payment Method Card */}
-                <div className="bg-card rounded-2xl shadow-lg dark:shadow-foreground/10 border dark:border-gray-700 p-4 sm:p-6 transition-colors">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-success to-success/90 flex items-center justify-center shadow-lg">
-                      <CreditCard className="w-6 h-6 text-white" />
+              <div className="animate-fadeIn space-y-3 sm:space-y-6">
+                <div className="rounded-xl border bg-card p-3 sm:rounded-2xl sm:p-6">
+                  <div className="mb-3 hidden items-center gap-3 sm:mb-6 sm:flex">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                      <CreditCard className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h2 className="font-bold text-foreground text-xl">Payment Method</h2>
-                      <p className="text-sm text-muted-foreground">Choose how you want to pay</p>
+                      <h2 className="text-lg font-bold text-foreground">
+                        Payment Method
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Choose how you want to pay
+                      </p>
                     </div>
                   </div>
-                  <PaymentMethod />
+                  <PaymentMethod compact />
                 </div>
 
                 {/* Desktop Place Order Button */}
@@ -435,7 +415,6 @@ useEffect(() => {
         currentStep={currentStep}
         addressId={addressId}
         total={total}
-        discount={discount}
         paymentMethod={paymentMethod}
         setCurrentStep={setCurrentStep}
       />
