@@ -2,16 +2,22 @@ const User = require("../models/User");
 const { OAuth2Client } = require("google-auth-library");
 const { setAuthCookies } = require("../utils/authCookies");
 
-const resolveGoogleRedirectUri = () => {
-  const explicit = (process.env.GOOGLE_REDIRECT_URI || "").trim();
-  if (explicit) return explicit.replace(/\s.+$/, "").trim();
+const sanitizeOAuthUrl = (value) => {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
 
-  const apiBase = (
-    process.env.API_URL ||
-    process.env.BACKEND_URL ||
-    process.env.SERVER_URL ||
-    ""
-  ).replace(/\/$/, "");
+  // Strip accidental notes/emojis after the URL (e.g. "...callback ✅")
+  const match = raw.match(/^https?:\/\/[^\s"'<>]+/i);
+  return (match ? match[0] : raw.split(/\s+/)[0]).replace(/\/$/, "");
+};
+
+const resolveGoogleRedirectUri = () => {
+  const explicit = sanitizeOAuthUrl(process.env.GOOGLE_REDIRECT_URI);
+  if (explicit) return explicit;
+
+  const apiBase = sanitizeOAuthUrl(
+    process.env.API_URL || process.env.BACKEND_URL || process.env.SERVER_URL,
+  );
 
   if (apiBase) {
     return apiBase.endsWith("/api")
@@ -246,6 +252,14 @@ const getGoogleAuthUrl = async (req, res) => {
     }
 
     const redirectUri = resolveGoogleRedirectUri();
+    if (!redirectUri.startsWith("http")) {
+      return res.status(500).json({
+        success: false,
+        message:
+          "Google redirect URI is not configured. Set GOOGLE_REDIRECT_URI on the server.",
+      });
+    }
+
     const params = new URLSearchParams({
       client_id: process.env.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
