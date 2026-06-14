@@ -7,11 +7,11 @@ import {
 } from "./homeSectionStyles";
 
 const showcaseImages = {
-  graphic: "/images/home-showcase/graphic-prints.webp",
-  anime: "/images/home-showcase/anime.webp",
-  "acid-wash": "/images/home-showcase/acid-wash.webp",
-  minimalist: "/images/home-showcase/minimalist.webp",
-  solids: "/images/home-showcase/solids.webp",
+  graphic: "/images/home-showcase/graphic-prints.png",
+  anime: "/images/home-showcase/anime.png",
+  "acid-wash": "/images/home-showcase/acid-wash.png",
+  minimalist: "/images/home-showcase/minimalist.png",
+  solids: "/images/home-showcase/solids.png",
 };
 
 export default function HomeShowcaseSection() {
