@@ -108,10 +108,7 @@ const ExchangePaymentStatus = ({
         <p className="text-2xl font-bold text-amber-900 dark:text-amber-100 mt-1">
           {formatPrice(extraAmount)}
         </p>
-        <p className="text-xs text-amber-900/90 dark:text-amber-200/80 mt-2 leading-relaxed">
-          Naya product jab deliver hoga, tab delivery agent ko yeh amount cash mein
-          dena hoga.
-        </p>
+        
       </div>
     );
   }

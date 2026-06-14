@@ -2,8 +2,42 @@ const User = require("../models/User");
 const { OAuth2Client } = require("google-auth-library");
 const { setAuthCookies } = require("../utils/authCookies");
 
-// ✅ Initialize Google OAuth Client
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const resolveGoogleRedirectUri = () => {
+  const explicit = (process.env.GOOGLE_REDIRECT_URI || "").trim();
+  if (explicit) return explicit.replace(/\s.+$/, "").trim();
+
+  const apiBase = (
+    process.env.API_URL ||
+    process.env.BACKEND_URL ||
+    process.env.SERVER_URL ||
+    ""
+  ).replace(/\/$/, "");
+
+  if (apiBase) {
+    return apiBase.endsWith("/api")
+      ? `${apiBase}/auth/google/callback`
+      : `${apiBase}/api/auth/google/callback`;
+  }
+
+  return "";
+};
+
+const getOAuthClient = () => {
+  const clientId = (process.env.GOOGLE_CLIENT_ID || "").trim();
+  const clientSecret = (process.env.GOOGLE_CLIENT_SECRET || "").trim();
+  const redirectUri = resolveGoogleRedirectUri();
+
+  if (!clientId || !clientSecret || !redirectUri) {
+    throw new Error(
+      "Google OAuth is not configured (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REDIRECT_URI).",
+    );
+  }
+
+  return new OAuth2Client(clientId, clientSecret, redirectUri);
+};
+
+// Token verification client (One Tap / ID token)
+const tokenClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const publicFrontendBase = () =>
   (process.env.FRONTEND_URL || process.env.CLIENT_URL || "").replace(/\/$/, "");
@@ -130,7 +164,7 @@ const googleOneTapLogin = async (req, res) => {
     // Verify Google token
     let ticket;
     try {
-      ticket = await client.verifyIdToken({
+      ticket = await tokenClient.verifyIdToken({
         idToken: token,
         audience: process.env.GOOGLE_CLIENT_ID
       });
@@ -200,23 +234,25 @@ const googleOneTapLogin = async (req, res) => {
 const getGoogleAuthUrl = async (req, res) => {
   try {
     console.log("📡 Backend generating Google URL");
-    
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
-    if (!clientId?.trim() || !redirectUri?.trim()) {
+
+    let oauthClient;
+    try {
+      oauthClient = getOAuthClient();
+    } catch (configError) {
       return res.status(500).json({
         success: false,
-        message: "Google OAuth is not configured (GOOGLE_CLIENT_ID / GOOGLE_REDIRECT_URI).",
+        message: configError.message,
       });
     }
 
+    const redirectUri = resolveGoogleRedirectUri();
     const params = new URLSearchParams({
-      client_id: clientId,
+      client_id: process.env.GOOGLE_CLIENT_ID,
       redirect_uri: redirectUri,
       response_type: "code",
       scope: "openid email profile",
       access_type: "offline",
-      prompt: "consent select_account",
+      prompt: "select_account",
     });
 
     const redirectUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
@@ -250,19 +286,15 @@ const googleCallback = async (req, res) => {
 
     // ✅ Exchange code for tokens
     try {
-      const response = await client.getToken({
-        code,
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-      });
+      const oauthClient = getOAuthClient();
+      const response = await oauthClient.getToken(code);
 
       console.log("✅ Tokens received from Google");
       
       const { tokens } = response;
 
       // Verify the ID token
-      const ticket = await client.verifyIdToken({
+      const ticket = await tokenClient.verifyIdToken({
         idToken: tokens.id_token,
         audience: process.env.GOOGLE_CLIENT_ID
       });

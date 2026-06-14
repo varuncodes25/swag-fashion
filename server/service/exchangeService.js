@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const crypto = require("crypto");
-const razorpay = require("../config/razorpay");
 const Order = require("../models/Order");
 const Exchange = require("../models/Exchange");
 const Product = require("../models/Product");
@@ -65,6 +64,15 @@ function resolveExtraPaymentMethod(payload, order, paymentRequired) {
   }
 
   return order.paymentMethod === "COD" ? "COD" : "RAZORPAY";
+}
+
+function getRazorpayClient() {
+  const keyId = (process.env.RAZORPAY_KEY_ID || "").trim();
+  const keySecret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
+  if (!keyId || !keySecret) {
+    throw new ExchangeError("Online payment is not configured on the server", 503);
+  }
+  return require("../config/razorpay");
 }
 
 function formatExchangeForClient(exchange) {
@@ -912,7 +920,7 @@ async function createExchangePaymentOrder(exchangeId, userId, userRole) {
   const receiptBase = String(exchange.exchangeNumber || exchange._id)
     .replace(/[^a-zA-Z0-9]/g, "")
     .slice(0, 32);
-  const rpOrder = await razorpay.orders.create({
+  const rpOrder = await getRazorpayClient().orders.create({
     amount: amountInPaise,
     currency: "INR",
     receipt: `exc_${receiptBase}`.slice(0, 40),
@@ -964,7 +972,7 @@ async function verifyExchangePaymentOrder(exchangeId, userId, userRole, paymentD
     throw new ExchangeError("Payment verification failed", 400);
   }
 
-  const rpOrder = await razorpay.orders.fetch(razorpayOrderId);
+  const rpOrder = await getRazorpayClient().orders.fetch(razorpayOrderId);
   const expectedPaise = Math.round(Number(exchange.pricing.extraAmountToPay) * 100);
 
   if (Number(rpOrder.amount) !== expectedPaise) {

@@ -54,6 +54,10 @@
       "source": "/sitemap.xml",
       "destination": "https://swag-fashion-1.onrender.com/sitemap.xml"
     },
+    {
+      "source": "/api/:path*",
+      "destination": "https://swag-fashion-1.onrender.com/api/:path*"
+    },
     { "source": "/(.*)", "destination": "/" }
   ]
 }

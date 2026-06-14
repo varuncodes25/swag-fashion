@@ -219,7 +219,23 @@ app.get("/sitemap.xml", async (req, res) => {
 // Load routes dynamically
 app.use("/api", apiLimiter);
 readdirSync("./routes").forEach((route) => {
-  app.use("/api", require(`./routes/${route}`));
+  try {
+    app.use("/api", require(`./routes/${route}`));
+    logger.info({
+      type: "route_loaded",
+      file: route,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error({
+      type: "route_load_failed",
+      file: route,
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
+    console.error(`[routes] Failed to load ${route}:`, error.message);
+  }
 });
 
 // Catch-all 404
