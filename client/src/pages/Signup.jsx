@@ -425,8 +425,15 @@ const Signup = () => {
                     I agree to the Terms & Conditions
                   </label>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    By creating an account, you agree to our Terms of Service and Privacy Policy. 
-                    We'll never share your personal information without your consent.
+                    By creating an account, you agree to our{" "}
+                    <a href="/termsandconditions" className="underline text-primary">
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a href="/privacy-policy" className="underline text-primary">
+                      Privacy Policy
+                    </a>
+                    . We&apos;ll never share your personal information without your consent.
                   </p>
                 </div>
               </div>

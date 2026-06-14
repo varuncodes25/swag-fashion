@@ -34,6 +34,8 @@ function isPublicBrowsePath(pathname) {
     "/contact",
     "/faq",
     "/termsandconditions",
+    "/terms",
+    "/privacy-policy",
     "/track-order",
     "/login",
     "/signup",

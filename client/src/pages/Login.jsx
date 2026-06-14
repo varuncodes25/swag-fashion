@@ -398,7 +398,14 @@ const Login = () => {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-xs text-muted-foreground transition-colors duration-300">
-            By signing in, you agree to our Terms and Privacy Policy
+            By signing in, you agree to our{" "}
+            <a href="/termsandconditions" className="underline hover:text-primary">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy-policy" className="underline hover:text-primary">
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>

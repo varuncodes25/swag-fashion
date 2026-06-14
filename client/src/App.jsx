@@ -51,6 +51,7 @@ const ResetPassword = lazyRoute(() =>
 const TermsAndConditions = lazyRoute(() =>
   import("./components/TermsAndConditions")
 );
+const PrivacyPolicy = lazyRoute(() => import("./components/PrivacyPolicy"));
 const CategoryPage = lazyRoute(() => import("./pages/CategoryPage"));
 const OrderDetails = lazyRoute(() => import("./components/order/OrderDetails"));
 const WishlistPage = lazyRoute(() => import("./pages/Wishlist"));
@@ -125,6 +126,14 @@ export default function App() {
     {
       path: "/termsandconditions",
       element: <RootLayout children={<TermsAndConditions />} />,
+    },
+    {
+      path: "/terms",
+      element: <RootLayout children={<TermsAndConditions />} />,
+    },
+    {
+      path: "/privacy-policy",
+      element: <RootLayout children={<PrivacyPolicy />} />,
     },
     {
       path: "/success",

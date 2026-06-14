@@ -37,7 +37,8 @@ const Footer = () => {
             <ul className="space-y-2">
               <li><Link to="/contact" className="link-premium text-sm">Print on Demand</Link></li>
               <li><Link to="/contact" className="link-premium text-sm">Bulk Orders</Link></li>
-              <li><Link to="/Termsandconditions" className="link-premium text-sm">Terms & Conditions</Link></li>
+              <li><Link to="/termsandconditions" className="link-premium text-sm">Terms &amp; Conditions</Link></li>
+              <li><Link to="/privacy-policy" className="link-premium text-sm">Privacy Policy</Link></li>
             </ul>
           </div>
 
