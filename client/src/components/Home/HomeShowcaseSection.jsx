@@ -35,7 +35,7 @@ export default function HomeShowcaseSection() {
               to={item.href}
               className="group flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-2 sm:w-20"
             >
-              <div className="relative h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md sm:h-20 sm:w-20">
+              <div className="h-[4.5rem] w-[4.5rem] overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md sm:h-20 sm:w-20">
                 <img
                   src={showcaseImages[item.id] || "/tshirt_model.png"}
                   alt={item.label}
@@ -45,11 +45,6 @@ export default function HomeShowcaseSection() {
                   }}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                {item.id === "graphic" && (
-                  <span className="absolute -right-0.5 -top-0.5 rounded-full bg-primary px-1 py-0.5 text-[8px] font-bold text-white">
-                    HOT
-                  </span>
-                )}
               </div>
               <span className="max-w-[4.5rem] text-center text-[11px] font-medium leading-tight text-foreground group-hover:text-primary sm:max-w-20 sm:text-xs">
                 {item.label}
@@ -66,7 +61,7 @@ export default function HomeShowcaseSection() {
               to={item.href}
               className="group flex w-24 flex-col items-center gap-2.5"
             >
-              <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md">
+              <div className="h-24 w-24 overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md">
                 <img
                   src={showcaseImages[item.id] || "/tshirt_model.png"}
                   alt={item.label}
@@ -76,11 +71,6 @@ export default function HomeShowcaseSection() {
                   }}
                   className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
-                {item.id === "graphic" && (
-                  <span className="absolute -right-0.5 -top-0.5 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold text-white">
-                    HOT
-                  </span>
-                )}
               </div>
               <span className="text-center text-sm font-medium text-foreground group-hover:text-primary">
                 {item.label}
