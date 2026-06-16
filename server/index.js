@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 const { readdirSync } = require("fs");
 const { connectDb } = require("./db/connection");
 const { notFound, errorHandler } = require("./middlewares/error.middleware");
@@ -216,17 +217,23 @@ app.get("/sitemap.xml", async (req, res) => {
   }
 });
 
-// Load routes dynamically
+// Load routes dynamically (path relative to this file, not process.cwd())
 app.use("/api", apiLimiter);
-readdirSync("./routes").forEach((route) => {
+const loadedRoutes = [];
+const failedRoutes = [];
+const routesDir = path.join(__dirname, "routes");
+
+readdirSync(routesDir).forEach((route) => {
   try {
-    app.use("/api", require(`./routes/${route}`));
+    app.use("/api", require(path.join(routesDir, route)));
+    loadedRoutes.push(route);
     logger.info({
       type: "route_loaded",
       file: route,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    failedRoutes.push({ file: route, message: error.message });
     logger.error({
       type: "route_load_failed",
       file: route,
@@ -236,6 +243,18 @@ readdirSync("./routes").forEach((route) => {
     });
     console.error(`[routes] Failed to load ${route}:`, error.message);
   }
+});
+
+app.get("/api/monitoring/routes", (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      loaded: loadedRoutes,
+      failed: failedRoutes,
+      hasExchangeRoutes: loadedRoutes.includes("exchangeRoutes.js"),
+      hasAdminRoutes: loadedRoutes.includes("adminRoutes.js"),
+    },
+  });
 });
 
 // Catch-all 404

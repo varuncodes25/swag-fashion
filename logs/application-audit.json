@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\satya\\OneDrive\\Desktop\\update_swag\\swag-fashion\\logs\\application-audit.json",
+    "files": [
+        {
+            "date": 1781629487482,
+            "name": "C:\\Users\\satya\\OneDrive\\Desktop\\update_swag\\swag-fashion\\logs\\application-2026-06-16.log",
+            "hash": "4e893df2b79ff3c818366b8745c75f9acddf1a3b58a28638a7eeae5d12e7cd23"
+        }
+    ],
+    "hashType": "sha256"
+}
