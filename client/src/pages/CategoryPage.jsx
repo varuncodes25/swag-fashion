@@ -479,10 +479,15 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen">
       <div className=" px-4 sm:px-6 lg:px-8">
-        {/* Mobile Header — compact sticky bar */}
-        <div className="sticky top-14 z-30 -mx-1 mb-1 border-b border-gray-200/80 bg-white/95 px-1 py-1.5 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/95 lg:hidden">
-          <div className="space-y-2">
-            <div className="flex items-center gap-1.5">
+        {/* Mobile filter bar — sits below site header, solid bg so cards don't show through */}
+        <div
+          className={`sticky z-30 mb-3 border-b border-gray-200 bg-white px-0 py-2.5 transition-shadow dark:border-zinc-800 dark:bg-zinc-950 lg:hidden ${
+            isMobileHeaderCompact ? "shadow-md" : "shadow-sm"
+          }`}
+          style={{ top: "var(--site-header-height)" }}
+        >
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2">
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold capitalize leading-tight text-gray-900 dark:text-zinc-100">
                   {searchParams.get("isPremium") === "true"
@@ -553,7 +558,7 @@ export default function CategoryPage() {
           </div>
         </div>
 
-        <div className="lg:grid lg:grid-cols-12 lg:gap-8 pt-4">
+        <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:pt-4">
           {/* SIDEBAR - Desktop */}
           <aside className="hidden lg:block lg:col-span-3">
             <div className="sticky top-24">

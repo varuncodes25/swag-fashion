@@ -82,6 +82,9 @@
 
     --radius: 0.5rem;
 
+    /* Sticky offsets — match Navbar logo + padding height */
+    --site-header-height: 4.0625rem;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 346 77% 48%;
@@ -170,6 +173,12 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 346 70% 58%;
+  }
+}
+
+@media (min-width: 640px) {
+  :root {
+    --site-header-height: 4.5625rem;
   }
 }
 

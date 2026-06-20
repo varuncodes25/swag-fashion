@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import MobileImageZoom from "./MobileImageZoom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useSwipeIndex } from "../../hooks/useSwipeIndex";
 import SimpleImageSlider from "./SimpleImageSlider";
 import GalleryImage from "./GalleryImage";
 import { normalizeProductImages, optimizeGalleryImage } from "@/utils/productImages";
@@ -52,12 +51,6 @@ const ProductGallery = ({
     setShowZoom(false);
   };
 
-  const { didSwipeRef: mobileDidSwipeRef, handlers: mobileSwipeHandlers } = useSwipeIndex({
-    onPrev: handlePrev,
-    onNext: handleNext,
-    enabled: galleryImages.length > 1,
-  });
-
   const handleContainerClick = () => {
     if (isZoomed) {
       setIsZoomed(false);
@@ -84,14 +77,6 @@ const ProductGallery = ({
     }
   };
 
-  const handleMobileImageClick = () => {
-    if (mobileDidSwipeRef.current) {
-      mobileDidSwipeRef.current = false;
-      return;
-    }
-    handleMobileZoomOpen();
-  };
-  // ✅ CORRECT: useEffect should come before any conditional returns
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft') handlePrev();
@@ -250,7 +235,9 @@ const ProductGallery = ({
         <div
           className="
             w-full
-            aspect-[3/4]
+            aspect-[2/3]
+            min-h-[420px]
+            max-h-[min(78vh,560px)]
             rounded-xl
             border
             border-gray-300 dark:border-white/10
@@ -258,15 +245,13 @@ const ProductGallery = ({
             mb-3
             relative
             overflow-hidden
-            touch-pan-y
           "
-          onClick={handleMobileImageClick}
-          onTouchStart={mobileSwipeHandlers.onTouchStart}
-          onTouchEnd={mobileSwipeHandlers.onTouchEnd}
         >
           <SimpleImageSlider
             images={galleryImages}
             index={selectedImage}
+            onIndexChange={onSelect}
+            onTap={handleMobileZoomOpen}
             fit="contain"
             className="absolute inset-0 z-[1]"
             imgClassName="p-1"

@@ -1,6 +1,5 @@
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useSwipeIndex } from "../../hooks/useSwipeIndex";
 import SimpleImageSlider from "./SimpleImageSlider";
 
 const MIN_SCALE = 1;
@@ -22,14 +21,6 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const scaleRef = useRef(1);
   const pinchRef = useRef({ startDistance: 0, startScale: 1 });
   const gestureRef = useRef(null);
-
-  const canSwipe = images.length > 1 && scale <= 1;
-
-  const { handlers: swipeHandlers } = useSwipeIndex({
-    onPrev,
-    onNext,
-    enabled: canSwipe,
-  });
 
   useEffect(() => {
     scaleRef.current = scale;
@@ -92,11 +83,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
         x: touch.clientX - position.x,
         y: touch.clientY - position.y,
       });
-      return;
     }
-
-    gestureRef.current = null;
-    swipeHandlers.onTouchStart(e);
   };
 
   const handleTouchMove = (e) => {
@@ -135,10 +122,6 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
         setScale(1);
         setPosition({ x: 0, y: 0 });
       }
-    }
-
-    if (gestureRef.current !== "pinch" && scaleRef.current <= 1 && images.length > 1) {
-      swipeHandlers.onTouchEnd(e);
     }
   };
 
@@ -201,7 +184,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
             <img
               src={images[activeIndex]?.url}
               alt="Zoomed product view"
-              className="pointer-events-none block h-auto max-h-[75vh] w-auto max-w-[100vw] select-none object-contain"
+              className="pointer-events-none block h-auto max-h-[82vh] w-auto max-w-[100vw] select-none object-contain"
               draggable={false}
             />
           </div>
@@ -209,9 +192,11 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
           <SimpleImageSlider
             images={images}
             index={activeIndex}
+            onIndexChange={onSelect}
             fit="contain"
+            enableSwipe={images.length > 1}
             className="absolute inset-0 h-full w-full"
-            imgClassName="max-h-[75vh] px-2"
+            imgClassName="max-h-[82vh] px-2"
           />
         )}
       </div>
