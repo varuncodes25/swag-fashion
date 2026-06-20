@@ -21,9 +21,13 @@ export function normalizeProductImages(images = []) {
     .filter(Boolean);
 }
 
-export function optimizeGalleryImage(url, { maxWidth = 900, thumb = false } = {}) {
+export function optimizeGalleryImage(
+  url,
+  { maxWidth = 900, thumb = false, square = false } = {},
+) {
   if (!url) return "";
-  return cloudinaryOptimize(url, { maxWidth: thumb ? 120 : maxWidth });
+  const width = thumb ? (square ? 400 : 120) : maxWidth;
+  return cloudinaryOptimize(url, { maxWidth: width, square: Boolean(square) });
 }
 
 export function preloadImageUrls(urls = [], options = {}) {

@@ -25,7 +25,7 @@ function pickProductImage(product) {
     imgs.find((img) => img.isMain)?.url ||
     imgs[0]?.url ||
     getImageUrl(product?.image);
-  return raw ? optimizeGalleryImage(raw, { maxWidth: 400, thumb: true }) : "";
+  return raw ? optimizeGalleryImage(raw, { thumb: true, square: true }) : "";
 }
 
 function MoodChip({ id, label, occasion, imageSrc, compact = false }) {
@@ -38,6 +38,9 @@ function MoodChip({ id, label, occasion, imageSrc, compact = false }) {
     : "text-center text-sm font-medium text-foreground group-hover:text-primary";
   const gap = compact ? "gap-2" : "gap-2.5";
   const fallback = MOOD_FALLBACK_IMAGES[id] || "/tshirt_model.png";
+  const src = imageSrc || fallback;
+  const isLocalAsset =
+    src.startsWith("/images/") || src.startsWith("/tshirt_model");
 
   return (
     <Link
@@ -45,23 +48,29 @@ function MoodChip({ id, label, occasion, imageSrc, compact = false }) {
       className={`group flex ${linkWidth} shrink-0 snap-start flex-col items-center ${gap}`}
     >
       <div
-        className={`${chipSize} overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md`}
+        className={`${chipSize} overflow-hidden rounded-full border-2 border-border bg-muted p-[3px] shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md sm:p-1`}
       >
-        <img
-          src={imageSrc || fallback}
-          alt={label}
-          loading="lazy"
-          onError={(e) => {
-            const el = e.currentTarget;
-            if (el.dataset.fallbackApplied === "1") {
-              el.src = "/tshirt_model.png";
-              return;
-            }
-            el.dataset.fallbackApplied = "1";
-            el.src = fallback;
-          }}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
+        <div className="relative h-full w-full overflow-hidden rounded-full bg-muted">
+          <img
+            src={src}
+            alt={label}
+            loading="lazy"
+            onError={(e) => {
+              const el = e.currentTarget;
+              if (el.dataset.fallbackApplied === "1") {
+                el.src = "/tshirt_model.png";
+                return;
+              }
+              el.dataset.fallbackApplied = "1";
+              el.src = fallback;
+            }}
+            className={`h-full w-full transition-transform duration-500 group-hover:scale-105 ${
+              isLocalAsset
+                ? "object-contain object-center"
+                : "object-cover object-center"
+            }`}
+          />
+        </div>
       </div>
       <span className={labelClass}>{label}</span>
     </Link>
