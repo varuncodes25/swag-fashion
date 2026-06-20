@@ -281,7 +281,7 @@ const ProductGallery = ({
                 key={i}
                 onClick={() => {
                   onSelect(i);
-                  setShowZoom(false);
+                  handleMobileZoomOpen();
                 }}
                 className={`shrink-0 w-16 h-16 overflow-hidden rounded-md border transition-all ${
                   selectedImage === i
@@ -301,20 +301,10 @@ const ProductGallery = ({
         <MobileImageZoom
           images={galleryImages}
           activeIndex={selectedImage}
-          onClose={() => {
-            setIsMobileZoomOpen(false);
-            setIsZoomed(false);
-            setShowZoom(false);
-          }}
+          onClose={handleMobileZoomClose}
           onPrev={handlePrev}
           onNext={handleNext}
-          onSelect={(index) => {
-            onSelect(index);
-            handleMobileZoomClose();
-            setIsMobileZoomOpen(false);
-            setIsZoomed(false);
-            setShowZoom(false);
-          }}
+          onSelect={(index) => onSelect(index)}
         />
       )}
 
