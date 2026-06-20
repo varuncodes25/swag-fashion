@@ -4,13 +4,18 @@ export default function PopularSearchTags({
   searchParams,
   onSelect,
   className = "",
+  scrollable = false,
 }) {
   const activeTag = searchParams.get("tags");
   const activeGroup = searchParams.get("tagGroup");
 
+  const containerClass = scrollable
+    ? "flex items-center gap-1.5 overflow-x-auto flex-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    : "flex flex-wrap items-center gap-2";
+
   return (
-    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      <span className="text-[11px] font-medium text-muted-foreground shrink-0">
+    <div className={`${containerClass} ${className}`}>
+      <span className="text-[10px] font-medium text-muted-foreground shrink-0">
         Popular:
       </span>
       {POPULAR_SEARCH_TAGS.map((item) => {
@@ -25,7 +30,9 @@ export default function PopularSearchTags({
             key={`${item.type}-${item.value}`}
             type="button"
             onClick={() => onSelect(item)}
-            className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
+            className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold transition ${
+              scrollable ? "whitespace-nowrap" : ""
+            } ${
               isActive
                 ? "border-primary bg-primary text-white"
                 : "border-gray-200 bg-white text-gray-700 hover:border-primary/40 hover:bg-primary/5 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"

@@ -6,7 +6,7 @@ export default function ProductGrid({ loading, products }) {
 
   if (loading && products.length === 0) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
         {[...Array(8)].map((_, i) => (
           <div key={i} className="animate-pulse">
             <div className="bg-gray-200 h-64 rounded-xl mb-4"></div>
@@ -42,7 +42,7 @@ export default function ProductGrid({ loading, products }) {
   // }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
       {products.map((product) => {
         // // Prepare data for ProductCard
         // const productData = {
