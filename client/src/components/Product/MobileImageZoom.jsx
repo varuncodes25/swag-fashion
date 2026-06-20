@@ -1,7 +1,7 @@
 import { X, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
-import ImageSlideTrack from "./ImageSlideTrack";
+import { useSwipeIndex } from "../../hooks/useSwipeIndex";
+import SimpleImageSlider from "./SimpleImageSlider";
 
 const MIN_SCALE = 1;
 const MAX_SCALE = 3;
@@ -19,24 +19,16 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   const containerRef = useRef(null);
-  const slideContainerRef = useRef(null);
   const scaleRef = useRef(1);
   const pinchRef = useRef({ startDistance: 0, startScale: 1 });
   const gestureRef = useRef(null);
 
-  const canSlide = images.length > 1 && scale <= 1;
+  const canSwipe = images.length > 1 && scale <= 1;
 
-  const {
-    slideOffset,
-    isSlideDragging,
-    isAnimating,
-    resetSlide,
-    handlers: slideHandlers,
-  } = useTouchImageSlide({
+  const { handlers: swipeHandlers } = useSwipeIndex({
     onPrev,
     onNext,
-    enabled: canSlide,
-    containerRef: slideContainerRef,
+    enabled: canSwipe,
   });
 
   useEffect(() => {
@@ -54,8 +46,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
     setScale(1);
     setPosition({ x: 0, y: 0 });
     scaleRef.current = 1;
-    resetSlide();
-  }, [activeIndex, resetSlide]);
+  }, [activeIndex]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -84,7 +75,6 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
   const handleTouchStart = (e) => {
     if (e.touches.length === 2) {
       gestureRef.current = "pinch";
-      resetSlide();
       pinchRef.current = {
         startDistance: getTouchDistance(e.touches[0], e.touches[1]),
         startScale: scaleRef.current,
@@ -106,7 +96,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
     }
 
     gestureRef.current = null;
-    slideHandlers.onTouchStart(e);
+    swipeHandlers.onTouchStart(e);
   };
 
   const handleTouchMove = (e) => {
@@ -130,11 +120,6 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
         x: touch.clientX - panStart.x,
         y: touch.clientY - panStart.y,
       });
-      return;
-    }
-
-    if (gestureRef.current !== "pinch" && scaleRef.current <= 1 && images.length > 1) {
-      slideHandlers.onTouchMove(e);
     }
   };
 
@@ -153,7 +138,7 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
     }
 
     if (gestureRef.current !== "pinch" && scaleRef.current <= 1 && images.length > 1) {
-      slideHandlers.onTouchEnd(e);
+      swipeHandlers.onTouchEnd(e);
     }
   };
 
@@ -204,13 +189,10 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
         </div>
       </div>
 
-      <div
-        ref={slideContainerRef}
-        className="relative flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden"
-      >
+      <div className="relative flex min-h-0 w-full flex-1 items-stretch justify-center overflow-hidden">
         {isZoomed ? (
           <div
-            className="relative origin-center will-change-transform"
+            className="relative flex flex-1 items-center justify-center origin-center will-change-transform"
             style={{
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
               transition: isPanning ? "none" : "transform 0.2s ease-out",
@@ -219,20 +201,17 @@ const MobileImageZoom = ({ images, activeIndex, onClose, onPrev, onNext, onSelec
             <img
               src={images[activeIndex]?.url}
               alt="Zoomed product view"
-              className="pointer-events-none block h-auto max-h-[70vh] w-auto max-w-[100vw] select-none object-contain"
+              className="pointer-events-none block h-auto max-h-[75vh] w-auto max-w-[100vw] select-none object-contain"
               draggable={false}
             />
           </div>
         ) : (
-          <ImageSlideTrack
+          <SimpleImageSlider
             images={images}
-            activeIndex={activeIndex}
-            slideOffset={slideOffset}
-            isSlideDragging={isSlideDragging}
-            isAnimating={isAnimating}
+            index={activeIndex}
             fit="contain"
-            className="absolute inset-0"
-            imgClassName="max-h-[70vh]"
+            className="absolute inset-0 h-full w-full"
+            imgClassName="max-h-[75vh] px-2"
           />
         )}
       </div>

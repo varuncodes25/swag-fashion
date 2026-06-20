@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImageOff } from "lucide-react";
 import { optimizeGalleryImage } from "@/utils/productImages";
+
+function isImageCached(src) {
+  if (!src) return false;
+  const probe = new window.Image();
+  probe.src = src;
+  return probe.complete && probe.naturalWidth > 0;
+}
 
 export default function GalleryImage({
   src,
@@ -10,13 +17,30 @@ export default function GalleryImage({
   priority = false,
   thumb = false,
 }) {
-  const [loaded, setLoaded] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const imgRef = useRef(null);
   const optimizedSrc = optimizeGalleryImage(src, { thumb });
+  const [loaded, setLoaded] = useState(() => isImageCached(optimizedSrc));
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    setLoaded(false);
     setFailed(false);
+    if (!optimizedSrc) {
+      setLoaded(false);
+      return;
+    }
+
+    const img = imgRef.current;
+    if (img?.complete && img.naturalWidth > 0) {
+      setLoaded(true);
+      return;
+    }
+
+    if (isImageCached(optimizedSrc)) {
+      setLoaded(true);
+      return;
+    }
+
+    setLoaded(false);
   }, [optimizedSrc]);
 
   const fitClass =
@@ -40,9 +64,10 @@ export default function GalleryImage({
         <div className="absolute inset-0 animate-pulse bg-muted/60" aria-hidden />
       )}
       <img
+        ref={imgRef}
         src={optimizedSrc}
         alt={alt}
-        className={`${fitClass} transition-opacity duration-200 ${
+        className={`${fitClass} transition-opacity duration-300 ${
           loaded ? "opacity-100" : "opacity-0"
         }`}
         loading={priority ? "eager" : "lazy"}

@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import MobileImageZoom from "./MobileImageZoom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useTouchImageSlide } from "../../hooks/useTouchImageSlide";
-import ImageSlideTrack from "./ImageSlideTrack";
+import { useSwipeIndex } from "../../hooks/useSwipeIndex";
+import SimpleImageSlider from "./SimpleImageSlider";
 import GalleryImage from "./GalleryImage";
 import { normalizeProductImages, optimizeGalleryImage } from "@/utils/productImages";
 
@@ -17,7 +17,6 @@ const ProductGallery = ({
   const [isMobileZoomOpen, setIsMobileZoomOpen] = useState(false);
   const [showZoom, setShowZoom] = useState(false);
   const [bgPos, setBgPos] = useState("50% 50%");
-  const mobileSlideContainerRef = useRef(null);
 
   const galleryImages = useMemo(
     () => normalizeProductImages(images),
@@ -53,17 +52,10 @@ const ProductGallery = ({
     setShowZoom(false);
   };
 
-  const {
-    slideOffset: mobileSlideOffset,
-    isSlideDragging: isMobileSlideDragging,
-    isAnimating: isMobileSlideAnimating,
-    didSwipeRef: mobileDidSwipeRef,
-    handlers: mobileSlideHandlers,
-  } = useTouchImageSlide({
+  const { didSwipeRef: mobileDidSwipeRef, handlers: mobileSwipeHandlers } = useSwipeIndex({
     onPrev: handlePrev,
     onNext: handleNext,
     enabled: galleryImages.length > 1,
-    containerRef: mobileSlideContainerRef,
   });
 
   const handleContainerClick = () => {
@@ -93,7 +85,7 @@ const ProductGallery = ({
   };
 
   const handleMobileImageClick = () => {
-    if (mobileDidSwipeRef.current || isMobileSlideAnimating) {
+    if (mobileDidSwipeRef.current) {
       mobileDidSwipeRef.current = false;
       return;
     }
@@ -256,32 +248,28 @@ const ProductGallery = ({
       <div className="lg:hidden">
         {/* MAIN IMAGE — portrait frame (3:4), image fills container */}
         <div
-          ref={mobileSlideContainerRef}
           className="
             w-full
             aspect-[3/4]
             rounded-xl
             border
             border-gray-300 dark:border-white/10
-            bg-neutral-50 dark:bg-neutral-900
+            bg-neutral-100 dark:bg-neutral-900
             mb-3
             relative
             overflow-hidden
             touch-pan-y
           "
           onClick={handleMobileImageClick}
-          onTouchStart={mobileSlideHandlers.onTouchStart}
-          onTouchMove={mobileSlideHandlers.onTouchMove}
-          onTouchEnd={mobileSlideHandlers.onTouchEnd}
+          onTouchStart={mobileSwipeHandlers.onTouchStart}
+          onTouchEnd={mobileSwipeHandlers.onTouchEnd}
         >
-          <ImageSlideTrack
+          <SimpleImageSlider
             images={galleryImages}
-            activeIndex={selectedImage}
-            slideOffset={mobileSlideOffset}
-            isSlideDragging={isMobileSlideDragging}
-            isAnimating={isMobileSlideAnimating}
-            fit="cover"
+            index={selectedImage}
+            fit="contain"
             className="absolute inset-0 z-[1]"
+            imgClassName="p-1"
           />
         </div>
 
