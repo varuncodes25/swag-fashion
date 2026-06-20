@@ -215,6 +215,8 @@ const CreateProduct = () => {
         response = await dispatch(
           updateProduct({ id: productId, data: formDataObj }),
         ).unwrap();
+        formInitializedForId.current = null;
+        await getProduct(productId);
       } else {
         response = await dispatch(createProduct(formDataObj)).unwrap();
       }
@@ -230,10 +232,17 @@ const CreateProduct = () => {
 
       navigate("/admin/dashboard/all-products");
     } catch (error) {
+      const payload =
+        typeof error === "object" && error !== null && !error.message
+          ? error
+          : error?.response?.data || error;
+      const fieldErrors = payload?.errors;
+      const occasionError = fieldErrors?.occasion;
       const errorMessage =
+        occasionError ||
         (typeof error === "string" ? error : null) ||
+        payload?.message ||
         error?.message ||
-        error?.response?.data?.message ||
         "Failed to save product";
 
       toast({
@@ -1295,12 +1304,20 @@ const CreateProduct = () => {
               <Button
                 key={occasion}
                 type="button"
-                variant={formData.occasion.includes(occasion) ? "default" : "outline"}
+                variant={
+                  formData.occasion.some(
+                    (item) => item.toLowerCase() === occasion.toLowerCase(),
+                  )
+                    ? "default"
+                    : "outline"
+                }
                 size="sm"
                 onClick={() => toggleOccasion(occasion)}
                 className="text-xs"
               >
-                {formData.occasion.includes(occasion) && <Check className="h-3 w-3 mr-1" />}
+                {formData.occasion.some(
+                  (item) => item.toLowerCase() === occasion.toLowerCase(),
+                ) && <Check className="h-3 w-3 mr-1" />}
                 {getShopByMoodOccasionLabel(occasion)}
               </Button>
             ))}
@@ -1314,12 +1331,20 @@ const CreateProduct = () => {
               <Button
                 key={occasion}
                 type="button"
-                variant={formData.occasion.includes(occasion) ? "default" : "outline"}
+                variant={
+                  formData.occasion.some(
+                    (item) => item.toLowerCase() === occasion.toLowerCase(),
+                  )
+                    ? "default"
+                    : "outline"
+                }
                 size="sm"
                 onClick={() => toggleOccasion(occasion)}
                 className="text-xs"
               >
-                {formData.occasion.includes(occasion) && <Check className="h-3 w-3 mr-1" />}
+                {formData.occasion.some(
+                  (item) => item.toLowerCase() === occasion.toLowerCase(),
+                ) && <Check className="h-3 w-3 mr-1" />}
                 {occasion}
               </Button>
             ))}

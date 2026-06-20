@@ -567,6 +567,61 @@ const OCCASIONS = [
   "Sleepwear",
 ];
 
+function normalizeOccasionList(value) {
+  const raw = Array.isArray(value)
+    ? value
+    : typeof value === "string" && value.trim()
+      ? [value.trim()]
+      : [];
+
+  const normalized = [];
+  for (const item of raw) {
+    const text = String(item ?? "").trim();
+    if (!text) continue;
+    const match = OCCASIONS.find(
+      (occasion) => occasion.toLowerCase() === text.toLowerCase(),
+    );
+    if (match && !normalized.includes(match)) {
+      normalized.push(match);
+    }
+  }
+
+  return normalized.length > 0 ? normalized : ["Casual"];
+}
+
+function resolveOccasionValue(occasion) {
+  return (
+    OCCASIONS.find(
+      (item) => item.toLowerCase() === String(occasion ?? "").trim().toLowerCase(),
+    ) || String(occasion ?? "").trim()
+  );
+}
+
+function extractProductOccasions(product) {
+  if (!product) return ["Casual"];
+
+  if (Array.isArray(product.occasion) && product.occasion.length > 0) {
+    return normalizeOccasionList(product.occasion);
+  }
+
+  if (typeof product.occasion === "string" && product.occasion.trim()) {
+    return normalizeOccasionList(product.occasion);
+  }
+
+  const specBlock = product.specifications?.["Season & Occasion"];
+  const specOccasion = specBlock?.Occasion || specBlock?.occasion;
+  if (specOccasion) {
+    return normalizeOccasionList(
+      String(specOccasion)
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean),
+    );
+  }
+
+  return ["Casual"];
+}
+
 const CARE_INSTRUCTIONS = [
   "Machine Wash",
   "Machine Wash Cold",
@@ -793,12 +848,7 @@ export const useProductForm = (editProductId = null) => {
         Array.isArray(product.season) && product.season.length > 0
           ? product.season
           : ["All Season"],
-      occasion:
-        Array.isArray(product.occasion) && product.occasion.length > 0
-          ? product.occasion
-          : typeof product.occasion === "string" && product.occasion.trim()
-            ? [product.occasion.trim()]
-            : ["Casual"],
+      occasion: extractProductOccasions(product),
       tags: Array.isArray(product.tags) ? product.tags : [],
       features: Array.isArray(product.features) ? product.features : [],
       packageContent: product.packageContent ?? "1 Piece",
@@ -985,12 +1035,18 @@ export const useProductForm = (editProductId = null) => {
 
   // Occasion handlers
   const toggleOccasion = (occasion) => {
-    const currentOccasions = formData.occasion;
-    const updatedOccasions = currentOccasions.includes(occasion)
-      ? currentOccasions.filter((item) => item !== occasion)
-      : [...currentOccasions, occasion];
+    const canonical = resolveOccasionValue(occasion);
+    setFormData((prev) => {
+      const currentOccasions = normalizeOccasionList(prev.occasion);
+      const updatedOccasions = currentOccasions.includes(canonical)
+        ? currentOccasions.filter((item) => item !== canonical)
+        : [...currentOccasions, canonical];
 
-    setFormData((prev) => ({ ...prev, occasion: updatedOccasions }));
+      return {
+        ...prev,
+        occasion: updatedOccasions.length > 0 ? updatedOccasions : ["Casual"],
+      };
+    });
   };
 
   const toggleTag = (tag) => {
@@ -1428,9 +1484,12 @@ const prepareFormData = () => {
         return; // Top wear ke liye bottom fields skip
       }
 
+      if (key === "occasion") {
+        return;
+      }
+
       if (
         key === "season" ||
-        key === "occasion" ||
         key === "features" ||
         key === "keyFeatures" ||
         key === "careInstructions"
@@ -1597,6 +1656,12 @@ const prepareFormData = () => {
     });
 
     formDataObj.append("colorImageMap", JSON.stringify(finalColorImageMap));
+
+    // Always send occasion last so multer definitely receives it.
+    formDataObj.set(
+      "occasion",
+      JSON.stringify(normalizeOccasionList(formData.occasion)),
+    );
 
     return formDataObj;
   } catch (error) {

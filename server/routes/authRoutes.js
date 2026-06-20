@@ -17,6 +17,7 @@ const {
 } = require("../controllers/googleAuthController");
 const verifyToken = require("../middlewares/verifyToken");
 const decryptRequest = require("../utils/decryptResponse");
+const upload = require("../middlewares/multer");
 const { buildLimiter, toNumber } = require("../utils/rateLimitConfig");
 const router = require("express").Router();
 
@@ -56,7 +57,13 @@ router.get("/auth/session", authLimiter, getSession);
 router.post("/logout", authLimiter, verifyToken, logout);
 router.put("/user/change-password", authLimiter, verifyToken,decryptRequest, changePassword);
 router.get("/users/profile", authLimiter, verifyToken, getProfile);
-router.put("/users/profile", verifyToken, decryptRequest, updateProfile);
+router.put(
+  "/users/profile",
+  verifyToken,
+  upload.single("avatar"),
+  decryptRequest,
+  updateProfile,
+);
 // router.post("/admin-signup", adminSignup);
 
 // router.post("/admin-login", adminLogin);

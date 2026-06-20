@@ -112,6 +112,35 @@ function parseCsvParam(value) {
     .filter(Boolean);
 }
 
+function normalizeOccasionsInput(raw) {
+  const allowed = Product.schema.path("occasion").caster.enumValues;
+  const rawOccasions = Array.isArray(raw)
+    ? raw
+    : typeof raw === "string" && raw.trim().startsWith("[")
+      ? (() => {
+          try {
+            return JSON.parse(raw);
+          } catch {
+            return parseCsvParam(raw);
+          }
+        })()
+      : parseCsvParam(String(raw ?? ""));
+
+  const normalized = [];
+  for (const value of rawOccasions) {
+    const text = String(value ?? "").trim();
+    if (!text) continue;
+    const match = allowed.find(
+      (item) => item.toLowerCase() === text.toLowerCase(),
+    );
+    if (match && !normalized.includes(match)) {
+      normalized.push(match);
+    }
+  }
+
+  return normalized.length > 0 ? normalized : ["Casual"];
+}
+
 function applyExactEnumFilter(query, field, paramValue) {
   const values = parseCsvParam(paramValue);
   if (values.length === 0) return;
@@ -464,7 +493,7 @@ const createProduct = async (req, res) => {
     const colorCodesArray = parse(colorCodes, []);
     const colorImageMapping = parse(colorImageMap, {});
     const seasonArray = parse(season, ["All Season"]);
-    const occasionArray = parse(occasion, ["Casual"]);
+    const occasionArray = normalizeOccasionsInput(parse(occasion, ["Casual"]));
     const tagsArray = parse(tags, [])
       .map((t) => String(t ?? "").trim())
       .filter(Boolean);
@@ -1056,23 +1085,16 @@ const updateProduct = async (req, res) => {
       }
     });
 
-    const OCCASION_VALUES = Product.schema.path("occasion").caster.enumValues;
     if (data.occasion !== undefined && data.occasion !== null) {
-      const rawOccasions = Array.isArray(data.occasion)
-        ? data.occasion
-        : parseCsvParam(String(data.occasion));
-      data.occasion = rawOccasions
-        .map((value) => {
-          const text = String(value ?? "").trim();
-          if (!text) return null;
-          return (
-            OCCASION_VALUES.find(
-              (allowed) => allowed.toLowerCase() === text.toLowerCase(),
-            ) || text
-          );
-        })
-        .filter(Boolean);
+      data.occasion = normalizeOccasionsInput(data.occasion);
     }
+
+    const resolvedOccasion =
+      data.occasion !== undefined
+        ? data.occasion
+        : req.body.occasion != null
+          ? normalizeOccasionsInput(req.body.occasion)
+          : undefined;
 
     if (data.tags !== undefined && data.tags !== null) {
       const rawTags = Array.isArray(data.tags)
@@ -1316,8 +1338,16 @@ const updateProduct = async (req, res) => {
       product.fit = updateFit;
     }
 
+    if (resolvedOccasion !== undefined) {
+      product.occasion = resolvedOccasion;
+      product.markModified("occasion");
+    }
+
     // ============ SAVE PRODUCT (TRIGGERS MIDDLEWARE) ============
-    console.log("💾 Saving product with middleware...", { fit: product.fit });
+    console.log("💾 Saving product with middleware...", {
+      fit: product.fit,
+      occasion: product.occasion,
+    });
     await product.save();
 
     console.log("✅ Product updated successfully");
@@ -1328,7 +1358,7 @@ const updateProduct = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Product updated successfully",
-      data: product.getProductDetailData(),
+      data: product.getAdminProductData(),
     });
   } catch (error) {
     console.error("❌ Update product error:", error);

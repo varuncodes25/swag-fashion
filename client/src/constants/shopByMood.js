@@ -11,42 +11,41 @@ export const SHOP_BY_MOOD_TILES = [
   {
     id: "college",
     label: "College",
-    tagline: "Campus fits",
     occasion: "College",
-    gradient: "from-violet-600 via-purple-600 to-indigo-800",
   },
   {
     id: "gym",
     label: "Gym",
-    tagline: "Move & train",
     occasion: "Sports",
-    gradient: "from-orange-500 via-rose-500 to-red-600",
   },
   {
     id: "travel",
     label: "Travel",
-    tagline: "On the go",
     occasion: "Travel",
-    gradient: "from-sky-500 via-blue-500 to-cyan-700",
   },
   {
     id: "casual",
     label: "Casual",
-    tagline: "Everyday ease",
     occasion: "Casual",
-    gradient: "from-emerald-500 via-teal-500 to-green-700",
   },
   {
     id: "streetwear",
     label: "Street",
-    tagline: "Bold looks",
     occasion: "Streetwear",
-    gradient: "from-amber-500 via-orange-500 to-yellow-600",
   },
 ];
 
 export const getMoodFilterHref = (occasion) =>
   `/category/all?occasion=${encodeURIComponent(occasion)}`;
+
+/** Local fallbacks when no catalog product is tagged for that mood. */
+export const MOOD_FALLBACK_IMAGES = {
+  college: "/images/home-mood/college.jpg",
+  gym: "/images/home-mood/gym.jpg",
+  travel: "/images/home-mood/travel.jpg",
+  casual: "/images/home-mood/casual.jpg",
+  streetwear: "/images/home-mood/streetwear.jpg",
+};
 
 /** Admin chip label — Sports shows as Gym on the homepage tile. */
 export const getShopByMoodOccasionLabel = (occasion) => {

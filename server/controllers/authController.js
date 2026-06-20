@@ -22,6 +22,7 @@ const {
   UnauthorizedError,
 } = require("../utils/handlar/ApiError");
 const { default: mongoose } = require("mongoose");
+const { uploadBuffer } = require("../config/cloudinary");
 
 const escapeHtml = (s) =>
   String(s ?? "")
@@ -770,50 +771,40 @@ const getProfile = asyncHandler(async (req, res, next) => {
 // controllers/userController.js
 const updateProfile = asyncHandler(async (req, res, next) => {
   try {
-    console.log("=== UPDATE PROFILE CONTROLLER ===");
-    console.log("1. req.userId:", req.userId);
-    console.log("2. req.user:", req.user);
-    console.log("3. req.body:", JSON.stringify(req.body, null, 2));
-    console.log("4. Headers:", req.headers.authorization);
-    
     const { name, phone } = req.body;
     const userId = req.id;
-    
-    // ✅ Direct database update for testing
+
     const user = await User.findById(userId);
     if (!user) {
-      console.log("❌ User not found!");
       return next(new NotFoundError("User not found"));
     }
-    
-    console.log("5. Current user:", { id: user._id, name: user.name, phone: user.phone });
-    
-    // ✅ Direct assignment
+
     if (name) {
       user.name = name;
-      console.log("6. Setting name to:", name);
     }
     if (phone) {
       user.phone = phone;
-      console.log("7. Setting phone to:", phone);
     }
-    
-    // ✅ Save with error handling
-    try {
-      await user.save();
-      console.log("8. User saved successfully!");
-    } catch (saveError) {
-      console.error("9. Save error:", saveError);
-      throw saveError;
+
+    if (req.file?.buffer) {
+      const uploadResult = await uploadBuffer(req.file.buffer, {
+        folder: "avatars",
+        transformation: [
+          { width: 400, height: 400, crop: "fill", quality: "auto:good" },
+        ],
+      });
+      user.avatar = uploadResult.secure_url;
     }
-    
-    console.log("10. Updated user:", { id: user._id, name: user.name, phone: user.phone });
-    
-    const response = new ApiResponse(200, { name: user.name, phone: user.phone }, "Profile updated");
+
+    await user.save();
+
+    const response = new ApiResponse(
+      200,
+      { name: user.name, phone: user.phone, avatar: user.avatar },
+      "Profile updated",
+    );
     return res.json(await encryptResponse(response));
-    
   } catch (error) {
-    console.error("❌ Update error:", error);
     next(error);
   }
 });

@@ -97,6 +97,10 @@ const getDeviceId = () => {
   return deviceId;
 };
 
+function isMultipartPayload(data) {
+  return typeof FormData !== "undefined" && data instanceof FormData;
+}
+
 apiClient.interceptors.request.use(
   async (config) => {
     config.withCredentials = true;
@@ -104,9 +108,16 @@ apiClient.interceptors.request.use(
     config.headers["platform"] = "web";
     config.headers["timestamp"] = Date.now().toString();
 
+    const isFormData = isMultipartPayload(config.data);
+
+    // Multipart uploads must bypass JSON encryption and default Content-Type.
+    if (isFormData) {
+      delete config.headers["Content-Type"];
+    }
+
     const shouldEncrypt = import.meta.env.VITE_ENCRYPT_REQUEST === "true";
 
-    if (shouldEncrypt && config.data && config.method !== "get") {
+    if (shouldEncrypt && config.data && config.method !== "get" && !isFormData) {
       try {
         const encryptedData = await CareerEncrypt(config.data);
         config.data = { encryptedData };

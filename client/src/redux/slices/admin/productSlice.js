@@ -35,9 +35,7 @@ export const createProduct = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       // Using your route: /create-product
-      const response = await apiClient.post('/create-product', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await apiClient.post('/create-product', formData);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -54,7 +52,7 @@ export const updateProduct = createAsyncThunk(
     } catch (error) {
       const payload = error.response?.data;
       return rejectWithValue(
-        payload?.message || payload?.error || error.message,
+        payload || { message: error.message },
       );
     }
   }

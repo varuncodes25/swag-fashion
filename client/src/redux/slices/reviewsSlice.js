@@ -55,9 +55,7 @@ export const createReview = createAsyncThunk(
         });
       }
 
-      const res = await apiClient.post('/create-review', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await apiClient.post('/create-review', formData);
 
       if (res.data.success) {
         return {

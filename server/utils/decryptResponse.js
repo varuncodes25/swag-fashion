@@ -10,7 +10,12 @@ const decryptRequest = async (req, res, next) => {
   if (req.path.includes('/upload') || req.method === 'GET') {
     return next();
   }
-console.log(req.body,"guhiheihwh")
+
+  const contentType = String(req.headers['content-type'] || '');
+  if (contentType.includes('multipart/form-data')) {
+    return next();
+  }
+
   // Check if request has encrypted data
   if (req.body && req.body.encryptedData) {
     try {

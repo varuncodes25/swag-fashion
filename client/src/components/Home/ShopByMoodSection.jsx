@@ -1,86 +1,140 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  GraduationCap,
-  Dumbbell,
-  Plane,
-  Sun,
-  Flame,
-  Sparkles,
-} from "lucide-react";
+import axios from "axios";
 import {
   SHOP_BY_MOOD_TILES,
+  MOOD_FALLBACK_IMAGES,
   getMoodFilterHref,
 } from "@/constants/shopByMood";
-import HomeSectionHeader from "@/components/Home/HomeSectionHeader";
 import {
-  HOME_SECTION_CLASS,
+  getImageUrl,
+  optimizeGalleryImage,
+  resolveImagesForColor,
+} from "@/utils/productImages";
+import {
+  HOME_SECTION_COMPACT,
   HOME_SECTION_CONTAINER,
   HOME_SECTION_TOP_DIVIDER,
 } from "./homeSectionStyles";
 
-const MOOD_ICONS = {
-  college: GraduationCap,
-  gym: Dumbbell,
-  travel: Plane,
-  casual: Sun,
-  streetwear: Flame,
-};
+function pickProductImage(product) {
+  if (!product) return "";
+  const color = product?.variants?.[0]?.color;
+  const imgs = resolveImagesForColor(product, color);
+  const raw =
+    imgs.find((img) => img.isMain)?.url ||
+    imgs[0]?.url ||
+    getImageUrl(product?.image);
+  return raw ? optimizeGalleryImage(raw, { maxWidth: 400, thumb: true }) : "";
+}
 
-function MoodCard({ id, label, tagline, occasion, gradient }) {
-  const Icon = MOOD_ICONS[id] || Sparkles;
+function MoodChip({ id, label, occasion, imageSrc, compact = false }) {
+  const chipSize = compact
+    ? "h-[4.5rem] w-[4.5rem] sm:h-20 sm:w-20"
+    : "h-24 w-24";
+  const linkWidth = compact ? "w-[4.5rem] sm:w-20" : "w-24";
+  const labelClass = compact
+    ? "max-w-[4.5rem] text-center text-[11px] font-medium leading-tight text-foreground group-hover:text-primary sm:max-w-20 sm:text-xs"
+    : "text-center text-sm font-medium text-foreground group-hover:text-primary";
+  const gap = compact ? "gap-2" : "gap-2.5";
+  const fallback = MOOD_FALLBACK_IMAGES[id] || "/tshirt_model.png";
 
   return (
     <Link
       to={getMoodFilterHref(occasion)}
-      className={`group relative flex min-h-[7.5rem] shrink-0 snap-start flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} p-4 shadow-md ring-1 ring-black/5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98] sm:min-h-[8.5rem] sm:p-5`}
+      className={`group flex ${linkWidth} shrink-0 snap-start flex-col items-center ${gap}`}
     >
       <div
-        className="pointer-events-none absolute -right-3 -top-3 h-20 w-20 rounded-full bg-white/10 blur-2xl transition group-hover:bg-white/15"
-        aria-hidden
-      />
-      <div className="relative flex items-start justify-between gap-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white backdrop-blur-sm sm:h-11 sm:w-11">
-          <Icon className="h-5 w-5 sm:h-5 sm:w-5" strokeWidth={2} />
-        </div>
+        className={`${chipSize} overflow-hidden rounded-full border-2 border-border bg-muted shadow-sm transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-md`}
+      >
+        <img
+          src={imageSrc || fallback}
+          alt={label}
+          loading="lazy"
+          onError={(e) => {
+            const el = e.currentTarget;
+            if (el.dataset.fallbackApplied === "1") {
+              el.src = "/tshirt_model.png";
+              return;
+            }
+            el.dataset.fallbackApplied = "1";
+            el.src = fallback;
+          }}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
       </div>
-      <div className="relative mt-auto pt-3">
-        <p className="text-sm font-bold tracking-tight text-white sm:text-base">
-          {label}
-        </p>
-        <p className="mt-0.5 text-[11px] font-medium text-white/85 sm:text-xs">
-          {tagline}
-        </p>
-      </div>
+      <span className={labelClass}>{label}</span>
     </Link>
   );
 }
 
 export default function ShopByMoodSection() {
-  return (
-    <section className={`${HOME_SECTION_CLASS} ${HOME_SECTION_TOP_DIVIDER}`}>
-      <div className={HOME_SECTION_CONTAINER}>
-        <HomeSectionHeader
-          badge="Curated"
-          badgeIcon={Sparkles}
-          title="Shop By Mood"
-          subtitle="Pick a vibe — college, gym, travel, casual & street."
-          viewAllHref="/category/all"
-          viewAllLabel="Browse all"
-        />
+  const [moodImages, setMoodImages] = useState(MOOD_FALLBACK_IMAGES);
 
-        {/* Mobile: horizontal scroll */}
-        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 scroll-smooth scrollbar-hide sm:hidden">
-          {SHOP_BY_MOOD_TILES.map((tile) => (
-            <div key={tile.id} className="w-[42vw] min-w-[9.5rem] max-w-[11rem]">
-              <MoodCard {...tile} />
-            </div>
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchMoodImages = async () => {
+      const results = await Promise.all(
+        SHOP_BY_MOOD_TILES.map(async (tile) => {
+          try {
+            const res = await axios.get(
+              `${import.meta.env.VITE_API_URL}/get-products`,
+              {
+                params: {
+                  occasion: tile.occasion,
+                  inStock: true,
+                  limit: 1,
+                  page: 1,
+                },
+              },
+            );
+            const product = res.data?.data?.[0];
+            const url = pickProductImage(product);
+            return [tile.id, url || MOOD_FALLBACK_IMAGES[tile.id]];
+          } catch {
+            return [tile.id, MOOD_FALLBACK_IMAGES[tile.id]];
+          }
+        }),
+      );
+
+      if (!cancelled) {
+        setMoodImages(Object.fromEntries(results));
+      }
+    };
+
+    fetchMoodImages();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <section className={`${HOME_SECTION_COMPACT} ${HOME_SECTION_TOP_DIVIDER}`}>
+      <div className={HOME_SECTION_CONTAINER}>
+        <div className="mb-3 text-center sm:mb-4">
+          <h2 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+            Shop by Mood
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
+            College, gym, travel, casual &amp; street
+          </p>
+        </div>
+
+        <div className="-mx-1 flex gap-4 overflow-x-auto px-1 pb-1 scroll-smooth scrollbar-hide sm:gap-5 lg:hidden">
+          {SHOP_BY_MOOD_TILES.map((item) => (
+            <MoodChip
+              key={item.id}
+              {...item}
+              imageSrc={moodImages[item.id]}
+              compact
+            />
           ))}
         </div>
 
-        {/* Tablet + desktop: full-width grid */}
-        <div className="hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-5 lg:gap-4">
-          {SHOP_BY_MOOD_TILES.map((tile) => (
-            <MoodCard key={tile.id} {...tile} />
+        <div className="hidden justify-center gap-8 lg:flex">
+          {SHOP_BY_MOOD_TILES.map((item) => (
+            <MoodChip key={item.id} {...item} imageSrc={moodImages[item.id]} />
           ))}
         </div>
       </div>

@@ -19,9 +19,7 @@ export const createBanner = createAsyncThunk(
   'banner/createBanner',
   async (formData, { rejectWithValue }) => {
     try {
-      const response = await apiClient.post(BANNERS_BASE, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await apiClient.post(BANNERS_BASE, formData);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -33,9 +31,7 @@ export const updateBanner = createAsyncThunk(
   'banner/updateBanner',
   async ({ id, formData }, { rejectWithValue }) => {
     try {
-      const response = await apiClient.put(`${BANNERS_BASE}/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await apiClient.put(`${BANNERS_BASE}/${id}`, formData);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
