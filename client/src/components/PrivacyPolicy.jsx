@@ -192,9 +192,13 @@ const PrivacyPolicy = () => {
         </section>
       </div>
 
-      <section className="w-full h-36 bg-card text-center rounded-t-md shadow-md flex flex-col items-center justify-center mt-6">
-        <h1 className="text-lg font-bold mb-2">Swag Fashion</h1>
-        <img src={swagiconDark} alt="Swag Icon" className="h-16 w-16" />
+      <section className="flex w-full flex-col items-center justify-center rounded-t-md bg-card py-6 text-center shadow-md mt-6">
+        <h1 className="mb-3 text-lg font-bold">Swag Fashion</h1>
+        <img
+          src={swagiconDark}
+          alt="Swag Fashion"
+          className="h-12 w-auto max-w-[140px] object-contain sm:h-14 sm:max-w-[160px]"
+        />
       </section>
     </div>
   );
