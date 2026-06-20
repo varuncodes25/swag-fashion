@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { resolveDisplayAvatarUrl } from "@/utils/avatar";
 
 function InfoRow({ label, value, icon: Icon, extra }) {
   return (
@@ -262,7 +263,7 @@ export default function MyProfile() {
   const displayName = profile?.name || "";
   const displayEmail = profile?.email || "";
   const displayPhone = profile?.phone || "";
-  const avatarUrl = avatarPreview || profile?.avatar;
+  const avatarUrl = avatarPreview || resolveDisplayAvatarUrl(profile?.avatar);
   const roleLabel =
     (profile?.role || "user").charAt(0).toUpperCase() +
     (profile?.role || "user").slice(1);

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const { OAuth2Client } = require("google-auth-library");
 const { setAuthCookies } = require("../utils/authCookies");
+const { applyGoogleProfilePicture } = require("../utils/avatarHelpers");
 
 const sanitizeOAuthUrl = (value) => {
   const raw = String(value || "").trim();
@@ -102,6 +103,7 @@ const findOrCreateGoogleUser = async (payload) => {
         if (!user.googleId) {
           user.googleId = googleId;
         }
+        applyGoogleProfilePicture(user, picture);
         if (!user.isEmailVerified && emailVerified) {
           user.isEmailVerified = true;
         }
@@ -120,9 +122,7 @@ const findOrCreateGoogleUser = async (payload) => {
     if (!user.googleId) {
       user.googleId = googleId;
     }
-    if (!user.avatar && picture) {
-      user.avatar = picture;
-    }
+    applyGoogleProfilePicture(user, picture);
     // Do not flip local+password accounts to Google-only (keeps email/password login working)
     if (!user.password) {
       user.provider = "google";

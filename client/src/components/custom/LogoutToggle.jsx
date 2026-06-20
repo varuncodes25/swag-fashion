@@ -7,17 +7,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { resolveDisplayAvatarUrl } from "@/utils/avatar";
 import { Link } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setUserLogout } from "@/redux/slices/authSlice";
 
 const LogoutToggle = ({ user }) => {
   const dispatch = useDispatch();
+  const avatarUrl = resolveDisplayAvatarUrl(user?.avatar);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Avatar className="cursor-pointer">
+          {avatarUrl ? (
+            <AvatarImage src={avatarUrl} alt={user?.name || "Account"} />
+          ) : null}
           <AvatarFallback className="text-xl">
             {user?.name?.charAt(0).toUpperCase()}
           </AvatarFallback>

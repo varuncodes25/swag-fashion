@@ -7,6 +7,7 @@ import { useRef, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser, updateProfile } from "@/redux/slices/authSlice";
 import { getProfile } from "@/redux/slices/authSlice";
+import { resolveDisplayAvatarUrl } from "@/utils/avatar";
 import { persistor } from "@/redux/store";
 import { useToast } from "@/hooks/use-toast";
 
@@ -91,24 +92,7 @@ export function Sidebar() {
   // ✅ FIXED: Better avatar URL handling
   const getAvatarUrl = () => {
     if (preview) return preview;
-    if (profile?.avatar) {
-      // Handle different avatar formats
-      let avatarUrl = profile.avatar;
-      
-      // If it's a Google avatar or any valid URL
-      if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-        return avatarUrl;
-      }
-      
-      // If it's a local path
-      if (avatarUrl.startsWith('/')) {
-        return avatarUrl;
-      }
-      
-      // If it's a relative path
-      return avatarUrl;
-    }
-    return "";
+    return resolveDisplayAvatarUrl(profile?.avatar) || "";
   };
 
   const getRoleBadgeColor = () => {
@@ -154,15 +138,11 @@ export function Sidebar() {
         <div className="relative group cursor-pointer" onClick={() => fileRef.current.click()}>
           <Avatar className="h-20 w-20 border-2 border-primary/20">
             {/* ✅ FIXED: Use key to force re-render when avatar changes */}
-            <AvatarImage 
-              key={avatarUrl || "default"} 
-              src={avatarUrl} 
-              className="object-cover"
-              onError={(e) => {
-                console.error("Image failed to load:", avatarUrl);
-                e.target.style.display = 'none';
-              }}
-            />
+              <AvatarImage
+                key={avatarUrl || "default"}
+                src={avatarUrl}
+                alt={displayName}
+              />
             <AvatarFallback className="bg-primary text-white text-xl">
               {getUserInitials()}
             </AvatarFallback>
