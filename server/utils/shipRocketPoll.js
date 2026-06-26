@@ -1,4 +1,5 @@
 const axios = require("axios");
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const getShiprocketToken = require("./shiprocket");
 const {
@@ -8,6 +9,11 @@ const {
 } = require("./orderStatusHelpers");
 
 const pollShiprocketStatus = async () => {
+  if (mongoose.connection.readyState !== 1) {
+    console.warn("Shiprocket poll skipped: database not connected");
+    return;
+  }
+
   const orders = await Order.find({
     "shiprocket.orderId": { $ne: null },
     status: { $in: ["CONFIRMED", "PROCESSING", "SHIPPED"] },

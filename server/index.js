@@ -263,7 +263,7 @@ app.use(notFound);
 // ✅ Error Handler (last middleware)
 app.use(errorHandler);
 // Start server
-app.listen(port, () => {
+const server = app.listen(port, () => {
   if (process.env.ENABLE_SHIPROCKET_POLL !== "false") {
     require("./utils/shipRocketPoll");
   }
@@ -277,4 +277,17 @@ app.listen(port, () => {
     message: `Server running on PORT ${port}`,
     timestamp: new Date().toISOString(),
   });
+});
+
+server.on("error", (error) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(
+      `Port ${port} is already in use. Stop the other server instance first:\n` +
+        `  Get-NetTCPConnection -LocalPort ${port} -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`
+    );
+    process.exit(1);
+  }
+
+  console.error("Server failed to start:", error.message);
+  process.exit(1);
 });

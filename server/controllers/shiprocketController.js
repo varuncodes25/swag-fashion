@@ -99,65 +99,113 @@ const createShipment = async (orderId) => {
   }
 };
 
+function isPincodeNotServiceable(error) {
+  return (
+    error?.code === "PINCODE_NOT_SERVICEABLE" ||
+    error?.message === "Shipping not available for this pincode"
+  );
+}
+
+function shouldUseDeliveryFallback(error) {
+  if (isPincodeNotServiceable(error)) return false;
+
+  const message = String(error?.message || "").toLowerCase();
+  return (
+    message.includes("failed to authenticate with shiprocket") ||
+    message.includes("unable to verify the first certificate") ||
+    message.includes("network error") ||
+    message.includes("timeout") ||
+    message.includes("econnrefused") ||
+    message.includes("enotfound") ||
+    message.includes("certificate")
+  );
+}
+
+function buildFallbackDeliveryEstimate(pincode, deliveryDays = 5) {
+  const deliveryDate = new Date();
+  deliveryDate.setDate(deliveryDate.getDate() + deliveryDays);
+  const formattedDate = deliveryDate.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
+
+  return {
+    success: true,
+    available: true,
+    pincode,
+    estimatedDate: formattedDate,
+    deliveryDays,
+    message: `Estimated delivery by ${formattedDate}`,
+    estimated: true,
+  };
+}
+
 const checkDeliveryDate = async (req, res) => {
   try {
-    const { pincode } = req.body;
+    const normalizedPincode = String(req.body?.pincode ?? "").trim();
 
-    // ============ SIMPLE VALIDATION ============
-    if (!pincode) {
+    if (!normalizedPincode) {
       return res.status(400).json({
         success: false,
-        message: "Pincode is required"
+        message: "Pincode is required",
       });
     }
 
-    if (pincode.length !== 6 || !/^\d+$/.test(pincode)) {
+    if (normalizedPincode.length !== 6 || !/^\d{6}$/.test(normalizedPincode)) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a valid 6-digit pincode"
+        message: "Please enter a valid 6-digit pincode",
       });
     }
 
-    // ============ DEFAULT WEIGHT = 0.5kg ============
     const totalWeight = 0.5;
 
-    // ============ CALL SHIPROCKET ============
     let shippingInfo;
     try {
       shippingInfo = await calculateShippingCharge({
-        deliveryPincode: pincode,
-        totalWeight: totalWeight
+        deliveryPincode: normalizedPincode,
+        totalWeight,
       });
     } catch (error) {
-      // Agar delivery available nahi hai
-      return res.json({
-        success: true,
-        available: false,
-        message: "Delivery not available at this pincode",
-        pincode: pincode
-      });
+      if (isPincodeNotServiceable(error)) {
+        return res.json({
+          success: true,
+          available: false,
+          message: "Delivery not available at this pincode",
+          pincode: normalizedPincode,
+        });
+      }
+
+      if (shouldUseDeliveryFallback(error)) {
+        console.warn(
+          "Shiprocket API unavailable, using fallback estimate:",
+          error.message
+        );
+        return res.json(buildFallbackDeliveryEstimate(normalizedPincode));
+      }
+
+      throw error;
     }
 
-    // ============ SIMPLE DATE FORMAT ============
     const deliveryDate = new Date(shippingInfo.estimatedDelivery);
-    const options = { day: 'numeric', month: 'short' };
-    const formattedDate = deliveryDate.toLocaleDateString('en-IN', options);
+    const formattedDate = deliveryDate.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    });
 
-    // ============ FINAL RESPONSE ============
     res.json({
       success: true,
       available: true,
-      pincode: pincode,
-      estimatedDate: formattedDate,        // "20 Mar"
-      deliveryDays: shippingInfo.deliveryDays, // 3
-      message: `Delivery by ${formattedDate}`
+      pincode: normalizedPincode,
+      estimatedDate: formattedDate,
+      deliveryDays: shippingInfo.deliveryDays,
+      message: `Delivery by ${formattedDate}`,
     });
-
   } catch (error) {
-    console.error("❌ Delivery check error:", error);
+    console.error("Delivery check error:", error);
     res.status(500).json({
       success: false,
-      message: "Something went wrong"
+      message: "Something went wrong",
     });
   }
 };

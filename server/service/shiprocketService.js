@@ -387,7 +387,9 @@ async function calculateShippingCharge({ deliveryPincode, totalWeight }) {
 
   const data = res.data?.data;
   if (!data || !data.available_courier_companies?.length) {
-    throw new Error("Shipping not available for this pincode");
+    const err = new Error("Shipping not available for this pincode");
+    err.code = "PINCODE_NOT_SERVICEABLE";
+    throw err;
   }
 
   const couriers = data.available_courier_companies;
@@ -396,12 +398,14 @@ async function calculateShippingCharge({ deliveryPincode, totalWeight }) {
     data.shiprocket_recommended_courier_id ||
     data.recommended_courier_company_id;
 
-  const recommendedCourier = couriers.find(
-    (c) => c.courier_company_id === recommendedId
-  );
+  const recommendedCourier =
+    couriers.find((c) => c.courier_company_id === recommendedId) ||
+    couriers[0];
 
   if (!recommendedCourier) {
-    throw new Error("Recommended courier not found");
+    const err = new Error("Shipping not available for this pincode");
+    err.code = "PINCODE_NOT_SERVICEABLE";
+    throw err;
   }
 
   return {

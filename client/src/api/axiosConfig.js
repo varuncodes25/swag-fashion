@@ -157,9 +157,14 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    const isPublicApiRequest =
+      originalRequest.url?.includes("/delivery-estimate") ||
+      originalRequest.url?.includes("/get-pincode/");
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
+      !isPublicApiRequest &&
       !originalRequest.url?.includes("/auth/refresh-token") &&
       !originalRequest.url?.includes("/auth/session")
     ) {

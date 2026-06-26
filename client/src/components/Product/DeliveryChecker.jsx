@@ -1,7 +1,24 @@
-// components/Product/DeliveryChecker.jsx
 import React, { useState } from "react";
 import { MapPin, Truck, Loader2, CheckCircle } from "lucide-react";
 import apiClient from "@/api/axiosConfig";
+
+function normalizeDeliveryPayload(data) {
+  if (!data || typeof data !== "object") return null;
+
+  if (
+    data.data &&
+    typeof data.data === "object" &&
+    ("available" in data.data || "success" in data.data)
+  ) {
+    return data.data;
+  }
+
+  if ("available" in data || "success" in data) {
+    return data;
+  }
+
+  return null;
+}
 
 const DeliveryChecker = () => {
   const [pincode, setPincode] = useState("");
@@ -21,23 +38,29 @@ const DeliveryChecker = () => {
     
     try {
       const response = await apiClient.post("/delivery-estimate", { pincode });
-      
-     
-      
-      if (response.data.success) {
-        if (response.data.available) {
-          setDeliveryInfo({
-            pincode: response.data.pincode,
-            estimatedDate: response.data.estimatedDate,
-            deliveryDays: response.data.deliveryDays,
-            message: response.data.message
-          });
-        } else {
-          setError("We don't deliver to this pincode yet");
-          setDeliveryInfo(null);
-        }
+      const payload = normalizeDeliveryPayload(response.data);
+
+      if (!payload?.success) {
+        setError(payload?.message || "Failed to check delivery. Please try again.");
+        setDeliveryInfo(null);
         setIsChecked(true);
+        return;
       }
+
+      if (payload.available) {
+        setDeliveryInfo({
+          pincode: payload.pincode || pincode,
+          estimatedDate: payload.estimatedDate,
+          deliveryDays: payload.deliveryDays || 5,
+          message: payload.message,
+          estimated: Boolean(payload.estimated),
+        });
+        setError("");
+      } else {
+        setError(payload.message || "We don't deliver to this pincode yet");
+        setDeliveryInfo(null);
+      }
+      setIsChecked(true);
     } catch (err) {
       console.error("Delivery check error:", err);
       setError(err.response?.data?.message || "Failed to check delivery");
@@ -102,7 +125,8 @@ const DeliveryChecker = () => {
         <div className="flex items-center gap-2 rounded-md bg-green-50 p-2 text-success dark:bg-green-900/20 lg:p-3">
           <Truck className="h-3.5 w-3.5 shrink-0 lg:h-4 lg:w-4" />
           <span className="text-xs lg:text-sm">
-            Free delivery in {deliveryInfo.deliveryDays}–{parseInt(deliveryInfo.deliveryDays) + 1} days
+            {deliveryInfo.estimated ? "Estimated delivery in" : "Free delivery in"}{" "}
+            {deliveryInfo.deliveryDays}–{Number(deliveryInfo.deliveryDays) + 1} days
           </span>
           <CheckCircle className="w-5 h-5 ml-auto text-green-500 dark:text-green-400 flex-shrink-0" />
         </div>
@@ -119,8 +143,15 @@ const DeliveryChecker = () => {
             <div className="relative flex-1">
               <input
                 type="text"
+                inputMode="numeric"
                 value={pincode}
                 onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && pincode.length === 6 && !loading) {
+                    e.preventDefault();
+                    handleCheck();
+                  }
+                }}
                 placeholder="Enter pincode"
                 className="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-foreground transition-colors placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary dark:placeholder-gray-500 dark:focus:ring-blue-400 lg:px-3 lg:py-2 lg:text-sm"
                 maxLength="6"
@@ -133,6 +164,7 @@ const DeliveryChecker = () => {
               )}
             </div>
             <button
+              type="button"
               onClick={handleCheck}
               disabled={pincode.length !== 6 || loading}
               className="btn-premium min-w-[60px] px-3 py-1.5 text-xs lg:min-w-[70px] lg:px-4 lg:py-2 lg:text-sm"
