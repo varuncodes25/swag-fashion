@@ -8,12 +8,9 @@ const {
   toggleWishlist
 } = require('../controllers/wishlistController');
 const verifyToken = require('../middlewares/verifyToken');
+const decryptRequest = require('../utils/decryptResponse');
 
-
-// All routes require authentication
-// router.use(verifyToken);
-
-router.post('/toggle',verifyToken, toggleWishlist);
+router.post('/toggle', verifyToken, decryptRequest, toggleWishlist);
 router.get('/wishlist',verifyToken, getWishlist);
 router.get('/check/:productId',verifyToken, checkWishlistStatus);
 

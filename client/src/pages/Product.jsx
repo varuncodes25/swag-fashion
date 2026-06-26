@@ -15,7 +15,7 @@ import ReviewsComponent from "@/components/custom/ReviewsComponent";
 import SimilarProducts from "@/components/Product/SimilarProducts";
 import DeliveryChecker from "@/components/Product/DeliveryChecker";
 import PaymentTrustRow from "@/components/common/PaymentTrustRow";
-import ProductServices from "@/components/Product/ProductServices";
+// import ProductServices from "@/components/Product/ProductServices";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
 /**
@@ -258,7 +258,7 @@ function ProductLoaded({
               )}
               <DeliveryChecker />
               <PaymentTrustRow className="mt-1" />
-              <ProductServices />
+              {/* <ProductServices /> */}
 
               <div className="hidden lg:block">
                 <ProductActions

@@ -11,7 +11,13 @@ exports.toggleWishlist = async (req, res) => {
     const { productId } = req.body;
     const userId = req.id;
 
-    // Check if product exists
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required",
+      });
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({
@@ -145,7 +151,7 @@ exports.getWishlist = async (req, res) => {
 exports.checkWishlistStatus = async (req, res) => {
   try {
     const { productId } = req.params;
-    const userId = req.user.id;
+    const userId = req.id;
 
     const exists = await Wishlist.findOne({
       user: userId,
