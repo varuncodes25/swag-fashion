@@ -53,11 +53,11 @@ export default function SummerSection() {
         />
 
         {loading ? (
-          <div className="flex gap-4 overflow-hidden">
+          <div className="flex gap-3 overflow-hidden sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="h-[320px] w-[min(72vw,220px)] shrink-0 animate-pulse rounded-xl bg-muted sm:w-[220px]"
+                className="h-[320px] w-[calc(50%-0.375rem)] shrink-0 animate-pulse rounded-xl bg-muted sm:w-auto"
               />
             ))}
           </div>
@@ -66,7 +66,7 @@ export default function SummerSection() {
             {products.map((product) => (
               <div
                 key={product._id}
-                className="w-[min(68vw,200px)] shrink-0 snap-start sm:w-auto"
+                className="w-[calc(50%-0.375rem)] shrink-0 snap-start sm:w-auto"
               >
                 <ProductCard {...product} />
               </div>
