@@ -53,20 +53,20 @@ export default function SummerSection() {
         />
 
         {loading ? (
-          <div className="flex gap-3 overflow-hidden sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+          <div className="-mx-1 flex gap-3 overflow-hidden px-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-4 lg:gap-6">
             {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="h-[320px] w-[calc(50%-0.375rem)] shrink-0 animate-pulse rounded-xl bg-muted sm:w-auto"
+                className="h-[320px] w-[calc(44%-0.375rem)] shrink-0 animate-pulse rounded-xl bg-muted sm:w-auto"
               />
             ))}
           </div>
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-1 scroll-smooth snap-x snap-mandatory scrollbar-hide sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:snap-none lg:grid-cols-4 lg:gap-6">
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 scroll-smooth snap-x snap-mandatory scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:snap-none lg:grid-cols-4 lg:gap-6">
             {products.map((product) => (
               <div
                 key={product._id}
-                className="w-[calc(50%-0.375rem)] shrink-0 snap-start sm:w-auto"
+                className="w-[calc(44%-0.375rem)] shrink-0 snap-start sm:w-auto"
               >
                 <ProductCard {...product} />
               </div>
