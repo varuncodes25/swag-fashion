@@ -1,6 +1,15 @@
 // store/slices/wishlistSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../../api/axiosConfig';
+import { setUserLogout, logoutUser } from './authSlice';
+
+function resetWishlistState(state) {
+  state.items = [];
+  state.wishlistStatus = {};
+  state.error = null;
+  state.loading = false;
+  state.lastUpdated = null;
+}
 
 // ✅ Async thunks - Toggle + Fetch (apiClient adds token + decrypts responses)
 export const fetchWishlist = createAsyncThunk(
@@ -55,9 +64,7 @@ const wishlistSlice = createSlice({
   initialState,
   reducers: {
     clearWishlist: (state) => {
-      state.items = [];
-      state.wishlistStatus = {};
-      state.error = null;
+      resetWishlistState(state);
     },
 
     optimisticToggle: (state, action) => {
@@ -125,7 +132,10 @@ const wishlistSlice = createSlice({
       .addCase(toggleWishlist.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+      .addCase(setUserLogout, resetWishlistState)
+      .addCase(logoutUser.fulfilled, resetWishlistState)
+      .addCase(logoutUser.rejected, resetWishlistState);
   }
 });
 

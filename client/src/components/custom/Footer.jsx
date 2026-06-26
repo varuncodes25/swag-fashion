@@ -7,9 +7,9 @@ const Footer = () => {
   return (
     <footer className="mt-auto border-t border-border bg-card">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-10">
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <PaymentTrustRow title="Safe & secure payments" compact />
-        </div>
+        </div> */}
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8 md:grid-cols-4 lg:gap-12">
           <div className="flex items-center justify-center md:justify-start">
