@@ -19,5 +19,6 @@ const decryptRequest = require("../utils/decryptResponse");
  *   GET /api/checkout/init?productId=PRODUCT_ID&qty=2
  */
 router.get("/checkout/init", verifyToken, checkoutInit);
-router.post("/delivery-estimate", verifyToken,decryptRequest, checkDeliveryDate);
+/** Public — pincode serviceability on product page (no login required) */
+router.post("/delivery-estimate", decryptRequest, checkDeliveryDate);
 module.exports = router;
