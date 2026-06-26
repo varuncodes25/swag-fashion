@@ -7,9 +7,11 @@ import SummerSection from "@/components/Home/SummerSection";
 import HomeShowcaseSection from "@/components/Home/HomeShowcaseSection";
 import ShopByMoodSection from "@/components/Home/ShopByMoodSection";
 import HomeReviewsSection from "@/components/Home/HomeReviewsSection";
+import HomeTrustStrip from "@/components/Home/HomeTrustStrip";
 import { HOME_PAGE_WRAP } from "@/components/Home/homeSectionStyles";
 import { useEffect, useState } from "react";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
+import { SITE } from "@/constants/siteConfig";
 
 const Home = () => {
   const [search, setSearch] = useState("");
@@ -25,16 +27,19 @@ const Home = () => {
     applyJsonLd("organization", {
       "@context": "https://schema.org",
       "@type": "Organization",
-      name: "Swag Fashion",
+      name: SITE.brand,
       url: getCanonicalFromPath("/"),
       logo: getCanonicalFromPath("/online-shopping.png"),
-      sameAs: [],
+      email: SITE.email,
+      telephone: `+91${SITE.phone}`,
+      sameAs: [SITE.instagram.url, SITE.youtube, SITE.facebook],
     });
   }, []);
 
   return (
     <div>
       <Banner />
+      <HomeTrustStrip />
       <div className={HOME_PAGE_WRAP}>
         <HomeShowcaseSection />
         <HomeCollections />

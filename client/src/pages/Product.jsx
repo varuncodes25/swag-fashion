@@ -14,6 +14,7 @@ import MobileStickyCTA from "@/components/Product/MobileStickyCTA";
 import ReviewsComponent from "@/components/custom/ReviewsComponent";
 import SimilarProducts from "@/components/Product/SimilarProducts";
 import DeliveryChecker from "@/components/Product/DeliveryChecker";
+import PaymentTrustRow from "@/components/common/PaymentTrustRow";
 import { applyJsonLd, applySeoMeta, getCanonicalFromPath } from "@/utils/seo";
 
 /**
@@ -255,6 +256,7 @@ function ProductLoaded({
                 />
               )}
               <DeliveryChecker />
+              <PaymentTrustRow className="mt-1" />
 
               <div className="hidden lg:block">
                 <ProductActions

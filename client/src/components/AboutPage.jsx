@@ -1,87 +1,107 @@
-import React from "react";
+import { Link } from "react-router-dom";
+import { ShieldCheck, Users, Package, Star } from "lucide-react";
+import { SITE } from "@/constants/siteConfig";
 
 const AboutPage = () => {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-16">
-      
-      {/* Hero Section */}
-      <div className="text-center mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">
-          About <span className="text-primary">Swag Fashion</span>
+    <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+      <div className="mb-12 text-center sm:mb-16">
+        <h1 className="mb-4 text-3xl font-bold tracking-tight sm:text-5xl">
+          About <span className="text-primary">{SITE.brand}</span>
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-          We turn blank tees into bold statements. Founded in 2025, Swag Fashion
-          delivers high-quality custom T-shirt printing for brands, creators,
-          and individuals who want to stand out.
+        <p className="mx-auto max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Bold tees, premium cotton, and streetwear that fits your vibe. Founded in{" "}
+          {SITE.foundedYear}, we deliver quality prints and comfortable fits across
+          India — for everyday wear, college, gym, and everything in between.
         </p>
       </div>
 
-      {/* Who We Are */}
-      <div className="mb-20 text-center max-w-3xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-semibold mb-4">
-          Who We Are
-        </h2>
-        <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-sm md:text-base">
-          We are a team of creators and trendsetters who believe fashion should
-          be bold, affordable, and expressive. Every piece is crafted with the
-          perfect balance of comfort, quality, and modern design — so you don’t
-          just wear clothes, you wear confidence.
+      <div className="mb-12 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+        {[
+          { icon: Users, stat: "10,000+", label: "Happy customers" },
+          { icon: Package, stat: "180–240 GSM", label: "Premium cotton" },
+          { icon: Star, stat: "4.8★", label: "Average rating" },
+          { icon: ShieldCheck, stat: "QC", label: "Every order checked" },
+        ].map(({ icon: Icon, stat, label }) => (
+          <div
+            key={label}
+            className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm"
+          >
+            <Icon className="mx-auto mb-2 h-6 w-6 text-primary" />
+            <p className="text-lg font-bold text-foreground">{stat}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-16 max-w-3xl mx-auto text-center">
+        <h2 className="mb-4 text-2xl font-semibold sm:text-3xl">Who we are</h2>
+        <p className="text-sm leading-relaxed text-muted-foreground sm:text-base">
+          We&apos;re a team of creators who believe fashion should be bold, affordable,
+          and expressive. Every piece balances comfort, quality, and modern design — so
+          you don&apos;t just wear clothes, you wear confidence.
         </p>
       </div>
 
-      {/* Our Process */}
-      <div>
-        <h2 className="text-2xl md:text-3xl font-semibold text-center mb-12">
-          Our Process
+      <div className="mb-16">
+        <h2 className="mb-8 text-center text-2xl font-semibold sm:text-3xl">
+          Our process
         </h2>
-
-        {/* Top Row */}
-        <div className="grid md:grid-cols-3 gap-8 text-center mb-10">
-          
-          {/* Design */}
-          <div className="p-6 bg-white dark:bg-zinc-800 rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition duration-300">
-            <h3 className="text-xl font-bold mb-2">Design</h3>
-            <p className="text-muted-foreground text-sm">
-              Your vision comes to life with creative, bold, and unique designs.
-            </p>
-          </div>
-
-          {/* Fabric */}
-          <div className="p-6 bg-white dark:bg-zinc-800 rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition duration-300">
-            <h3 className="text-xl font-bold mb-2">Premium Fabric</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              180 GSM, 200 GSM, 220 GSM, 240 GSM 100% cotton — soft, durable, and made for everyday wear.
-            </p>
-          </div>
-
-          {/* Printing */}
-          <div className="p-6 bg-white dark:bg-zinc-800 rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition duration-300">
-            <h3 className="text-xl font-bold mb-2">Printing</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Advanced DTF printing ensures vibrant and long-lasting designs.
-            </p>
-          </div>
+        <div className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              title: "Design",
+              desc: "Trend-led graphics, anime, acid wash, minimal & solids.",
+            },
+            {
+              title: "Premium fabric",
+              desc: "180–240 GSM 100% cotton — soft, durable, everyday comfort.",
+            },
+            {
+              title: "DTF printing",
+              desc: "Vibrant, long-lasting prints that survive washes.",
+            },
+            {
+              title: "Quality check",
+              desc: "Every unit inspected before it ships to you.",
+            },
+            {
+              title: "Fast delivery",
+              desc: "Pan-India shipping with tracking on every order.",
+            },
+            {
+              title: "Easy exchange",
+              desc: `${SITE.exchangeWindowDays}-day exchange support for size or quality issues.`,
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="rounded-2xl border border-border bg-card p-6 shadow-sm transition hover:shadow-md"
+            >
+              <h3 className="mb-2 text-lg font-bold">{item.title}</h3>
+              <p className="text-sm text-muted-foreground">{item.desc}</p>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Bottom Row */}
-        <div className="flex flex-col md:flex-row justify-center gap-8 text-center">
-          
-          {/* Quality */}
-          <div className="p-6 bg-white dark:bg-zinc-800 rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition duration-300 w-full md:w-1/3">
-            <h3 className="text-xl font-bold mb-2">Quality Check</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Every product is inspected carefully before it reaches you.
-            </p>
-          </div>
-
-          {/* Delivery */}
-          <div className="p-6 bg-white dark:bg-zinc-800 rounded-2xl shadow-md hover:shadow-2xl hover:-translate-y-1 transition duration-300 w-full md:w-1/3">
-            <h3 className="text-xl font-bold mb-2">Fast Delivery</h3>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">
-              Reliable and fast shipping — delivered safely to your doorstep.
-            </p>
-          </div>
-
+      <div className="rounded-2xl border border-border bg-muted/40 p-6 text-center sm:p-8">
+        <h2 className="mb-2 text-xl font-semibold">Shop with confidence</h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Secure payments · COD · Pincode delivery check · Track your order anytime
+        </p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Link to="/shipping-policy" className="text-sm font-medium text-primary hover:underline">
+            Shipping policy
+          </Link>
+          <span className="text-muted-foreground">·</span>
+          <Link to="/return-policy" className="text-sm font-medium text-primary hover:underline">
+            Return &amp; exchange
+          </Link>
+          <span className="text-muted-foreground">·</span>
+          <Link to="/contact" className="text-sm font-medium text-primary hover:underline">
+            Contact us
+          </Link>
         </div>
       </div>
     </div>

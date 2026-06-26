@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { initCheckout, setProductId ,setVariantId} from "@/redux/slices/checkoutSlice";
 import AddressSection from "@/components/checkout/AddressSection";
 import PaymentMethod from "@/components/checkout/PaymentMethod";
+import PaymentTrustRow from "@/components/common/PaymentTrustRow";
 import PlaceOrderButton from "@/components/checkout/PlaceOrderButton";
 import {
   ArrowLeft,
@@ -300,6 +301,7 @@ useEffect(() => {
                     </div>
                   </div>
                   <PaymentMethod compact />
+                  <PaymentTrustRow className="mt-4" compact />
                 </div>
 
                 {/* Desktop Place Order Button */}

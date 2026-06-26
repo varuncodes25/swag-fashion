@@ -1,38 +1,7 @@
-import React, { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-
-const faqs = [
-  {
-    question: "What types of T-shirts do you offer for printing?",
-    answer:
-      "We offer 100% cotton, blended, and performance dry-fit T-shirts in various sizes and colors.",
-  },
-  {
-    question: "Can I print my own design?",
-    answer:
-      "Absolutely! Please email your artwork or design to us when placing your order.",
-  },
-  {
-    question: "What printing methods do you use?",
-    answer:
-      "We use screen printing, DTG (Direct to Garment), and heat transfer vinyl depending on the order and design.",
-  },
-  {
-    question: "Is there a minimum order quantity?",
-    answer:
-      "No, you can order even a single custom T-shirt. Bulk orders receive a discount.",
-  },
-  {
-    question: "How long does it take to receive my order?",
-    answer:
-      "Typical turnaround time is 3–7 business days depending on the order size and shipping method.",
-  },
-  {
-    question: "Do you offer bulk pricing or discounts?",
-    answer:
-      "Yes! The more you order, the more you save. Contact us for a custom quote.",
-  },
-];
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { SHOPPER_FAQS } from "@/constants/siteConfig";
 
 const FaqPage = () => {
   const [activeIndex, setActiveIndex] = useState(null);
@@ -42,30 +11,53 @@ const FaqPage = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-extrabold text-center mb-10 text-zinc-900 dark:text-zinc-100">
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:py-12">
+      <h1 className="mb-2 text-center text-3xl font-extrabold text-foreground sm:text-4xl">
         Frequently Asked Questions
       </h1>
-      <div className="space-y-5">
-        {faqs.map((faq, index) => {
+      <p className="mb-8 text-center text-sm text-muted-foreground">
+        Orders, delivery, payments, exchanges &amp; more
+      </p>
+
+      <div className="mb-8 flex flex-wrap justify-center gap-3 text-sm">
+        <Link to="/shipping-policy" className="text-primary hover:underline">
+          Shipping policy
+        </Link>
+        <span className="text-muted-foreground">·</span>
+        <Link to="/return-policy" className="text-primary hover:underline">
+          Return &amp; exchange
+        </Link>
+        <span className="text-muted-foreground">·</span>
+        <Link to="/contact" className="text-primary hover:underline">
+          Contact support
+        </Link>
+      </div>
+
+      <div className="space-y-4">
+        {SHOPPER_FAQS.map((faq, index) => {
           const isActive = activeIndex === index;
           return (
             <div
               key={index}
-              className="border rounded-xl bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 shadow-sm transition-all"
+              className="rounded-xl border border-border bg-card shadow-sm transition-all"
             >
               <button
-                className="w-full flex justify-between items-center px-6 py-4 text-left text-lg font-semibold text-zinc-800 dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                type="button"
+                className="flex w-full items-center justify-between px-5 py-4 text-left text-base font-semibold text-foreground transition-colors hover:bg-muted/50 sm:text-lg"
                 onClick={() => toggle(index)}
+                aria-expanded={isActive}
               >
                 {faq.question}
-                <span className={`transition-transform duration-200 ${isActive ? "rotate-180" : ""}`}>
-                  <ChevronDown size={20} />
-                </span>
+                <ChevronDown
+                  size={20}
+                  className={`shrink-0 transition-transform duration-200 ${
+                    isActive ? "rotate-180" : ""
+                  }`}
+                />
               </button>
               <div
-                className={`px-6 pt-0 overflow-hidden transition-all duration-300 text-zinc-600 dark:text-zinc-300 ${
-                  isActive ? "max-h-40 pb-4" : "max-h-0"
+                className={`overflow-hidden px-5 text-sm text-muted-foreground transition-all duration-300 sm:text-base ${
+                  isActive ? "max-h-48 pb-4" : "max-h-0"
                 }`}
               >
                 <p>{faq.answer}</p>

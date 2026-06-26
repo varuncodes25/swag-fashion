@@ -68,8 +68,8 @@ const ProductServices = ({ promises = [] }) => {
     },
     {
       id: "returns",
-      title: "Easy Returns",
-      desc: "10-day return policy",
+      title: "Easy Exchanges",
+      desc: "7-day exchange policy",
       icon: RefreshCw,
       color: "orange",
       iconComponent: RefreshCw,

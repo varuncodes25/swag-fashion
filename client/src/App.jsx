@@ -52,6 +52,8 @@ const TermsAndConditions = lazyRoute(() =>
   import("./components/TermsAndConditions")
 );
 const PrivacyPolicy = lazyRoute(() => import("./components/PrivacyPolicy"));
+const ReturnPolicy = lazyRoute(() => import("./components/ReturnPolicy"));
+const ShippingPolicy = lazyRoute(() => import("./components/ShippingPolicy"));
 const CategoryPage = lazyRoute(() => import("./pages/CategoryPage"));
 const OrderDetails = lazyRoute(() => import("./components/order/OrderDetails"));
 const WishlistPage = lazyRoute(() => import("./pages/Wishlist"));
@@ -134,6 +136,14 @@ export default function App() {
     {
       path: "/privacy-policy",
       element: <RootLayout children={<PrivacyPolicy />} />,
+    },
+    {
+      path: "/return-policy",
+      element: <RootLayout children={<ReturnPolicy />} />,
+    },
+    {
+      path: "/shipping-policy",
+      element: <RootLayout children={<ShippingPolicy />} />,
     },
     {
       path: "/success",
