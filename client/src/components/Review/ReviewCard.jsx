@@ -12,6 +12,9 @@ import {
 import MobileImageZoom from "../Product/MobileImageZoom";
 import ReviewUserAvatar from "./ReviewUserAvatar";
 import { isSameUser } from "./reviewUtils";
+import VerifiedPurchaseBadge, {
+  isVerifiedPurchaseReview,
+} from "./VerifiedPurchaseBadge";
 
 const ReviewCard = ({
   review,
@@ -85,10 +88,13 @@ const ReviewCard = ({
         <div className="flex min-w-0 items-center gap-2.5">
           <ReviewUserAvatar name={reviewUserName} size={compact ? "sm" : "md"} />
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h4 className={`truncate font-medium text-foreground ${compact ? "text-sm" : ""}`}>
                 {reviewUserName}
               </h4>
+              {isVerifiedPurchaseReview(review) && (
+                <VerifiedPurchaseBadge />
+              )}
               {!compact && (
                 <span className="text-xs text-muted-foreground">
                   {formatDate(review?.createdAt)}

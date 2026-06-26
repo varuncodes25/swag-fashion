@@ -102,6 +102,7 @@ const createReview = async (req, res) => {
       review: review.trim(),
       rating: numericRating,
       images: uploadedImages,
+      verifiedPurchase: true,
     });
 
     await Product.findByIdAndUpdate(productId, {

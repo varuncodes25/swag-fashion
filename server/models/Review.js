@@ -43,6 +43,10 @@ const reviewSchema = new mongoose.Schema(
         public_id: { type: String }, // if using Cloudinary or similar
       },
     ],
+    verifiedPurchase: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

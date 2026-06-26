@@ -10,6 +10,7 @@ import {
   toggleWishlist,
 } from "@/redux/slices/wishlistSlice";
 import { formatPriceShort } from "@/utils/productCard";
+import { formatSoldCount } from "@/constants/siteConfig";
 
 /* ================= BEAUTIFUL PRODUCT CARD ================= */
 const ProductCard = ({
@@ -23,6 +24,7 @@ const ProductCard = ({
   image = null,
   totalStock = 0,
   reviewCount = 0,
+  soldCount = 0,
   isNewArrival = false,
   isBestSeller = false,
   isPremium = false,
@@ -54,6 +56,7 @@ const ProductCard = ({
   }
 
   const hasRealDiscount = discountPercentage > 0 && safeSellingPrice < safePrice;
+  const soldLabel = formatSoldCount(soldCount);
 
   // Wishlist state
   const isInWishlist = wishlistStatus?.[_id] || false;
@@ -227,6 +230,11 @@ const ProductCard = ({
               {productType && (
                 <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
                   {productType}
+                </p>
+              )}
+              {soldLabel && (
+                <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+                  {soldLabel}
                 </p>
               )}
             </div>

@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Star, Quote } from "lucide-react";
 import apiClient from "@/api/axiosConfig";
+import VerifiedPurchaseBadge, {
+  isVerifiedPurchaseReview,
+} from "@/components/Review/VerifiedPurchaseBadge";
 import {
   HOME_SECTION_CLASS,
   HOME_SECTION_CONTAINER,
@@ -88,7 +91,12 @@ export default function HomeReviewsSection() {
                     {review.review}
                   </p>
                   <div className="mt-3 border-t border-border pt-2.5 sm:mt-4 sm:pt-3">
-                    <p className="text-xs font-semibold text-foreground sm:text-sm">{userName}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-semibold text-foreground sm:text-sm">{userName}</p>
+                      {isVerifiedPurchaseReview(review) && (
+                        <VerifiedPurchaseBadge />
+                      )}
+                    </div>
                     {productName && (
                       <p className="mt-0.5 truncate text-xs text-primary group-hover:underline">
                         {productName}

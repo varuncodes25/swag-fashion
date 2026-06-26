@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { POLICY } from "@/constants/siteConfig";
 import {
   Truck, Package, Award,
   Ruler, Heart, Shield,
@@ -320,7 +321,7 @@ const ProductTabs = ({ product }) => {
                 <Truck className="h-4 w-4 text-primary lg:h-5 lg:w-5" />
               </div>
               <h3 className="text-sm font-semibold text-foreground lg:text-lg">
-                Delivery & Returns
+                Delivery &amp; Exchange
               </h3>
             </div>
             {openSections.shipping ? (
@@ -360,31 +361,31 @@ const ProductTabs = ({ product }) => {
                 </div>
               </div>
 
-              {/* Returns Card */}
+              {/* Exchange Card */}
               <div className="bg-card rounded-lg border border-border p-4">
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                     <RefreshCw className="h-5 w-5 text-success" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium text-foreground mb-3">Returns</h4>
+                    <h4 className="font-medium text-foreground mb-3">Exchange</h4>
 
                     <div className="flex items-center justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Policy</span>
                       <span className="font-medium text-success">
-                        {product.returnPolicy || "7 Days Return"}
+                        {POLICY.exchangeLabel}
                       </span>
                     </div>
 
-                    {product.returnWindow && (
-                      <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-muted-foreground">Return window</span>
-                        <span className="text-foreground">{product.returnWindow} days</span>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Window</span>
+                      <span className="text-foreground">
+                        {product.returnWindow || POLICY.exchangeWindowDays} days from delivery
+                      </span>
+                    </div>
 
                     <div className="mt-3 text-xs text-muted-foreground bg-gray-50 dark:bg-gray-700/50 p-2 rounded">
-                      👕 Items must be unworn, unwashed with original tags attached
+                      {POLICY.noReturnsNote}. {POLICY.returnConditions}
                     </div>
                   </div>
                 </div>

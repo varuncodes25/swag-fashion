@@ -4,13 +4,11 @@ import {
   CheckCircle2,
   Lock,
   RefreshCw,
-  Package,
-  HelpCircle,
   Shield
 } from "lucide-react";
+import { POLICY } from "@/constants/siteConfig";
 
-const ProductServices = ({ promises = [] }) => {
-  // All static services in a proper array
+const ProductServices = () => {
   const STATIC_SERVICES = [
     {
       id: "authentic",
@@ -69,7 +67,7 @@ const ProductServices = ({ promises = [] }) => {
     {
       id: "returns",
       title: "Easy Exchanges",
-      desc: "7-day exchange policy",
+      desc: `${POLICY.exchangeShort} — ${POLICY.noReturnsNote.toLowerCase()}`,
       icon: RefreshCw,
       color: "orange",
       iconComponent: RefreshCw,

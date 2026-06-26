@@ -19,6 +19,26 @@ export const SITE = {
   exchangeWindowDays: 7,
 };
 
+/** Single source of truth for return/exchange copy across the site */
+export const POLICY = {
+  exchangeWindowDays: SITE.exchangeWindowDays,
+  exchangeShort: `${SITE.exchangeWindowDays}-day exchange`,
+  exchangeLabel: `${SITE.exchangeWindowDays}-day easy exchange`,
+  exchangeDetail:
+    "Easy exchange within 7 days of delivery for size or quality issues. Monetary returns/refunds are not offered.",
+  noReturnsNote: "Exchanges only — no monetary returns",
+  returnConditions:
+    "Item must be unworn, unwashed, with original tags attached.",
+};
+
+export function formatSoldCount(count) {
+  const n = Number(count) || 0;
+  if (n < 5) return null;
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k+ sold`;
+  if (n >= 100) return `${Math.floor(n / 50) * 50}+ sold`;
+  return `${n}+ sold`;
+}
+
 export function getWhatsAppUrl(message = SITE.whatsappMessage) {
   const text = encodeURIComponent(message);
   return `https://wa.me/${SITE.whatsappNumber}?text=${text}`;
