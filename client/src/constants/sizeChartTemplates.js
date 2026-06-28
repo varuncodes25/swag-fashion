@@ -143,7 +143,11 @@ export function chartsMatchTemplate(sizeCharts, colors, sizes, templateKey) {
   );
 }
 
-/** Resolve chart for product page: template → product.sizeChart → variants */
+/** Resolve chart for product page (priority order):
+ *  1. sizeChartTemplate — new products (reference only in DB)
+ *  2. sizeChart — custom product-level chart
+ *  3. variants[].sizeDetails — legacy old products (backward compatible)
+ */
 export function resolveProductSizeChartData({
   sizeChartTemplate,
   sizeChart,

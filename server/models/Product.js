@@ -1495,8 +1495,15 @@ productSchema.methods.getProductDetailData = function () {
       barcode: v.barcode,
       isInStock: v.stock > 0,
       availableStock: Math.max(v.stock - (v.reservedStock || 0), 0),
-      sizeDetails: v.sizeDetails,
+      sizeDetails: v.sizeDetails, // legacy — old products without sizeChartTemplate
     })),
+
+    // New: template reference or custom chart (old products may not have these)
+    sizeChartTemplate: this.sizeChartTemplate || null,
+    sizeChart:
+      this.sizeChart instanceof Map
+        ? Object.fromEntries(this.sizeChart)
+        : this.sizeChart || null,
 
     // Centralized images storage
     allImages: this.allImages,

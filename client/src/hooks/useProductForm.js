@@ -1560,7 +1560,7 @@ const prepareFormData = () => {
     colors.forEach((colorName) => {
       sizes.forEach((sizeName) => {
         const stock = stockMatrix[colorName]?.[sizeName];
-        variants.push({
+        const variantEntry = {
           color: colorName,
           colorCode: COLOR_OPTIONS.find((c) => c.name === colorName)?.code || "#000000",
           size: sizeName,
@@ -1573,7 +1573,22 @@ const prepareFormData = () => {
             parseFloat(formData.basePrice) || 0,
             parseFloat(formData.discount) || 0,
           ),
-        });
+        };
+
+        // Legacy path: old products without template — keep sizeDetails on variants
+        if (!useTemplate && !useProductLevelChart) {
+          const raw = sizeCharts[colorName]?.[sizeName] || {};
+          if (Object.keys(raw).length > 0 || defaultFitDescription) {
+            variantEntry.sizeDetails = {
+              ...raw,
+              ...(defaultFitDescription && !raw.fitDescription
+                ? { fitDescription: defaultFitDescription }
+                : {}),
+            };
+          }
+        }
+
+        variants.push(variantEntry);
       });
     });
 
