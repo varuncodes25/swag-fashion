@@ -207,11 +207,10 @@ app.get("/sitemap.xml", async (req, res) => {
     res.setHeader("Content-Type", "application/xml");
     res.status(200).send(xml);
   } catch (error) {
-    logger.error({
+    logger.error("Sitemap generation failed", {
       type: "sitemap_generation_error",
       message: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString(),
     });
     res.status(500).json({ success: false, message: "Failed to generate sitemap" });
   }
@@ -227,19 +226,17 @@ readdirSync(routesDir).forEach((route) => {
   try {
     app.use("/api", require(path.join(routesDir, route)));
     loadedRoutes.push(route);
-    logger.info({
+    logger.info(`Route loaded → ${route}`, {
       type: "route_loaded",
       file: route,
-      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     failedRoutes.push({ file: route, message: error.message });
-    logger.error({
+    logger.error(`Route failed → ${route}`, {
       type: "route_load_failed",
       file: route,
       message: error.message,
       stack: error.stack,
-      timestamp: new Date().toISOString(),
     });
     console.error(`[routes] Failed to load ${route}:`, error.message);
   }
@@ -272,11 +269,7 @@ const server = app.listen(port, () => {
   } catch (_) {
     /* ignore */
   }
-  logger.info({
-    type: "server_start",
-    message: `Server running on PORT ${port}`,
-    timestamp: new Date().toISOString(),
-  });
+  logger.info(`Server running on PORT ${port}`, { type: "server_start" });
 });
 
 server.on("error", (error) => {

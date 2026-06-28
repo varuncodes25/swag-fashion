@@ -1,6 +1,10 @@
 // components/Product/SizeChartModal.jsx
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { X, Ruler, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  resolveProductSizeChartData,
+  sizeDetailsMeaningful,
+} from '@/constants/sizeChartTemplates';
 
 const INCH_TO_CM = 2.54;
 
@@ -78,25 +82,14 @@ const SizeChartModal = ({
   clothingType,
   variantsForSizeChart = [],
   sizesOrder = [],
-  /** Optional full URL or path (e.g. Cloudinary) — overrides default T-shirt guide image */
+  sizeChartTemplate = null,
+  sizeChart = null,
   topWearGuideImageUrl,
 }) => {
   const topWearGuideSrc = topWearGuideImageUrl?.trim() || DEFAULT_TOP_WEAR_GUIDE_IMAGE;
   const [unit, setUnit] = useState('inches');
   const [showGuide, setShowGuide] = useState(true);
   const wasOpenRef = useRef(false);
-
-  useEffect(() => {
-    if (isOpen && !wasOpenRef.current && variant?.sizeDetails) {
-      const u =
-        variant.sizeDetails.unit != null &&
-        String(variant.sizeDetails.unit).trim().toLowerCase() === 'cm'
-          ? 'cm'
-          : 'inches';
-      setUnit(u);
-    }
-    wasOpenRef.current = isOpen;
-  }, [isOpen, variant?._id, variant?.size, variant?.sizeDetails?.unit]);
 
   // ============ CLOTHING TYPE CATEGORIES ============
   const categories = {
@@ -229,37 +222,40 @@ const SizeChartModal = ({
   };
 
   const sizeChartData = useMemo(() => {
-    const fromVariants = {};
-    for (const v of variantsForSizeChart || []) {
-      if (!v?.size || !v?.sizeDetails) continue;
-      const hasMeasurements = Object.keys(v.sizeDetails).some(
-        (k) =>
-          k !== '_id' &&
-          k !== 'unit' &&
-          v.sizeDetails[k] !== undefined &&
-          v.sizeDetails[k] !== null &&
-          v.sizeDetails[k] !== ''
-      );
-      if (!hasMeasurements) continue;
-      fromVariants[v.size] = v.sizeDetails;
-    }
-    if (Object.keys(fromVariants).length > 0) return fromVariants;
-
-    if (variant?.size && variant?.sizeDetails) {
-      const hasMeasurements = Object.keys(variant.sizeDetails).some(
-        (k) =>
-          k !== '_id' &&
-          k !== 'unit' &&
-          variant.sizeDetails[k] !== undefined &&
-          variant.sizeDetails[k] !== null &&
-          variant.sizeDetails[k] !== ''
-      );
-      if (hasMeasurements) return { [variant.size]: variant.sizeDetails };
-    }
+    const resolved = resolveProductSizeChartData({
+      sizeChartTemplate,
+      sizeChart,
+      variants: variantsForSizeChart,
+      sizesOrder,
+    });
+    if (Object.keys(resolved).length > 0) return resolved;
 
     if (!variantsForSizeChart?.length) return getSampleData();
     return {};
-  }, [variantsForSizeChart, clothingType, variant?.size, variant?.sizeDetails]);
+  }, [
+    sizeChartTemplate,
+    sizeChart,
+    variantsForSizeChart,
+    sizesOrder,
+    clothingType,
+    variant?.size,
+    variant?.sizeDetails,
+  ]);
+
+  useEffect(() => {
+    if (isOpen && !wasOpenRef.current) {
+      const firstSize = sizesOrder?.[0] || Object.keys(sizeChartData)[0];
+      const unitSource = sizeChartData[firstSize] || variant?.sizeDetails;
+      if (unitSource?.unit != null) {
+        const u =
+          String(unitSource.unit).trim().toLowerCase() === 'cm'
+            ? 'cm'
+            : 'inches';
+        setUnit(u);
+      }
+    }
+    wasOpenRef.current = isOpen;
+  }, [isOpen, variant?._id, variant?.size, sizeChartData, sizesOrder]);
 
   const rowSizes = useMemo(() => {
     const keys = Object.keys(sizeChartData);
@@ -441,7 +437,9 @@ const SizeChartModal = ({
   const headersList = getHeaders();
   const measurementTips = getMeasurementTips();
 
-  if (!isOpen || !variant?.sizeDetails) return null;
+  const hasChartData = Object.keys(sizeChartData).length > 0;
+
+  if (!isOpen || !hasChartData) return null;
 
   /* No dimmed overlay — only the panel; transparent layer catches outside click to close. Navbar clear via top offset. */
   return (

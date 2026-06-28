@@ -5,53 +5,15 @@ import {
   MAX_IMAGE_SIZE_MB,
 } from "@/constants/uploadLimits";
 import { PRODUCT_TAG_PRESETS } from "@/constants/productTags";
+import {
+  SIZE_CHART_TEMPLATES,
+  buildSizeChartFromTemplate,
+  chartsMatchTemplate,
+  extractProductLevelSizeChart,
+  normalizeProductSizeChart,
+} from "@/constants/sizeChartTemplates";
 
 const SIZE_OPTIONS = ["S", "M", "L", "XL","XXL"];
-
-const SIZE_CHART_TEMPLATES = {
-  regularTshirt: {
-    label: "Regular T-Shirt",
-    productFit: "Regular",
-    measurements: {
-      S: { chest: 38, length: 26, shoulder: 17, sleeve: 8, waist: 18 },
-      M: { chest: 40, length: 27, shoulder: 18, sleeve: 8.5, waist: 19 },
-      L: { chest: 42, length: 28, shoulder: 19, sleeve: 9, waist: 20 },
-      XL: { chest: 44, length: 29, shoulder: 20, sleeve: 9.5, waist: 21 },
-    },
-    defaults: {
-      fitDescription: "True to size",
-      unit: "inches",
-    },
-  },
-  oversizedTshirt: {
-    label: "Oversized T-Shirt",
-    productFit: "Oversized",
-    measurements: {
-      S: { chest: 43, length: 27, shoulder: 20.5, sleeve: 9.5, waist: 22.5 },
-      M: { chest: 46, length: 27, shoulder: 21, sleeve: 10, waist: 23.5 },
-      L: { chest: 48, length: 28, shoulder: 22.5, sleeve: 10, waist: 24.5 },
-      XL: { chest: 50, length: 30, shoulder: 23.5, sleeve: 11, waist: 25.5 },
-    },
-    defaults: {
-      fitDescription: "Oversized",
-      unit: "inches",
-    },
-  },
-  poloShirt: {
-    label: "Polo T-Shirt (Regular fit)",
-    productFit: "Regular",
-    measurements: {
-      S: { chest: 39, length: 27, shoulder: 17.5, sleeve: 8.5, waist: 19 },
-      M: { chest: 41, length: 28, shoulder: 18.5, sleeve: 9, waist: 20 },
-      L: { chest: 43, length: 29, shoulder: 19.5, sleeve: 9.5, waist: 21 },
-      XL: { chest: 45, length: 30, shoulder: 20.5, sleeve: 10, waist: 22 },
-    },
-    defaults: {
-      fitDescription: "True to size",
-      unit: "inches",
-    },
-  },
-};
 const MAX_IMAGES_PER_COLOR = 40;
 const DEFAULT_VARIANT_STOCK = 20;
 
@@ -761,6 +723,7 @@ export const useProductForm = (editProductId = null) => {
   const [tempSpecKey, setTempSpecKey] = useState("");
   const [tempSpecValue, setTempSpecValue] = useState("");
   const [sizeCharts, setSizeCharts] = useState({});
+  const [sizeChartTemplateKey, setSizeChartTemplateKey] = useState("oversizedTshirt");
   const [editingProductId, setEditingProductId] = useState(editProductId);
 
   const fileInputRefs = useRef({});
@@ -797,7 +760,29 @@ export const useProductForm = (editProductId = null) => {
     }
 
     const charts = {};
-    if (product.variants) {
+    const productLevelChart = normalizeProductSizeChart(product.sizeChart);
+
+    if (product.sizeChartTemplate) {
+      setSizeChartTemplateKey(product.sizeChartTemplate);
+      const templateChart = buildSizeChartFromTemplate(
+        product.sizeChartTemplate,
+        product.sizes || [],
+      );
+      const productColors =
+        product.colors ||
+        [...new Set(product.variants?.map((v) => v.color) || [])];
+      productColors.forEach((color) => {
+        charts[color] = { ...(templateChart || {}) };
+      });
+    } else if (productLevelChart && Object.keys(productLevelChart).length > 0) {
+      setSizeChartTemplateKey("");
+      const productColors =
+        product.colors ||
+        [...new Set(product.variants?.map((v) => v.color) || [])];
+      productColors.forEach((color) => {
+        charts[color] = { ...productLevelChart };
+      });
+    } else if (product.variants) {
       product.variants.forEach((variant) => {
         if (
           variant.sizeDetails &&
@@ -809,6 +794,9 @@ export const useProductForm = (editProductId = null) => {
           charts[variant.color][variant.size] = variant.sizeDetails;
         }
       });
+      setSizeChartTemplateKey("");
+    } else {
+      setSizeChartTemplateKey("oversizedTshirt");
     }
     const loadedFit =
       product.fit || inferFitFromSizeCharts(charts) || "Regular";
@@ -1328,6 +1316,8 @@ export const useProductForm = (editProductId = null) => {
       setFormData((prev) => ({ ...prev, fit: templateFit }));
     }
 
+    setSizeChartTemplateKey(templateKey);
+
     setSizeCharts((prev) => {
       const nextCharts = { ...prev };
 
@@ -1401,6 +1391,8 @@ export const useProductForm = (editProductId = null) => {
       stock[presetColor][size] = DEFAULT_VARIANT_STOCK;
     });
     setStockMatrix(stock);
+
+    setSizeChartTemplateKey("oversizedTshirt");
 
     if (template) {
       const charts = {
@@ -1547,13 +1539,27 @@ const prepareFormData = () => {
       throw new Error("Please add at least one size");
     }
 
-    // Create variants with size charts
+    // Create variants (size chart stored once on product via template or sizeChart)
     const variants = [];
+    const productLevelChart = extractProductLevelSizeChart(
+      sizeCharts,
+      colors,
+      sizes,
+    );
+    const templateSelected =
+      sizeChartTemplateKey && SIZE_CHART_TEMPLATES[sizeChartTemplateKey];
+    const chartsMatchSelectedTemplate =
+      templateSelected &&
+      chartsMatchTemplate(sizeCharts, colors, sizes, sizeChartTemplateKey);
+    const useTemplate =
+      templateSelected &&
+      (!productLevelChart || chartsMatchSelectedTemplate);
+    const useProductLevelChart =
+      !useTemplate && Boolean(productLevelChart);
 
     colors.forEach((colorName) => {
       sizes.forEach((sizeName) => {
         const stock = stockMatrix[colorName]?.[sizeName];
-        // ✅ HAMESHA VARIANT ADD KARO, CHAHE STOCK 0 HO
         variants.push({
           color: colorName,
           colorCode: COLOR_OPTIONS.find((c) => c.name === colorName)?.code || "#000000",
@@ -1567,14 +1573,6 @@ const prepareFormData = () => {
             parseFloat(formData.basePrice) || 0,
             parseFloat(formData.discount) || 0,
           ),
-          sizeDetails: (() => {
-            const raw = sizeCharts[colorName]?.[sizeName] || {};
-            if (!defaultFitDescription) return raw;
-            return {
-              ...raw,
-              fitDescription: raw.fitDescription || defaultFitDescription,
-            };
-          })(),
         });
       });
     });
@@ -1584,6 +1582,13 @@ const prepareFormData = () => {
     }
 
     formDataObj.append("variants", JSON.stringify(variants));
+
+    if (useTemplate) {
+      formDataObj.append("sizeChartTemplate", sizeChartTemplateKey);
+    } else if (useProductLevelChart) {
+      formDataObj.append("sizeChart", JSON.stringify(productLevelChart));
+      formDataObj.append("sizeChartTemplate", "");
+    }
     formDataObj.append("colors", JSON.stringify(colors));
     formDataObj.append("sizes", JSON.stringify(sizes));
     formDataObj.append("stockMatrix", JSON.stringify(stockMatrix));
@@ -1728,6 +1733,7 @@ const prepareFormData = () => {
     setVariantImages({});
     setColorImageMap({});
     setSizeCharts({});
+    setSizeChartTemplateKey("oversizedTshirt");
     setSelectedSize("M");
     setCurrentColor("");
     setTempSpecKey("");
@@ -1914,6 +1920,8 @@ const prepareFormData = () => {
     getTotalStockForColor,
 
     sizeCharts,
+    sizeChartTemplateKey,
+    setSizeChartTemplateKey,
     updateSizeChart,
     getSizeChartForColor,
     getSizeChartForVariant,

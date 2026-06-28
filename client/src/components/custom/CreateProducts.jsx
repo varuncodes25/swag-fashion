@@ -73,6 +73,8 @@ const CreateProduct = () => {
     setTempSpecKey,
     setTempSpecValue,
     sizeCharts, // Size charts data
+    sizeChartTemplateKey,
+    setSizeChartTemplateKey,
     updateSizeChart, // Update size chart function
     getSizeChartForColor, // Get charts for color
     getSizeChartForVariant, // Get chart for specific variant
@@ -140,7 +142,6 @@ const CreateProduct = () => {
   const [customSizeInput, setCustomSizeInput] = useState("");
   const [customTagInput, setCustomTagInput] = useState("");
   const [tagSearchQuery, setTagSearchQuery] = useState("");
-  const [selectedSizeChartTemplate, setSelectedSizeChartTemplate] = useState("oversizedTshirt");
   const clothingCategory = TOP_WEAR_TYPES.includes(formData.clothingType)
     ? "top"
     : BOTTOM_WEAR_TYPES.includes(formData.clothingType)
@@ -768,8 +769,8 @@ const CreateProduct = () => {
                   </div>
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <Select
-                      value={selectedSizeChartTemplate}
-                      onValueChange={setSelectedSizeChartTemplate}
+                      value={sizeChartTemplateKey}
+                      onValueChange={setSizeChartTemplateKey}
                     >
                       <SelectTrigger className="bg-background border-input text-foreground sm:max-w-xs">
                         <SelectValue placeholder="Select size chart template" />
@@ -791,7 +792,7 @@ const CreateProduct = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => applySizeChartTemplate(selectedSizeChartTemplate)}
+                      onClick={() => applySizeChartTemplate(sizeChartTemplateKey)}
                       disabled={!colors.length || !sizes.length}
                       className="border-input hover:bg-accent"
                     >

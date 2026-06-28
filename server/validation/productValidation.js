@@ -218,6 +218,29 @@ const createProductSchema = yup.object({
     ])
     .optional(),
 
+  sizeChartTemplate: yup
+    .string()
+    .oneOf(["regularTshirt", "oversizedTshirt", "poloShirt", ""])
+    .nullable()
+    .optional(),
+
+  sizeChart: yup.lazy((val) => {
+    if (val == null || val === "") return yup.mixed().optional();
+    if (typeof val === "string") {
+      try {
+        val = JSON.parse(val);
+      } catch {
+        return yup.mixed().optional();
+      }
+    }
+    if (typeof val !== "object") return yup.mixed().optional();
+    const shape = {};
+    Object.keys(val).forEach((sizeKey) => {
+      shape[sizeKey] = sizeChartSchema;
+    });
+    return yup.object(shape).optional();
+  }),
+
   pattern: yup
     .string()
     .oneOf([

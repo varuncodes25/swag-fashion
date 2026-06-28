@@ -3,8 +3,11 @@ import { useState } from "react";
 import ColorSelector from "@/components/Product/ColorSelector";
 import SizeSelector from "@/components/Product/SizeSelector";
 import QuantitySelector from "@/components/Product/QuantitySelector";
-import SizeChartModal from "@/components/Product/SizeChartModal"; // ✅ Import modal
+import SizeChartModal from "@/components/Product/SizeChartModal";
 import { Ruler, Info } from "lucide-react";
+import {
+  productHasSizeChart,
+} from "@/constants/sizeChartTemplates";
 
 const ProductVariants = ({
   colors = [],
@@ -22,19 +25,16 @@ const ProductVariants = ({
   clothingType,
   variantsForSizeChart = [],
   sizesOrder = [],
+  sizeChartTemplate = null,
+  sizeChart = null,
 }) => {
   const [showSizeChart, setShowSizeChart] = useState(false);
 
-  const sizeDetailsMeaningful = (sd) => {
-    if (!sd || typeof sd !== 'object') return false;
-    return Object.keys(sd).some(
-      (k) => k !== '_id' && sd[k] !== undefined && sd[k] !== null && sd[k] !== ''
-    );
-  };
-
-  const hasSizeChart = (variantsForSizeChart.length > 0 ? variantsForSizeChart : [variant]).some((v) =>
-    sizeDetailsMeaningful(v?.sizeDetails)
-  );
+  const hasSizeChart = productHasSizeChart({
+    sizeChartTemplate,
+    sizeChart,
+    variants: variantsForSizeChart.length > 0 ? variantsForSizeChart : [variant],
+  });
 
   return (
     <div className="space-y-4 lg:space-y-8">
@@ -170,6 +170,8 @@ const ProductVariants = ({
         clothingType={clothingType}
         variantsForSizeChart={variantsForSizeChart}
         sizesOrder={sizesOrder}
+        sizeChartTemplate={sizeChartTemplate}
+        sizeChart={sizeChart}
       />
     </div>
   );

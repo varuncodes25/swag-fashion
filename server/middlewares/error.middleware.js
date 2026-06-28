@@ -31,14 +31,13 @@ const errorHandler = (err, req, res, next) => {
   let error = { ...err };
   error.message = err.message;
 
-  logger.error({
+  logger.error(err.message || "Unhandled error", {
     type: "unhandled_error",
     message: err.message,
     stack: err.stack,
     path: req.originalUrl,
     method: req.method,
     requestId: req.requestId || null,
-    timestamp: new Date().toISOString(),
   });
 
   if (exposeErrorDetails()) {

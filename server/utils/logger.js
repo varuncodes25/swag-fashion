@@ -39,16 +39,63 @@ const logger = createLogger({
   transports: [dailyRotateTransport, errorRotateTransport],
 });
 
+const formatConsoleLine = (info) => {
+  const { timestamp, level, message, service, ...meta } = info;
+  const { type, ...rest } = meta;
+
+  if (type === "http_access") {
+    const ms =
+      rest.responseTimeMs != null ? ` ${Math.round(rest.responseTimeMs)}ms` : "";
+    return `${timestamp} ${level}: ${rest.method} ${rest.url} → ${rest.statusCode}${ms}`;
+  }
+
+  if (type === "security_event") {
+    return `${timestamp} ${level}: Security ${rest.method} ${rest.path} → ${rest.statusCode} (${rest.durationMs}ms)`;
+  }
+
+  if (type === "route_loaded") {
+    return `${timestamp} ${level}: Route loaded → ${rest.file}`;
+  }
+
+  if (type === "route_load_failed") {
+    return `${timestamp} ${level}: Route failed → ${rest.file}: ${rest.message}`;
+  }
+
+  if (type === "server_start") {
+    return `${timestamp} ${level}: ${message}`;
+  }
+
+  if (type === "db_connected") {
+    return `${timestamp} ${level}: ${message}`;
+  }
+
+  if (type === "db_connect_error") {
+    return `${timestamp} ${level}: ${message}${rest.stack ? `\n  ${rest.stack}` : ""}`;
+  }
+
+  if (type === "unhandled_error" || type === "sitemap_generation_error") {
+    const detail = [rest.path && `${rest.method} ${rest.path}`, rest.message]
+      .filter(Boolean)
+      .join(" — ");
+    return `${timestamp} ${level}: ${detail || message}${rest.stack ? `\n  ${rest.stack}` : ""}`;
+  }
+
+  const extras = Object.entries(rest)
+    .filter(([, v]) => v != null && v !== "")
+    .map(([k, v]) => `${k}=${typeof v === "object" ? JSON.stringify(v) : v}`)
+    .join(", ");
+
+  const label = type ? `[${type}] ` : "";
+  return `${timestamp} ${level}: ${label}${message}${extras ? ` (${extras})` : ""}`;
+};
+
 if (!isProduction) {
   logger.add(
     new transports.Console({
       format: combine(
         colorize(),
         timestamp(),
-        printf(({ timestamp, level, message, ...meta }) => {
-          const metaText = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : "";
-          return `${timestamp} ${level}: ${message}${metaText}`;
-        })
+        printf(formatConsoleLine)
       ),
     })
   );

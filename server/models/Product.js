@@ -670,6 +670,20 @@ const productSchema = new mongoose.Schema(
       default: "Not Applicable",
     },
 
+    /** Reusable template key — avoids duplicating measurements on every variant */
+    sizeChartTemplate: {
+      type: String,
+      enum: ["regularTshirt", "oversizedTshirt", "poloShirt", null],
+      default: null,
+    },
+
+    /** Custom per-size measurements (one chart per product, not per variant) */
+    sizeChart: {
+      type: Map,
+      of: sizeChartSchema,
+      default: undefined,
+    },
+
     pattern: {
       type: String,
       enum: [

@@ -2,6 +2,11 @@ const Product = require("../models/Product");
 const Category = require("../models/Category");
 const cloudinary = require("cloudinary").v2;
 const { resolveTagsForFilter } = require("../constants/productTagGroups");
+const {
+  parseSizeChart,
+  normalizeVariantsForSave,
+  SIZE_CHART_TEMPLATE_KEYS,
+} = require("../utils/sizeChart");
 
 /** Support both names: CLOUDINARY_* (docs) and CLOUD_* (Render / legacy). */
 function getCloudinaryCloudName() {
@@ -545,6 +550,17 @@ const createProduct = async (req, res) => {
     // Fit from form (default Regular only if missing)
     const productFit = (req.body.fit || fit || "Regular").trim();
 
+    const parsedProductSizeChart = parseSizeChart(req.body.sizeChart);
+    const hasCustomSizeChart =
+      parsedProductSizeChart &&
+      Object.keys(parsedProductSizeChart).length > 0;
+    const resolvedSizeChartTemplate =
+      !hasCustomSizeChart &&
+      req.body.sizeChartTemplate &&
+      SIZE_CHART_TEMPLATE_KEYS.includes(req.body.sizeChartTemplate)
+        ? req.body.sizeChartTemplate
+        : null;
+
     // ============ CREATE PRODUCT ============
     const product = new Product({
       // Basic Info
@@ -593,15 +609,14 @@ const createProduct = async (req, res) => {
         colorCode: colorCodesArray[0] || "#808080",
       })),
 
-      // Variants
-      variants: variantsArray.map((v) => ({
-        color: v.color,
-        colorCode: v.colorCode,
-        size: v.size,
-        price: parseFloat(v.price || basePrice),
-        stock: v.stock || 0,
-        sizeDetails: v.sizeDetails || {},
-      })),
+      // Variants (size chart stored once on product, not per variant)
+      variants: normalizeVariantsForSave(variantsArray, {
+        sizeChartTemplate: resolvedSizeChartTemplate,
+        sizeChart: hasCustomSizeChart ? parsedProductSizeChart : null,
+      }),
+
+      sizeChartTemplate: resolvedSizeChartTemplate,
+      sizeChart: hasCustomSizeChart ? parsedProductSizeChart : undefined,
 
       // Offer & Discount
       discount: parseInt(discount) || 0,
@@ -1077,6 +1092,7 @@ const updateProduct = async (req, res) => {
       "keyFeatures",
       "stockMatrix",
       "productDimensions",
+      "sizeChart",
     ];
 
     fieldsToParse.forEach((field) => {
@@ -1315,6 +1331,34 @@ const updateProduct = async (req, res) => {
     }
 
     data.allImages = allImages;
+
+    if (data.sizeChartTemplate === "" || data.sizeChartTemplate === "null") {
+      data.sizeChartTemplate = null;
+    }
+
+    const parsedUpdateSizeChart = parseSizeChart(data.sizeChart);
+    const hasCustomUpdateChart =
+      parsedUpdateSizeChart &&
+      Object.keys(parsedUpdateSizeChart).length > 0;
+
+    if (hasCustomUpdateChart) {
+      data.sizeChart = parsedUpdateSizeChart;
+      data.sizeChartTemplate = null;
+    } else if (data.sizeChart !== undefined) {
+      data.sizeChart = undefined;
+    }
+
+    if (data.variants) {
+      data.variants = normalizeVariantsForSave(data.variants, {
+        sizeChartTemplate:
+          data.sizeChartTemplate !== undefined
+            ? data.sizeChartTemplate
+            : product.sizeChartTemplate,
+        sizeChart: hasCustomUpdateChart
+          ? parsedUpdateSizeChart
+          : data.sizeChart,
+      });
+    }
 
     // ============ REMOVE FIELDS THAT SHOULDN'T BE UPDATED DIRECTLY ============
     delete data._id;

@@ -254,6 +254,8 @@ function ProductLoaded({
                   clothingType={product.clothingType}
                   variantsForSizeChart={variantsForSelectedColor}
                   sizesOrder={sizes}
+                  sizeChartTemplate={product.sizeChartTemplate}
+                  sizeChart={product.sizeChart}
                 />
               )}
               <DeliveryChecker />

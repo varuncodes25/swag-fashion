@@ -1,22 +1,18 @@
 const mongoose = require("mongoose");
+const { logger } = require("../utils/logger");
 
 const connectDb = async () => {
   try {
     const connection = await mongoose.connect(process.env.MONGO_URI);
-
-    if (connection.STATES.connecting) {
-      console.log(`Connecting DB to ${connection.connection.host}`);
-    }
-
-    if (connection.STATES.connected) {
-      console.log(`DB connected`);
-    }
-
-    if (connection.STATES.disconnected) {
-      console.log(`Disconnected DB from ${connection.connection.host}`);
-    }
+    logger.info(`MongoDB connected → ${connection.connection.host}`, {
+      type: "db_connected",
+    });
   } catch (error) {
-    console.log("Error connecting to database", error);
+    logger.error("MongoDB connection failed", {
+      type: "db_connect_error",
+      message: error.message,
+      stack: error.stack,
+    });
   }
 };
 
